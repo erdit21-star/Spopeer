@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What's New — Spopeer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      --bg: #fafaf8;
+      --white: #ffffff;
+      --ink: #111111;
+      --muted: #7a7a7a;
+      --border: #ebebE7;
+      --surface: #f3f3ef;
+      --accent: #001f3f;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --r: 12px;
+      --r-pill: 999px;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--ink);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+.back-btn {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .back-btn:hover { color: var(--ink); }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+
+    .changelog {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 32px;
+    }
+
+    .changelog-title { font-family: var(--font-display); font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .changelog-subtitle { color: var(--muted); margin-bottom: 24px; }
+
+    .entry { margin-bottom: 22px; }
+    .entry-date { font-weight: 700; margin-bottom: 8px; }
+    .entry-items { list-style: disc; margin-left: 18px; color: var(--muted); }
+
+    .footer-note { margin-top: 32px; color: var(--muted); font-size: 13px; }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+
+.site-footer {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+
+.footer-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 24px 0;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.foot-logo {
+  font-family: var(--fD);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  display: inline-block;
+}
+
+.foot-brand p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 18px;
+  max-width: 230px;
+}
+
+.social-row {
+  display: flex;
+  gap: 7px;
+}
+
+.soc-btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rS);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.soc-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.foot-col h5 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.foot-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.foot-col ul li {
+  margin-bottom: 9px;
+}
+
+.foot-col ul a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 300;
+  transition: color .2s;
+}
+
+.foot-col ul a:hover {
+  color: var(--accent);
+}
+
+.footer-btm {
+  max-width: 1280px;
+  margin: 36px auto 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.footer-btm p {
+  font-size: 12px;
+  color: var(--muted-2);
+  margin: 0;
+}
+
+.footer-btm-links {
+  display: flex;
+  gap: 18px;
+}
+
+.footer-btm-links a {
+  font-size: 12px;
+  color: var(--muted-2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.footer-btm-links a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 36px 16px 0;
+  }
+
+  .footer-btm {
+    padding: 14px 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <a href="/index.html" class="back-btn" data-home-link><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="changelog">
+      <h1 class="changelog-title">What's New</h1>
+      <p class="changelog-subtitle">Recent updates, improvements, and new features in Spopeer.</p>
+
+      <div class="entry">
+        <div class="entry-date">March 2026</div>
+        <ul class="entry-items">
+          <li>Introduced the new Profile Menu with quick access to settings, subscriptions, and account controls.</li>
+          <li>Added the Feed page makeover with improved navigation and user experience.</li>
+          <li>Improved security checks for authenticated views across the platform.</li>
+        </ul>
+      </div>
+
+      <div class="entry">
+        <div class="entry-date">February 2026</div>
+        <ul class="entry-items">
+          <li>Added subscription management page with premium upgrade options.</li>
+          <li>Enabled login-based access to profile editing and messaging.</li>
+          <li>Implemented a consistent brand color scheme across all pages.</li>
+        </ul>
+      </div>
+
+      <p class="footer-note">Want to suggest a new feature? Reach out via <a href="/pages/contact/index.html">Contact</a>.</p>
+    </div>
+  </div>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

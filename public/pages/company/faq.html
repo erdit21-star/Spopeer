@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ - Spopeer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --accent: #001f3f;
+      --accent-light: #cce7ff;
+      --background: #fafaf8;
+      --surface: #ffffff;
+      --ink: #0f0f0f;
+      --muted: #7a7a7a;
+      --border: #e8e8e4;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-display: 'Syne', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--background);
+    }
+
+    /* ─── NAVBAR ─── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(250, 250, 248, 0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .navbar {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 28px;
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--ink);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+.nav-links {
+      display: flex;
+      gap: 4px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 999px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--ink);
+      background: #f3f3ef;
+    }
+
+    .auth-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-outline {
+      padding: 8px 20px;
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: var(--font-body);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--ink);
+      background: #f3f3ef;
+    }
+
+    .btn-fill {
+      padding: 8px 22px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0, 31, 63, 0.25);
+      font-family: var(--font-body);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-fill:hover {
+      background: #001a33;
+      transform: translateY(-1px);
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      background: linear-gradient(135deg, var(--accent) 0%, #1a6bff 100%);
+      color: white;
+      padding: 80px 24px;
+      text-align: center;
+    }
+
+    .hero-content {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      line-height: 1.2;
+      font-family: var(--font-display);
+    }
+
+    .hero p {
+      font-size: 18px;
+      opacity: 0.95;
+    }
+
+    /* ─── CONTAINER ─── */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-header h2 {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 12px;
+      font-family: var(--font-display);
+    }
+
+    .section-header p {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ─── FAQ ACCORDION ─── */
+    .faq-container {
+      display: grid;
+      gap: 16px;
+    }
+
+    .faq-item {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .faq-item:hover {
+      border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(0, 31, 63, 0.08);
+    }
+
+    .faq-question {
+      padding: 24px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      font-family: var(--font-body);
+      transition: background 0.2s;
+    }
+
+    .faq-question:hover {
+      background: rgba(0, 31, 63, 0.02);
+    }
+
+    .faq-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 24px;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 500px;
+      padding: 0 24px 24px 24px;
+    }
+
+    .faq-answer p {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    /* ─── CTA ─── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--accent) 0%, #1a6bff 100%);
+      color: white;
+      padding: 60px 24px;
+      text-align: center;
+      border-radius: 12px;
+      margin: 80px 24px 0;
+    }
+
+    .cta-section h2 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      font-family: var(--font-display);
+    }
+
+    .cta-section p {
+      font-size: 16px;
+      margin-bottom: 24px;
+      opacity: 0.95;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      padding: 14px 40px;
+      background: white;
+      color: var(--accent);
+      text-decoration: none;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: 700;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 56px 28px 0;
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr;
+      gap: 40px;
+    }
+
+    .foot-logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--ink);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .foot-brand p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-weight: 300;
+      margin-bottom: 20px;
+      max-width: 240px;
+    }
+
+    .social-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .social-btn {
+      width: 36px;
+      height: 36px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 14px;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .social-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .foot-col h4 {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 16px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .foot-col ul {
+      list-style: none;
+    }
+
+    .foot-col ul li {
+      margin-bottom: 10px;
+    }
+
+    .foot-col ul a {
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 300;
+      transition: color 0.2s;
+    }
+
+    .foot-col ul a:hover {
+      color: var(--accent);
+    }
+
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 28px;
+      margin-top: 40px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-bottom p {
+      font-size: 12px;
+      color: #b0b0b0;
+    }
+
+    .footer-bottom-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-bottom-links a {
+      font-size: 12px;
+      color: #b0b0b0;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-bottom-links a:hover {
+      color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      .hero {
+        padding: 50px 24px;
+      }
+
+      .hero h1 {
+        font-size: 36px;
+      }
+
+      .container {
+        padding: 40px 24px;
+      }
+
+      .footer-inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+
+      .cta-section {
+        margin: 40px 24px 0;
+      }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+
+.site-footer {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+
+.footer-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 24px 0;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.foot-logo {
+  font-family: var(--fD);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  display: inline-block;
+}
+
+.foot-brand p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 18px;
+  max-width: 230px;
+}
+
+.social-row {
+  display: flex;
+  gap: 7px;
+}
+
+.soc-btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rS);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.soc-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.foot-col h5 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.foot-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.foot-col ul li {
+  margin-bottom: 9px;
+}
+
+.foot-col ul a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 300;
+  transition: color .2s;
+}
+
+.foot-col ul a:hover {
+  color: var(--accent);
+}
+
+.footer-btm {
+  max-width: 1280px;
+  margin: 36px auto 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.footer-btm p {
+  font-size: 12px;
+  color: var(--muted-2);
+  margin: 0;
+}
+
+.footer-btm-links {
+  display: flex;
+  gap: 18px;
+}
+
+.footer-btm-links a {
+  font-size: 12px;
+  color: var(--muted-2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.footer-btm-links a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 36px 16px 0;
+  }
+
+  .footer-btm {
+    padding: 14px 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <ul class="nav-links">
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#user-types">Who It's For</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+      </ul>
+      <div class="auth-row">
+        <a href="../auth/login.html" class="btn-outline">Log In</a>
+        <a href="../auth/signup.html" class="btn-fill">Sign Up Free</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Frequently Asked Questions</h1>
+      <p>Everything you need to know about Spopeer. Can't find the answer you're looking for? Feel free to contact our support team.</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="section-header">
+      <h2>Common Questions</h2>
+      <p>Get answers to the most common questions about Spopeer's platform, features, and how to get started.</p>
+    </div>
+
+    <div class="faq-container">
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>What is Spopeer, and how does it work?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Spopeer is a global sports networking platform that connects athletes, coaches, clubs, and sports professionals to collaborate, grow, and build their futures in sports. Our platform uses AI matching, a sports marketplace, and blockchain security to empower every user.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Who can join Spopeer, and is it open to all sports professionals?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Yes! Spopeer is open to athletes, coaches, clubs, scouts, physiotherapists, and all other sports professionals. Whether you're an amateur or professional, or play a mainstream or niche sport, there's a place for you on Spopeer.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Is Spopeer free, or are there premium features?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Spopeer is free to join and use for basic features. We offer premium features and services for users looking to unlock advanced tools and opportunities to grow their sports careers and businesses.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>How can athletes benefit from using Spopeer?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Athletes can showcase their skills, connect with coaches and clubs, access training programs, track performance analytics, build sponsorship opportunities, and monetize their talent through various platform features like the sports marketplace and stock exchange.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>What features does Spopeer offer for coaches?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Coaches can discover promising athletes, build their brand, connect with clubs and athletes globally, create and sell training programs, and earn new revenue streams by sharing their expertise with a worldwide audience.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>How can sports clubs use Spopeer to grow and connect?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Clubs can recruit exceptional talent, build engaged fan communities, manage digital assets on blockchain, trade player tokens, and connect with coaches and sponsors globally to expand their reach and revenue streams.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>What opportunities does Spopeer provide for sports professionals?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Sports professionals like physiotherapists, analysts, scouts, and managers can expand their professional networks, connect with global opportunities, and scale their services across 1,500+ sports categories from 200+ countries.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Can I find sponsorships and funding opportunities on Spopeer?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Yes! Spopeer's AI matchmaking system helps connect athletes and clubs with potential sponsors. Additionally, our Sports Stock Exchange allows investors to fund athletes and clubs through blockchain-powered tokens.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>What makes Spopeer different from other sports networking platforms?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Spopeer uniquely combines a comprehensive sports network, AI-powered matchmaking, a sports marketplace, blockchain security, sports stock exchange, and specialized tools all in one platform. We're dedicated to empowering sports professionals worldwide.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>How does Spopeer verify users and maintain credibility?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>We use blockchain verification, profile authentication, and community reviews to maintain trust and credibility on the platform. All transactions and user data are encrypted for maximum security.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>What types of content can users share on Spopeer?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Users can share performance videos, training content, achievements, comments, and collaborate with other professionals. Our platform supports media uploads, career milestones, and community engagement.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Does Spopeer support live streaming for events and training?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Yes! Spopeer supports live streaming features for events, training sessions, and matches. This allows athletes and coaches to connect with audiences in real-time and monetize their content.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>What is the Spopeer Marketplace, and how does it work?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>The Spopeer Marketplace is a one-stop platform where users can buy and sell sports gear, training programs, coaching services, and other sports-related products and services from verified professionals worldwide.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>How does Spopeer ensure user data privacy and security?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>We follow the latest security standards and regulations, using encryption, blockchain verification, and secure payment processing to protect all user data. Your privacy is our priority.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Where can I find support if I have issues with my Spopeer account?</span>
+          <div class="faq-icon">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </button>
+        <div class="faq-answer">
+          <p>Our support team is here to help! You can reach us through our help center, email, WhatsApp, or Telegram channels. We typically respond within 24 hours to all inquiries.</p>
+        </div>
+      </div>
+    </div>
+
+    <section class="cta-section">
+      <h2>Still have questions?</h2>
+      <p>Can't find the answer you're looking for? Our support team is here to help with any technical questions or concerns.</p>
+      <a href="/pages/contact/index.html" class="cta-btn">Contact Us</a>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+
+      <p>Connecting the global sports community � athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+
+      <div class="social-row">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+        <li><a href="/index.html#user-types">User Types</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="/pages/legal/about.html">About Us</a></li>
+        <li><a href="/pages/company/careers.html">Careers</a></li>
+        <li><a href="/pages/company/blog.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Support</h5>
+      <ul>
+        <li><a href="/pages/company/help-center.html">Help Center</a></li>
+        <li><a href="/pages/contact/index.html">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links">
+      <a href="/pages/legal/privacy.html">Privacy</a>
+      <a href="/pages/legal/terms.html">Terms</a>
+      <a href="/pages/contact/index.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.faq-question').forEach(button => {
+      button.addEventListener('click', () => {
+        const faqItem = button.parentElement;
+        const isActive = faqItem.classList.contains('active');
+        
+        // Close all other items
+        document.querySelectorAll('.faq-item.active').forEach(item => {
+          if (item !== faqItem) {
+            item.classList.remove('active');
+          }
+        });
+
+        // Toggle current item
+        faqItem.classList.toggle('active');
+      });
+    });
+  </script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

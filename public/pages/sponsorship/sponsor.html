@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spopeer · Sponsorship Hub</title>
+  <script src="/js/auth.js"></script>
+  <script src="/js/sanitize.js"></script>
+  <script src="/js/auth-guard.js"></script>
+  <script>window.Auth.requireAuth();</script>
+  <script src="/js/profile-sync-service.js"></script>
+  <script src="/js/shared-ui.js"></script>
+  <script src="/js/profile-identity.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <link rel="stylesheet" href="/css/shared-nav.css" />
+  <link rel="stylesheet" href="/css/components/toast.css" />
+  <style>
+    .app-shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 24px 48px;
+      display: grid;
+      grid-template-columns: var(--left-w) minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+    .sidebar-left {
+      position: sticky;
+      top: calc(var(--nav-h) + 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--rM);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-2);
+      transition: .2s;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover { background: var(--surface); color: var(--ink); }
+    .nav-item.active {
+      background: var(--accent-lt);
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .nav-spacer { height: 8px; }
+    .sidebar-help {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sidebar-help h3 {
+      margin: 0;
+      font-size: 16px;
+      font-family: var(--fD);
+      letter-spacing: -.03em;
+    }
+    .sidebar-help p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .page-main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .hero {
+      background: linear-gradient(135deg, rgba(0,31,63,1) 0%, rgba(17,57,104,1) 55%, rgba(26,107,255,0.95) 100%);
+      color: white;
+      border-radius: var(--rXL);
+      padding: 28px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+      gap: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -100px auto;
+      width: 260px;
+      height: 260px;
+      background: radial-gradient(circle, rgba(255,255,255,.16), transparent 68%);
+      pointer-events: none;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: var(--pill);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      margin: 16px 0 10px;
+      font-family: var(--fD);
+      font-size: clamp(30px, 3vw, 42px);
+      line-height: 1.02;
+      letter-spacing: -.05em;
+    }
+    .hero p {
+      margin: 0;
+      max-width: 720px;
+      color: rgba(255,255,255,.82);
+      font-size: 15px;
+    }
+    .hero-actions {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .btn {
+      border: 1.5px solid transparent;
+      border-radius: var(--pill);
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: white;
+      color: var(--accent);
+    }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-secondary {
+      background: rgba(255,255,255,.08);
+      color: white;
+      border-color: rgba(255,255,255,.18);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,.14); }
+
+    .hero-card {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 26px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      backdrop-filter: blur(8px);
+    }
+    .hero-card h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .hero-card p {
+      font-size: 13px;
+      color: rgba(255,255,255,.78);
+    }
+    .mini-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .mini-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      color: rgba(255,255,255,.88);
+      font-size: 13px;
+    }
+    .mini-item i {
+      width: 18px;
+      margin-top: 3px;
+      color: white;
+    }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .panel {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 22px;
+    }
+    .panel h2,
+    .panel h3 {
+      margin: 0;
+      font-family: var(--fD);
+      letter-spacing: -.03em;
+    }
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .panel-subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: var(--pill);
+      padding: 6px 10px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .status-pill.green { background: var(--green-lt); color: var(--green); }
+    .status-pill.amber { background: var(--amber-lt); color: var(--amber); }
+    .status-pill.blue { background: var(--blue-lt); color: var(--blue); }
+
+    .discovery-grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+    }
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .field label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 11px 13px;
+      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--ink);
+      transition: .2s;
+    }
+    .field textarea { min-height: 112px; resize: vertical; }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,31,63,.08);
+    }
+    .field small { color: var(--muted); }
+    .composer-tabs {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: var(--pill);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+    .composer-tab {
+      border: none;
+      background: transparent;
+      border-radius: var(--pill);
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .composer-tab.active { background: var(--white); color: var(--accent); box-shadow: 0 2px 10px rgba(0,0,0,.04); }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .form-full { grid-column: 1 / -1; }
+    .muted-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .secure-card {
+      background: linear-gradient(180deg, rgba(0,31,63,.04), transparent);
+      border: 1.5px dashed rgba(0,31,63,.18);
+      border-radius: var(--rL);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .secure-card h3 { font-size: 18px; }
+    .secure-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--ink-2);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .board-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .board-tab {
+      padding: 9px 14px;
+      border-radius: var(--pill);
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .board-tab.active { color: var(--accent); border-color: var(--accent-lt); background: var(--accent-lt); }
+    .board-list {
+      display: grid;
+      gap: 14px;
+    }
+    .board-card {
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--white);
+    }
+    .board-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .board-title-wrap {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .board-title {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      color: var(--ink);
+    }
+    .board-meta,
+    .board-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .board-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: var(--pill);
+      padding: 7px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--ink-2);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .board-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 4px;
+    }
+    .btn-soft {
+      background: var(--surface);
+      border-color: var(--border);
+      color: var(--ink);
+    }
+    .btn-soft:hover { background: var(--surface-2); }
+    .btn-strong {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-lt);
+    }
+    .btn-strong:hover { background: var(--accent-hover); }
+
+    .empty-state {
+      border: 1.5px dashed var(--border);
+      border-radius: 22px;
+      padding: 26px;
+      background: linear-gradient(180deg, rgba(0,31,63,.02), transparent);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .empty-state h3 {
+      margin: 0;
+      font-size: 19px;
+      font-family: var(--fD);
+      letter-spacing: -.03em;
+    }
+    .empty-state p {
+      margin: 0;
+      max-width: 540px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .runtime-status {
+      display: none;
+      padding: 13px 16px;
+      border-radius: 16px;
+      background: var(--blue-lt);
+      color: var(--blue);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .runtime-status[hidden] { display: none !important; }
+
+    @media (max-width: 1120px) {
+      .hero,
+      .discovery-grid,
+      .section-grid { grid-template-columns: 1fr; }
+      .filters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 960px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar-left { position: static; }
+    }
+    @media (max-width: 720px) {
+      .nav-search { display: none; }
+      .nav-inner { padding: 0 16px; }
+      .app-shell { padding: 18px 16px 100px; }
+      .hero { padding: 22px; border-radius: 24px; }
+      .panel { padding: 18px; }
+      .filters-grid,
+      .form-grid { grid-template-columns: 1fr; }
+      .board-top { flex-direction: column; }
+      .hero-actions,
+      .board-actions { flex-direction: column; align-items: stretch; }
+      .btn { width: 100%; }
+      .chip-name { display: none; }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/fonts.css">
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <header class="topnav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" data-home-link>
+        <span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+
+      <div class="nav-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="hubSearch" type="search" placeholder="Search by sport, city, sponsor type or goal" />
+      </div>
+
+      <div class="nav-right">
+        <button class="nav-icon" type="button" aria-label="Notifications" onclick="window.location.href='/pages/dashboard/notifications.html'">
+          <i class="fa-regular fa-bell"></i>
+          <span class="notif-badge"></span>
+        </button>
+        <button class="nav-icon" type="button" aria-label="Messages" onclick="window.location.href='/pages/messaging/inbox.html'">
+          <i class="fa-regular fa-paper-plane"></i>
+        </button>
+
+        <div class="user-chip" id="userChip" role="button" aria-haspopup="menu" aria-expanded="false">
+          <div class="chip-avatar" id="chipAvatar">SP</div>
+          <span class="chip-name" id="chipName">Profile</span>
+          <span class="chip-caret"><i class="fa-solid fa-chevron-down"></i></span>
+        </div>
+
+        <div class="profile-menu" id="profileMenu" aria-hidden="true">
+          <section class="profile-menu-section">
+            <div class="profile-menu-section-header">
+              <h4 class="profile-menu-title">Profile</h4>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-user"></i><span>View my profile</span></button>
+              <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i><span>Edit profile</span></button>
+              <button class="profile-menu-item" data-action="account-settings"><i class="fa-solid fa-sliders"></i><span>Settings</span></button>
+            </div>
+          </section>
+          <section class="profile-menu-section collapsed">
+            <div class="profile-menu-section-header">
+              <h4 class="profile-menu-title">Workspace</h4>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-comments"></i><span>Messages</span></button>
+              <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i><span>Events</span></button>
+              <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-line"></i><span>Marketplace analytics</span></button>
+              <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i><span>Download my data</span></button>
+            </div>
+          </section>
+          <section class="profile-menu-section collapsed">
+            <div class="profile-menu-section-header">
+              <h4 class="profile-menu-title">Support</h4>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-circle-question"></i><span>Help center</span></button>
+              <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i><span>Contact support</span></button>
+              <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i><span>Log out</span></button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar-left">
+      <a class="nav-item" href="/feed.html"><i class="fa-solid fa-house"></i><span>Home</span></a>
+      <a class="nav-item" href="/pages/search/search.html"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></a>
+      <a class="nav-item" href="/pages/messaging/inbox.html"><i class="fa-regular fa-comments"></i><span>Messages</span></a>
+      <a class="nav-item" href="/pages/events/event.html"><i class="fa-regular fa-calendar"></i><span>Events</span></a>
+      <a class="nav-item" href="/pages/marketplace/marketplace.html"><i class="fa-solid fa-store"></i><span>Marketplace</span></a>
+      <a class="nav-item active" href="/pages/sponsorship/sponsor.html"><i class="fa-solid fa-handshake-angle"></i><span>Sponsorship</span></a>
+      <a class="nav-item" href="/pages/community/forums.html"><i class="fa-regular fa-hand-peace"></i><span>Community</span></a>
+      <a class="nav-item" id="sidebarProfileLink" href="/pages/profiles/public-profile.html"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+
+      <div class="nav-spacer"></div>
+      <div class="sidebar-help">
+        <h3>Built for real sponsorships</h3>
+        <p>Every accepted offer or sponsorship invitation should move into a dedicated private conversation so negotiations and documents stay separate from normal messages.</p>
+        <button class="btn btn-strong" type="button" id="openSecureChatBtn"><i class="fa-solid fa-lock"></i><span>Open secure sponsor chat</span></button>
+      </div>
+    </aside>
+
+    <main class="page-main">
+      <section class="hero">
+        <div>
+          <span class="eyebrow"><i class="fa-solid fa-handshake-angle"></i><span>Sponsorship hub</span></span>
+          <h1 id="heroTitle">Find the right sponsor fit for your next season, event or campaign.</h1>
+          <p id="heroCopy">Athletes, coaches, clubs and supportive professionals can all use this space to publish sponsorship needs, present sponsorship offers and move serious conversations into a dedicated secure chat.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" type="button" id="jumpToComposer"><i class="fa-solid fa-plus"></i><span>Create sponsor post</span></button>
+            <button class="btn btn-secondary" type="button" id="jumpToBoard"><i class="fa-solid fa-compass"></i><span>Browse sponsor board</span></button>
+          </div>
+        </div>
+
+        <div class="hero-card">
+          <h2>How sponsorship works on Spopeer</h2>
+          <p>This page is open to every user type. Discovery happens here, but trust-building and negotiation should continue in a protected sponsor conversation after an offer is accepted or an invitation is sent.</p>
+          <div class="mini-list">
+            <div class="mini-item"><i class="fa-solid fa-magnifying-glass"></i><span>Athletes, coaches and clubs can search active sponsor offers by sport, region and support type.</span></div>
+            <div class="mini-item"><i class="fa-solid fa-bullhorn"></i><span>Anyone seeking support can publish what they need for games, tournaments, travel, kits, facilities or long-term development.</span></div>
+            <div class="mini-item"><i class="fa-solid fa-briefcase"></i><span>Supportive professionals and brands can publish sponsor offers and review sponsorship requests from verified users.</span></div>
+            <div class="mini-item"><i class="fa-solid fa-shield-halved"></i><span>Accepted matches should open a separate sponsor chat for contracts, deliverables, proof of payment and updates.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Discover sponsor opportunities</h2>
+              <p class="panel-subtitle">Search live sponsor offers by sport, region and support type without mixing them with your normal feed.</p>
+            </div>
+            <span class="status-pill blue"><i class="fa-solid fa-compass"></i><span>Browse</span></span>
+          </div>
+          <p class="muted-note">Use the filter panel to narrow sponsorships for tournaments, league play, training camps, kits, transport, media partnerships or nutrition support.</p>
+        </article>
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Publish sponsor needs</h2>
+              <p class="panel-subtitle">Clubs, coaches and athletes can announce why they need support and what kind of partnership they are looking for.</p>
+            </div>
+            <span class="status-pill amber"><i class="fa-solid fa-bullhorn"></i><span>Request</span></span>
+          </div>
+          <p class="muted-note">Create clear sponsor requests for game travel, tournament fees, uniforms, staff costs, accommodation, equipment or season packages.</p>
+        </article>
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Move serious talks into secure chat</h2>
+              <p class="panel-subtitle">When someone accepts an offer or sends a sponsorship invitation, create a dedicated private thread just for that sponsorship.</p>
+            </div>
+            <span class="status-pill green"><i class="fa-solid fa-lock"></i><span>Secure</span></span>
+          </div>
+          <p class="muted-note">This keeps sponsor negotiations, deliverables, files and follow-ups separate from everyday messages.</p>
+        </article>
+      </section>
+
+      <section class="discovery-grid">
+        <div class="panel" id="boardSection">
+          <div class="panel-header">
+            <div>
+              <h2>Sponsor board</h2>
+              <p class="panel-subtitle">Filter offers, sponsorship requests and secure sponsor conversations.</p>
+            </div>
+            <span class="status-pill" id="resultPill"><i class="fa-solid fa-filter-circle-dollar"></i><span>Live board</span></span>
+          </div>
+
+          <div class="filters-grid">
+            <div class="field">
+              <label for="filterTerm">Search</label>
+              <input id="filterTerm" type="search" placeholder="Basketball, apparel, travel, academy..." />
+            </div>
+            <div class="field">
+              <label for="filterRole">Audience</label>
+              <select id="filterRole">
+                <option value="all">All audiences</option>
+                <option value="athlete">Athletes</option>
+                <option value="coach">Coaches</option>
+                <option value="club">Clubs</option>
+                <option value="supportive_professional">Supportive professionals</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filterSport">Sport</label>
+              <input id="filterSport" type="text" placeholder="Any sport" />
+            </div>
+            <div class="field">
+              <label for="filterType">Sponsor type</label>
+              <select id="filterType">
+                <option value="all">All sponsor types</option>
+                <option value="financial">Financial support</option>
+                <option value="travel">Travel support</option>
+                <option value="equipment">Equipment</option>
+                <option value="apparel">Apparel</option>
+                <option value="nutrition">Nutrition</option>
+                <option value="facility">Facility support</option>
+                <option value="media">Media / exposure</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="board-tabs" role="tablist" aria-label="Sponsor board views">
+            <button class="board-tab active" type="button" data-view="offers">Sponsor offers</button>
+            <button class="board-tab" type="button" data-view="requests">Sponsor requests</button>
+            <button class="board-tab" type="button" data-view="secure">Secure chats</button>
+          </div>
+
+          <div class="runtime-status" id="runtimeStatus" hidden></div>
+          <div class="board-list" id="boardList"></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <section class="panel" id="composerSection">
+            <div class="panel-header">
+              <div>
+                <h2>Create sponsor post</h2>
+                <p class="panel-subtitle" id="composerIntro">Publish a sponsorship need or an offer that matches your role.</p>
+              </div>
+            </div>
+
+            <div class="composer-tabs" role="tablist" aria-label="Composer type">
+              <button class="composer-tab active" type="button" data-mode="request">I need a sponsor</button>
+              <button class="composer-tab" type="button" data-mode="offer">I offer sponsorship</button>
+            </div>
+
+            <form id="sponsorForm">
+              <div class="form-grid">
+                <div class="field">
+                  <label for="postTitle">Title</label>
+                  <input id="postTitle" name="title" type="text" placeholder="Example: Looking for travel sponsor for national tournament" required maxlength="200" />
+                </div>
+                <div class="field">
+                  <label for="postSport">Sport</label>
+                  <input id="postSport" name="sport" type="text" placeholder="Football, tennis, volleyball..." required maxlength="100" />
+                </div>
+                <div class="field">
+                  <label for="postSponsorType">Sponsor type</label>
+                  <select id="postSponsorType" name="sponsorType" required>
+                    <option value="financial">Financial support</option>
+                    <option value="travel">Travel support</option>
+                    <option value="equipment">Equipment</option>
+                    <option value="apparel">Apparel</option>
+                    <option value="nutrition">Nutrition</option>
+                    <option value="facility">Facility support</option>
+                    <option value="media">Media / exposure</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="postAudience">Target audience</label>
+                  <select id="postAudience" name="targetAudience" required>
+                    <option value="athlete">Athletes</option>
+                    <option value="coach">Coaches</option>
+                    <option value="club">Clubs</option>
+                    <option value="supportive_professional">Supportive professionals</option>
+                    <option value="all">All user types</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="postLocation">Location</label>
+                  <input id="postLocation" name="location" type="text" placeholder="City, country or remote" maxlength="100" />
+                </div>
+                <div class="field">
+                  <label for="postTimeline">Timeline</label>
+                  <input id="postTimeline" name="timeline" type="text" placeholder="July 2026, season 2026/27, ongoing..." maxlength="100" />
+                </div>
+                <div class="field form-full">
+                  <label for="postSummary">Details</label>
+                  <textarea id="postSummary" name="summary" placeholder="Describe what you need or what you offer, the expected visibility or deliverables, and how people should contact you." maxlength="2000"></textarea>
+                </div>
+              </div>
+              <div class="board-actions" style="margin-top:16px;">
+                <button class="btn btn-strong" type="submit"><i class="fa-solid fa-paper-plane"></i><span>Publish sponsor post</span></button>
+                <button class="btn btn-soft" type="button" id="resetSponsorForm"><i class="fa-solid fa-rotate-left"></i><span>Reset form</span></button>
+              </div>
+            </form>
+          </section>
+
+          <section class="secure-card">
+            <h3>Sponsor chat workflow</h3>
+            <ul>
+              <li>When a sponsor accepts a request, start a dedicated private sponsor thread.</li>
+              <li>When an athlete, coach or club invites a sponsor, move that invitation into a protected chat after the first reply.</li>
+              <li>Keep sponsor deliverables, files, invoices, match tickets and timelines in that separate thread.</li>
+            </ul>
+            <button class="btn btn-soft" type="button" id="createSecureDraft"><i class="fa-solid fa-comments"></i><span>Create secure sponsor conversation draft</span></button>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      /* ── API helpers ── */
+      var API_BASE = '/api/sponsorships';
+      var token = localStorage.getItem('spopeer_token') || localStorage.getItem('token') || '';
+
+      function apiHeaders() {
+        return {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        };
+      }
+
+      async function apiGet(path) {
+        var res = await fetch(API_BASE + (path || ''), { headers: apiHeaders() });
+        if (!res.ok) throw new Error('API error ' + res.status);
+        return res.json();
+      }
+
+      async function apiPost(path, body) {
+        var res = await fetch(API_BASE + (path || ''), {
+          method: 'POST',
+          headers: apiHeaders(),
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          var err = await res.json().catch(function () { return {}; });
+          throw new Error(err.error || 'API error ' + res.status);
+        }
+        return res.json();
+      }
+
+      async function apiDelete(path) {
+        var res = await fetch(API_BASE + (path || ''), {
+          method: 'DELETE',
+          headers: apiHeaders()
+        });
+        if (!res.ok) throw new Error('API error ' + res.status);
+        return res.json();
+      }
+
+      /* ── State ── */
+      var user = getUser();
+      var activeView = 'offers';
+      var activeMode = 'request';
+
+      function getUser() {
+        try {
+          return JSON.parse(localStorage.getItem('spopeer_user') || '{}') || {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function normalizeRole(value) {
+        var raw = String(value || user.role || user.userType || user.accountType || 'athlete').toLowerCase();
+        if (raw.indexOf('support') !== -1 || raw.indexOf('professional') !== -1 || raw.indexOf('brand') !== -1 || raw.indexOf('company') !== -1) return 'supportive_professional';
+        if (raw.indexOf('club') !== -1) return 'club';
+        if (raw.indexOf('coach') !== -1) return 'coach';
+        return 'athlete';
+      }
+
+      function roleLabel(role) {
+        return {
+          athlete: 'Athlete',
+          coach: 'Coach',
+          club: 'Club',
+          supportive_professional: 'Supportive professional'
+        }[normalizeRole(role)] || 'Athlete';
+      }
+
+      function userName() {
+        var full = user.displayName || user.name || [user.firstName, user.lastName].filter(Boolean).join(' ');
+        return full || (user.email ? user.email.split('@')[0] : 'Spopeer user');
+      }
+
+      function initials() {
+        var full = userName().trim().split(/\s+/).filter(Boolean);
+        return ((full[0] || 'S')[0] + (full[1] || 'P')[0]).toUpperCase();
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      /* ── Role-specific copy ── */
+      function roleSpecificCopy() {
+        var role = normalizeRole();
+        var title = document.getElementById('heroTitle');
+        var copy = document.getElementById('heroCopy');
+        var intro = document.getElementById('composerIntro');
+        var requestTab = document.querySelector('.composer-tab[data-mode="request"]');
+        var offerTab = document.querySelector('.composer-tab[data-mode="offer"]');
+
+        var content = {
+          athlete: {
+            title: 'Discover sponsor support for your next game, tournament or season.',
+            copy: 'Athletes can search sponsor offers by sport, pitch sponsorship needs for travel, kits or tournament entry, and move real sponsor conversations into a secure private thread.',
+            intro: 'Publish the support you need for tournaments, travel, equipment, kits, nutrition or season goals.',
+            requestLabel: 'I need a sponsor',
+            offerLabel: 'I offer sponsorship'
+          },
+          coach: {
+            title: 'Find sponsorship support for your coaching work, camps and team development.',
+            copy: 'Coaches can search sponsor offers, announce sponsorship needs for sessions, games, camps and programs, and move accepted sponsor matches into a secure conversation.',
+            intro: 'Post sponsor needs for sessions, travel, camps, staffing, video analysis or growth initiatives.',
+            requestLabel: 'I need a sponsor',
+            offerLabel: 'I offer sponsorship'
+          },
+          club: {
+            title: 'Build sponsor partnerships for your teams, tournaments and club operations.',
+            copy: 'Clubs can search sponsorship opportunities, publish sponsor needs for matches, tournaments, facilities and player support, and keep each sponsor relationship inside a dedicated chat.',
+            intro: 'Describe the club activity, tournament or season package you want sponsors to support.',
+            requestLabel: 'We need a sponsor',
+            offerLabel: 'We offer sponsorship'
+          },
+          supportive_professional: {
+            title: 'Publish sponsor offers and discover who is actively looking for sponsorship.',
+            copy: 'Brands, agencies, apparel companies and other supportive professionals can publish sponsor offers, filter live sponsorship requests, and move accepted opportunities into a secure sponsor chat.',
+            intro: 'Describe the sponsor package you offer and who it is best for.',
+            requestLabel: 'We need a sponsor',
+            offerLabel: 'We offer sponsorship'
+          }
+        }[role];
+
+        if (title) title.textContent = content.title;
+        if (copy) copy.textContent = content.copy;
+        if (intro) intro.textContent = content.intro;
+        if (requestTab) requestTab.textContent = content.requestLabel;
+        if (offerTab) offerTab.textContent = content.offerLabel;
+        document.getElementById('postAudience').value = role === 'supportive_professional' ? 'all' : role;
+      }
+
+      /* ── Create post (API-backed) ── */
+      async function createPost(event) {
+        event.preventDefault();
+        var form = document.getElementById('sponsorForm');
+        var payload = {
+          mode: activeMode,
+          title: form.title.value.trim(),
+          sport: form.sport.value.trim(),
+          sponsorType: form.sponsorType.value,
+          targetAudience: form.targetAudience.value,
+          location: form.location.value.trim(),
+          timeline: form.timeline.value.trim(),
+          summary: form.summary.value.trim()
+        };
+
+        if (!payload.title || !payload.sport) {
+          showStatus('Add at least a title and sport before publishing.');
+          return;
+        }
+
+        try {
+          await apiPost('', payload);
+          form.reset();
+          document.getElementById('postAudience').value = normalizeRole() === 'supportive_professional' ? 'all' : normalizeRole();
+          showStatus((activeMode === 'offer' ? 'Sponsor offer' : 'Sponsor request') + ' published successfully.');
+          activeView = activeMode === 'offer' ? 'offers' : 'requests';
+          syncTabs();
+          renderBoard();
+        } catch (err) {
+          showStatus('Error: ' + err.message);
+        }
+      }
+
+      function showStatus(message) {
+        var node = document.getElementById('runtimeStatus');
+        if (!node) return;
+        node.textContent = message;
+        node.hidden = false;
+        node.style.display = 'block';
+        clearTimeout(showStatus.timer);
+        showStatus.timer = setTimeout(function () {
+          node.hidden = true;
+          node.style.display = 'none';
+        }, 4000);
+      }
+
+      function syncTabs() {
+        document.querySelectorAll('.board-tab').forEach(function (button) {
+          button.classList.toggle('active', button.dataset.view === activeView);
+        });
+        document.querySelectorAll('.composer-tab').forEach(function (button) {
+          button.classList.toggle('active', button.dataset.mode === activeMode);
+        });
+      }
+
+      function formatDate(value) {
+        if (!value) return 'No date';
+        try {
+          return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        } catch (e) {
+          return value;
+        }
+      }
+
+      /* ── Secure thread ── */
+      async function createSecureThread(sourceItem) {
+        try {
+          var body = {
+            mode: 'secure',
+            title: sourceItem ? sourceItem.title : 'New sponsor conversation',
+            sport: sourceItem ? sourceItem.sport : '',
+            sponsorType: sourceItem ? sourceItem.sponsorType : '',
+            summary: 'Secure sponsor chat for: ' + (sourceItem ? sourceItem.title : 'General sponsorship discussion'),
+            targetAudience: 'all'
+          };
+          await apiPost('', body);
+          activeView = 'secure';
+          syncTabs();
+          renderBoard();
+          showStatus('Secure sponsor chat draft created.');
+        } catch (err) {
+          showStatus('Error creating thread: ' + err.message);
+        }
+      }
+
+      /* ── Board rendering (API-backed) ── */
+      function buildQueryString() {
+        var params = new URLSearchParams();
+        var term = document.getElementById('filterTerm').value.trim();
+        var role = document.getElementById('filterRole').value;
+        var sport = document.getElementById('filterSport').value.trim();
+        var sponsorType = document.getElementById('filterType').value;
+
+        params.set('mode', activeView === 'offers' ? 'offer' : activeView === 'requests' ? 'request' : 'secure');
+        if (term) params.set('search', term);
+        if (role !== 'all') params.set('targetAudience', role);
+        if (sport) params.set('sport', sport);
+        if (sponsorType !== 'all') params.set('sponsorType', sponsorType);
+        return '?' + params.toString();
+      }
+
+      async function renderBoard() {
+        var resultPill = document.getElementById('resultPill');
+        if (resultPill) {
+          resultPill.innerHTML = activeView === 'offers'
+            ? '<i class="fa-solid fa-hand-holding-heart"></i><span>Sponsor offers</span>'
+            : activeView === 'requests'
+              ? '<i class="fa-solid fa-bullhorn"></i><span>Sponsor requests</span>'
+              : '<i class="fa-solid fa-lock"></i><span>Secure chats</span>';
+        }
+
+        try {
+          var data = await apiGet(buildQueryString());
+          var items = data.sponsorships || data || [];
+          renderCards(items, activeView);
+        } catch (err) {
+          renderEmpty(activeView);
+        }
+      }
+
+      function renderEmpty(view) {
+        var list = document.getElementById('boardList');
+        var emptyCopy = {
+          offers: {
+            title: 'No sponsor offers published yet',
+            copy: 'Supportive professionals, brands and clubs can start posting sponsorship packages here. You can publish the first offer from the composer on the right.'
+          },
+          requests: {
+            title: 'No sponsorship requests published yet',
+            copy: 'Athletes, coaches and clubs can publish what they need for games, camps, tournaments and growth plans. Use the composer to post the first request.'
+          },
+          secure: {
+            title: 'No secure sponsor chats yet',
+            copy: 'As soon as an offer is accepted or an invitation gets a serious response, create a dedicated sponsor thread so negotiations stay private and separate from everyday messaging.'
+          }
+        }[view];
+
+        list.innerHTML = '<div class="empty-state"><h3>' + escapeHtml(emptyCopy.title) + '</h3><p>' + escapeHtml(emptyCopy.copy) + '</p></div>';
+      }
+
+      function renderCards(items, view) {
+        var list = document.getElementById('boardList');
+        if (!items.length) {
+          renderEmpty(view);
+          return;
+        }
+
+        list.innerHTML = items.map(function (item) {
+          var ownerName = item.ownerName || (item.author ? (item.author.name || item.author.firstName || 'User') : 'User');
+          var ownerRole = item.ownerRole || (item.author ? item.author.userType : 'athlete');
+
+          if (view === 'secure') {
+            return '<article class="board-card">'
+              + '<div class="board-top"><div class="board-title-wrap">'
+              + '<h3 class="board-title">' + escapeHtml(item.title) + '</h3>'
+              + '<p class="board-meta">' + escapeHtml(ownerName) + ' &middot; ' + escapeHtml(roleLabel(ownerRole)) + ' &middot; Created ' + escapeHtml(formatDate(item.createdAt)) + '</p>'
+              + '</div><span class="status-pill green"><i class="fa-solid fa-lock"></i><span>' + escapeHtml(item.status || 'active') + '</span></span></div>'
+              + '<div class="board-tags">'
+              + (item.sport ? '<span class="tag"><i class="fa-solid fa-medal"></i><span>' + escapeHtml(item.sport) + '</span></span>' : '')
+              + (item.sponsorType ? '<span class="tag"><i class="fa-solid fa-tag"></i><span>' + escapeHtml(item.sponsorType) + '</span></span>' : '')
+              + '</div>'
+              + '<p class="board-copy">Use this dedicated sponsor conversation for agreement terms, files, sponsor deliverables, event updates and post-campaign review.</p>'
+              + '<div class="board-actions"><button class="btn btn-strong" type="button" data-open-inbox="1"><i class="fa-regular fa-comments"></i><span>Open secure chat</span></button></div>'
+              + '</article>';
+          }
+
+          var topPill = view === 'offers'
+            ? '<span class="status-pill blue"><i class="fa-solid fa-hand-holding-heart"></i><span>Offer</span></span>'
+            : '<span class="status-pill amber"><i class="fa-solid fa-bullhorn"></i><span>Request</span></span>';
+
+          var ctaText = view === 'offers' ? 'Accept offer in secure chat' : 'Invite to secure chat';
+
+          return '<article class="board-card">'
+            + '<div class="board-top"><div class="board-title-wrap">'
+            + '<h3 class="board-title">' + escapeHtml(item.title) + '</h3>'
+            + '<p class="board-meta">' + escapeHtml(ownerName) + ' &middot; ' + escapeHtml(roleLabel(ownerRole)) + ' &middot; Published ' + escapeHtml(formatDate(item.createdAt)) + '</p>'
+            + '</div>' + topPill + '</div>'
+            + '<p class="board-copy">' + escapeHtml(item.summary || 'No additional details were added yet.') + '</p>'
+            + '<div class="board-tags">'
+            + '<span class="tag"><i class="fa-solid fa-medal"></i><span>' + escapeHtml(item.sport || 'Any sport') + '</span></span>'
+            + '<span class="tag"><i class="fa-solid fa-tag"></i><span>' + escapeHtml(item.sponsorType || 'General sponsorship') + '</span></span>'
+            + (item.location ? '<span class="tag"><i class="fa-solid fa-location-dot"></i><span>' + escapeHtml(item.location) + '</span></span>' : '')
+            + (item.timeline ? '<span class="tag"><i class="fa-regular fa-clock"></i><span>' + escapeHtml(item.timeline) + '</span></span>' : '')
+            + '<span class="tag"><i class="fa-regular fa-user"></i><span>For ' + escapeHtml(item.targetAudience === 'all' ? 'all users' : roleLabel(item.targetAudience)) + '</span></span>'
+            + '</div>'
+            + '<div class="board-actions">'
+            + '<button class="btn btn-soft" type="button" data-contact-id="' + escapeHtml(String(item.userId || '')) + '"><i class="fa-regular fa-envelope"></i><span>Contact profile</span></button>'
+            + '<button class="btn btn-strong" type="button" data-create-secure="' + escapeHtml(String(item.id || '')) + '"><i class="fa-solid fa-lock"></i><span>' + escapeHtml(ctaText) + '</span></button>'
+            + '</div>'
+            + '</article>';
+        }).join('');
+      }
+
+      /* ── Event binding ── */
+      function bindEvents() {
+        document.getElementById('jumpToComposer').addEventListener('click', function () {
+          document.getElementById('composerSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        document.getElementById('jumpToBoard').addEventListener('click', function () {
+          document.getElementById('boardSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        document.getElementById('openSecureChatBtn').addEventListener('click', function () {
+          createSecureThread();
+        });
+        document.getElementById('createSecureDraft').addEventListener('click', function () {
+          createSecureThread();
+        });
+        document.getElementById('resetSponsorForm').addEventListener('click', function () {
+          document.getElementById('sponsorForm').reset();
+          document.getElementById('postAudience').value = normalizeRole() === 'supportive_professional' ? 'all' : normalizeRole();
+        });
+        document.getElementById('sponsorForm').addEventListener('submit', createPost);
+
+        document.querySelectorAll('.board-tab').forEach(function (button) {
+          button.addEventListener('click', function () {
+            activeView = button.dataset.view;
+            syncTabs();
+            renderBoard();
+          });
+        });
+        document.querySelectorAll('.composer-tab').forEach(function (button) {
+          button.addEventListener('click', function () {
+            activeMode = button.dataset.mode;
+            syncTabs();
+          });
+        });
+        ['filterTerm', 'filterRole', 'filterSport', 'filterType', 'hubSearch'].forEach(function (id) {
+          var node = document.getElementById(id);
+          if (!node) return;
+          var debounceTimer;
+          node.addEventListener('input', function () {
+            if (id === 'hubSearch') {
+              document.getElementById('filterTerm').value = node.value;
+            }
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(renderBoard, 300);
+          });
+          node.addEventListener('change', renderBoard);
+        });
+
+        document.getElementById('boardList').addEventListener('click', function (event) {
+          var secureButton = event.target.closest('[data-create-secure]');
+          if (secureButton) {
+            var id = secureButton.getAttribute('data-create-secure');
+            apiGet('/' + encodeURIComponent(id)).then(function (data) {
+              var item = data.sponsorship || data;
+              createSecureThread(item);
+            }).catch(function () {
+              createSecureThread({ title: 'Sponsorship #' + id });
+            });
+            return;
+          }
+
+          var inboxButton = event.target.closest('[data-open-inbox]');
+          if (inboxButton) {
+            window.location.href = '/pages/messaging/inbox.html';
+            return;
+          }
+
+          var contactButton = event.target.closest('[data-contact-id]');
+          if (contactButton) {
+            var contactId = contactButton.getAttribute('data-contact-id');
+            if (contactId) {
+              window.location.href = '/pages/profiles/public-profile.html?userId=' + encodeURIComponent(contactId);
+            } else {
+              showStatus('Use the secure sponsor chat action once the sponsorship interest is confirmed.');
+            }
+          }
+        });
+      }
+
+      /* ── Profile link in sidebar ── */
+      function wireProfileLink() {
+        var link = document.getElementById('sidebarProfileLink');
+        if (link && window.SpopeerProfileIdentity) {
+          link.href = window.SpopeerProfileIdentity.buildProfileUrl('/');
+        }
+      }
+
+      /* ── Init ── */
+      if (typeof ProfileSyncService !== 'undefined') ProfileSyncService.init();
+      roleSpecificCopy();
+      bindEvents();
+      syncTabs();
+      renderBoard();
+      wireProfileLink();
+
+      if (window.sharedUi && typeof window.sharedUi.setupSocialFeedRuntime === 'function') {
+        window.sharedUi.setupSocialFeedRuntime({ basePath: '../../', statusId: 'runtimeStatus' });
+      }
+    })();
+  </script>
+  <script src="/js/navigation.js"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spopeer - Admin Dashboard</title>
+<script src="../../js/api.js"></script>
+<script src="../../js/auth.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080c14;
+  --surface:#0d1320;
+  --surface-2:#111827;
+  --border:#1e2d45;
+  --text:#e8edf5;
+  --text-2:#8fa3c0;
+  --accent:#2563ff;
+  --green:#10b981;
+  --font-head:'Syne',sans-serif;
+  --font-body:'Plus Jakarta Sans',sans-serif;
+}
+body{font-family:var(--font-body);background:radial-gradient(circle at 20% 0%,#13203b 0,#080c14 45%);color:var(--text);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:22px 16px 38px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.h1{font-family:var(--font-head);font-size:26px;font-weight:800}
+.sub{color:var(--text-2);font-size:13px;margin-top:4px}
+.btn{border:1px solid var(--border);background:var(--surface-2);color:var(--text);padding:9px 12px;border-radius:10px;text-decoration:none;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0}
+.card{background:rgba(13,19,32,.9);border:1px solid var(--border);border-radius:14px;padding:14px}
+.k{font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.v{font-family:var(--font-head);font-size:24px;font-weight:700}
+.panels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.panel h2{font-size:14px;margin-bottom:10px}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.row strong{font-size:12px}
+.row span{font-size:12px;color:var(--text-2);text-align:right}
+.empty{font-size:12px;color:var(--text-2);padding:8px 0}
+.status{margin-top:14px;font-size:12px;color:var(--green)}
+@media (max-width:980px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .panels{grid-template-columns:1fr}
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div>
+        <h1 class="h1">Admin Dashboard</h1>
+        <p class="sub">Real platform analytics from persisted backend data.</p>
+      </div>
+      <a class="btn" href="/feed.html">Back to Feed</a>
+    </header>
+
+    <section class="grid">
+      <article class="card"><div class="k">Total Users</div><div class="v" id="totalUsers">0</div></article>
+      <article class="card"><div class="k">Total Posts</div><div class="v" id="totalPosts">0</div></article>
+      <article class="card"><div class="k">Total Follows</div><div class="v" id="totalFollows">0</div></article>
+      <article class="card"><div class="k">Total Views</div><div class="v" id="totalViews">0</div></article>
+      <article class="card"><div class="k">Total Bookmarks</div><div class="v" id="totalBookmarks">0</div></article>
+    </section>
+
+    <section class="panels">
+      <article class="card panel">
+        <h2>Users By Role</h2>
+        <div class="list" id="usersByRoleList"><p class="empty">No platform activity yet</p></div>
+      </article>
+
+      <article class="card panel">
+        <h2>Latest Users</h2>
+        <div class="list" id="latestUsersList"><p class="empty">No users yet</p></div>
+      </article>
+
+      <article class="card panel">
+        <h2>Latest Posts</h2>
+        <div class="list" id="latestPostsList"><p class="empty">No posts yet</p></div>
+      </article>
+    </section>
+
+    <p id="status" class="status"></p>
+  </main>
+
+  <script>
+    (async function () {
+      if (!window.Auth || !window.Auth.isLoggedIn || !window.Auth.isLoggedIn()) {
+        window.location.href = '/pages/auth/login.html';
+        return;
+      }
+
+      try {
+        const [dashboardRes, usersRes, postsRes] = await Promise.all([
+          window.SpopeerAPI.adminDashboard(),
+          window.SpopeerAPI.request('/api/admin/users?limit=5&page=1'),
+          window.SpopeerAPI.request('/api/admin/posts?limit=5&page=1')
+        ]);
+
+        const overview = dashboardRes.payload || {};
+        document.getElementById('totalUsers').textContent = String(overview.totalUsers || 0);
+        document.getElementById('totalPosts').textContent = String(overview.totalPosts || 0);
+        document.getElementById('totalFollows').textContent = String(overview.totalConnections || 0);
+        document.getElementById('totalViews').textContent = String(overview.totalMessages || 0);
+        document.getElementById('totalBookmarks').textContent = String((overview.usersBySubscription || []).reduce(function (acc, item) {
+          return acc + Number(item.count || 0);
+        }, 0));
+
+        const roleList = document.getElementById('usersByRoleList');
+        const roleItems = overview.usersByRole || [];
+        roleList.innerHTML = roleItems.length
+          ? roleItems.map(function (item) {
+              return '<div class="row"><strong>' + (item._id || 'unknown') + '</strong><span>' + String(item.count || 0) + '</span></div>';
+            }).join('')
+          : '<p class="empty">No platform activity yet</p>';
+
+        const latestUsersList = document.getElementById('latestUsersList');
+        const latestUsers = usersRes.payload || [];
+        latestUsersList.innerHTML = latestUsers.length
+          ? latestUsers.map(function (user) {
+              const name = ((user.firstName || '') + ' ' + (user.lastName || '')).trim() || user.email || 'Unknown user';
+              const role = user.role || 'unknown';
+              return '<div class="row"><strong>' + name + '</strong><span>' + role + '</span></div>';
+            }).join('')
+          : '<p class="empty">No users yet</p>';
+
+        const latestPostsList = document.getElementById('latestPostsList');
+        const latestPosts = postsRes.payload || [];
+        latestPostsList.innerHTML = latestPosts.length
+          ? latestPosts.map(function (post) {
+              const author = post.author && (post.author.firstName || post.author.lastName)
+                ? ((post.author.firstName || '') + ' ' + (post.author.lastName || '')).trim()
+                : 'Unknown';
+              const text = post.content ? post.content.slice(0, 60) : '';
+              return '<div class="row"><strong>' + author + '</strong><span>' + text + '</span></div>';
+            }).join('')
+          : '<p class="empty">No posts yet</p>';
+
+        document.getElementById('status').textContent = 'Real analytics loaded from backend.';
+      } catch (err) {
+        window.location.href = '/feed.html';
+      }
+    })();
+  </script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>

@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — Spopeer</title>
+  <script>
+    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var _li = !!(localStorage.getItem('spopeer_token') || localStorage.getItem('token'));
+    if (!_ud || !_li) window.location.href = '../../pages/auth/login.html';
+  </script>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/auth.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <link rel="stylesheet" href="/css/shared-nav.css" />
+  <style>
+    /* Settings-specific overrides */
+    .profile-menu-item.logout { color: #b91c1c; font-weight: 700; margin-top: 8px; }
+    .profile-menu-item.logout:hover { background: #fee2e2; color: #991b1b; }
+
+    /* ── LAYOUT ── */
+    .page-layout{max-width:1280px;margin:0 auto;padding:28px 24px 60px;display:grid;grid-template-columns:240px 1fr;gap:28px;align-items:start}
+
+    /* ── SETTINGS SIDEBAR ── */
+    .settings-sidebar{position:sticky;top:calc(var(--nav-h) + 20px);display:flex;flex-direction:column;gap:4px}
+    .sidebar-header{padding:0 12px;margin-bottom:16px}
+    .sidebar-title{font-family:var(--fD);font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+    .sidebar-subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+    .sidebar-section-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-2);padding:0 12px;margin-bottom:4px;margin-top:16px}
+    .sidebar-nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--rS);font-size:13px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:.18s;text-decoration:none;border:1.5px solid transparent}
+    .sidebar-nav-item:hover{background:var(--surface);color:var(--ink)}
+    .sidebar-nav-item.active{background:var(--accent-lt);color:var(--accent);font-weight:700;border-color:rgba(0,31,63,.12)}
+    .sidebar-nav-item i{width:18px;text-align:center;font-size:13px;flex-shrink:0}
+    .sidebar-nav-item.danger{color:var(--red)}
+    .sidebar-nav-item.danger:hover{background:var(--red-lt);color:var(--red)}
+
+    /* ── MAIN CONTENT ── */
+    .settings-main{display:flex;flex-direction:column;gap:20px}
+    .settings-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rL);overflow:hidden;transition:box-shadow .2s;scroll-margin-top:calc(var(--nav-h) + 24px)}
+    .settings-card:hover{box-shadow:0 4px 24px rgba(0,0,0,.05)}
+    .card-header{padding:20px 24px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
+    .card-icon{width:36px;height:36px;border-radius:var(--rS);background:var(--accent-lt);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .card-icon i{color:var(--accent);font-size:14px}
+    .card-icon.blue{background:var(--blue-lt)}
+    .card-icon.blue i{color:var(--blue)}
+    .card-icon.green{background:var(--green-lt)}
+    .card-icon.green i{color:var(--green)}
+    .card-icon.red{background:var(--red-lt)}
+    .card-icon.red i{color:var(--red)}
+    .card-header-text{flex:1;min-width:0}
+    .card-title{font-size:15px;font-weight:700;color:var(--ink)}
+    .card-desc{font-size:12px;color:var(--muted);margin-top:2px}
+    .card-body{padding:24px}
+    .setting-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border);gap:16px}
+    .setting-row:last-child{border-bottom:none;padding-bottom:0}
+    .setting-row:first-child{padding-top:0}
+    .setting-info{flex:1;min-width:0}
+    .setting-label{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px}
+    .setting-desc{font-size:12px;color:var(--muted);line-height:1.5}
+    .toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--surface-2);border:1.5px solid var(--border);border-radius:24px;transition:.3s}
+    .toggle-slider:before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+    input:checked+.toggle-slider{background:var(--accent);border-color:var(--accent)}
+    input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+    /* form inputs */
+    .form-group{margin-bottom:20px}
+    .form-label{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;display:block}
+    .form-input{width:100%;padding:10px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rS);font-size:13px;font-family:var(--fB);color:var(--ink);transition:.2s}
+    .form-input:focus{outline:none;background:var(--white);border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,31,63,.08)}
+    .form-input::placeholder{color:var(--muted-2)}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .form-hint{font-size:11px;color:var(--muted);margin-top:4px}
+    select.form-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237a7a7a' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 5.5l6.5 6.5 6.5-6.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+
+    /* buttons */
+    .btn-row{display:flex;gap:10px;margin-top:8px}
+    .btn-primary{padding:10px 22px;background:var(--accent);color:#fff;border:none;border-radius:var(--pill);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fB);transition:.2s;display:flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(0,31,63,.15)}
+    .btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px)}
+    .btn-outline{padding:10px 22px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:var(--pill);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--fB);transition:.2s;display:flex;align-items:center;gap:7px}
+    .btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+    .btn-danger{padding:10px 22px;background:var(--red);color:#fff;border:none;border-radius:var(--pill);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fB);transition:.2s;display:flex;align-items:center;gap:7px}
+    .btn-danger:hover{background:#b91c1c;transform:translateY(-1px)}
+
+    /* status badge */
+    .status-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:var(--pill);text-transform:uppercase;letter-spacing:.04em}
+    .status-badge.active{background:var(--green-lt);color:var(--green)}
+    .status-badge.free{background:var(--surface-2);color:var(--muted)}
+
+    /* toast */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:#fff;padding:12px 24px;border-radius:var(--rL);font-size:13px;font-weight:600;z-index:9999;transition:transform .3s ease;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+    .toast.visible{transform:translateX(-50%) translateY(0)}
+    .toast i{font-size:14px}
+
+    /* responsive */
+    @media(max-width:768px){
+      .page-layout{grid-template-columns:1fr;padding:16px}
+      .settings-sidebar{position:static;flex-direction:row;overflow-x:auto;gap:4px;padding-bottom:8px;scrollbar-width:none}
+      .settings-sidebar::-webkit-scrollbar{display:none}
+      .sidebar-header,.sidebar-section-label{display:none}
+      .sidebar-nav-item{white-space:nowrap;flex-shrink:0}
+      .form-row{grid-template-columns:1fr}
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+
+<!-- ── TOP NAV ── -->
+<nav class="topnav">
+  <div class="nav-inner">
+    <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="navSearchInput" placeholder="Search athletes, clubs, coaches">
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon" title="Home" onclick="window.location.href='/feed.html'"><i class="fa-solid fa-house"></i></button>
+      <button class="nav-icon" title="Messages" onclick="window.location.href='../../pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
+      <button class="nav-icon" title="Notifications" onclick="window.location.href='notifications.html'">
+        <i class="fa-regular fa-bell"></i>
+        <span class="notif-badge"></span>
+      </button>
+      <div class="user-chip" id="userChip">
+        <span class="chip-avatar" id="chipAvatar">U</span>
+        <span class="chip-name" id="chipName">User</span>
+        <i class="fa-solid fa-chevron-down chip-caret"></i>
+      </div>
+      <div class="profile-menu" id="profileMenu" aria-hidden="true">
+        <div class="profile-menu-section" data-section="identity">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
+            <div class="profile-menu-title">Your Identity</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
+            <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
+            <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="account">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Account & Settings</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
+            <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
+            <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy & Safety</button>
+            <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
+            <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
+            <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="features">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Platform Features</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>
+            <button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements & Badges</button>
+            <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
+            <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
+            <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
+            <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="help">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Help & Misc</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
+            <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
+            <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
+          </div>
+        </div>
+        <div class="profile-menu-section">
+          <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
+            <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── PAGE LAYOUT ── -->
+<div class="page-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="settings-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">Settings</div>
+      <div class="sidebar-subtitle">Manage your preferences</div>
+    </div>
+    <div class="sidebar-section-label">General</div>
+    <a href="#section-notifications" class="sidebar-nav-item active" data-section="notifications">
+      <i class="fa-regular fa-bell"></i> Notifications
+    </a>
+    <a href="#section-privacy" class="sidebar-nav-item" data-section="privacy">
+      <i class="fa-regular fa-shield"></i> Privacy & Safety
+    </a>
+    <a href="#section-appearance" class="sidebar-nav-item" data-section="appearance">
+      <i class="fa-regular fa-palette"></i> Appearance
+    </a>
+    <div class="sidebar-section-label">Account</div>
+    <a href="#section-account" class="sidebar-nav-item" data-section="account">
+      <i class="fa-regular fa-circle-user"></i> Account Info
+    </a>
+    <a href="#section-password" class="sidebar-nav-item" data-section="password">
+      <i class="fa-solid fa-key"></i> Password
+    </a>
+    <a href="#section-connected" class="sidebar-nav-item" data-section="connected">
+      <i class="fa-solid fa-link"></i> Connected Accounts
+    </a>
+    <div class="sidebar-section-label">More</div>
+    <a href="#section-data" class="sidebar-nav-item" data-section="data">
+      <i class="fa-solid fa-download"></i> Your Data
+    </a>
+    <a href="#section-danger" class="sidebar-nav-item danger" data-section="danger">
+      <i class="fa-regular fa-trash-can"></i> Delete Account
+    </a>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <div class="settings-main">
+
+    <!-- NOTIFICATIONS -->
+    <div class="settings-card" id="section-notifications">
+      <div class="card-header">
+        <div class="card-icon"><i class="fa-regular fa-bell"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Notifications</div>
+          <div class="card-desc">Control how and when you receive notifications</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Email Notifications</div>
+            <div class="setting-desc">Receive email updates about new messages, connections, and activity</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="emailNotif">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Push Notifications</div>
+            <div class="setting-desc">Get real-time push notifications on your device</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="pushNotif">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Training Reminders</div>
+            <div class="setting-desc">Get notified about your scheduled training sessions</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="trainingNotif">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">New Follower Alerts</div>
+            <div class="setting-desc">Get notified when someone follows you</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="followerNotif">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Weekly Digest</div>
+            <div class="setting-desc">Receive a weekly summary of your activity and highlights</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="digestNotif">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIVACY -->
+    <div class="settings-card" id="section-privacy">
+      <div class="card-header">
+        <div class="card-icon blue"><i class="fa-regular fa-shield"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Privacy & Safety</div>
+          <div class="card-desc">Manage who can see your profile and content</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Profile Visibility</div>
+            <div class="setting-desc">Make your profile visible to all users on Spopeer</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="profileVisibility">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Show Online Status</div>
+            <div class="setting-desc">Let others see when you're active</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="onlineStatus">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Data Sharing</div>
+            <div class="setting-desc">Allow anonymized data to improve recommendations and experience</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="dataSharing">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Allow Direct Messages</div>
+            <div class="setting-desc">Let anyone send you direct messages</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="allowDMs">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPEARANCE -->
+    <div class="settings-card" id="section-appearance">
+      <div class="card-header">
+        <div class="card-icon green"><i class="fa-regular fa-palette"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Appearance</div>
+          <div class="card-desc">Customize the look and feel of your Spopeer experience</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Language</label>
+          <select class="form-input" id="language">
+            <option value="en" selected>English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="ar">العربية</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Content Feed Default</label>
+          <select class="form-input" id="feedDefault">
+            <option value="all" selected>All Sports</option>
+            <option value="my-sport">My Sport Only</option>
+            <option value="following">Following Only</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Avatar Style</label>
+            <select class="form-input" id="avatarStyle">
+              <option value="gradient">Animated Gradient</option>
+              <option value="neon">Neon Glow</option>
+              <option value="soft">Soft Glow</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Primary Avatar Color</label>
+            <input type="color" class="form-input" id="avatarColor" value="#001f3f" style="height:48px;padding:8px;">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Accent Avatar Color</label>
+            <input type="color" class="form-input" id="avatarAccent" value="#1a6bff" style="height:48px;padding:8px;">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="saveAppearance"><i class="fa-solid fa-check" style="font-size:11px"></i> Save Preferences</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNT INFO -->
+    <div class="settings-card" id="section-account">
+      <div class="card-header">
+        <div class="card-icon"><i class="fa-regular fa-circle-user"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Account Information</div>
+          <div class="card-desc">View and update your account details</div>
+        </div>
+        <span class="status-badge active" id="planBadge"><i class="fa-solid fa-circle" style="font-size:5px"></i> Active</span>
+      </div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="accountName" placeholder="Your name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="accountEmail" placeholder="your@email.com" readonly>
+            <div class="form-hint">Contact support to change your email</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-input" id="accountUsername" placeholder="@username">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Account Type</label>
+            <input type="text" class="form-input" id="accountType" readonly>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="saveAccount"><i class="fa-solid fa-check" style="font-size:11px"></i> Save Changes</button>
+          <button class="btn-outline" id="cancelAccount">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="settings-card" id="section-password">
+      <div class="card-header">
+        <div class="card-icon"><i class="fa-solid fa-key"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Change Password</div>
+          <div class="card-desc">Update your password to keep your account secure</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Current Password</label>
+          <input type="password" class="form-input" id="currentPass" placeholder="Enter current password">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <input type="password" class="form-input" id="newPass" placeholder="Enter new password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm New Password</label>
+            <input type="password" class="form-input" id="confirmPass" placeholder="Confirm new password">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="updatePassword"><i class="fa-solid fa-lock" style="font-size:11px"></i> Update Password</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONNECTED ACCOUNTS -->
+    <div class="settings-card" id="section-connected">
+      <div class="card-header">
+        <div class="card-icon blue"><i class="fa-solid fa-link"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Connected Accounts</div>
+          <div class="card-desc">Link external accounts for easier sign-in and sharing</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="setting-row">
+          <div class="setting-info" style="display:flex;align-items:center;gap:10px">
+            <i class="fa-brands fa-google" style="font-size:18px;color:#4285F4;width:20px;text-align:center"></i>
+            <div>
+              <div class="setting-label">Google</div>
+              <div class="setting-desc">Not connected</div>
+            </div>
+          </div>
+          <button class="btn-outline" style="padding:7px 16px;font-size:12px">Connect</button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info" style="display:flex;align-items:center;gap:10px">
+            <i class="fa-brands fa-apple" style="font-size:18px;color:var(--ink);width:20px;text-align:center"></i>
+            <div>
+              <div class="setting-label">Apple</div>
+              <div class="setting-desc">Not connected</div>
+            </div>
+          </div>
+          <button class="btn-outline" style="padding:7px 16px;font-size:12px">Connect</button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info" style="display:flex;align-items:center;gap:10px">
+            <i class="fa-brands fa-strava" style="font-size:18px;color:#FC4C02;width:20px;text-align:center"></i>
+            <div>
+              <div class="setting-label">Strava</div>
+              <div class="setting-desc">Sync your workouts and training data</div>
+            </div>
+          </div>
+          <button class="btn-outline" style="padding:7px 16px;font-size:12px">Connect</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- YOUR DATA -->
+    <div class="settings-card" id="section-data">
+      <div class="card-header">
+        <div class="card-icon green"><i class="fa-solid fa-download"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Your Data</div>
+          <div class="card-desc">Download a copy of your Spopeer data</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+          You can download all of your Spopeer data including your profile information, posts, connections, and activity history.
+          The export will be generated as a JSON file.
+        </p>
+        <div class="btn-row">
+          <button class="btn-primary" id="downloadData"><i class="fa-solid fa-download" style="font-size:11px"></i> Download My Data</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DELETE ACCOUNT -->
+    <div class="settings-card" id="section-danger">
+      <div class="card-header">
+        <div class="card-icon red"><i class="fa-regular fa-trash-can"></i></div>
+        <div class="card-header-text">
+          <div class="card-title" style="color:var(--red)">Delete Account</div>
+          <div class="card-desc">Permanently delete your account and all associated data</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+          This action is permanent and cannot be undone. All your posts, connections, and profile data will be permanently removed.
+        </p>
+        <div class="btn-row">
+          <button class="btn-danger" id="deleteAccount"><i class="fa-regular fa-trash-can" style="font-size:11px"></i> Delete My Account</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer" style="background:var(--white);border-top:1px solid var(--border);margin-top:60px;">
+  <div class="footer-grid" style="max-width:1280px;margin:0 auto;padding:48px 24px 0;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:40px;">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link style="font-family:var(--fD);font-size:21px;font-weight:800;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:7px;margin-bottom:10px;"><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7;max-width:230px;">Connecting the global sports community — athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+    </div>
+    <div class="foot-col"><h5 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin-bottom:14px;">Platform</h5><ul style="list-style:none;"><li><a href="/index.html#features">Features</a></li><li><a href="/index.html#how-it-works">How It Works</a></li><li><a href="/index.html#user-types">User Types</a></li></ul></div>
+    <div class="foot-col"><h5 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin-bottom:14px;">Company</h5><ul style="list-style:none;"><li><a href="/pages/legal/about.html">About Us</a></li><li><a href="/pages/company/careers.html">Careers</a></li><li><a href="/pages/company/blog.html">Blog</a></li></ul></div>
+    <div class="foot-col"><h5 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin-bottom:14px;">Support</h5><ul style="list-style:none;"><li><a href="/pages/company/help-center.html">Help Center</a></li><li><a href="/pages/contact/index.html">Contact Us</a></li></ul></div>
+    <div class="foot-col"><h5 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin-bottom:14px;">Legal</h5><ul style="list-style:none;"><li><a href="/pages/legal/privacy.html">Privacy Policy</a></li><li><a href="/pages/legal/terms.html">Terms of Use</a></li><li><a href="/pages/company/report-abuse.html">Report Abuse</a></li></ul></div>
+  </div>
+  <div class="footer-btm" style="max-width:1280px;margin:36px auto 0;padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+    <p style="font-size:12px;color:var(--muted-2);">&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links" style="display:flex;gap:18px;"><a href="/pages/legal/privacy.html">Privacy</a><a href="/pages/legal/terms.html">Terms</a><a href="/pages/contact/index.html">Contact</a></div>
+  </div>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  const ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+
+  function roleLabel(role) {
+    return {
+      athlete: 'Athlete',
+      coach: 'Coach',
+      club: 'Club',
+      supportive_professional: 'Supportive Professional',
+      admin: 'Admin'
+    }[role] || 'User';
+  }
+
+  async function persistProfile(payload, sourceLabel) {
+    const result = await window.SpopeerAPI.updateProfile(payload);
+    const savedUser = result.user || payload;
+    localStorage.setItem('spopeer_user', JSON.stringify(savedUser));
+    localStorage.setItem('user', JSON.stringify(savedUser));
+    localStorage.setItem('spopeer_loggedIn', 'true');
+    localStorage.setItem('_profileLastUpdated_', Date.now().toString());
+    window.dispatchEvent(new CustomEvent('profileUpdated', {
+      detail: {
+        profile: savedUser,
+        timestamp: Date.now(),
+        source: sourceLabel
+      }
+    }));
+    return savedUser;
+  }
+
+  /* ── Hydrate user chip ── */
+  const fullName = ud.fullName || ud.name || 'User';
+  const nameParts = fullName.split(/\s+/).filter(Boolean);
+  const firstInitial = (nameParts[0] || '')[0] || '';
+  const lastInitial = (nameParts[1] || '')[0] || '';
+  const initials = (firstInitial + lastInitial).toUpperCase() || 'U';
+
+  const chipAv = document.getElementById('chipAvatar');
+  const chipNm = document.getElementById('chipName');
+  if (chipAv) chipAv.textContent = initials;
+  if (chipNm) chipNm.textContent = fullName.split(' ')[0] || 'User';
+
+  /* ── Hydrate account info ── */
+  const nameInput = document.getElementById('accountName');
+  const emailInput = document.getElementById('accountEmail');
+  const usernameInput = document.getElementById('accountUsername');
+  const typeInput = document.getElementById('accountType');
+  if (nameInput) nameInput.value = fullName;
+  if (emailInput) emailInput.value = ud.email || ud.userEmail || '';
+  if (usernameInput) usernameInput.value = '@' + (ud.email ? ud.email.split('@')[0] : ud.username || 'user');
+  if (typeInput) typeInput.value = roleLabel(ud.role || ud.userType);
+
+  /* ── Profile menu: handled by shared-ui.js setupSocialFeedRuntime ── */
+
+  /* ── Sidebar nav highlighting ── */
+  document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+      document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  /* ── Search bar ── */
+  document.getElementById('navSearchInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      window.location.href = '../../pages/search/search.html?term=' + encodeURIComponent(e.target.value.trim());
+    }
+  });
+
+  /* ── Toast ── */
+  function showToast(msg, icon) {
+    const toast = document.getElementById('toast');
+    toast.innerHTML = '<i class="fa-solid ' + (icon || 'fa-circle-check') + '"></i> ' + msg;
+    toast.classList.add('visible');
+    setTimeout(() => toast.classList.remove('visible'), 3000);
+  }
+
+  /* ── Save account info ── */
+  document.getElementById('saveAccount')?.addEventListener('click', async () => {
+    const name = document.getElementById('accountName').value.trim();
+    if (!name) {
+      showToast('Name cannot be empty', 'fa-triangle-exclamation');
+      return;
+    }
+
+    try {
+      const savedUser = await persistProfile({ fullName: name }, 'settings-save');
+      showToast('Account info saved!');
+      if (chipNm) chipNm.textContent = (savedUser.fullName || 'User').split(' ')[0] || 'User';
+      if (chipAv) {
+        const initialsValue = (savedUser.fullName || 'User')
+          .split(/\s+/)
+          .filter(Boolean)
+          .map(part => part[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase() || 'U';
+        chipAv.textContent = initialsValue;
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to save account info', 'fa-triangle-exclamation');
+    }
+  });
+
+  document.getElementById('cancelAccount')?.addEventListener('click', () => {
+    if (nameInput) nameInput.value = fullName;
+  });
+
+  /* ── Privacy & notification toggle persistence ── */
+  const SETTINGS_KEY = 'spopeer_settings';
+  const toggleIds = ['emailNotif','pushNotif','trainingNotif','followerNotif','digestNotif','profileVisibility','onlineStatus','dataSharing','allowDMs'];
+
+  function loadSettings() {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch { return {}; }
+  }
+  function saveSettings(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
+
+  // Hydrate toggles from saved state on load
+  const saved = loadSettings();
+  toggleIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (id in saved) el.checked = !!saved[id];
+    el.addEventListener('change', () => {
+      const s = loadSettings();
+      s[id] = el.checked;
+      saveSettings(s);
+      showToast('Setting updated');
+    });
+  });
+
+  // Hydrate selects
+  ['language','feedDefault','avatarStyle','avatarColor','avatarAccent'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (saved[id]) el.value = saved[id];
+    el.addEventListener('change', () => {
+      const s = loadSettings();
+      s[id] = el.value;
+      saveSettings(s);
+    });
+  });
+
+  /* ── Save appearance ── */
+  document.getElementById('saveAppearance')?.addEventListener('click', async () => {
+    const s = loadSettings();
+    s.language = document.getElementById('language')?.value || 'en';
+    s.feedDefault = document.getElementById('feedDefault')?.value || 'all';
+    s.avatarStyle = document.getElementById('avatarStyle')?.value || 'gradient';
+    s.avatarColor = document.getElementById('avatarColor')?.value || '#001f3f';
+    s.avatarAccent = document.getElementById('avatarAccent')?.value || '#1a6bff';
+    saveSettings(s);
+
+    try {
+      await persistProfile({
+        avatarStyle: s.avatarStyle,
+        avatarColor: s.avatarColor,
+        avatarAccent: s.avatarAccent
+      }, 'settings-appearance');
+      showToast('Preferences saved!');
+    } catch (err) {
+      showToast(err.message || 'Failed to save preferences', 'fa-triangle-exclamation');
+    }
+  });
+
+  /* ── Update password (calls real API) ── */
+  document.getElementById('updatePassword')?.addEventListener('click', async () => {
+    const curP = document.getElementById('currentPass').value;
+    const newP = document.getElementById('newPass').value;
+    const confP = document.getElementById('confirmPass').value;
+    if (!curP || !newP || !confP) { showToast('Please fill all password fields', 'fa-triangle-exclamation'); return; }
+    if (newP !== confP) { showToast('Passwords do not match', 'fa-triangle-exclamation'); return; }
+    if (newP.length < 8) { showToast('Password must be at least 8 characters', 'fa-triangle-exclamation'); return; }
+
+    try {
+      const token = localStorage.getItem('spopeer_token') || localStorage.getItem('token');
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+        },
+        body: JSON.stringify({ currentPassword: curP, newPassword: newP })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Failed to update password', 'fa-triangle-exclamation'); return; }
+      document.getElementById('currentPass').value = '';
+      document.getElementById('newPass').value = '';
+      document.getElementById('confirmPass').value = '';
+      showToast('Password updated!');
+    } catch (err) {
+      showToast('Network error — please try again', 'fa-triangle-exclamation');
+    }
+  });
+
+  /* ── Download data ── */
+  document.getElementById('downloadData')?.addEventListener('click', () => {
+    const exportData = {
+      profile: ud,
+      posts: JSON.parse(localStorage.getItem('spopeer_user_posts') || '[]'),
+      connections: JSON.parse(localStorage.getItem('spopeer_followed_users') || '[]'),
+      exportDate: new Date().toISOString(),
+      platform: 'Spopeer'
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'spopeer-data-' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Data downloaded!');
+  });
+
+  /* ── Delete account (demo) ── */
+  document.getElementById('deleteAccount')?.addEventListener('click', () => {
+    if (confirm('Are you sure you want to permanently delete your account? This action cannot be undone.')) {
+      ['spopeer_token','spopeer_user','spopeer_loggedIn','authToken','token','user','userToken','userData'].forEach(k => localStorage.removeItem(k));
+      window.location.href = '/feed.html';
+    }
+  });
+})();
+</script>
+<script src="../../js/shared-ui.js"></script>
+<script>
+  if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
+    window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+  }
+</script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>

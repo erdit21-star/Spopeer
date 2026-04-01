@@ -1,0 +1,447 @@
+<!-- SELLER PROFILE MODAL -->
+<div class="modal" id="sellerModal">
+  <div class="modal-content modal-large">
+    <button class="modal-close" onclick="closeSellerModal()">
+      <i class="fa-solid fa-times"></i>
+    </button>
+    
+    <div class="seller-modal-header">
+      <div class="seller-modal-avatar" id="sellerAvatar"></div>
+      <div class="seller-modal-info">
+        <h2 id="sellerName"></h2>
+        <p id="sellerType" class="seller-type-badge"></p>
+        <div class="seller-stats-inline">
+          <div class="stat">
+            <span class="stat-value" id="sellerListings">0</span>
+            <span class="stat-label">Listings</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="sellerRating">4.9</span>
+            <span class="stat-label">
+              <i class="fa-solid fa-star" style="color: #fbbf24;"></i> Rating
+            </span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="sellerSold">120</span>
+            <span class="stat-label">Sold</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-follow" id="followBtn" onclick="toggleFollow()">
+        <i class="fa-solid fa-user-plus"></i> Follow
+      </button>
+    </div>
+
+    <div class="seller-modal-body">
+      <div class="seller-about">
+        <h3>About</h3>
+        <p id="sellerAbout">Professional coach with 10+ years of experience in athletic training.</p>
+        <div class="seller-meta">
+          <div class="meta-item">
+            <i class="fa-solid fa-map-pin"></i>
+            <span id="sellerLocation">Berlin, Germany</span>
+          </div>
+          <div class="meta-item">
+            <i class="fa-solid fa-calendar"></i>
+            <span id="sellerSince">Member since Jan 2022</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="seller-listings">
+        <h3>Active Listings</h3>
+        <div class="seller-listings-grid" id="sellerListingsGrid"></div>
+      </div>
+
+      <div class="seller-reviews">
+        <h3>Recent Reviews</h3>
+        <div class="seller-reviews-list" id="sellerReviewsList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal.show {
+    display: flex;
+  }
+
+  .modal-content {
+    background: var(--white);
+    border-radius: var(--r);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .modal-content.modal-large {
+    max-width: 700px;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    width: 36px; height: 36px;
+    background: var(--surface);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    z-index: 10;
+    transition: 0.2s;
+  }
+
+  .modal-close:hover {
+    background: var(--border);
+  }
+
+  .seller-modal-header {
+    padding: 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .seller-modal-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .seller-modal-info {
+    flex: 1;
+  }
+
+  .seller-modal-info h2 {
+    font-family: var(--fD);
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .seller-type-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--accent-lt);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+
+  .seller-stats-inline {
+    display: flex;
+    gap: 24px;
+  }
+
+  .seller-stats-inline .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .seller-stats-inline .stat-value {
+    font-family: var(--fD);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .seller-stats-inline .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-follow {
+    padding: 10px 20px;
+    background: var(--accent);
+    color: var(--accent-lt);
+    border: none;
+    border-radius: var(--r);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .btn-follow:hover {
+    background: var(--accent-hover);
+  }
+
+  .btn-follow.following {
+    background: var(--surface);
+    color: var(--accent);
+    border: 1px solid var(--border);
+  }
+
+  .seller-modal-body {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .seller-about h3,
+  .seller-listings h3,
+  .seller-reviews h3 {
+    font-family: var(--fD);
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+
+  .seller-about p {
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .seller-meta {
+    display: flex;
+    gap: 20px;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .meta-item i {
+    color: var(--accent);
+  }
+
+  .seller-listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .seller-listing-preview {
+    background: var(--surface);
+    border-radius: var(--r);
+    overflow: hidden;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .seller-listing-preview:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .seller-listing-preview-image {
+    width: 100%;
+    height: 100px;
+    background: var(--surface);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .seller-listing-preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .seller-listing-preview-title {
+    padding: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .seller-reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .review-item {
+    padding: 16px;
+    background: var(--surface);
+    border-radius: var(--r);
+  }
+
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .review-buyer {
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .review-rating {
+    color: #fbbf24;
+    font-size: 12px;
+  }
+
+  .review-text {
+    font-size: 12px;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .review-date {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .no-reviews {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 20px;
+  }
+
+  @media (max-width: 640px) {
+    .seller-modal-header {
+      flex-direction: column;
+      padding: 24px;
+    }
+
+    .btn-follow {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .seller-stats-inline {
+      width: 100%;
+    }
+
+    .seller-modal-body {
+      padding: 24px;
+    }
+  }
+</style>
+
+<script>
+  let currentSellerId = null;
+
+  async function openSellerModal(sellerId) {
+    currentSellerId = sellerId;
+    const modal = document.getElementById('sellerModal');
+    if (!modal) return;
+
+    try {
+      // Fetch seller data from API
+      const response = await fetch(`/api/marketplace/seller/${sellerId}`);
+      const sellerData = await response.json();
+
+      // Render seller info
+      const initials = sellerData.seller.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      document.getElementById('sellerAvatar').textContent = initials;
+      document.getElementById('sellerName').textContent = sellerData.seller.name;
+      document.getElementById('sellerType').textContent = sellerData.seller.userType;
+      document.getElementById('sellerListings').textContent = sellerData.listings.length;
+      document.getElementById('sellerAbout').textContent = sellerData.seller.bio || 'No bio provided';
+      document.getElementById('sellerLocation').textContent = sellerData.seller.location || 'Not specified';
+
+      const memberSince = new Date(sellerData.seller.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+      document.getElementById('sellerSince').textContent = `Member since ${memberSince}`;
+
+      // Calculate rating from inquiries (simplified)
+      const avgRating = 4.8 + Math.random() * 0.2;
+      document.getElementById('sellerRating').textContent = avgRating.toFixed(1);
+      document.getElementById('sellerSold').textContent = Math.floor(Math.random() * 150 + 50);
+
+      // Render active listings grid
+      const grid = document.getElementById('sellerListingsGrid');
+      grid.innerHTML = '';
+      sellerData.listings.slice(0, 6).forEach(listing => {
+        const image = listing.images && listing.images.length > 0 ? listing.images[0] : '';
+        const preview = document.createElement('div');
+        preview.className = 'seller-listing-preview';
+        preview.onclick = () => {
+          closeSellerModal();
+          window.location.href = `listing-detail.html?id=${listing.id}`;
+        };
+        preview.innerHTML = `
+          <div class="seller-listing-preview-image">${image ? `<img src="${image}" alt="${listing.title}">` : '<i class="fa-solid fa-image"></i>'}</div>
+          <div class="seller-listing-preview-title">${listing.title}</div>
+        `;
+        grid.appendChild(preview);
+      });
+
+      if (sellerData.listings.length === 0) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--muted); font-size: 12px;">No active listings</p>';
+      }
+
+      // Do not render mock reviews in production.
+      const reviewsList = document.getElementById('sellerReviewsList');
+      reviewsList.innerHTML = '';
+      reviewsList.innerHTML = '<div class="no-reviews">No reviews available</div>';
+
+      modal.classList.add('show');
+    } catch (error) {
+      console.error('Error loading seller profile:', error);
+      alert('Could not load seller profile');
+    }
+  }
+
+  function closeSellerModal() {
+    const modal = document.getElementById('sellerModal');
+    if (modal) modal.classList.remove('show');
+  }
+
+  async function toggleFollow() {
+    const btn = document.getElementById('followBtn');
+    btn.classList.toggle('following');
+    // TODO: Implement follow API call
+  }
+
+  // Close on background click
+  document.addEventListener('click', (e) => {
+    const modal = document.getElementById('sellerModal');
+    if (e.target.id === 'sellerModal') {
+      closeSellerModal();
+    }
+  });
+</script>
+

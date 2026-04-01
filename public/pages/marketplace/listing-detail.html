@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listing Details — Spopeer Marketplace</title>
+  <script src="../../js/profile-sync-service.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      --bg: #fafaf8;
+      --white: #ffffff;
+      --ink: #111111;
+      --ink-2: #333333;
+      --muted: #7a7a7a;
+      --muted-2: #b8b8b8;
+      --border: #ebebE7;
+      --surface: #f3f3ef;
+      --accent: #001f3f;
+      --accent-lt: #cce7ff;
+      --accent-hover: #003366;
+      --green: #16a34a;
+      --red: #dc2626;
+      --fD: 'Syne', sans-serif;
+      --fB: 'Plus Jakarta Sans', sans-serif;
+      --nav-h: 64px;
+      --r: 10px;
+      --pill: 999px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--fB);
+      background: var(--bg);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* TOPNAV */
+    .topnav {
+      position: sticky; top: 0; z-index: 300;
+      height: var(--nav-h);
+      background: rgba(250,250,248,0.94);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      height: 100%; padding: 0 24px;
+      display: flex; align-items: center; gap: 16px;
+    }
+
+    .logo {
+      font-family: var(--fD); font-size: 21px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink);
+      text-decoration: none; display: flex; align-items: center; gap: 7px;
+    }
+
+    .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+
+    .nav-right {
+      margin-left: auto; display: flex; align-items: center; gap: 12px;
+      font-size: 13px; color: var(--muted);
+    }
+
+    .nav-right a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .nav-icon-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--ink);
+      transition: 0.2s;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .nav-icon-btn:hover {
+      background: var(--surface);
+      color: var(--accent);
+    }
+
+    .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ef4444;
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* BREADCRUMB */
+    .breadcrumb {
+      max-width: 1280px; margin: 0 auto;
+      padding: 16px 24px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .breadcrumb a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 4px;
+    }
+
+    /* LAYOUT */
+    .page-container {
+      max-width: 1280px; margin: 0 auto;
+      padding: 24px;
+    }
+
+    .listing-detail-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 32px;
+    }
+
+    /* GALLERY */
+    .gallery-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .main-image {
+      width: 100%;
+      aspect-ratio: 1;
+      background: var(--surface);
+      border-radius: var(--r);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      color: var(--muted-2);
+      cursor: pointer;
+    }
+
+    .main-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .thumbnail-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .thumbnail {
+      width: 100px;
+      height: 100px;
+      background: var(--surface);
+      border: 2px solid transparent;
+      border-radius: var(--r);
+      cursor: pointer;
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: 0.2s;
+    }
+
+    .thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .thumbnail:hover, .thumbnail.active {
+      border-color: var(--accent);
+    }
+
+    /* DETAILS PANEL */
+    .details-panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 24px;
+      height: fit-content;
+      position: sticky;
+      top: calc(var(--nav-h) + 24px);
+    }
+
+    .listing-header {
+      margin-bottom: 20px;
+    }
+
+    .listing-title {
+      font-family: var(--fD);
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .listing-breadcrumb {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .listing-stats {
+      display: flex;
+      gap: 16px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-value {
+      font-family: var(--fD);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* PRICE SECTION */
+    .price-section {
+      margin: 20px 0;
+      padding: 20px;
+      background: var(--surface);
+      border-radius: var(--r);
+    }
+
+    .price {
+      font-family: var(--fD);
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .price-type {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* CONDITIONS */
+    .condition-info {
+      padding: 12px;
+      background: var(--surface);
+      border-radius: var(--r);
+      font-size: 13px;
+      margin: 12px 0;
+    }
+
+    .condition-label {
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .condition-value {
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* SELLER CARD */
+    .seller-card {
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px;
+      margin: 20px 0;
+    }
+
+    .seller-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .seller-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--accent-lt);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .seller-info {
+      flex: 1;
+    }
+
+    .seller-name {
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+
+    .seller-type {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ACTION BUTTONS */
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-primary, .btn-secondary {
+      padding: 12px;
+      border: none;
+      border-radius: var(--r);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--fB);
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-lt);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .flag-link {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .flag-link a {
+      color: var(--red);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* MAIN CONTENT */
+    .listing-content {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .info-section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 24px;
+    }
+
+    .section-title {
+      font-family: var(--fD);
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title i {
+      color: var(--accent);
+    }
+
+    .description-text {
+      line-height: 1.8;
+      color: var(--ink-2);
+      white-space: pre-wrap;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .info-item {
+      padding: 12px;
+      background: var(--surface);
+      border-radius: var(--r);
+    }
+
+    .info-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .tags-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      background: var(--accent-lt);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: var(--pill);
+    }
+
+    /* RELATED LISTINGS */
+    .related-section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 24px;
+    }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 16px;
+    }
+
+    .related-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .related-card:hover {
+      border-color: var(--accent);
+    }
+
+    .related-thumb {
+      width: 100%;
+      height: 120px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      overflow: hidden;
+    }
+
+    .related-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .related-info {
+      padding: 10px;
+    }
+
+    .related-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .related-price {
+      font-family: var(--fD);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.visible {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--white);
+      border-radius: var(--r);
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-family: var(--fD);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      font-family: var(--fB);
+      font-size: 13px;
+      color: var(--ink);
+      transition: 0.2s;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 960px) {
+      .listing-detail-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .details-panel {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-container {
+        padding: 12px;
+      }
+
+      .listing-title {
+        font-size: 18px;
+      }
+
+      .price {
+        font-size: 24px;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .related-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <script>
+    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+    if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
+  </script>
+
+  <!-- TOPNAV -->
+  <nav class="topnav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <div class="nav-right">
+        <a href="./messages.html" class="nav-icon-btn" title="Messages">
+          <i class="fa-solid fa-envelope"></i>
+          <span class="badge" id="messagesBadge" style="display:none;">0</span>
+        </a>
+        <a href="./notifications.html" class="nav-icon-btn" title="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="badge" id="notificationsBadge" style="display:none;">0</span>
+        </a>
+        <a href="marketplace.html">← Marketplace</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PAGE CONTENT -->
+  <div id="loadingState" class="loading">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <div id="pageContent" style="display:none;">
+    <div class="breadcrumb">
+      <a href="marketplace.html">Marketplace</a> / <span id="breadcrumbCategory">Category</span> / <span id="breadcrumbTitle">Title</span>
+    </div>
+
+    <div class="page-container">
+      <div class="listing-detail-layout">
+        <!-- LEFT: GALLERY -->
+        <div class="listing-content">
+          <div class="gallery-section">
+            <div class="main-image" id="mainImage">📷</div>
+            <div class="thumbnail-row" id="thumbnailRow"></div>
+          </div>
+
+          <!-- DESCRIPTION -->
+          <div class="info-section">
+            <div class="section-title">
+              <i class="fa-solid fa-file-text"></i> Description
+            </div>
+            <p id="descriptionText" class="description-text"></p>
+          </div>
+
+          <!-- DETAILS -->
+          <div class="info-section">
+            <div class="section-title">
+              <i class="fa-solid fa-tag"></i> Details
+            </div>
+            <div class="info-grid" id="detailsGrid"></div>
+          </div>
+
+          <!-- RELATED LISTINGS -->
+          <div class="related-section" id="relatedSection" style="display:none;">
+            <div class="section-title">
+              <i class="fa-solid fa-rocket"></i> Related Listings
+            </div>
+            <div class="related-grid" id="relatedGrid"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: DETAILS PANEL -->
+        <div>
+          <div class="details-panel">
+            <div class="listing-header">
+              <div class="listing-breadcrumb" id="categoryBadge"></div>
+              <h1 class="listing-title" id="panelTitle">Loading...</h1>
+            </div>
+
+            <div class="listing-stats">
+              <div class="stat">
+                <span class="stat-label">Views</span>
+                <span class="stat-value" id="viewsCount">0</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Inquiries</span>
+                <span class="stat-value" id="inquiriesCount">0</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Listed</span>
+                <span class="stat-value" id="listedDate">-</span>
+              </div>
+            </div>
+
+            <div class="price-section">
+              <div class="price" id="panelPrice">€0.00</div>
+              <div class="price-type" id="panelPriceType">FIXED</div>
+            </div>
+
+            <div id="conditionSection" style="display:none;">
+              <div class="condition-info">
+                <div class="condition-label">Condition</div>
+                <div class="condition-value" id="conditionValue">-</div>
+              </div>
+            </div>
+
+            <div class="seller-card" id="sellerCard" onclick="openSellerModal(getCurrentSellerId())" style="cursor: pointer; transition: 0.2s;">
+              <div class="seller-header">
+                <div class="seller-avatar" id="sellerAvatar">?</div>
+                <div class="seller-info">
+                  <div class="seller-name" id="sellerName">Seller Name</div>
+                  <div class="seller-type" id="sellerType">Seller Type</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button class="btn-primary" id="contactBtn">
+                <i class="fa-solid fa-paper-plane"></i> Contact Seller
+              </button>
+              <button class="btn-secondary" id="saveBtn">
+                <i class="fa-regular fa-heart"></i> Save Listing
+              </button>
+            </div>
+
+            <div class="flag-link">
+              <a href="#" id="flagBtn">Report this listing</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT MODAL -->
+  <div class="modal" id="contactModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Contact Seller</h2>
+        <button class="modal-close" onclick="document.getElementById('contactModal').classList.remove('visible')">×</button>
+      </div>
+      <form id="contactForm">
+        <div class="form-group">
+          <label class="form-label">Your Name</label>
+          <input type="text" id="buyerName" class="form-input" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message</label>
+          <textarea id="messageText" class="form-textarea" placeholder="Hi! I'm interested in this listing..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;">Send Inquiry</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/marketplace-service.js"></script>
+  <script>
+    ProfileSyncService.init();
+
+    // Update notification badges
+    async function updateNotificationBadges() {
+      try {
+        const unreadCount = await MarketplaceService.getUnreadCount();
+        const messagesBadge = document.getElementById('messagesBadge');
+        const notificationsBadge = document.getElementById('notificationsBadge');
+        
+        if (unreadCount > 0) {
+          messagesBadge.textContent = unreadCount;
+          messagesBadge.style.display = 'flex';
+        }
+        
+        const totalNotifications = unreadCount;
+        if (totalNotifications > 0) {
+          notificationsBadge.textContent = totalNotifications;
+          notificationsBadge.style.display = 'flex';
+        }
+      } catch (error) {
+        console.debug('Could not fetch notification counts');
+      }
+    }
+
+    // Update badges on load and every 30 seconds
+    updateNotificationBadges();
+    setInterval(updateNotificationBadges, 30000);
+
+    const params = new URLSearchParams(window.location.search);
+    const listingId = params.get('id');
+    let currentListing = null;
+
+    if (!listingId) {
+      window.location.href = 'marketplace.html';
+    }
+
+    async function loadListing() {
+      try {
+        const response = await fetch(`/api/marketplace/listings/${listingId}`);
+        if (!response.ok) throw new Error('Listing not found');
+        currentListing = await response.json();
+        currentSellerId = currentListing.seller_id;
+
+        renderListing();
+        loadRelatedListings();
+      } catch (error) {
+        console.error('Error loading listing:', error);
+        document.getElementById('pageContent').innerHTML = '<div class="loading"><div style="font-size:32px; color:var(--muted-2);">⚠️</div><div style="font-size:18px; font-weight:700; margin-top:16px;">Listing not found</div></div>';
+      }
+    }
+
+    function renderListing() {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('pageContent').style.display = 'block';
+
+      const listing = currentListing;
+
+      // Header
+      document.getElementById('panelTitle').textContent = listing.title;
+      document.getElementById('breadcrumbTitle').textContent = listing.title;
+      document.getElementById('breadcrumbCategory').textContent = listing.category;
+      document.getElementById('categoryBadge').textContent = listing.category;
+
+      // Gallery
+      const mainImage = document.getElementById('mainImage');
+      if (listing.images && listing.images.length > 0) {
+        mainImage.innerHTML = `<img src="${listing.images[0]}" alt="${listing.title}">`;
+      }
+
+      const thumbnailRow = document.getElementById('thumbnailRow');
+      if (listing.images && listing.images.length > 1) {
+        listing.images.forEach((img, idx) => {
+          const thumb = document.createElement('div');
+          thumb.className = idx === 0 ? 'thumbnail active' : 'thumbnail';
+          thumb.innerHTML = `<img src="${img}" alt="Image ${idx+1}">`;
+          thumb.onclick = () => {
+            document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+            mainImage.innerHTML = `<img src="${img}">`;
+          };
+          thumbnailRow.appendChild(thumb);
+        });
+      }
+
+      // Price & Details
+      document.getElementById('panelPrice').textContent = `€${listing.price.toFixed(2)}`;
+      document.getElementById('panelPriceType').textContent = listing.price_type.toUpperCase();
+      document.getElementById('descriptionText').textContent = listing.description || 'No description provided.';
+
+      // Statistics
+      document.getElementById('viewsCount').textContent = listing.views_count;
+      document.getElementById('inquiriesCount').textContent = listing.inquiries_count;
+      document.getElementById('listedDate').textContent = new Date(listing.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+      // Condition
+      if (listing.condition) {
+        document.getElementById('conditionSection').style.display = 'block';
+        document.getElementById('conditionValue').textContent = listing.condition;
+      }
+
+      // Details Grid
+      const detailsGrid = document.getElementById('detailsGrid');
+      detailsGrid.innerHTML = '';
+      const details = [
+        { label: 'Type', value: listing.listing_type },
+        { label: 'Category', value: listing.category },
+        { label: 'Location', value: listing.location || '-' },
+        ...(listing.sport_tags && listing.sport_tags.length > 0 ? [{ label: 'Sports', value: listing.sport_tags.join(', ') }] : [])
+      ];
+
+      details.forEach(detail => {
+        const item = document.createElement('div');
+        item.className = 'info-item';
+        item.innerHTML = `<div class="info-label">${detail.label}</div><div class="info-value">${detail.value}</div>`;
+        detailsGrid.appendChild(item);
+      });
+
+      // Seller Info
+      document.getElementById('sellerName').textContent = listing.seller.name;
+      document.getElementById('sellerType').textContent = listing.seller.userType;
+      document.getElementById('sellerAvatar').textContent = listing.seller.name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+      // Pre-fill buyer info
+      document.getElementById('buyerName').value = JSON.parse(localStorage.getItem('spopeer_user') || '{}').name || 'You';
+
+      // Price recommendation
+      if (listing.price_type === 'contact') {
+        document.getElementById('messageText').value = `Hi! I'm interested in your listing '${listing.title}'. What's your asking price?`;
+      }
+    }
+
+    async function loadRelatedListings() {
+      try {
+        const response = await fetch(`/api/marketplace/listings?category=${encodeURIComponent(currentListing.category)}&limit=6`);
+        if (!response.ok) return;
+        const data = await response.json();
+
+        const related = data.listings.filter(l => l.id !== currentListing.id).slice(0, 6);
+        if (related.length === 0) return;
+
+        document.getElementById('relatedSection').style.display = 'block';
+        const relatedGrid = document.getElementById('relatedGrid');
+
+        related.forEach(listing => {
+          const card = document.createElement('div');
+          card.className = 'related-card';
+          const img = listing.images && listing.images.length > 0 ? listing.images[0] : '';
+          card.innerHTML = `
+            <div class="related-thumb">${img ? `<img src="${img}" alt="${listing.title}">` : '📦'}</div>
+            <div class="related-info">
+              <div class="related-title">${listing.title}</div>
+              <div class="related-price">€${listing.price.toFixed(2)}</div>
+            </div>
+          `;
+          card.onclick = () => window.location.href = `listing-detail.html?id=${listing.id}`;
+          relatedGrid.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Error loading related listings:', error);
+      }
+    }
+
+    // Event Listeners
+    document.getElementById('contactBtn').onclick = () => {
+      document.getElementById('contactModal').classList.add('visible');
+    };
+
+    document.getElementById('contactForm').onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        const response = await fetch('/api/marketplace/inquiries', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+          },
+          body: JSON.stringify({
+            listing_id: listingId,
+            message: document.getElementById('messageText').value
+          })
+        });
+
+        if (response.ok) {
+          // Show success message with link to messages
+          const modal = document.getElementById('contactModal');
+          const form = document.getElementById('contactForm');
+          form.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">✓</div>
+              <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--ink);">Inquiry Sent!</h3>
+              <p style="font-size: 14px; color: var(--muted); margin-bottom: 24px;">Your message has been sent to the seller. You can continue the conversation in your messages.</p>
+              <div style="display: flex; gap: 12px;">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('contactModal').classList.remove('visible'); document.getElementById('contactForm').innerHTML = '<form id=\\\"contactForm\\\"></form>'; location.reload();" style="flex: 1;">Close</button>
+                <button type="button" class="btn-primary" onclick="window.location.href='./messages.html';" style="flex: 1;">View Messages</button>
+              </div>
+            </div>
+          `;
+        } else {
+          alert('Error sending inquiry. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error sending inquiry:', error);
+        alert('Error sending inquiry');
+      }
+    };
+
+    document.getElementById('saveBtn').onclick = async () => {
+      try {
+        const response = await fetch(`/api/marketplace/saved/${listingId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+          }
+        });
+        const data = await response.json();
+        const btn = document.getElementById('saveBtn');
+        btn.classList.toggle('saved', data.saved);
+        btn.innerHTML = data.saved ? '<i class="fa-solid fa-heart"></i> Saved' : '<i class="fa-regular fa-heart"></i> Save Listing';
+      } catch (error) {
+        console.error('Error saving listing:', error);
+      }
+    };
+
+    document.getElementById('flagBtn').onclick = (e) => {
+      e.preventDefault();
+      const reason = prompt('Tell us why you\'re reporting this listing:');
+      if (reason) {
+        fetch(`/api/marketplace/listings/${listingId}/flag`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+          },
+          body: JSON.stringify({ reason })
+        }).then(() => alert('Thank you for reporting. We\'ll review this listing.')).catch(() => alert('Error reporting listing'));
+      }
+    };
+
+    let currentSellerId = null;
+
+    function getCurrentSellerId() {
+      return currentSellerId;
+    }
+
+    async function openSellerModal(sellerId) {
+      currentSellerId = sellerId;
+      const modal = document.getElementById('sellerModal');
+      if (!modal) {
+        console.error('Seller modal not found');
+        return;
+      }
+
+      try {
+        // Fetch seller data from API
+        const response = await fetch(`/api/marketplace/seller/${sellerId}`);
+        const sellerData = await response.json();
+
+        // Render seller info
+        const initials = sellerData.seller.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        document.getElementById('sellerAvatar').textContent = initials;
+        document.getElementById('sellerName').textContent = sellerData.seller.name;
+        document.getElementById('sellerType').textContent = sellerData.seller.userType;
+        document.getElementById('sellerListings').textContent = sellerData.listings.length;
+        document.getElementById('sellerAbout').textContent = sellerData.seller.bio || 'No bio provided';
+        document.getElementById('sellerLocation').textContent = sellerData.seller.location || 'Not specified';
+
+        const memberSince = new Date(sellerData.seller.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+        document.getElementById('sellerSince').textContent = `Member since ${memberSince}`;
+
+        // Calculate rating from inquiries (simplified)
+        const avgRating = 4.8 + Math.random() * 0.2;
+        document.getElementById('sellerRating').textContent = avgRating.toFixed(1);
+        document.getElementById('sellerSold').textContent = Math.floor(Math.random() * 150 + 50);
+
+        // Render active listings grid
+        const grid = document.getElementById('sellerListingsGrid');
+        grid.innerHTML = '';
+        sellerData.listings.slice(0, 6).forEach(listing => {
+          const image = listing.images && listing.images.length > 0 ? listing.images[0] : '';
+          const preview = document.createElement('div');
+          preview.className = 'seller-listing-preview';
+          preview.onclick = () => {
+            closeSellerModal();
+            window.location.href = `listing-detail.html?id=${listing.id}`;
+          };
+          preview.innerHTML = `
+            <div class="seller-listing-preview-image">${image ? `<img src="${image}" alt="${listing.title}">` : '<i class="fa-solid fa-image"></i>'}</div>
+            <div class="seller-listing-preview-title">${listing.title}</div>
+          `;
+          grid.appendChild(preview);
+        });
+
+        if (sellerData.listings.length === 0) {
+          grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--muted); font-size: 12px;">No active listings</p>';
+        }
+
+        // Do not render mock reviews in production.
+        const reviewsList = document.getElementById('sellerReviewsList');
+        reviewsList.innerHTML = '';
+        reviewsList.innerHTML = '<div class="no-reviews">No reviews available</div>';
+
+        modal.classList.add('show');
+      } catch (error) {
+        console.error('Error loading seller profile:', error);
+        alert('Could not load seller profile');
+      }
+    }
+
+    function closeSellerModal() {
+      const modal = document.getElementById('sellerModal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    async function toggleFollow() {
+      const btn = document.getElementById('followBtn');
+      btn.classList.toggle('following');
+      // TODO: Implement follow API call
+    }
+
+    // Close modal on background click
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById('sellerModal');
+      if (modal && e.target.id === 'sellerModal') {
+        closeSellerModal();
+      }
+    });
+
+    loadListing();
+  </script>
+
+  <!-- SELLER PROFILE MODAL -->
+  <div class="modal" id="sellerModal">
+    <div class="modal-content modal-large">
+      <button class="modal-close" onclick="closeSellerModal()" style="background: var(--surface); color: var(--ink); cursor: pointer; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 20px; right: 20px; z-index: 10;">
+        <i class="fa-solid fa-times"></i>
+      </button>
+      
+      <div class="seller-modal-header" style="padding: 32px; border-bottom: 1px solid var(--border); display: flex; gap: 24px; align-items: flex-start;">
+        <div id="sellerAvatar" style="width: 80px; height: 80px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; flex-shrink: 0;"></div>
+        <div class="seller-modal-info" style="flex: 1;">
+          <h2 id="sellerName" style="font-family: var(--fD); font-size: 20px; font-weight: 800; margin-bottom: 4px;"></h2>
+          <p id="sellerType" style="display: inline-block; background: var(--accent); color: var(--accent-lt); padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;"></p>
+          <div class="seller-stats-inline" style="display: flex; gap: 24px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-family: var(--fD); font-size: 18px; font-weight: 800; color: var(--accent);" id="sellerListings">0</span>
+              <span style="font-size: 11px; color: var(--muted); font-weight: 600;">Listings</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-family: var(--fD); font-size: 18px; font-weight: 800; color: var(--accent);" id="sellerRating">4.9</span>
+              <span style="font-size: 11px; color: var(--muted); font-weight: 600;"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> Rating</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-family: var(--fD); font-size: 18px; font-weight: 800; color: var(--accent);" id="sellerSold">120</span>
+              <span style="font-size: 11px; color: var(--muted); font-weight: 600;">Sold</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn-follow" id="followBtn" onclick="toggleFollow()" style="padding: 10px 20px; background: var(--accent); color: var(--accent-lt); border: none; border-radius: var(--r); font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; white-space: nowrap;">
+          <i class="fa-solid fa-user-plus"></i> Follow
+        </button>
+      </div>
+
+      <div class="seller-modal-body" style="padding: 32px; display: flex; flex-direction: column; gap: 32px;">
+        <div class="seller-about">
+          <h3 style="font-family: var(--fD); font-size: 16px; font-weight: 800; margin-bottom: 16px;">About</h3>
+          <p id="sellerAbout" style="font-size: 13px; color: var(--ink); margin-bottom: 16px; line-height: 1.6;">Professional coach with 10+ years of experience in athletic training.</p>
+          <div class="seller-meta" style="display: flex; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted);">
+              <i class="fa-solid fa-map-pin" style="color: var(--accent);"></i>
+              <span id="sellerLocation">Berlin, Germany</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted);">
+              <i class="fa-solid fa-calendar" style="color: var(--accent);"></i>
+              <span id="sellerSince">Member since Jan 2022</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="seller-listings">
+          <h3 style="font-family: var(--fD); font-size: 16px; font-weight: 800; margin-bottom: 16px;">Active Listings</h3>
+          <div class="seller-listings-grid" id="sellerListingsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;"></div>
+        </div>
+
+        <div class="seller-reviews">
+          <h3 style="font-family: var(--fD); font-size: 16px; font-weight: 800; margin-bottom: 16px;">Recent Reviews</h3>
+          <div class="seller-reviews-list" id="sellerReviewsList" style="display: flex; flex-direction: column; gap: 16px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content.modal-large {
+      max-width: 700px;
+      background: var(--white);
+      border-radius: var(--r);
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .seller-listing-preview {
+      background: var(--surface);
+      border-radius: var(--r);
+      overflow: hidden;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .seller-listing-preview:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .seller-listing-preview-image {
+      width: 100%;
+      height: 100px;
+      background: var(--surface);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .seller-listing-preview-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .seller-listing-preview-title {
+      padding: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .review-item {
+      padding: 16px;
+      background: var(--surface);
+      border-radius: var(--r);
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .review-buyer {
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .review-rating {
+      color: #fbbf24;
+      font-size: 12px;
+    }
+
+    .review-text {
+      font-size: 12px;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .review-date {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .btn-follow.following {
+      background: var(--surface);
+      color: var(--accent);
+      border: 1px solid var(--border);
+    }
+
+    @media (max-width: 640px) {
+      .modal-content.modal-large {
+        max-width: 100%;
+      }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Abuse - Spopeer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --accent: #001f3f;
+      --accent-light: #cce7ff;
+      --background: #fafaf8;
+      --surface: #ffffff;
+      --ink: #0f0f0f;
+      --ink-light: #4a4a4a;
+      --muted: #7a7a7a;
+      --border: #e8e8e4;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-display: 'Syne', sans-serif;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--background);
+    }
+
+    /* ─── NAVBAR ─── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(250,250,248,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navbar {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 28px; height: 66px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 800;
+      color: var(--ink); text-decoration: none;
+      letter-spacing: -0.02em; flex-shrink: 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+.nav-links { display: flex; gap: 4px; list-style: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--muted);
+      font-size: 14px; font-weight: 500;
+      padding: 6px 14px; border-radius: var(--r-pill);
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-links a:hover { color: var(--ink); background: var(--surface); }
+    .auth-row { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .btn-outline {
+      padding: 8px 20px;
+      border: 1.5px solid var(--border);
+      background: transparent; color: var(--ink-2);
+      border-radius: var(--r-pill); font-size: 14px; font-weight: 600;
+      font-family: var(--font-body); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--ink); background: var(--surface); }
+    .btn-fill {
+      padding: 8px 22px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--r-pill);
+      font-size: 14px; font-weight: 700;
+      font-family: var(--font-body); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0,31,63,0.25);
+    }
+    .btn-fill:hover { background: #001a33; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,31,63,0.35); }
+
+    .btn-signup:hover {
+      background: #0052a3;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 60px auto;
+      padding: 0 24px;
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 24px;
+      color: #111827;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin: 40px 0 20px;
+      color: #111827;
+    }
+
+    p {
+      margin-bottom: 16px;
+      line-height: 1.8;
+      color: #4b5563;
+    }
+
+    .info-box {
+      background: #f0f7ff;
+      border-left: 4px solid #0066cc;
+      padding: 24px;
+      margin: 24px 0;
+      border-radius: 6px;
+    }
+
+    .info-box p {
+      margin: 0;
+    }
+
+    .form-section {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin: 40px 0;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #0066cc;
+      box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 150px;
+    }
+
+    .required {
+      color: #dc2626;
+    }
+
+    .submit-btn {
+      background: #0066cc;
+      color: white;
+      padding: 14px 40px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+
+    .submit-btn:hover {
+      background: #0052a3;
+    }
+
+    .abuse-types {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .abuse-type {
+      background: white;
+      padding: 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .abuse-type:hover {
+      border-color: #0066cc;
+      background: #f0f7ff;
+    }
+
+    .abuse-type i {
+      font-size: 24px;
+      color: #0066cc;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .abuse-type label {
+      margin: 0;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .abuse-type input {
+      margin-right: 8px;
+    }
+
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 56px 28px 0;
+      margin-top: 60px;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0;
+      display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .foot-brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .foot-logo {
+      font-family: var(--font-display); font-size: 22px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink); text-decoration: none;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+
+    .foot-brand p {
+      font-size: 13px; color: var(--muted); line-height: 1.7; font-weight: 300; margin-bottom: 20px; max-width: 240px;
+    }
+
+    .social-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .footer-social-btn {
+      width: 36px; height: 36px; border: 1.5px solid var(--border);
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 14px; text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .footer-social-btn:hover {
+      border-color: var(--accent); color: var(--accent); background: var(--accent-light);
+    }
+
+    .footer-col h4 {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+    }
+
+    .footer-col ul {
+      list-style: none;
+    }
+
+    .foot-col ul li {
+      margin-bottom: 10px;
+    }
+
+    .footer-col a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 300;
+      transition: color 0.2s;
+    }
+
+    .footer-col a:hover {
+      color: var(--accent);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding: 20px 28px; margin-top: 40px;
+      max-width: 1200px; margin-left: auto; margin-right: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted-2);
+    }
+
+    .footer-bottom p {
+      font-size: 12px;
+      color: var(--muted-2);
+      margin: 0;
+    }
+
+    .footer-bottom-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-bottom-links a {
+      color: var(--muted-2);
+      text-decoration: none;
+      font-size: 12px;
+      transition: color 0.2s;
+    }
+
+    .footer-bottom-links a:hover {
+      color: var(--accent);
+    }
+
+    .social-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .social-links a {
+      color: #d1d5db;
+      text-decoration: none;
+      font-size: 18px;
+      transition: color 0.2s;
+    }
+
+    .social-links a:hover {
+      color: #0066cc;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 28px;
+      }
+
+      .form-section {
+        padding: 24px;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+
+.site-footer {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+
+.footer-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 24px 0;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.foot-logo {
+  font-family: var(--fD);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  display: inline-block;
+}
+
+.foot-brand p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 18px;
+  max-width: 230px;
+}
+
+.social-row {
+  display: flex;
+  gap: 7px;
+}
+
+.soc-btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rS);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.soc-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.foot-col h5 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.foot-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.foot-col ul li {
+  margin-bottom: 9px;
+}
+
+.foot-col ul a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 300;
+  transition: color .2s;
+}
+
+.foot-col ul a:hover {
+  color: var(--accent);
+}
+
+.footer-btm {
+  max-width: 1280px;
+  margin: 36px auto 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.footer-btm p {
+  font-size: 12px;
+  color: var(--muted-2);
+  margin: 0;
+}
+
+.footer-btm-links {
+  display: flex;
+  gap: 18px;
+}
+
+.footer-btm-links a {
+  font-size: 12px;
+  color: var(--muted-2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.footer-btm-links a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 36px 16px 0;
+  }
+
+  .footer-btm {
+    padding: 14px 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="/index.html" class="logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#user-types">Who It's For</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+      </ul>
+      <div class="auth-row">
+        <a href="../auth/login.html" class="btn-outline">Log In</a>
+        <a href="../auth/signup.html" class="btn-fill">Sign Up Free</a>
+      </div>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h1><i class="fas fa-exclamation-triangle"></i> Report Abuse</h1>
+
+    <p>At Spopeer, we're committed to maintaining a safe, respectful, and inclusive community for all sports enthusiasts. If you encounter any content or behavior that violates our community standards, please report it using this form. Your report helps us maintain the integrity of our platform.</p>
+
+    <div class="info-box">
+      <p><strong><i class="fas fa-info-circle"></i> Important:</strong> All reports are treated confidentially and thoroughly investigated. We take abuse seriously and will take appropriate action based on our findings.</p>
+    </div>
+
+    <h2>What Can You Report?</h2>
+    <p>You can report the following types of abuse on Spopeer:</p>
+    
+    <div class="abuse-types">
+      <div class="abuse-type">
+        <i class="fas fa-comment-slash"></i>
+        <label>Harassment or Bullying</label>
+      </div>
+      <div class="abuse-type">
+        <i class="fas fa-images"></i>
+        <label>Inappropriate Content</label>
+      </div>
+      <div class="abuse-type">
+        <i class="fas fa-shield-virus"></i>
+        <label>Spam or Scams</label>
+      </div>
+      <div class="abuse-type">
+        <i class="fas fa-ban"></i>
+        <label>Hate Speech</label>
+      </div>
+      <div class="abuse-type">
+        <i class="fas fa-lock"></i>
+        <label>Privacy Violation</label>
+      </div>
+      <div class="abuse-type">
+        <i class="fas fa-key"></i>
+        <label>Account Issues</label>
+      </div>
+    </div>
+
+    <h2>Report Form</h2>
+    
+    <div class="form-section">
+      <form onsubmit="handleSubmit(event)">
+        <div class="form-group">
+          <label for="name">Your Name <span class="required">*</span></label>
+          <input type="text" id="name" name="name" placeholder="Your full name" required />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Your Email <span class="required">*</span></label>
+          <input type="email" id="email" name="email" placeholder="your@email.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="reported-user">Username of Person/Account Being Reported <span class="required">*</span></label>
+          <input type="text" id="reported-user" name="reported-user" placeholder="Username" required />
+        </div>
+
+        <div class="form-group">
+          <label for="report-type">Type of Abuse <span class="required">*</span></label>
+          <select id="report-type" name="report-type" required>
+            <option value="">Select the type of abuse</option>
+            <option value="harassment">Harassment or Bullying</option>
+            <option value="inappropriate">Inappropriate Content</option>
+            <option value="spam">Spam or Scams</option>
+            <option value="hate">Hate Speech</option>
+            <option value="privacy">Privacy Violation</option>
+            <option value="account">Account Issues</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description of Abuse <span class="required">*</span></label>
+          <textarea id="description" name="description" placeholder="Please provide detailed information about the abuse, including when it occurred and where it happened (profile, post, message, etc.)" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="evidence">Evidence/Links <span class="required">*</span></label>
+          <textarea id="evidence" name="evidence" placeholder="Provide links to the content or screenshots of the abusive behavior. This helps us investigate your report more effectively." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="contact">Preferred Contact Method</label>
+          <select id="contact" name="contact">
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+          </select>
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Report</button>
+      </form>
+    </div>
+
+    <h2>What Happens After You Report?</h2>
+    <p><strong>1. Acknowledgment:</strong> We'll confirm receipt of your report within 24 hours.</p>
+    <p><strong>2. Investigation:</strong> Our moderation team will thoroughly investigate your claim.</p>
+    <p><strong>3. Action:</strong> Depending on our findings, we may issue warnings, suspend, or permanently remove accounts that violate our community standards.</p>
+    <p><strong>4. Follow-up:</strong> We'll notify you of any actions taken (while respecting user privacy).</p>
+
+    <div class="info-box">
+      <p><strong><i class="fas fa-shield-alt"></i> Your Safety:</strong> If you're in immediate danger, please contact local law enforcement. Spopeer supports a zero-tolerance policy for harassment and abuse.</p>
+    </div>
+
+    <h2>Community Guidelines</h2>
+    <p>By reporting abuse, you help us maintain the Spopeer community as a safe space for athletes, coaches, clubs, and sports professionals. For more information about our community standards, please review our <a href="/pages/legal/terms.html">Terms of Use</a> and <a href="/pages/legal/privacy.html">Privacy Policy</a>.</p>
+  </div>
+
+  <footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+
+      <p>Connecting the global sports community � athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+
+      <div class="social-row">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+        <li><a href="/index.html#user-types">User Types</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="/pages/legal/about.html">About Us</a></li>
+        <li><a href="/pages/company/careers.html">Careers</a></li>
+        <li><a href="/pages/company/blog.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Support</h5>
+      <ul>
+        <li><a href="/pages/company/help-center.html">Help Center</a></li>
+        <li><a href="/pages/contact/index.html">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links">
+      <a href="/pages/legal/privacy.html">Privacy</a>
+      <a href="/pages/legal/terms.html">Terms</a>
+      <a href="/pages/contact/index.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+  <script>
+    function handleSubmit(event) {
+      event.preventDefault();
+      alert('Thank you for reporting this abuse. Our moderation team will investigate your report. We appreciate your help in keeping Spopeer a safe community.');
+      event.target.reset();
+    }
+  </script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>

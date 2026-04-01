@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Use - Spopeer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --bg: #fafaf8;
+            --white: #ffffff;
+            --ink: #0f0f0f;
+            --muted: #7a7a7a;
+            --muted-2: #b0b0b0;
+            --border: #e8e8e4;
+            --accent: #001f3f;
+            --accent-light: #cce7ff;
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --r: 12px;
+            --r-pill: 999px;
+        }
+
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: var(--font-body);
+            line-height: 1.6;
+            color: var(--ink);
+            background-color: var(--bg);
+        }
+
+        /* Header */
+        header {
+            position: sticky; top: 0; z-index: 200;
+            background: rgba(250,250,248,0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+        .navbar {
+            max-width: 1200px; margin: 0 auto; padding: 0 28px; height: 66px;
+            display: flex; align-items: center; justify-content: space-between; gap: 24px;
+        }
+        .logo {
+            font-family: var(--font-display); font-size: 22px; font-weight: 800;
+            letter-spacing: -0.02em; color: var(--ink); text-decoration: none;
+            display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+        }
+        .logo-dot {
+            width: 8px; height: 8px; background: var(--accent); border-radius: 50%;
+        }
+        .nav-links {
+            display: flex; gap: 4px; list-style: none; margin: 0; padding: 0;
+        }
+        .nav-links a {
+            font-size: 14px; font-weight: 500; color: var(--muted);
+            text-decoration: none; transition: color 0.2s, background 0.2s;
+            padding: 6px 14px; border-radius: var(--r-pill);
+        }
+        .nav-links a:hover { color: var(--ink); background: var(--surface); }
+        .auth-row { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+        .btn-outline {
+            padding: 8px 20px; background: transparent; color: var(--ink-2);
+            border: 1.5px solid var(--border); border-radius: var(--r-pill);
+            font-size: 14px; font-weight: 600; text-decoration: none;
+            transition: border-color 0.2s, background 0.2s; font-family: var(--font-body);
+            cursor: pointer; display: inline-flex; align-items: center;
+        }
+        .btn-outline:hover { border-color: var(--ink); background: var(--surface); }
+        .btn-fill {
+            padding: 8px 22px; background: var(--accent); color: #fff;
+            border: none; border-radius: var(--r-pill);
+            font-size: 14px; font-weight: 700; text-decoration: none;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px rgba(0,31,63,0.25);
+            font-family: var(--font-body); cursor: pointer; display: inline-flex; align-items: center;
+        }
+        .btn-fill:hover { background: #001a33; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,31,63,0.35); }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, var(--accent) 0%, #000a1a 100%);
+            color: white;
+            padding: 80px 24px;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-family: var(--font-display);
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        .page-header p {
+            font-size: 18px;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        main {
+            background: var(--white);
+            margin: 40px auto;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* Sidebar and Content Layout */
+        .terms-wrapper {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+            padding: 40px;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            font-size: 0.9em;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 12px;
+        }
+
+        .sidebar ul li a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.95em;
+            transition: color 0.3s;
+        }
+
+        .sidebar ul li a:hover {
+            color: #001a33;
+            text-decoration: underline;
+        }
+
+        /* Content Sections */
+        .content h2 {
+            font-size: 1.5em;
+            color: var(--accent);
+            margin-top: 35px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            font-weight: 700;
+        }
+
+        .content h2:first-child {
+            margin-top: 0;
+        }
+
+        .content h3 {
+            font-size: 1.1em;
+            color: var(--ink);
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+            text-align: justify;
+            color: var(--muted);
+            font-size: 0.95em;
+        }
+
+        .content ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .content ul li {
+            margin-bottom: 10px;
+            color: var(--muted);
+            font-size: 0.95em;
+        }
+
+        /* Highlight Boxes */
+        .highlight-box {
+            background-color: var(--accent-light);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+
+        .highlight-box strong {
+            color: var(--accent);
+        }
+
+        /* Yes/No Section */
+        .terms-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .terms-yes, .terms-no {
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .terms-yes {
+            background-color: #f1f8f4;
+            border-left-color: #10b981;
+        }
+
+        .terms-yes h4 {
+            color: #10b981;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .terms-no {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+
+        .terms-no h4 {
+            color: #ef4444;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .terms-yes ul, .terms-no ul {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .terms-yes ul li:before {
+            content: "✓ ";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .terms-no ul li:before {
+            content: "✗ ";
+            color: #ef4444;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .terms-yes ul li, .terms-no ul li {
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        /* Footer */
+        footer { background: var(--white); border-top: 1px solid var(--border); }
+        .footer-inner {
+            max-width: 1200px; margin: 0 auto; padding: 56px 28px 0;
+            display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; gap: 40px;
+        }
+        .foot-logo {
+            font-family: var(--font-display); font-size: 22px; font-weight: 800;
+            letter-spacing: -0.02em; color: var(--ink); text-decoration: none;
+            display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+        }
+        .foot-brand p { font-size: 13px; color: var(--muted); line-height: 1.7; font-weight: 300; margin-bottom: 20px; max-width: 240px; }
+        .social-row { display: flex; gap: 8px; }
+        .footer-social-btn {
+            width: 36px; height: 36px; border: 1.5px solid var(--border);
+            border-radius: var(--r); display: flex; align-items: center; justify-content: center;
+            color: var(--muted); font-size: 14px; text-decoration: none;
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
+        }
+        .footer-social-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+        .foot-col h4 { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+        .foot-col ul { list-style: none; }
+        .foot-col ul li { margin-bottom: 10px; }
+        .foot-col ul a { font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 300; transition: color 0.2s; }
+        .foot-col ul a:hover { color: var(--accent); }
+        .footer-bottom {
+            max-width: 1200px; margin: 0 auto; padding: 20px 28px; margin-top: 40px;
+            border-top: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+        }
+        .footer-bottom p { font-size: 12px; color: var(--muted-2); }
+        .footer-bottom-links { display: flex; gap: 20px; }
+        .footer-bottom-links a { font-size: 12px; color: var(--muted-2); text-decoration: none; transition: color 0.2s; }
+        .footer-bottom-links a:hover { color: var(--accent); }
+
+        footer .footer-links a {
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: color 0.3s;
+        }
+
+        footer .footer-links a:hover {
+            color: #004fa3;
+        }
+
+        footer .footer-bottom {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            nav .nav-links {
+                gap: 15px;
+            }
+
+            .terms-wrapper {
+                grid-template-columns: 1fr;
+                padding: 25px;
+            }
+
+            .sidebar {
+                position: relative;
+                top: 0;
+            }
+
+            .sidebar ul li a {
+                font-size: 0.9em;
+            }
+
+            .terms-comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .content h2 {
+                font-size: 1.2em;
+            }
+
+            .content h3 {
+                font-size: 1em;
+            }
+
+            footer .footer-links {
+                gap: 10px;
+                font-size: 0.85em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.5em;
+            }
+
+            header p {
+                font-size: 0.95em;
+            }
+
+            nav .nav-links {
+                display: none;
+            }
+
+            .terms-wrapper {
+                padding: 15px;
+            }
+
+            .content {
+                font-size: 0.9em;
+            }
+        }
+    .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+
+.site-footer {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+
+.footer-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 24px 0;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.foot-logo {
+  font-family: var(--fD);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  display: inline-block;
+}
+
+.foot-brand p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 18px;
+  max-width: 230px;
+}
+
+.social-row {
+  display: flex;
+  gap: 7px;
+}
+
+.soc-btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rS);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.soc-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.foot-col h5 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.foot-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.foot-col ul li {
+  margin-bottom: 9px;
+}
+
+.foot-col ul a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 300;
+  transition: color .2s;
+}
+
+.foot-col ul a:hover {
+  color: var(--accent);
+}
+
+.footer-btm {
+  max-width: 1280px;
+  margin: 36px auto 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.footer-btm p {
+  font-size: 12px;
+  color: var(--muted-2);
+  margin: 0;
+}
+
+.footer-btm-links {
+  display: flex;
+  gap: 18px;
+}
+
+.footer-btm-links a {
+  font-size: 12px;
+  color: var(--muted-2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.footer-btm-links a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 36px 16px 0;
+  }
+
+  .footer-btm {
+    padding: 14px 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <header>
+        <nav class="navbar">
+            <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+            <ul class="nav-links">
+                <li><a href="/index.html#features">Features</a></li>
+                <li><a href="/index.html#user-types">Who It's For</a></li>
+                <li><a href="/index.html#how-it-works">How It Works</a></li>
+            </ul>
+            <div class="auth-row">
+                <a href="../auth/login.html" class="btn-outline">Log In</a>
+                <a href="../auth/signup.html" class="btn-fill">Sign Up Free</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Header -->
+    <section class="page-header">
+        <h1>Terms of Use</h1>
+        <p>Please read these terms carefully. By using Spopeer, you agree to comply with all provisions outlined below.</p>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="terms-wrapper">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <h3>Contents</h3>
+                <ul>
+                    <li><a href="#spopeer-services">Spopeer Services</a></li>
+                    <li><a href="#acceptance">Acceptance of Terms</a></li>
+                    <li><a href="#age-restriction">Age Restriction</a></li>
+                    <li><a href="#rules">Rules for Using Services</a></li>
+                    <li><a href="#registration">Registration of Profiles</a></li>
+                    <li><a href="#account-categories">Account Categories</a></li>
+                    <li><a href="#trademarks">Trademarks</a></li>
+                    <li><a href="#license">License and Copyright</a></li>
+                    <li><a href="#terms-comparison">Your Responsibilities</a></li>
+                    <li><a href="#payments">Payments and Charges</a></li>
+                    <li><a href="#law">Governing Law</a></li>
+                    <li><a href="#changes">Changes to Terms</a></li>
+                    <li><a href="#termination">Termination</a></li>
+                    <li><a href="#disclaimer">Disclaimer</a></li>
+                    <li><a href="#general">General Terms</a></li>
+                </ul>
+            </aside>
+
+            <!-- Main Content -->
+            <section class="content">
+                <h2 id="spopeer-services">Spopeer Services</h2>
+                <p>
+                    Spopeer is a global social network platform designed for sports enthusiasts, including athletes, coaches, sports clubs, and supportive professionals. Our platform provides a comprehensive ecosystem for individuals to promote their sports-related projects, connect with like-minded individuals, and share their passion for sports.
+                </p>
+                <p>
+                    Through the Spopeer website and social media channels, users can access various types of content, including articles, images, graphics, videos, audio clips, scripts, and software. Athletes, coaches, sports clubs, and supportive professionals have the right to contribute original content to the platform.
+                </p>
+
+                <h2 id="acceptance">Acceptance of Terms</h2>
+                <p>
+                    Your use of the Spopeer platform is contingent upon your acceptance of these Terms of Use, as well as our Privacy Policy. These terms apply to all Spopeer users, whether they are free or paid members. Some services may have additional terms and conditions, which you must accept in accordance with our company policy.
+                </p>
+                <p>
+                    We reserve the right to update, revise, modify, or change these terms at any time. Revised terms will be available on our website, and your continued use of Spopeer following such changes indicates your acceptance of the revised terms. Spopeer may, at its sole discretion, terminate, change, or suspend services without prior notice or explanation and may restrict user access to specific features at any time.
+                </p>
+
+                <h2 id="age-restriction">Age Restriction</h2>
+                <p>
+                    Users must be at least 18 years of age to use Spopeer services. By accepting these terms, you confirm that you are of legal age to use Spopeer in your jurisdiction and that any information you provide is accurate and truthful.
+                </p>
+                <p>
+                    We reserve the right to request proof of age at any time. Spopeer may deny service, suspend accounts, or change registration criteria without prior notice if we determine that a user does not meet age requirements or has provided false information.
+                </p>
+
+                <h2 id="rules">Rules for Using Services</h2>
+                <p>
+                    By agreeing to these terms, you commit to using our services only for their intended purposes and within the scope defined by Spopeer. Services are exclusively for registered users and are not permitted for commercial use unless expressly authorized by Spopeer.
+                </p>
+                <p>You are responsible for all activities conducted under your account and for maintaining the confidentiality of your login credentials. You may not:</p>
+                <ul>
+                    <li>Share your account or content submission permissions with third parties</li>
+                    <li>Overload or attempt to disrupt Spopeer's infrastructure or services</li>
+                    <li>Bypass security measures or engage in any hacking activities</li>
+                    <li>Participate in spamming, phishing, or malicious activities</li>
+                    <li>Scrape, crawl, or extract data from the platform</li>
+                    <li>Use bots or automated tools without authorization</li>
+                    <li>Harass, threaten, or abuse other users</li>
+                    <li>Post illegal, defamatory, or infringing content</li>
+                </ul>
+
+                <h2 id="registration">Registration of Profiles</h2>
+                <p>
+                    While browsing Spopeer content is open to all visitors, using our interactive services and features requires account registration. During registration, you must provide accurate, current, and complete information. Failure to maintain accurate information may result in account suspension or termination.
+                </p>
+                <p>
+                    Spopeer reserves the right to deny registration or cancel accounts that may cause harm, violate applicable laws, or violate these terms. Users are responsible for all activities under their account and must not disclose login details to anyone else. If you suspect unauthorized access or security threats to your account, notify our technical and customer support team immediately.
+                </p>
+
+                <div class="highlight-box">
+                    <strong>Important:</strong> Each user may create and maintain only one account. Creating multiple accounts for the same person may result in permanent suspension.
+                </div>
+
+                <h2 id="account-categories">Account Categories</h2>
+                <p>Spopeer offers distinct account categories tailored to different user types:</p>
+                <ul>
+                    <li><strong>Athletes:</strong> For professional and amateur athletes to promote their projects, events, training tips, achievements, and professional ideas.</li>
+                    <li><strong>Coaches:</strong> For coaches and managers to build their professional profiles. Coaches may be required to provide verification information for authentication.</li>
+                    <li><strong>Sports Clubs:</strong> For sports clubs and organizations to register and promote their services, including providing club details, member information, and achievements.</li>
+                    <li><strong>Supportive Professionals:</strong> For sports nutritionists, physiotherapists, sports psychologists, and other related professionals to offer their services to the sports community.</li>
+                </ul>
+                <p>
+                    Spopeer may request government IDs, sports certificates, official documentation, or other proof of identity before granting registration to certain account types. This verification helps maintain platform integrity and user trust.
+                </p>
+
+                <h2 id="trademarks">Trademarks</h2>
+                <p>
+                    Spopeer's trademarks, including but not limited to "Spopeer," "Spopeer.com," and associated logos, are protected intellectual property and cannot be copied, imitated, or reproduced without prior written permission from Spopeer.
+                </p>
+                <p>
+                    Using these marks without express consent is strictly prohibited. Additionally, all Spopeer service materials, such as images, graphics, icons, and design elements, are subject to the same intellectual property restrictions. Other Spopeer names, domains, and logos belong to their respective owners and are similarly protected.
+                </p>
+
+                <h2 id="license">License and Copyright</h2>
+                <p>
+                    Spopeer and/or its content providers hold exclusive copyrights for all content on the website and services, including images, videos, audio clips, graphics, and written materials. Users are granted a limited, non-exclusive, revocable license to access and view this material for personal, informational purposes only.
+                </p>
+                <p>
+                    This license does not permit the use of material for marketing, commercial resale, or any commercial purposes. Users must not:</p>
+                <ul>
+                    <li>Use framing techniques to display Spopeer content</li>
+                    <li>Publish or distribute Spopeer material elsewhere without permission</li>
+                    <li>Engage in data mining, extraction, or collection</li>
+                    <li>Modify or create derivative works from Spopeer content</li>
+                    <li>Remove copyright or proprietary notices</li>
+                </ul>
+                <p>
+                    User-generated content (posts, images, videos) remains the property of the user who created it. By posting content to Spopeer, users grant Spopeer a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, and distribute such content on the platform.
+                </p>
+
+                <h2 id="terms-comparison">Your Responsibilities</h2>
+                <p>By agreeing to these terms, you understand your rights and obligations:</p>
+                
+                <div class="terms-comparison">
+                    <div class="terms-yes">
+                        <h4>You Agree To</h4>
+                        <ul>
+                            <li>Comply with all applicable laws and regulations</li>
+                            <li>Maintain accurate and updated personal information</li>
+                            <li>Use your real name on your profile</li>
+                            <li>Use Spopeer for professional and legitimate purposes</li>
+                            <li>Respect other users' intellectual property rights</li>
+                            <li>Report violations and abusive behavior</li>
+                            <li>Accept responsibility for your account</li>
+                        </ul>
+                    </div>
+                    <div class="terms-no">
+                        <h4>You Agree NOT To</h4>
+                        <ul>
+                            <li>Use Spopeer for illegal or objectionable purposes</li>
+                            <li>Infringe on others' intellectual property rights</li>
+                            <li>Misuse Spopeer trademarks or copyrighted material</li>
+                            <li>Imitate or impersonate other users</li>
+                            <li>Use Spopeer data without authorization</li>
+                            <li>Engage in harassment, threats, or abuse</li>
+                            <li>Conduct unauthorized commercial activities</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2 id="payments">Payments and Charges</h2>
+                <p>
+                    Joining Spopeer and accessing basic features is free. However, certain premium features and services may have associated fees. By using paid services, you accept responsibility for all applicable charges and associated taxes.
+                </p>
+                <p>
+                    Spopeer will notify you in advance of any fee changes. If you do not agree with fee modifications, you may cancel your premium subscription. Your use of paid services is governed by separate terms specific to those services. All fees paid for premium services are non-refundable unless expressly stated otherwise.
+                </p>
+
+                <h2 id="law">Governing Law</h2>
+                <p>
+                    These Terms of Use are governed by and construed in accordance with the laws of Greece, without regard to its conflict of law provisions. Any disputes, claims, or controversies arising from or relating to these terms or the use of Spopeer services will be exclusively resolved by the competent courts located in Greece.
+                </p>
+                <p>
+                    By using Spopeer, you consent to the exclusive jurisdiction of Greek courts and waive any objection to venue or inconvenient forum.
+                </p>
+
+                <h2 id="changes">Changes to Terms</h2>
+                <p>
+                    Spopeer reserves the right to update, revise, or modify these Terms of Use at any time. Changes will be posted on our website and, where applicable, communicated to users via email or in-app notifications. Your continued use of Spopeer following the posting of revised terms constitutes your acceptance of the changes.
+                </p>
+                <p>
+                    For significant changes affecting user rights, Spopeer will provide notice at least 30 days in advance. If you do not agree with revised terms, you may terminate your account.
+                </p>
+
+                <h2 id="termination">Termination</h2>
+                <p>
+                    Spopeer may terminate, suspend, or restrict your account and access to services at any time, with or without cause, and with or without prior notice. Termination may occur if:
+                </p>
+                <ul>
+                    <li>You violate these Terms of Use or our policies</li>
+                    <li>You engage in illegal or harmful activities</li>
+                    <li>You repeatedly violate platform guidelines</li>
+                    <li>Payment for premium services fails</li>
+                    <li>We determine it is in the best interest of the platform</li>
+                </ul>
+                <p>
+                    All fees paid are non-refundable upon account termination. You retain the right to request account deletion at any time in accordance with our Privacy Policy, which will result in the removal of your personal data as detailed in that policy.
+                </p>
+
+                <h2 id="disclaimer">Disclaimer</h2>
+                <p>
+                    <strong>Disclaimer of Warranties:</strong> Spopeer is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, either express or implied. Spopeer does not warrant that services will be uninterrupted, error-free, or free from viruses or harmful code.
+                </p>
+                <p>
+                    Spopeer is not responsible for user actions, user-generated content, or how users interpret information shared on the platform. We may modify, block, reject, or remove any content or campaigns without explanation. We do not guarantee content completeness, accuracy, or availability.
+                </p>
+                <p>
+                    <strong>Limitation of Liability:</strong> Users access Spopeer at their own risk. To the fullest extent permitted by law, Spopeer shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of or inability to use the platform or services.
+                </p>
+
+                <div class="highlight-box">
+                    <strong>Important:</strong> Spopeer is not liable for events beyond our control, including force majeure events, third-party actions, or circumstances beyond our reasonable foresight.
+                </div>
+
+                <h2 id="general">General Terms</h2>
+                <p>
+                    <strong>Entire Agreement:</strong> These Terms of Use, together with our Privacy Policy and any additional terms for specific services, constitute the entire agreement between you and Spopeer regarding your use of the platform.
+                </p>
+                <p>
+                    <strong>Non-Transferability:</strong> These terms are personal and non-transferable. You may not assign, transfer, or delegate your rights or obligations under these terms without Spopeer's express written consent.
+                </p>
+                <p>
+                    <strong>Severability:</strong> If any provision of these terms is found to be invalid, illegal, or unenforceable, that provision will be modified to the minimum extent necessary to make it valid, or if such modification is not possible, the provision will be severed. The remaining provisions will continue in full force.
+                </p>
+                <p>
+                    <strong>Notices:</strong> All notices from Spopeer to users will be provided in writing and may be delivered via email, in-app notifications, or posted on the website. Users may contact Spopeer using the contact information provided in our Privacy Policy.
+                </p>
+                <p>
+                    <strong>Contact Information:</strong> If you have questions about these Terms of Use or wish to report violations, please contact our support team at:
+                </p>
+                <ul>
+                    <li><strong>Email:</strong> support@spopeer.com</li>
+                    <li><strong>Mailing Address:</strong> Spopeer Services, Greece</li>
+                    <li><strong>Support Portal:</strong> Available through your account dashboard</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong>Last Updated:</strong> December 2025. These Terms of Use may be updated periodically. Please review them regularly to stay informed of any changes.
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+
+      <p>Connecting the global sports community � athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+
+      <div class="social-row">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+        <li><a href="/index.html#user-types">User Types</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="/pages/legal/about.html">About Us</a></li>
+        <li><a href="/pages/company/careers.html">Careers</a></li>
+        <li><a href="/pages/company/blog.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Support</h5>
+      <ul>
+        <li><a href="/pages/company/help-center.html">Help Center</a></li>
+        <li><a href="/pages/contact/index.html">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links">
+      <a href="/pages/legal/privacy.html">Privacy</a>
+      <a href="/pages/legal/terms.html">Terms</a>
+      <a href="/pages/contact/index.html">Contact</a>
+    </div>
+  </div>
+</footer>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

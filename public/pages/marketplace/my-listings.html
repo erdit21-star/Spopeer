@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Listings — Spopeer Marketplace</title>
+  <script src="../../js/profile-sync-service.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      --bg: #fafaf8;
+      --white: #ffffff;
+      --ink: #111111;
+      --ink-2: #333333;
+      --muted: #7a7a7a;
+      --muted-2: #b8b8b8;
+      --border: #ebebE7;
+      --surface: #f3f3ef;
+      --surface-2: #eeeeea;
+      --accent: #001f3f;
+      --accent-lt: #cce7ff;
+      --accent-hover: #003366;
+      --red: #dc2626;
+      --yellow: #eab308;
+      --green: #16a34a;
+      --fD: 'Syne', sans-serif;
+      --fB: 'Plus Jakarta Sans', sans-serif;
+      --nav-h: 64px;
+      --r: 10px;
+      --pill: 999px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--fB);
+      background: var(--bg);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* TOPNAV */
+    .topnav {
+      position: sticky; top: 0; z-index: 300;
+      height: var(--nav-h);
+      background: rgba(250,250,248,0.94);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      height: 100%; padding: 0 24px;
+      display: flex; align-items: center; gap: 16px;
+    }
+
+    .logo {
+      font-family: var(--fD); font-size: 21px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink);
+      text-decoration: none; display: flex; align-items: center; gap: 7px;
+    }
+
+    .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+
+    .nav-right {
+      margin-left: auto; display: flex; align-items: center; gap: 12px;
+    }
+
+    /* PAGE CONTAINER */
+    .page-container {
+      max-width: 1280px; margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-family: var(--fD);
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .btn-create {
+      background: var(--accent);
+      color: var(--accent-lt);
+      border: none;
+      padding: 12px 24px;
+      border-radius: var(--r);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--fB);
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-create:hover {
+      background: var(--accent-hover);
+    }
+
+    /* STATS ROW */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      background: var(--surface);
+      border-radius: var(--r);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .stat-content h3 {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-family: var(--fD);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    /* TABS */
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--fB);
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: 0.2s;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn:hover {
+      color: var(--ink);
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* LISTINGS TABLE */
+    .listings-wrapper {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+    }
+
+    .listings-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .listings-table thead {
+      background: var(--surface);
+    }
+
+    .listings-table th {
+      padding: 16px 20px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .listings-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .listings-table tbody tr {
+      transition: 0.2s;
+    }
+
+    .listings-table tbody tr:hover {
+      background: var(--surface);
+    }
+
+    .listings-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .listing-cell-image {
+      width: 48px;
+      height: 48px;
+      background: var(--surface);
+      border-radius: var(--r);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .listing-cell-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .listing-cell-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .listing-title {
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    .listing-category {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-active {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-paused {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .badge-sold {
+      background: #ede9fe;
+      color: #6d28d9;
+    }
+
+    .stat-number {
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      background: var(--white);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 12px;
+    }
+
+    .action-btn:hover {
+      background: var(--surface);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .action-btn.danger {
+      color: var(--red);
+    }
+
+    .action-btn.danger:hover {
+      background: rgba(220, 38, 38, 0.1);
+      border-color: var(--red);
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 60px 40px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state-title {
+      font-family: var(--fD);
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .empty-state-btn {
+      display: inline-block;
+      padding: 10px 24px;
+      background: var(--accent);
+      color: var(--accent-lt);
+      border: none;
+      border-radius: var(--r);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+
+    .empty-state-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    /* SAVED LISTINGS SECTION */
+    .saved-section {
+      margin-top: 56px;
+      padding-top: 32px;
+      border-top: 2px solid var(--border);
+    }
+
+    .saved-title {
+      font-family: var(--fD);
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .saved-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .saved-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .saved-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(0,31,63,0.08);
+    }
+
+    .saved-image {
+      width: 100%;
+      height: 160px;
+      background: var(--surface);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .saved-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .saved-info {
+      padding: 12px;
+    }
+
+    .saved-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .saved-price {
+      font-family: var(--fD);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    /* MODALS */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--white);
+      border-radius: var(--r);
+      padding: 32px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .modal-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-family: var(--fD);
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .modal-text {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 10px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--fB);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .modal-btn-primary {
+      background: var(--red);
+      color: white;
+      border-color: var(--red);
+    }
+
+    .modal-btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .modal-btn-secondary {
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .modal-btn-secondary:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 960px) {
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .listings-table {
+        font-size: 12px;
+      }
+
+      .listings-table th, .listings-table td {
+        padding: 12px 12px;
+      }
+
+      .action-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-container {
+        padding: 16px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn-create {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .stats-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .saved-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <script>
+    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+    if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
+  </script>
+
+  <!-- TOPNAV -->
+  <nav class="topnav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <div class="nav-right">
+        <a href="marketplace.html" style="color: var(--muted); font-size: 13px; text-decoration: none;">← Back to Marketplace</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PAGE CONTENT -->
+  <div class="page-container">
+    <div class="page-header">
+      <h1 class="page-title">My Listings</h1>
+      <div style="display: flex; gap: 12px;">
+        <a href="analytics.html" class="btn-create" style="background: transparent; color: var(--accent); border: 1.5px solid var(--accent);">
+          <i class="fa-solid fa-chart-line"></i> Analytics
+        </a>
+        <a href="create-listing.html" class="btn-create">
+          <i class="fa-solid fa-plus"></i> Create New Listing
+        </a>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-content">
+          <h3>Total Listings</h3>
+          <div class="stat-value" id="totalListings">0</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">👁️</div>
+        <div class="stat-content">
+          <h3>Total Views</h3>
+          <div class="stat-value" id="totalViews">0</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">💬</div>
+        <div class="stat-content">
+          <h3>Total Inquiries</h3>
+          <div class="stat-value" id="totalInquiries">0</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">❤️</div>
+        <div class="stat-content">
+          <h3>Saved by Others</h3>
+          <div class="stat-value" id="totalSaved">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB BAR -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-status="all" onclick="filterByStatus('all')">All</button>
+      <button class="tab-btn" data-status="active" onclick="filterByStatus('active')">Active</button>
+      <button class="tab-btn" data-status="paused" onclick="filterByStatus('paused')">Paused</button>
+      <button class="tab-btn" data-status="sold" onclick="filterByStatus('sold')">Sold</button>
+    </div>
+
+    <!-- LISTINGS TABLE -->
+    <div class="listings-wrapper">
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <div class="empty-state-icon">📭</div>
+        <div class="empty-state-title">No listings yet</div>
+        <div class="empty-state-text">You haven't created any listings. Start sharing your products or services!</div>
+        <a href="create-listing.html" class="empty-state-btn">Create Your First Listing</a>
+      </div>
+
+      <div id="listingsContainer">
+        <table class="listings-table">
+          <thead>
+            <tr>
+              <th style="width: 40%;">Listing</th>
+              <th style="width: 12%;">Status</th>
+              <th style="width: 10%;">Views</th>
+              <th style="width: 12%;">Inquiries</th>
+              <th style="width: 16%;">Created</th>
+              <th style="width: 10%;"></th>
+            </tr>
+          </thead>
+          <tbody id="listingsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SAVED LISTINGS SECTION -->
+    <div class="saved-section">
+      <h2 class="saved-title">Your Saved Listings</h2>
+      <div class="saved-grid" id="savedGrid"></div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div class="modal" id="deleteModal">
+    <div class="modal-content">
+      <div class="modal-icon">⚠️</div>
+      <div class="modal-title">Delete Listing?</div>
+      <div class="modal-text">This action cannot be undone. Your listing will be permanently removed.</div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/marketplace-service.js"></script>
+  <script>
+    ProfileSyncService.init();
+
+    let allMyListings = [];
+    let currentFilter = 'all';
+    let deleteTargetId = null;
+
+    async function loadMyListings() {
+      try {
+        const listings = await MarketplaceService.getMyListings();
+        allMyListings = listings;
+        
+        renderListings();
+        loadStats();
+        loadSavedListings();
+      } catch (error) {
+        console.error('Error loading listings:', error);
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('listingsContainer').style.display = 'none';
+      }
+    }
+
+    function renderListings() {
+      const tbody = document.getElementById('listingsTableBody');
+      tbody.innerHTML = '';
+
+      const filtered = allMyListings.filter(listing => {
+        if (currentFilter === 'all') return true;
+        return listing.status === currentFilter;
+      });
+
+      if (filtered.length === 0) {
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('listingsContainer').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('listingsContainer').style.display = 'block';
+
+      filtered.forEach(listing => {
+        const row = document.createElement('tr');
+        const image = listing.images && listing.images.length > 0 ? listing.images[0] : '';
+        const imgHtml = image ? `<img src="${image}" alt="${listing.title}">` : `<i class="fa-solid fa-image"></i>`;
+        const date = new Date(listing.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        let statusBadge = '';
+        if (listing.status === 'active') {
+          statusBadge = '<span class="badge badge-active">Active</span>';
+        } else if (listing.status === 'paused') {
+          statusBadge = '<span class="badge badge-paused">Paused</span>';
+        } else if (listing.status === 'sold') {
+          statusBadge = '<span class="badge badge-sold">Sold</span>';
+        }
+
+        row.innerHTML = `
+          <td>
+            <div class="listing-cell-info">
+              <div class="listing-cell-image">${imgHtml}</div>
+              <div>
+                <div class="listing-title">${listing.title}</div>
+                <div class="listing-category">€${listing.price.toFixed(2)} • ${listing.category}</div>
+              </div>
+            </div>
+          </td>
+          <td>${statusBadge}</td>
+          <td><span class="stat-number">${listing.views_count || 0}</span></td>
+          <td><span class="stat-number">${listing.inquiries_count || 0}</span></td>
+          <td>${date}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="action-btn" onclick="editListing(${listing.id})" title="Edit">
+                <i class="fa-solid fa-pencil"></i>
+              </button>
+              <button class="action-btn" onclick="toggleListingStatus(${listing.id}, '${listing.status}')" title="${listing.status === 'active' ? 'Pause' : 'Activate'}">
+                <i class="fa-solid fa-${listing.status === 'active' ? 'pause' : 'play'}"></i>
+              </button>
+              <button class="action-btn danger" onclick="showDeleteModal(${listing.id})" title="Delete">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    async function loadStats() {
+      const totalListings = allMyListings.length;
+      const totalViews = allMyListings.reduce((sum, l) => sum + (l.views_count || 0), 0);
+      const totalInquiries = allMyListings.reduce((sum, l) => sum + (l.inquiries_count || 0), 0);
+
+      document.getElementById('totalListings').textContent = totalListings;
+      document.getElementById('totalViews').textContent = totalViews;
+      document.getElementById('totalInquiries').textContent = totalInquiries;
+
+      try {
+        const saved = await MarketplaceService.getSavedListings();
+        document.getElementById('totalSaved').textContent = saved.length;
+      } catch (error) {
+        console.error('Error loading saved count:', error);
+      }
+    }
+
+    async function loadSavedListings() {
+      try {
+        const saved = await MarketplaceService.getSavedListings();
+        const grid = document.getElementById('savedGrid');
+        grid.innerHTML = '';
+
+        if (saved.length === 0) {
+          grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--muted); font-size: 13px;">You haven\'t saved any listings yet</p>';
+          return;
+        }
+
+        saved.forEach(listing => {
+          const image = listing.images && listing.images.length > 0 ? listing.images[0] : '';
+          const imgHtml = image ? `<img src="${image}" alt="${listing.title}">` : `<i class="fa-solid fa-image"></i>`;
+          
+          const card = document.createElement('div');
+          card.className = 'saved-card';
+          card.onclick = () => window.location.href = `listing-detail.html?id=${listing.id}`;
+          
+          card.innerHTML = `
+            <div class="saved-image">${imgHtml}</div>
+            <div class="saved-info">
+              <div class="saved-title">${listing.title}</div>
+              <div class="saved-price">€${listing.price.toFixed(2)}</div>
+            </div>
+          `;
+          
+          grid.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Error loading saved listings:', error);
+      }
+    }
+
+    function filterByStatus(status) {
+      currentFilter = status;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`[data-status="${status}"]`).classList.add('active');
+      renderListings();
+    }
+
+    function editListing(id) {
+      window.location.href = `create-listing.html?edit=${id}`;
+    }
+
+    async function toggleListingStatus(id, currentStatus) {
+      const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+      try {
+        await MarketplaceService.updateStatus(id, newStatus);
+        loadMyListings();
+      } catch (error) {
+        console.error('Error updating status:', error);
+        alert('Error updating listing status');
+      }
+    }
+
+    function showDeleteModal(id) {
+      deleteTargetId = id;
+      document.getElementById('deleteModal').classList.add('show');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('show');
+      deleteTargetId = null;
+    }
+
+    async function confirmDelete() {
+      if (!deleteTargetId) return;
+
+      try {
+        await MarketplaceService.deleteListing(deleteTargetId);
+        closeDeleteModal();
+        loadMyListings();
+      } catch (error) {
+        console.error('Error deleting listing:', error);
+        alert('Error deleting listing');
+      }
+    }
+
+    // Close modal on background click
+    document.getElementById('deleteModal').addEventListener('click', (e) => {
+      if (e.target.id === 'deleteModal') {
+        closeDeleteModal();
+      }
+    });
+
+    // Initial load
+    loadMyListings();
+  </script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

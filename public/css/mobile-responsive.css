@@ -1,0 +1,351 @@
+/* ═══════════════════════════════════════════════════════════
+   Spopeer — Shared Mobile-Responsive Foundation
+   Applied across the whole project.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 0. Base protection ── */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+img, video, svg, canvas, iframe, embed, object { max-width: 100%; height: auto; }
+iframe { border: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Scrollable table wrapper (added by JS) */
+.sp-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+
+/* ── 1. Tablet breakpoint (≤1024px) ── */
+@media (max-width: 1024px) {
+  /* Layout stacking — common multi-column wrappers */
+  .app-layout,
+  .page-wrap,
+  .page-shell,
+  .content-grid,
+  .search-grid,
+  .market-grid,
+  .settings-grid,
+  .dashboard-grid,
+  .profile-grid {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Sidebars become full-width blocks */
+  .sidebar,
+  .sidebar-left,
+  .sidebar-right,
+  .panel-left,
+  .filters-panel,
+  .profile-sidebar,
+  .sticky-sidebar,
+  aside:not(.edit-sidebar):not(.right-col) {
+    width: 100% !important;
+    max-width: 100% !important;
+    position: static !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Right sidebars hide on tablet */
+  .sidebar-right,
+  .right-col {
+    display: none !important;
+  }
+
+  /* Container fluid padding */
+  .app-layout,
+  .page-wrap,
+  .page-shell {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* Footer grids */
+  .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 24px !important;
+  }
+}
+
+/* ── 2. Mobile breakpoint (≤768px) ── */
+@media (max-width: 768px) {
+  /* Nav improvements */
+  .nav-search {
+    display: none !important;
+  }
+  .topnav, header {
+    height: 56px !important;
+  }
+  .nav-inner, .navbar {
+    padding: 0 12px !important;
+    gap: 8px !important;
+  }
+  .nav-right {
+    gap: 4px !important;
+  }
+  .nav-icon {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 15px !important;
+  }
+
+  /* Logo compact */
+  .logo-text {
+    font-size: 17px !important;
+  }
+
+  /* User chip compact */
+  .chip-name, .chip-caret {
+    display: none !important;
+  }
+  .user-chip {
+    padding: 4px !important;
+  }
+
+  /* Public nav links hide (replaced by mobile menu) */
+  .nav-links, .auth-row, .auth-buttons {
+    display: none !important;
+  }
+
+  /* Grid collapses */
+  .app-layout,
+  .page-wrap,
+  .page-shell {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    gap: 12px !important;
+  }
+
+  /* All sidebars and panels full-width */
+  .sidebar,
+  .sidebar-left,
+  .sidebar-right,
+  .sidebar-profile,
+  .panel-left,
+  .panel-right,
+  .filters-panel,
+  .right-col,
+  .sticky-sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+    position: static !important;
+    height: auto !important;
+  }
+
+  /* Sidebar-left stays visible but non-sticky */
+  .sidebar-left {
+    display: block !important;
+    padding: 8px 0 !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border, #e8e8e4) !important;
+  }
+
+  /* Card & content spacing */
+  .content-card,
+  .side-card,
+  .card {
+    padding: 14px !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* Form controls */
+  .form-input, input, textarea, select {
+    font-size: 16px !important; /* prevents iOS zoom */
+  }
+
+  /* Buttons touch-friendly */
+  button, .btn, [class*="btn-"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Action rows wrap */
+  .action-row, .btn-row, .post-actions, .profile-actions {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* Tables wrapped by JS — ensure they scroll */
+  .sp-table-scroll {
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+  table {
+    min-width: 480px;
+  }
+
+  /* Modals / dialogs */
+  .modal, .dialog, .modal-content, [class*="modal"], [class*="dialog"] {
+    max-width: 95vw !important;
+    max-height: 90vh !important;
+    margin: 5vh auto !important;
+  }
+
+  /* Profile menu position fix */
+  .profile-menu {
+    right: 4px !important;
+    width: calc(100vw - 24px) !important;
+    max-width: 280px !important;
+  }
+
+  /* Notification popover */
+  .notif-popover {
+    right: 4px !important;
+    width: calc(100vw - 24px) !important;
+    max-width: 320px !important;
+  }
+
+  /* Footer */
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  footer {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* Bottom safe-area spacing */
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+/* ── 3. Small phone breakpoint (≤480px) ── */
+@media (max-width: 480px) {
+  /* Tighter padding */
+  .app-layout,
+  .page-wrap,
+  .page-shell {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Cards tighter */
+  .content-card,
+  .side-card,
+  .card,
+  .edit-card {
+    border-radius: 10px !important;
+  }
+
+  /* Grids to single column */
+  .form-row, .form-row-3 {
+    grid-template-columns: 1fr !important;
+  }
+  .checkbox-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Typography scale */
+  h1, .page-title {
+    font-size: 22px !important;
+  }
+  h2 {
+    font-size: 18px !important;
+  }
+
+  /* Marketplace / search grids */
+  .role-grid,
+  .results-grid,
+  .marketplace-results-grid,
+  .listings-grid,
+  .media-grid,
+  .achievement-grid,
+  .recommended-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Nav even more compact */
+  .nav-inner, .navbar {
+    padding: 0 8px !important;
+  }
+}
+
+/* ── 4. Mobile hamburger for guest/public navs (injected by JS) ── */
+.sp-public-hamburger {
+  display: none;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--ink, #111);
+  font-size: 20px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-left: auto;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .2s;
+}
+.sp-public-hamburger:hover { background: var(--surface, #f3f3ef); }
+
+.sp-public-mobile-panel {
+  display: none;
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  background: var(--white, #fff);
+  border-bottom: 1px solid var(--border, #e8e8e4);
+  box-shadow: 0 8px 30px rgba(0,0,0,.1);
+  z-index: 800;
+  padding: 12px 16px;
+  flex-direction: column;
+  gap: 4px;
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+.sp-public-mobile-panel.open { display: flex; }
+
+.sp-public-mobile-panel a,
+.sp-public-mobile-panel button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-2, #333);
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  width: 100%;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s;
+}
+.sp-public-mobile-panel a:hover,
+.sp-public-mobile-panel button:hover {
+  background: var(--surface, #f3f3ef);
+}
+
+@media (max-width: 768px) {
+  .sp-public-hamburger { display: flex; }
+}
+@media (min-width: 769px) {
+  .sp-public-hamburger { display: none !important; }
+  .sp-public-mobile-panel { display: none !important; }
+}
+
+/* ── 5. Messaging mobile chat back button ── */
+.sp-msg-back-btn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--ink, #111);
+  font-size: 16px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (max-width: 768px) {
+  .sp-msg-back-btn { display: flex; }
+}

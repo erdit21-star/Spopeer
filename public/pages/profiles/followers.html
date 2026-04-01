@@ -1,0 +1,1352 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Followers — Spopeer</title>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/auth.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    /* ── DESIGN TOKENS (matches Spopeer system) ── */
+    :root {
+      --accent:       #001f3f;
+      --accent-mid:   #003366;
+      --accent-hover: #001428;
+      --accent-lt:    #cce7ff;
+      --accent-lt2:   #e8f4ff;
+      --bg:           #fafaf8;
+      --white:        #ffffff;
+      --ink:          #111111;
+      --ink-2:        #333333;
+      --ink-light:    #4a4a4a;
+      --muted:        #7a7a7a;
+      --muted-2:      #b8b8b8;
+      --border:       #ebebE7;
+      --surface:      #f3f3ef;
+      --surface-2:    #eeeeea;
+      --blue:         #1a6bff;
+      --blue-lt:      #eef3ff;
+      --red:          #ef4444;
+      --red-lt:       #fef2f2;
+      --green:        #16a34a;
+      --green-lt:     #dcfce7;
+      --fD:           'Syne', sans-serif;
+      --fB:           'Plus Jakarta Sans', sans-serif;
+      --nav-h:        64px;
+      --r:            10px;
+      --rS:           7px;
+      --rM:           16px;
+      --rL:           20px;
+      --pill:         999px;
+      --shadow-sm:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:    0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+      --shadow-lg:    0 8px 28px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.04);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--fB);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 400;
+      height: var(--nav-h);
+      background: rgba(250,250,248,.95);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      height: 100%;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      font-family: var(--fD);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      color: var(--ink);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .logo-dot {
+      width: 7px; height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+    .nav-search {
+      flex: 1;
+      max-width: 340px;
+      position: relative;
+    }
+    .nav-search i {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+    .nav-search input {
+      width: 100%;
+      padding: 9px 14px 9px 36px;
+      background: var(--surface);
+      border: 1.5px solid transparent;
+      border-radius: var(--pill);
+      font-size: 13px;
+      font-family: var(--fB);
+      color: var(--ink);
+      transition: .2s;
+    }
+    .nav-search input:focus {
+      outline: none;
+      background: var(--white);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,31,63,.07);
+    }
+    .nav-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+    }
+    .nav-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: .2s;
+      position: relative;
+    }
+    .nav-btn:hover { background: var(--surface); color: var(--ink); }
+    .nav-notif-dot {
+      position: absolute;
+      top: 7px; right: 7px;
+      width: 7px; height: 7px;
+      background: var(--red);
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+    }
+    /* profile chip */
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--pill);
+      padding: 5px 12px 5px 5px;
+      user-select: none;
+      transition: .2s;
+      margin-left: 4px;
+    }
+    .user-chip:hover { border-color: var(--accent); }
+    .chip-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--accent-lt);
+      font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .chip-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .chip-caret { font-size: 9px; color: var(--muted); }
+
+    /* ── PROFILE MENU ── */
+    .profile-menu{position:absolute;top:100%;right:0;margin-top:8px;width:260px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--rL);box-shadow:0 14px 40px rgba(0,0,0,.12);padding:12px 0;display:none;z-index:500}
+    .profile-menu.visible{display:block}
+    .profile-menu-section{padding:0}
+    .profile-menu-section+.profile-menu-section{border-top:1px solid var(--border)}
+    .profile-menu-section-header{padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .2s;border-radius:var(--rS);margin:2px 4px}
+    .profile-menu-section-header:hover{background:var(--surface)}
+    .profile-menu-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0}
+    .profile-menu-section-toggle{font-size:10px;color:var(--muted-2);transition:transform .3s ease,color .2s}
+    .profile-menu-section.collapsed .profile-menu-section-toggle{transform:rotate(-90deg)}
+    .profile-menu-section-items{overflow:hidden;transition:max-height .3s ease,padding .3s ease;max-height:500px;padding:0 16px 10px}
+    .profile-menu-section.collapsed .profile-menu-section-items{max-height:0;padding:0 16px}
+    .profile-menu-item{width:100%;text-align:left;font-size:13px;color:var(--ink-2);padding:8px 10px;display:flex;align-items:center;gap:10px;background:transparent;border:none;cursor:pointer;transition:background .2s;border-radius:var(--rS);margin-bottom:2px;font-family:var(--fB)}
+    .profile-menu-item:hover{background:var(--surface);color:var(--ink)}
+    .profile-menu-item i{width:18px;text-align:center;color:var(--muted)}
+    .profile-menu-item.logout{color:var(--accent)}
+    .profile-menu-item.logout:hover{background:rgba(0,31,63,.06)}
+
+    /* ── LAYOUT ── */
+    .page-outer {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    /* ── LEFT SIDEBAR ── */
+    .sidebar {
+      position: sticky;
+      top: calc(var(--nav-h) + 20px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Profile mini-card */
+    .profile-mini {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--rL);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .profile-mini-cover {
+      height: 64px;
+      background: linear-gradient(135deg, var(--accent) 0%, #003a70 100%);
+      position: relative;
+    }
+    .profile-mini-cover::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .profile-mini-body {
+      padding: 0 16px 18px;
+    }
+    .profile-mini-av-wrap {
+      margin-top: -24px;
+      margin-bottom: 10px;
+    }
+    .profile-mini-av {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--accent-lt);
+      font-size: 18px; font-weight: 800;
+      font-family: var(--fD);
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid var(--white);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .profile-mini-name {
+      font-family: var(--fD);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -.01em;
+    }
+    .profile-mini-type {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .profile-mini-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      margin-top: 14px;
+    }
+    .pstat {
+      background: var(--white);
+      padding: 10px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .pstat:hover { background: var(--surface); }
+    .pstat-n {
+      font-family: var(--fD);
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .pstat-l {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-top: 3px;
+    }
+    .btn-view-profile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      margin-top: 12px;
+      padding: 10px;
+      background: var(--accent);
+      color: var(--accent-lt);
+      border: none;
+      border-radius: var(--r);
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--fB);
+      cursor: pointer;
+      text-decoration: none;
+      transition: .2s;
+    }
+    .btn-view-profile:hover { background: var(--accent-mid); }
+
+    /* Suggestions card */
+    .sidebar-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--rL);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .sidebar-card-head {
+      padding: 14px 18px 10px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sidebar-card-title {
+      font-family: var(--fD);
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -.01em;
+    }
+    .sidebar-card-link {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .sugg-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 18px;
+      transition: background .15s;
+      cursor: pointer;
+    }
+    .sugg-item:hover { background: var(--surface); }
+    .sugg-av {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .sugg-info { flex: 1; min-width: 0; }
+    .sugg-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sugg-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .btn-sugg {
+      padding: 5px 12px;
+      background: var(--accent-lt2);
+      color: var(--accent);
+      border: 1.5px solid var(--accent-lt);
+      border-radius: var(--pill);
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--fB);
+      cursor: pointer;
+      transition: .2s;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .btn-sugg:hover { background: var(--accent); color: var(--accent-lt); border-color: var(--accent); }
+
+    /* ── MAIN CONTENT ── */
+    .main-content { min-width: 0; }
+
+    /* Page header */
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      gap: 12px;
+    }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .breadcrumb a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .breadcrumb a:hover { color: var(--accent); }
+    .breadcrumb i { font-size: 10px; }
+    .page-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .page-title {
+      font-family: var(--fD);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      color: var(--ink);
+    }
+    .page-count-pill {
+      padding: 4px 12px;
+      background: var(--accent);
+      color: var(--accent-lt);
+      border-radius: var(--pill);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* Search bar inside main */
+    .list-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .list-search {
+      flex: 1;
+      position: relative;
+    }
+    .list-search i {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+    .list-search input {
+      width: 100%;
+      padding: 10px 14px 10px 36px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      font-size: 13px;
+      font-family: var(--fB);
+      color: var(--ink);
+      transition: .2s;
+    }
+    .list-search input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,31,63,.06);
+    }
+    .list-search input::placeholder { color: var(--muted-2); }
+    .filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--fB);
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: .2s;
+      white-space: nowrap;
+    }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn i { font-size: 12px; color: var(--muted); }
+
+    /* Tabs */
+    .tabs-row {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      padding: 11px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      background: none;
+      font-family: var(--fB);
+      transition: .2s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .tab-btn:hover { color: var(--ink); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 700;
+    }
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 18px;
+      padding: 0 6px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: var(--pill);
+      transition: .2s;
+    }
+    .tab-btn.active .tab-badge {
+      background: var(--accent);
+      color: var(--accent-lt);
+    }
+
+    /* User cards */
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--rL);
+      transition: border-color .2s, box-shadow .2s, transform .15s;
+      cursor: pointer;
+      animation: cardIn .3s ease both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .user-card:hover {
+      border-color: rgba(0,31,63,.25);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+    .user-av-wrap { position: relative; flex-shrink: 0; }
+    .user-av {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--accent-lt);
+      font-family: var(--fD);
+      font-size: 17px;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      border: 2px solid var(--white);
+      box-shadow: var(--shadow-sm);
+    }
+    .user-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .type-dot {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 2px solid var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px;
+    }
+    .type-dot.athlete { background: var(--accent); color: var(--accent-lt); }
+    .type-dot.coach   { background: #7c3aed; color: #fff; }
+    .type-dot.club    { background: var(--green); color: #fff; }
+    .type-dot.pro     { background: #ea580c; color: #fff; }
+
+    .user-info { flex: 1; min-width: 0; }
+    .user-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+    .user-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .verified-ic {
+      font-size: 12px;
+      color: var(--blue);
+      flex-shrink: 0;
+    }
+    .user-meta {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .meta-dot { color: var(--muted-2); font-size: 10px; }
+    .user-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: var(--pill);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .badge-athlete { background: var(--accent-lt2); color: var(--accent); }
+    .badge-coach   { background: #ede9fe; color: #6d28d9; }
+    .badge-club    { background: var(--green-lt); color: var(--green); }
+    .badge-pro     { background: #fff7ed; color: #ea580c; }
+
+    .user-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn-message-sm {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: .2s;
+    }
+    .btn-message-sm:hover { background: var(--blue-lt); color: var(--blue); border-color: #c7d9ff; }
+    .btn-follow {
+      padding: 8px 18px;
+      border: 1.5px solid var(--accent);
+      background: var(--white);
+      border-radius: var(--pill);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--fB);
+      color: var(--accent);
+      transition: .2s;
+      white-space: nowrap;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .btn-follow:hover { background: var(--accent); color: var(--accent-lt); }
+    .btn-follow.following {
+      background: var(--accent);
+      color: var(--accent-lt);
+      border-color: var(--accent);
+    }
+    .btn-follow.following:hover {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+    .btn-follow.following:hover .follow-label::before { content: 'Unfollow'; }
+    .btn-follow.following .follow-label { display: block; }
+    .btn-follow.following:hover .follow-label { display: none; }
+    .btn-follow.following:hover .unfollow-label { display: block; }
+    .unfollow-label { display: none; }
+
+    /* Mutual badge */
+    .mutual-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .mutual-avatars {
+      display: flex;
+    }
+    .mutual-av {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1.5px solid var(--white);
+      margin-right: -5px;
+      font-size: 7px;
+      font-weight: 800;
+      color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .empty-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 28px;
+      color: var(--muted-2);
+    }
+    .empty-title {
+      font-family: var(--fD);
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .empty-desc {
+      font-size: 13px;
+      color: var(--muted);
+      max-width: 300px;
+      margin: 0 auto 20px;
+      line-height: 1.6;
+    }
+    .btn-empty {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 22px;
+      background: var(--accent);
+      color: var(--accent-lt);
+      border: none;
+      border-radius: var(--pill);
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--fB);
+      cursor: pointer;
+      text-decoration: none;
+      transition: .2s;
+    }
+    .btn-empty:hover { background: var(--accent-mid); }
+
+    /* Section divider label */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      padding: 14px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: var(--white);
+      padding: 11px 22px;
+      border-radius: var(--pill);
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s, transform .25s;
+      white-space: nowrap;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 860px) {
+      .page-outer {
+        grid-template-columns: 1fr;
+        padding: 20px 16px 60px;
+      }
+      .sidebar { position: static; }
+      .profile-mini { display: none; }
+    }
+    @media (max-width: 540px) {
+      .nav-search { display: none; }
+      .list-toolbar { flex-wrap: wrap; }
+      .list-search { flex: 1 1 100%; }
+      .user-card { padding: 12px 14px; }
+      .btn-message-sm { display: none; }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<header>
+  <nav class="nav-inner">
+    <a href="/index.html" class="logo" data-home-link>
+      <span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span>
+    </a>
+
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search athletes, coaches, sports…"/>
+    </div>
+
+    <div class="nav-right">
+      <button class="nav-btn" onclick="window.location.href='/feed.html'" title="Home">
+        <i class="fa-solid fa-house"></i>
+      </button>
+      <button class="nav-btn" title="Messages">
+        <i class="fa-regular fa-paper-plane"></i>
+      </button>
+      <button class="nav-btn" title="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="nav-notif-dot"></span>
+      </button>
+      <div class="user-chip" id="userChip">
+        <span class="chip-avatar" id="chipAvatar">?</span>
+        <span class="chip-name" id="chipName">You</span>
+        <i class="fa-solid fa-chevron-down chip-caret"></i>
+      </div>
+      <div class="profile-menu" id="profileMenu" aria-hidden="true">
+        <div class="profile-menu-section" data-section="identity">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
+            <div class="profile-menu-title">Your Identity</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
+            <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
+            <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="account">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Account & Settings</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
+            <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
+            <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy & Safety</button>
+            <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
+            <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
+            <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="features">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Platform Features</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>
+            <button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements & Badges</button>
+            <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
+            <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
+            <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
+            <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="help">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Help & Misc</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
+            <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
+            <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
+          </div>
+        </div>
+        <div class="profile-menu-section">
+          <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
+            <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<div class="page-outer">
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <aside class="sidebar">
+    <!-- Profile mini card -->
+    <div class="profile-mini">
+      <div class="profile-mini-cover"></div>
+      <div class="profile-mini-body">
+        <div class="profile-mini-av-wrap">
+          <div class="profile-mini-av" id="sidebarAv">?</div>
+        </div>
+        <div class="profile-mini-name" id="sidebarName">Your Name</div>
+        <div class="profile-mini-type" id="sidebarType">Athlete</div>
+        <div class="profile-mini-stats">
+          <div class="pstat" onclick="switchTab('followers')">
+            <div class="pstat-n" id="statFollowers">0</div>
+            <div class="pstat-l">Followers</div>
+          </div>
+          <div class="pstat" onclick="switchTab('following')">
+            <div class="pstat-n" id="statFollowing">0</div>
+            <div class="pstat-l">Following</div>
+          </div>
+        </div>
+        <a href="public-profile.html" class="btn-view-profile">
+          <i class="fa-regular fa-id-badge"></i> View My Profile
+        </a>
+      </div>
+    </div>
+
+    <!-- People you may know -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-head">
+        <div class="sidebar-card-title">People you may know</div>
+        <span class="sidebar-card-link">See all</span>
+      </div>
+      <div id="suggestionsList"></div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+
+    <!-- Page heading -->
+    <div class="page-head">
+      <div class="page-head-left">
+        <div class="breadcrumb">
+          <a href="/feed.html"><i class="fa-solid fa-house"></i> Home</a>
+          <i class="fa-solid fa-chevron-right"></i>
+          <a href="public-profile.html">Profile</a>
+          <i class="fa-solid fa-chevron-right"></i>
+          <span id="breadcrumbCurrent">Followers</span>
+        </div>
+        <div class="page-title-row">
+          <h1 class="page-title" id="pageTitle">Followers</h1>
+          <span class="page-count-pill" id="pageCountPill">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="list-toolbar">
+      <div class="list-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="listSearchInput" placeholder="Search followers…"/>
+      </div>
+      <button class="filter-btn" id="filterBtn">
+        <i class="fa-solid fa-sliders"></i> Filter
+      </button>
+    </div>
+
+    <!-- Filter chips (hidden by default) -->
+    <div id="filterChips" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="user-type-badge badge-athlete" style="cursor:pointer;padding:5px 14px;border:1.5px solid transparent;" data-filter="athlete">🏃 Athlete</button>
+      <button class="user-type-badge badge-coach"   style="cursor:pointer;padding:5px 14px;border:1.5px solid transparent;" data-filter="coach">🎯 Coach</button>
+      <button class="user-type-badge badge-club"    style="cursor:pointer;padding:5px 14px;border:1.5px solid transparent;" data-filter="club">🏟️ Club</button>
+      <button class="user-type-badge badge-pro"     style="cursor:pointer;padding:5px 14px;border:1.5px solid transparent;" data-filter="pro">🩺 Professional</button>
+      <button style="padding:5px 14px;border-radius:var(--pill);border:1.5px solid var(--border);background:var(--white);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;" id="clearFilter">Clear</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-row">
+      <button class="tab-btn active" id="tabFollowers" data-tab="followers">
+        <i class="fa-regular fa-users"></i>
+        Followers <span class="tab-badge" id="badgeFollowers">0</span>
+      </button>
+      <button class="tab-btn" id="tabFollowing" data-tab="following">
+        <i class="fa-regular fa-user-plus"></i>
+        Following <span class="tab-badge" id="badgeFollowing">0</span>
+      </button>
+    </div>
+
+    <!-- Lists -->
+    <div class="user-list" id="listFollowers"></div>
+    <div class="user-list" id="listFollowing" style="display:none;"></div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Data ── */
+  var user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+  var followersData = [];
+  var followingData = [];
+  var followingEmails = new Set();
+
+  var avatarColors = [
+    '#001f3f','#003366','#1a6bff','#16a34a','#7c3aed','#ea580c','#0891b2','#b91c1c'
+  ];
+  function colorFor(email) {
+    var idx = 0;
+    for (var i = 0; i < email.length; i++) idx = (idx + email.charCodeAt(i)) % avatarColors.length;
+    return avatarColors[idx];
+  }
+
+  function normalizeUserType(role) {
+    if (role === 'supportive_professional') return 'pro';
+    return role || 'athlete';
+  }
+
+  function normalizeConnection(entry) {
+    return {
+      id: entry.id || entry._id || entry.email || '',
+      name: entry.fullName || entry.name || entry.email || 'User',
+      email: entry.email || '',
+      userType: normalizeUserType(entry.role || entry.userType),
+      sport: entry.primarySport || entry.sport || '',
+      mutual: 0,
+      verified: false
+    };
+  }
+
+  /* ── Helpers ── */
+  function initials(name) {
+    return name.split(' ').map(function (x) { return x[0] || ''; }).join('').toUpperCase().slice(0, 2) || '??';
+  }
+  function typeLabel(t) {
+    return { athlete:'Athlete', coach:'Coach', club:'Club', pro:'Professional' }[t] || 'User';
+  }
+  function typeBadgeClass(t) {
+    return { athlete:'badge-athlete', coach:'badge-coach', club:'badge-club', pro:'badge-pro' }[t] || 'badge-athlete';
+  }
+  function typeDotClass(t) {
+    return { athlete:'athlete', coach:'coach', club:'club', pro:'pro' }[t] || 'athlete';
+  }
+  function typeIcon(t) {
+    return { athlete:'fa-person-running', coach:'fa-bullseye', club:'fa-shield-halved', pro:'fa-star' }[t] || 'fa-user';
+  }
+  function showToast(msg, icon) {
+    var t = document.getElementById('toast');
+    t.innerHTML = (icon ? '<i class="fa-solid ' + icon + '"></i> ' : '') + msg;
+    t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2500);
+  }
+
+  async function loadConnections() {
+    if (!window.SpopeerAPI || !window.SpopeerAPI.getFollowers || !window.SpopeerAPI.getFollowing) {
+      return;
+    }
+
+    const userId = user.id || user._id || user.email;
+    if (!userId) {
+      return;
+    }
+
+    try {
+      const results = await Promise.all([
+        window.SpopeerAPI.getFollowers(userId),
+        window.SpopeerAPI.getFollowing(userId)
+      ]);
+
+      followersData = (results[0].users || []).map(normalizeConnection);
+      followingData = (results[1].users || []).map(normalizeConnection);
+      followingEmails = new Set(followingData.map(function (entry) { return entry.email; }));
+
+      document.getElementById('statFollowers').textContent = followersData.length;
+      document.getElementById('statFollowing').textContent = followingData.length;
+      document.getElementById('badgeFollowers').textContent = followersData.length;
+      document.getElementById('badgeFollowing').textContent = followingData.length;
+      document.getElementById('pageCountPill').textContent = activeTab === 'followers' ? followersData.length : followingData.length;
+      renderSuggestions();
+      switchTab(activeTab);
+    } catch (err) {
+      console.error('Failed to load real follow data:', err);
+      showToast(err.message || 'Failed to load follow data', 'triangle-exclamation');
+    }
+  }
+
+  function renderSuggestions() {
+    var suggList = document.getElementById('suggestionsList');
+    if (!suggList) return;
+    suggList.innerHTML = '<div class="sugg-item" style="justify-content:flex-start;"><div class="sugg-info"><div class="sugg-name">No suggestions yet</div><div class="sugg-meta">Suggestions will appear as real network activity grows.</div></div></div>';
+  }
+
+  /* ── Hydrate sidebar ── */
+  var nameStr = (user.fullName || user.displayName || user.name || 'You');
+  var ini = initials(nameStr);
+  document.getElementById('sidebarAv').textContent = ini;
+  document.getElementById('sidebarName').textContent = nameStr.trim();
+  document.getElementById('sidebarType').textContent = typeLabel(normalizeUserType(user.role || user.userType));
+  document.getElementById('chipAvatar').textContent = ini.slice(0, 1);
+  document.getElementById('chipName').textContent = nameStr.split(' ')[0] || nameStr;
+  renderSuggestions();
+
+  /* ── Render user list ── */
+  var activeFilter = null;
+  var searchQuery  = '';
+  var activeTab    = (new URLSearchParams(window.location.search).get('type') === 'following') ? 'following' : 'followers';
+
+  function renderCard(u, idx) {
+    var isSelf = !!u.email && !!user.email && u.email === user.email;
+    var isFollowed = followingEmails.has(u.email);
+    var card = document.createElement('div');
+    card.className = 'user-card';
+    card.style.animationDelay = (idx * 40) + 'ms';
+    var mutualHtml = '';
+    if (u.mutual > 0) {
+      mutualHtml = '<div class="mutual-badge"><div class="mutual-avatars">' +
+        '<div class="mutual-av">M</div><div class="mutual-av">+</div>' +
+        '</div>' + u.mutual + ' mutual connection' + (u.mutual > 1 ? 's' : '') + '</div>';
+    }
+    card.innerHTML =
+      '<div class="user-av-wrap">' +
+        '<div class="user-av" style="background:' + colorFor(u.email) + ';">' + initials(u.name) + '</div>' +
+        '<div class="type-dot ' + typeDotClass(u.userType) + '"><i class="fa-solid ' + typeIcon(u.userType) + '" style="font-size:7px;"></i></div>' +
+      '</div>' +
+      '<div class="user-info">' +
+        '<div class="user-name-row">' +
+          '<span class="user-name">' + u.name + '</span>' +
+          (u.verified ? '<i class="fa-solid fa-circle-check verified-ic"></i>' : '') +
+        '</div>' +
+        '<div class="user-meta">' +
+          '<span class="user-type-badge ' + typeBadgeClass(u.userType) + '">' + typeLabel(u.userType) + '</span>' +
+          (u.sport ? '<span class="meta-dot">·</span><span>' + u.sport + '</span>' : '') +
+        '</div>' +
+        (mutualHtml ? '<div style="margin-top:5px;">' + mutualHtml + '</div>' : '') +
+      '</div>' +
+      '<div class="user-actions">' +
+        '<button class="btn-message-sm" title="Message"><i class="fa-regular fa-paper-plane"></i></button>' +
+        (isSelf ? '' : '<button class="btn-follow' + (isFollowed ? ' following' : '') + '" data-email="' + u.email + '">' +
+          (isFollowed
+            ? '<span class="follow-label"><i class="fa-solid fa-check" style="font-size:10px;"></i> Following</span><span class="unfollow-label"><i class="fa-solid fa-times" style="font-size:10px;"></i> Unfollow</span>'
+            : '<i class="fa-solid fa-plus" style="font-size:10px;"></i> Follow') +
+        '</button>') +
+      '</div>';
+
+    /* Follow toggle */
+    var followButton = card.querySelector('.btn-follow');
+    if (followButton) {
+      followButton.addEventListener('click', async function (e) {
+      e.stopPropagation();
+      var email = this.dataset.email;
+      this.disabled = true;
+      try {
+        if (followingEmails.has(email)) {
+          await window.SpopeerAPI.unfollowUser(email);
+          showToast('Unfollowed ' + u.name, 'user-minus');
+        } else {
+          await window.SpopeerAPI.followUser(email);
+          showToast('Now following ' + u.name, 'check');
+        }
+        await loadConnections();
+      } catch (err) {
+        showToast(err.message || 'Unable to update follow status', 'triangle-exclamation');
+      } finally {
+        this.disabled = false;
+      }
+      });
+    }
+    /* Message */
+    card.querySelector('.btn-message-sm').addEventListener('click', function (e) {
+      e.stopPropagation();
+      showToast('Opening chat with ' + u.name + '…', 'paper-plane');
+    });
+    /* Card click → profile */
+    card.addEventListener('click', function () {
+      window.location.href = 'public-profile.html?userId=' + encodeURIComponent(u.email);
+    });
+    return card;
+  }
+
+  function filterData(data) {
+    return data.filter(function (u) {
+      var matchesFilter = !activeFilter || u.userType === activeFilter;
+      var matchesSearch = !searchQuery || u.name.toLowerCase().includes(searchQuery) || (u.sport || '').toLowerCase().includes(searchQuery);
+      return matchesFilter && matchesSearch;
+    });
+  }
+
+  function renderList(container, data) {
+    container.innerHTML = '';
+    var filtered = filterData(data);
+    if (!filtered.length) {
+      container.innerHTML =
+        '<div class="empty-state">' +
+        '<div class="empty-icon"><i class="fa-regular fa-users"></i></div>' +
+        '<div class="empty-title">No results found</div>' +
+        '<div class="empty-desc">Try adjusting your search or filters to find people in the sports community.</div>' +
+        '<a href="/feed.html" class="btn-empty"><i class="fa-solid fa-compass"></i> Explore Spopeer</a>' +
+        '</div>';
+      return;
+    }
+    filtered.forEach(function (u, i) {
+      container.appendChild(renderCard(u, i));
+    });
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    var isFollowers = tab === 'followers';
+    document.getElementById('tabFollowers').classList.toggle('active', isFollowers);
+    document.getElementById('tabFollowing').classList.toggle('active', !isFollowers);
+    document.getElementById('listFollowers').style.display = isFollowers ? 'flex' : 'none';
+    document.getElementById('listFollowing').style.display = !isFollowers ? 'flex' : 'none';
+    document.getElementById('pageTitle').textContent = isFollowers ? 'Followers' : 'Following';
+    document.getElementById('breadcrumbCurrent').textContent = isFollowers ? 'Followers' : 'Following';
+    document.getElementById('pageCountPill').textContent = isFollowers ? followersData.length : followingData.length;
+    document.getElementById('listSearchInput').placeholder = isFollowers ? 'Search followers…' : 'Search following…';
+    var url = new URL(window.location);
+    url.searchParams.set('type', tab);
+    history.replaceState(null, '', url);
+    renderList(document.getElementById('listFollowers'), followersData);
+    renderList(document.getElementById('listFollowing'), followingData);
+  }
+
+  /* ── Tabs ── */
+  document.getElementById('tabFollowers').addEventListener('click', function () { switchTab('followers'); });
+  document.getElementById('tabFollowing').addEventListener('click', function () { switchTab('following'); });
+
+  /* ── Search ── */
+  document.getElementById('listSearchInput').addEventListener('input', function () {
+    searchQuery = this.value.trim().toLowerCase();
+    renderList(document.getElementById('listFollowers'), followersData);
+    renderList(document.getElementById('listFollowing'), followingData);
+  });
+
+  /* ── Filter toggle ── */
+  document.getElementById('filterBtn').addEventListener('click', function () {
+    var fc = document.getElementById('filterChips');
+    fc.style.display = fc.style.display === 'none' ? 'flex' : 'none';
+  });
+  document.getElementById('filterChips').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-filter]');
+    if (btn) {
+      activeFilter = activeFilter === btn.dataset.filter ? null : btn.dataset.filter;
+      this.querySelectorAll('[data-filter]').forEach(function (b) {
+        b.style.borderColor = 'transparent';
+        b.style.outline = '';
+      });
+      if (activeFilter) {
+        btn.style.borderColor = 'var(--accent)';
+      }
+      renderList(document.getElementById('listFollowers'), followersData);
+      renderList(document.getElementById('listFollowing'), followingData);
+    }
+  });
+  document.getElementById('clearFilter').addEventListener('click', function () {
+    activeFilter = null;
+    document.querySelectorAll('#filterChips [data-filter]').forEach(function (b) {
+      b.style.borderColor = 'transparent';
+    });
+    renderList(document.getElementById('listFollowers'), followersData);
+    renderList(document.getElementById('listFollowing'), followingData);
+  });
+
+  /* ── Badges ── */
+  document.getElementById('badgeFollowers').textContent = followersData.length;
+  document.getElementById('badgeFollowing').textContent = followingData.length;
+
+  /* ── Init ── */
+  switchTab(activeTab);
+  loadConnections();
+
+  /* ── Expose for sidebar stat clicks ── */
+  window.switchTab = switchTab;
+})();
+</script>
+<script src="../../js/shared-ui.js"></script>
+<script>
+  if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
+    window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+  }
+</script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

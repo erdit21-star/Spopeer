@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Help Center — Spopeer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --accent: #001f3f;
+      --accent-light: #cce7ff;
+      --background: #fafaf8;
+      --surface: #ffffff;
+      --ink: #0f0f0f;
+      --ink-light: #4a4a4a;
+      --muted: #7a7a7a;
+      --border: #e8e8e4;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-display: 'Syne', sans-serif;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--background);
+    }
+
+    /* ─── NAVBAR ─── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(250,250,248,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navbar {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 28px; height: 66px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 800;
+      color: var(--ink); text-decoration: none;
+      letter-spacing: -0.02em; flex-shrink: 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+.nav-links { display: flex; gap: 4px; list-style: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--muted);
+      font-size: 14px; font-weight: 500;
+      padding: 6px 14px; border-radius: var(--r-pill);
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-links a:hover { color: var(--ink); background: var(--surface); }
+    .auth-row { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .btn-outline {
+      padding: 8px 20px;
+      border: 1.5px solid var(--border);
+      background: transparent; color: var(--ink-2);
+      border-radius: var(--r-pill); font-size: 14px; font-weight: 600;
+      font-family: var(--font-body); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--ink); background: var(--surface); }
+    .btn-fill {
+      padding: 8px 22px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--r-pill);
+      font-size: 14px; font-weight: 700;
+      font-family: var(--font-body); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0,31,63,0.25);
+    }
+    .btn-fill:hover { background: #001a33; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,31,63,0.35); }
+
+    .hero {
+      background: linear-gradient(135deg, var(--accent) 0%, #001428 100%);
+      color: white;
+      padding: 80px 24px;
+      text-align: center;
+    }
+
+    .hero-content {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: 18px;
+      opacity: 0.95;
+    }
+
+    .search-box {
+      max-width: 500px;
+      margin: 32px auto 0;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .search-box input::placeholder {
+      color: #9ca3af;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+
+    .help-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 32px;
+      margin-bottom: 60px;
+    }
+
+    .help-card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border-left: 4px solid var(--accent);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .help-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    .help-card-icon {
+      font-size: 32px;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .help-card h3 {
+      font-size: 20px;
+      color: #111827;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .help-card p {
+      color: #6b7280;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .help-card a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .help-card a:hover {
+      color: #001a2d;
+    }
+
+    .faq-section {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 60px;
+    }
+
+    .faq-section h2 {
+      font-size: 32px;
+      color: var(--accent);
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 3px solid var(--accent);
+      font-family: var(--font-display);
+    }
+
+    .faq-item {
+      margin-bottom: 24px;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 24px;
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+    }
+
+    .faq-item h4 {
+      font-size: 18px;
+      color: #111827;
+      margin-bottom: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .faq-item h4:hover {
+      color: var(--accent);
+    }
+
+    .faq-item p {
+      color: #6b7280;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .cta-section {
+      background: linear-gradient(135deg, var(--accent) 0%, #001428 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+
+    .cta-section p {
+      font-size: 18px;
+      opacity: 0.95;
+      margin-bottom: 24px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 12px 32px;
+      background: white;
+      color: var(--accent);
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 700;
+      transition: background 0.2s;
+      margin: 0 8px;
+    }
+
+    .cta-button:hover {
+      background: #f0f7ff;
+    }
+
+    footer { background: var(--white); border-top: 1px solid var(--border); }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto; padding: 56px 28px 0;
+      display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; gap: 40px;
+    }
+    .foot-logo {
+      font-family: var(--font-display); font-size: 22px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink); text-decoration: none;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .foot-brand p { font-size: 13px; color: var(--muted); line-height: 1.7; font-weight: 300; margin-bottom: 20px; max-width: 240px; }
+    .social-row { display: flex; gap: 8px; }
+    .footer-social-btn {
+      width: 36px; height: 36px; border: 1.5px solid var(--border);
+      border-radius: var(--r); display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 14px; text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .footer-social-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .foot-col h4 { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .foot-col ul { list-style: none; }
+    .foot-col ul li { margin-bottom: 10px; }
+    .foot-col ul a { font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 300; transition: color 0.2s; }
+    .foot-col ul a:hover { color: var(--accent); }
+    .footer-bottom {
+      max-width: 1200px; margin: 0 auto; padding: 20px 28px; margin-top: 40px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-bottom p { font-size: 12px; color: var(--muted-2); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a { font-size: 12px; color: var(--muted-2); text-decoration: none; transition: color 0.2s; }
+    .footer-bottom-links a:hover { color: var(--accent); }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .help-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+
+.site-footer {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+
+.footer-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 24px 0;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.foot-logo {
+  font-family: var(--fD);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  display: inline-block;
+}
+
+.foot-brand p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 18px;
+  max-width: 230px;
+}
+
+.social-row {
+  display: flex;
+  gap: 7px;
+}
+
+.soc-btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rS);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.soc-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.foot-col h5 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.foot-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.foot-col ul li {
+  margin-bottom: 9px;
+}
+
+.foot-col ul a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 300;
+  transition: color .2s;
+}
+
+.foot-col ul a:hover {
+  color: var(--accent);
+}
+
+.footer-btm {
+  max-width: 1280px;
+  margin: 36px auto 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.footer-btm p {
+  font-size: 12px;
+  color: var(--muted-2);
+  margin: 0;
+}
+
+.footer-btm-links {
+  display: flex;
+  gap: 18px;
+}
+
+.footer-btm-links a {
+  font-size: 12px;
+  color: var(--muted-2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.footer-btm-links a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 36px 16px 0;
+  }
+
+  .footer-btm {
+    padding: 14px 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <ul class="nav-links">
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#user-types">Who It's For</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+      </ul>
+      <div class="auth-row">
+        <a href="../auth/login.html" class="btn-outline">Log In</a>
+        <a href="../auth/signup.html" class="btn-fill">Sign Up Free</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Help Center</h1>
+      <p>Find answers to common questions and get support</p>
+      <div class="search-box">
+        <input type="text" placeholder="Search for help topics..." />
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="help-grid">
+      <div class="help-card">
+        <div class="help-card-icon">
+          <i class="fas fa-user-circle"></i>
+        </div>
+        <h3>Account & Profile</h3>
+        <p>Learn how to set up your account, manage your profile, and customize your preferences.</p>
+        <a href="#account">Browse articles →</a>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-icon">
+          <i class="fas fa-network-wired"></i>
+        </div>
+        <h3>Networking & Connections</h3>
+        <p>Discover how to find and connect with other athletes, coaches, and professionals.</p>
+        <a href="#networking">Browse articles →</a>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h3>Safety & Privacy</h3>
+        <p>Understand our safety features and how we protect your personal information.</p>
+        <a href="#safety">Browse articles →</a>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-icon">
+          <i class="fas fa-search"></i>
+        </div>
+        <h3>Search & Discovery</h3>
+        <p>Find athletes, coaches, and sports opportunities that match your interests.</p>
+        <a href="#search">Browse articles →</a>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-icon">
+          <i class="fas fa-envelope"></i>
+        </div>
+        <h3>Messaging</h3>
+        <p>Send messages, communicate with connections, and manage your conversations.</p>
+        <a href="#messaging">Browse articles →</a>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-icon">
+          <i class="fas fa-cogs"></i>
+        </div>
+        <h3>Technical Support</h3>
+        <p>Get help with technical issues and troubleshooting problems.</p>
+        <a href="#technical">Browse articles →</a>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <h2>Frequently Asked Questions</h2>
+
+      <div class="faq-item">
+        <h4>How do I create a Spopeer account?</h4>
+        <p>Click the "Sign Up" button at the top of the page, select your user type (Athlete, Coach, Club, or Professional), and fill in your information. You'll need to verify your email before your account is fully active.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>How do I find other athletes or coaches?</h4>
+        <p>Use the Search feature to browse by sport, location, and user type. You can also explore featured profiles and join communities related to your interests.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>Is my personal information safe?</h4>
+        <p>Yes! We use industry-standard encryption and privacy controls. You can manage what information is visible to others in your privacy settings. See our Privacy Policy for more details.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>How do I report inappropriate behavior?</h4>
+        <p>If you encounter any inappropriate behavior or content, click the "Report" button on their profile or visit our <a href="../../pages/company/report-abuse.html">Report Abuse</a> page. Our moderation team will review your report promptly.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>Can I delete my account?</h4>
+        <p>Yes, you can delete your account anytime from your account settings. Please note that deleting your account will remove all your profile information and messages.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>How do I update my profile information?</h4>
+        <p>Log in to your account, go to your profile, and click "Edit Profile." You can update your bio, photo, skills, and other information. Remember to save your changes.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>Is there a mobile app?</h4>
+        <p>Spopeer is currently available as a web platform optimized for mobile browsers. Native mobile apps are in development.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>How do I contact support?</h4>
+        <p>If you can't find the answer you're looking for, visit our <a href="/pages/contact/index.html">Contact Us</a> page to send us a message directly.</p>
+      </div>
+    </div>
+
+    <div class="cta-section">
+      <h2>Didn't find what you're looking for?</h2>
+      <p>Our support team is here to help! Reach out to us directly.</p>
+      <a href="/pages/contact/index.html" class="cta-button">Contact Support</a>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+
+      <p>Connecting the global sports community � athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+
+      <div class="social-row">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+        <li><a href="/index.html#user-types">User Types</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="/pages/legal/about.html">About Us</a></li>
+        <li><a href="/pages/company/careers.html">Careers</a></li>
+        <li><a href="/pages/company/blog.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Support</h5>
+      <ul>
+        <li><a href="/pages/company/help-center.html">Help Center</a></li>
+        <li><a href="/pages/contact/index.html">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links">
+      <a href="/pages/legal/privacy.html">Privacy</a>
+      <a href="/pages/legal/terms.html">Terms</a>
+      <a href="/pages/contact/index.html">Contact</a>
+    </div>
+  </div>
+</footer>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

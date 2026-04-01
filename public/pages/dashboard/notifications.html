@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Spopeer · Notifications</title>
+<script>
+  var _ud = JSON.parse(localStorage.getItem('spopeer_user')||'null');
+  var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+  if (!_ud || !_li) window.location.href = '../../pages/auth/login.html';
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+<link rel="stylesheet" href="/css/shared-tokens.css"/>
+<link rel="stylesheet" href="/css/shared-nav.css"/>
+<link rel="stylesheet" href="/css/components/toast.css"/>
+<style>
+/* ── LAYOUT ── */
+.app-layout{max-width:1280px;margin:0 auto;padding:24px 24px 0;display:grid;grid-template-columns:var(--left-w) 1fr;gap:20px;align-items:start}
+.sidebar-left{position:sticky;top:calc(var(--nav-h) + 16px);display:flex;flex-direction:column;gap:4px}
+.sidebar-profile{display:flex;align-items:center;gap:11px;padding:14px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--rL);margin-bottom:8px}
+.sp-av{width:42px;height:42px;border-radius:50%;flex-shrink:0;background:var(--accent);color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.sp-info{flex:1;min-width:0}
+.sp-name{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-role{font-size:11px;color:var(--muted);margin-top:1px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--r);font-size:14px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:.2s;border:none;background:transparent;width:100%;text-align:left;font-family:var(--font-body)}
+.nav-item i{width:20px;font-size:16px;color:var(--muted);text-align:center;flex-shrink:0}
+.nav-item:hover{background:var(--surface);color:var(--ink)}
+.nav-item:hover i{color:var(--ink)}
+.nav-item.active{background:var(--accent-lt);color:var(--accent);font-weight:700}
+.nav-item.active i{color:var(--accent)}
+.nav-badge-count{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:800;min-width:18px;height:18px;border-radius:var(--pill);display:flex;align-items:center;justify-content:center;padding:0 5px}
+.sidebar-divider{height:1px;background:var(--border);margin:8px 0}
+.compose-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px 16px;margin-top:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--pill);font-size:14px;font-weight:700;font-family:var(--font-body);cursor:pointer;box-shadow:0 6px 20px rgba(0,31,63,.22);transition:background .2s,transform .15s}
+.compose-btn:hover{background:var(--accent-hover);transform:translateY(-1px)}
+
+/* ── NOTIFICATIONS ── */
+.notif-col{min-width:0;padding-bottom:60px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.page-title{font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--ink);display:flex;align-items:center;gap:10px}
+.unread-count-badge{background:var(--accent);color:#fff;font-size:12px;font-weight:800;padding:3px 10px;border-radius:var(--pill);font-family:var(--font-body)}
+.page-header-actions{display:flex;align-items:center;gap:8px}
+.btn-mark-all{padding:8px 16px;border:1.5px solid var(--border);border-radius:var(--pill);background:transparent;color:var(--muted);font-size:13px;font-weight:600;font-family:var(--font-body);cursor:pointer;transition:.2s}
+.btn-mark-all:hover{border-color:var(--accent);color:var(--accent)}
+.btn-settings{width:36px;height:36px;border:1.5px solid var(--border);border-radius:50%;background:transparent;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.btn-settings:hover{border-color:var(--ink);color:var(--ink)}
+
+.filter-row{display:flex;gap:0;background:var(--white);border:1.5px solid var(--border);border-radius:var(--rL);padding:5px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.ftab{flex-shrink:0;padding:8px 16px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--muted);border-radius:var(--r);cursor:pointer;transition:.2s;font-family:var(--font-body);display:flex;align-items:center;gap:6px}
+.ftab.active{background:var(--accent);color:#fff}
+.ftab:not(.active):hover{background:var(--surface);color:var(--ink)}
+.ftab-count{font-size:11px;font-weight:800;background:rgba(255,255,255,.3);padding:1px 6px;border-radius:var(--pill)}
+.ftab:not(.active) .ftab-count{background:var(--surface-2);color:var(--muted)}
+
+.notif-card{display:flex;align-items:flex-start;gap:13px;padding:14px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--rL);margin-bottom:8px;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+.notif-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;border-radius:3px 0 0 3px;transition:.2s}
+.notif-card.unread{background:var(--accent-lt);border-color:rgba(0,31,63,.18)}
+.notif-card.unread::before{background:var(--accent)}
+.notif-card:hover{border-color:#ddd;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+
+.av-wrap{position:relative;flex-shrink:0}
+.av{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0}
+.av-orange{background:#001f3f}.av-blue{background:#1a6bff}.av-green{background:#16a34a}
+
+.notif-body{flex:1;min-width:0}
+.notif-text{font-size:14px;color:var(--ink-2);line-height:1.5;margin-bottom:5px}
+.notif-text strong{font-weight:700;color:var(--ink)}
+.notif-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.notif-time{font-size:12px;color:var(--muted-2)}
+.notif-dot{width:3px;height:3px;background:var(--muted-2);border-radius:50%}
+
+.notif-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.thumb{width:48px;height:48px;border-radius:var(--rS);background:var(--surface);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted);flex-shrink:0}
+.unread-dot{width:9px;height:9px;background:var(--accent);border-radius:50%;flex-shrink:0;margin-top:4px}
+
+.empty-state{padding:48px 24px;text-align:center;display:none}
+.empty-icon{font-size:36px;color:var(--muted-2);margin-bottom:12px}
+.empty-title{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.empty-sub{font-size:14px;color:var(--muted)}
+
+/* ── FOOTER ── */
+.site-footer{background:var(--white);border-top:1px solid var(--border);margin-top:60px}
+.footer-grid{max-width:1280px;margin:0 auto;padding:48px 24px 0;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:40px}
+.foot-logo{font-family:var(--font-display);font-size:21px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.foot-brand p{font-size:13px;color:var(--muted);line-height:1.7;font-weight:300;margin-bottom:18px;max-width:230px}
+.social-row{display:flex;gap:7px}
+.soc-btn{width:34px;height:34px;border:1.5px solid var(--border);border-radius:var(--rS);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;text-decoration:none;transition:.2s}
+.soc-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-lt)}
+.foot-col h5{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin-bottom:14px}
+.foot-col ul{list-style:none}
+.foot-col ul li{margin-bottom:9px}
+.foot-col ul a{font-size:13px;color:var(--muted);text-decoration:none;font-weight:300;transition:color .2s}
+.foot-col ul a:hover{color:var(--accent)}
+.footer-btm{max-width:1280px;margin:36px auto 0;padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.footer-btm p{font-size:12px;color:var(--muted-2)}
+.footer-btm-links{display:flex;gap:18px}
+.footer-btm-links a{font-size:12px;color:var(--muted-2);text-decoration:none;transition:color .2s}
+.footer-btm-links a:hover{color:var(--accent)}
+
+@media(max-width:900px){.app-layout{grid-template-columns:1fr}.sidebar-left{display:none}.footer-grid{grid-template-columns:1fr 1fr;padding:36px 16px 0}.footer-btm{padding:14px 16px;flex-direction:column;text-align:center}}
+@media(max-width:640px){.nav-inner{padding:0 14px}.filter-row{gap:2px}.ftab{padding:8px 11px;font-size:12px}.achievement-body{flex-wrap:wrap;gap:12px}}
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+
+<!-- ══ TOP NAV ══ -->
+<nav class="topnav">
+  <div class="nav-inner">
+    <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search athletes, clubs, sports…">
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon" title="Home" onclick="window.location.href='/feed.html'"><i class="fa-solid fa-house"></i></button>
+      <button class="nav-icon" title="Messages" onclick="window.location.href='../messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
+      <button class="nav-icon active-page" title="Notifications">
+        <i class="fa-solid fa-bell"></i>
+      </button>
+      <div class="user-chip" id="userChip">
+        <span class="chip-avatar" id="chipAvatar">JD</span>
+        <span class="chip-name" id="chipName">Jamie</span>
+        <i class="fa-solid fa-chevron-down chip-caret"></i>
+      </div>
+      <div class="profile-menu" id="profileMenu" aria-hidden="true">
+        <div class="profile-menu-section" data-section="identity">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
+            <div class="profile-menu-title">Your Identity</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
+            <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
+            <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="account">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Account & Settings</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
+            <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
+            <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy & Safety</button>
+            <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
+            <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
+            <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="features">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Platform Features</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>
+            <button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements & Badges</button>
+            <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
+            <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
+            <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
+            <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="help">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Help & Misc</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
+            <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
+            <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
+          </div>
+        </div>
+        <div class="profile-menu-section">
+          <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
+            <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ APP LAYOUT ══ -->
+<div class="app-layout">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar-left">
+    <div class="sidebar-profile">
+      <div class="sp-av" id="sidebarAvatar">JD</div>
+      <div class="sp-info">
+        <div class="sp-name" id="sidebarName">Jamie Davis</div>
+        <div class="sp-role">Athlete · Runner</div>
+      </div>
+    </div>
+
+    <button class="nav-item" onclick="window.location.href='/feed.html'"><i class="fa-solid fa-house"></i>Home</button>
+    <button class="nav-item" onclick="window.location.href='../messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i> Messages</button>
+    <button class="nav-item" onclick="window.location.href='../sponsorship/sponsor.html'"><i class="fa-solid fa-handshake-angle"></i> Sponsorship</button>
+    <button class="nav-item" onclick="window.location.href='settings.html'"><i class="fa-regular fa-gear"></i> Settings</button>
+  </aside>
+
+  <!-- MAIN NOTIFICATIONS COLUMN -->
+  <div class="notif-col">
+    <div class="page-header">
+      <div>
+        <div class="page-title">
+          <i class="fa-solid fa-bell"></i>
+          Notifications
+          <span class="unread-count-badge" id="unreadCount">0</span>
+        </div>
+        <div class="page-subtitle" style="margin-top:6px; color: var(--muted); font-size: 13px;">Stay on top of everything that matters.</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn-mark-all" id="markAllReadBtn">Mark all read</button>
+        <button class="btn-settings" title="Notification settings" onclick="window.location.href='settings.html'"><i class="fa-regular fa-gear"></i></button>
+      </div>
+    </div>
+
+    <div class="filter-row" id="filterRow">
+      <button class="ftab active" data-filter="all">All <span class="ftab-count" id="allCount">0</span></button>
+      <button class="ftab" data-filter="unread">Unread <span class="ftab-count" id="unreadTabCount">0</span></button>
+      <button class="ftab" data-filter="activity">Activity</button>
+      <button class="ftab" data-filter="social">Social</button>
+      <button class="ftab" data-filter="updates">Updates</button>
+    </div>
+
+    <div id="notifList"></div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon"><i class="fa-regular fa-bell-slash"></i></div>
+      <div class="empty-title">No notifications yet</div>
+      <div class="empty-sub">Once you start getting updates, they’ll show up here.</div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <p>Connecting the global sports community — athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+      <div class="social-row">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+        <li><a href="/index.html#user-types">User Types</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="/pages/legal/about.html">About Us</a></li>
+        <li><a href="/pages/company/careers.html">Careers</a></li>
+        <li><a href="/pages/company/blog.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Support</h5>
+      <ul>
+        <li><a href="/pages/company/help-center.html">Help Center</a></li>
+        <li><a href="/pages/contact/index.html">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links">
+      <a href="/pages/legal/privacy.html">Privacy</a>
+      <a href="/pages/legal/terms.html">Terms</a>
+      <a href="/pages/contact/index.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  const user = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+  if (user && user.name) {
+    const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    document.getElementById('chipAvatar').textContent = initials;
+    document.getElementById('sidebarAvatar').textContent = initials;
+    document.getElementById('chipName').textContent = user.name.split(' ')[0];
+    document.getElementById('sidebarName').textContent = user.name;
+  }
+
+  /* – user chip & profile menu: handled by shared-ui.js – */
+
+  const NOTIF_KEY = 'spopeer_notifications';
+  const NOTIF_LAST_SEEN_KEY = 'spopeer_notifications_lastSeen';
+
+  const getLastSeen = () => {
+    const stored = parseInt(localStorage.getItem(NOTIF_LAST_SEEN_KEY), 10);
+    return Number.isFinite(stored) ? stored : 0;
+  };
+
+  const setLastSeen = (ts) => {
+    localStorage.setItem(NOTIF_LAST_SEEN_KEY, String(ts));
+  };
+
+  const getStoredNotifications = () => {
+    const stored = localStorage.getItem(NOTIF_KEY);
+    if (!stored) return [];
+    try { return JSON.parse(stored) || []; } catch { return []; }
+  };
+
+  const saveNotifications = (notifs) => {
+    localStorage.setItem(NOTIF_KEY, JSON.stringify(notifs));
+  };
+
+  const getUnreadCount = (notifs) => notifs.filter(n => !n.read).length;
+
+  const formatRelativeTime = (iso) => {
+    const date = new Date(iso);
+    const diffMs = Date.now() - date.getTime();
+    const diffMins = Math.round(diffMs / 60000);
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHrs = Math.round(diffMins / 60);
+    if (diffHrs < 24) return `${diffHrs}h ago`;
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  };
+
+  const getIconClass = (type) => {
+    switch (type) {
+      case 'like': return 'fa-solid fa-heart';
+      case 'comment': return 'fa-solid fa-comment';
+      case 'follow': return 'fa-solid fa-user-plus';
+      case 'event': return 'fa-solid fa-calendar-check';
+      default: return 'fa-solid fa-bell';
+    }
+  };
+
+  const renderNotifications = (filter = 'all') => {
+    const list = document.getElementById('notifList');
+    const emptyState = document.getElementById('emptyState');
+    const unreadCountLabel = document.getElementById('unreadCount');
+    const allCountLabel = document.getElementById('allCount');
+    const unreadTabCountLabel = document.getElementById('unreadTabCount');
+
+    const notifs = getStoredNotifications();
+    const unreadCount = getUnreadCount(notifs);
+
+    unreadCountLabel.textContent = unreadCount;
+    allCountLabel.textContent = notifs.length;
+    unreadTabCountLabel.textContent = unreadCount;
+
+    const filtered = notifs.filter(n => {
+      if (filter === 'all') return true;
+      if (filter === 'unread') return !n.read;
+      if (filter === 'activity') return ['like','comment','event'].includes(n.type);
+      if (filter === 'social') return ['follow'].includes(n.type);
+      if (filter === 'updates') return ['event'].includes(n.type);
+      return true;
+    });
+
+    list.innerHTML = '';
+    if (filtered.length === 0) {
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    filtered.forEach(n => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = `notif-card ${n.read ? '' : 'unread'}`;
+      card.innerHTML = `
+        <div class="av-wrap">
+          <div class="av ${n.type === 'follow' ? 'av-green' : n.type === 'like' ? 'av-orange' : n.type === 'comment' ? 'av-blue' : 'av-purple'}">
+            ${n.sender ? `<span>${(n.sender.initials || n.sender.name?.slice(0,2) || '').toUpperCase()}</span>` : `<i class="${getIconClass(n.type)}"></i>`}
+          </div>
+          ${n.read ? '' : '<div class="unread-dot"></div>'}
+        </div>
+        <div class="notif-body">
+          <div class="notif-text">${n.text}</div>
+          <div class="notif-meta"><span class="notif-time">${formatRelativeTime(n.createdAt)}</span></div>
+        </div>
+        <div class="notif-right">
+          <div class="thumb"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => {
+        if (!n.read) {
+          n.read = true;
+          saveNotifications(notifs);
+          renderNotifications(filter);
+        }
+        if (n.href) {
+          window.location.href = n.href;
+        }
+      });
+
+      list.appendChild(card);
+    });
+  };
+
+  document.querySelectorAll('.ftab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderNotifications(tab.dataset.filter);
+    });
+  });
+
+  document.getElementById('markAllReadBtn')?.addEventListener('click', () => {
+    const notifs = getStoredNotifications().map(n => ({ ...n, read: true }));
+    saveNotifications(notifs);
+    setLastSeen(Date.now());
+    renderNotifications(document.querySelector('.ftab.active')?.dataset.filter || 'all');
+  });
+
+  // Never seed demo notifications in production.
+
+  // Mark as seen when visiting notifications page
+  setLastSeen(Date.now());
+
+  renderNotifications();
+})();
+</script>
+<script src="../../js/shared-ui.js"></script>
+<script>
+  if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
+    window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+  }
+</script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

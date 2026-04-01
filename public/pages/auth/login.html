@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In — Spopeer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <style>
+    /* Auth-specific token overrides */
+    :root { --accent-2: #1a6bff; --accent-2-light: #eef3ff; }
+
+    /* ─── NAVBAR ─── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(250,250,248,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navbar {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 28px; height: 66px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 800;
+      color: var(--ink); text-decoration: none;
+      letter-spacing: -0.02em; flex-shrink: 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+.nav-links { display: flex; gap: 4px; list-style: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--muted);
+      font-size: 14px; font-weight: 500;
+      padding: 6px 14px; border-radius: var(--r-pill);
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-links a:hover { color: var(--ink); background: var(--surface); }
+    .auth-row { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .btn-outline {
+      padding: 8px 20px;
+      border: 1.5px solid var(--border);
+      background: transparent; color: var(--ink-2);
+      border-radius: var(--r-pill); font-size: 14px; font-weight: 600;
+      font-family: var(--font-body); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--ink); background: var(--surface); }
+    .btn-fill {
+      padding: 8px 22px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--r-pill);
+      font-size: 14px; font-weight: 700;
+      font-family: var(--font-body); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0,31,63,0.25);
+    }
+    .btn-fill:hover { background: #001a33; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,31,63,0.35); }
+
+    /* ─── LOGIN SECTION ─── */
+    .login-wrap {
+      max-width: 1200px; margin: 0 auto;
+      padding: 80px 28px;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 48px;
+      min-height: calc(100vh - 66px - 200px);
+      align-items: start;
+    }
+    .login-left { padding-top: 40px; }
+    .login-left h1 {
+      font-family: var(--font-display);
+      font-size: 48px; font-weight: 800;
+      letter-spacing: -0.03em; color: var(--ink);
+      margin-bottom: 24px;
+    }
+    .login-left p {
+      font-size: 17px; font-weight: 300;
+      color: var(--muted); line-height: 1.75;
+      max-width: 500px;
+    }
+
+    /* ─── LOGIN CARD ─── */
+    .login-card {
+      background: var(--white);
+      border-radius: var(--r-lg);
+      border: 1.5px solid var(--border);
+      padding: 36px 32px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+      position: relative; overflow: hidden;
+    }
+    .login-card::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 180px; height: 180px;
+      background: radial-gradient(circle, rgba(0,31,63,0.08) 0%, transparent 70%);
+      border-radius: 50%; pointer-events: none;
+    }
+    .card-heading { margin-bottom: 24px; }
+    .card-heading h2 {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink); margin-bottom: 4px;
+    }
+    .card-heading p { font-size: 13px; color: var(--muted); }
+    .social-login { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+    .social-btn {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 14px 16px; border: 1.5px solid var(--border);
+      background: var(--white); border-radius: var(--r-sm);
+      font-size: 15px; font-weight: 600; color: var(--ink-2);
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+      font-family: var(--font-body); flex: 1; min-width: 200px;
+    }
+    .social-btn:hover { 
+      background: var(--surface); border-color: var(--accent); color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,31,63,0.12);
+    }
+    .social-btn:active { transform: translateY(0); }
+    .social-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .divider {
+      display: flex; align-items: center; gap: 12px; margin: 24px 0; color: var(--border);
+    }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .divider-text { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--ink-2); margin-bottom: 6px; letter-spacing: 0.01em;
+    }
+    .form-group input {
+      width: 100%; padding: 10px 14px;
+      background: var(--surface);
+      border: 1.5px solid transparent;
+      border-radius: var(--r-sm);
+      font-size: 14px; font-family: var(--font-body);
+      color: var(--ink);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .form-group input::placeholder { color: var(--muted-2); }
+    .form-group input:focus {
+      outline: none; border-color: var(--accent);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(0,31,63,0.08);
+    }
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 44px; }
+    .pw-toggle {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      background: transparent; border: none; cursor: pointer; color: var(--muted-2); font-size: 14px; padding:6px; border-radius:6px;
+    }
+    .pw-toggle:focus { outline: 2px solid rgba(26,107,255,0.18); }
+    .remember-forgot {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px; font-size: 14px;
+    }
+    .checkbox-group { display: flex; align-items: center; gap: 6px; }
+    .checkbox-group input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; }
+    .checkbox-group label { margin: 0; cursor: pointer; color: var(--muted); font-weight: 500; }
+    .forgot-link { color: var(--accent); text-decoration: none; font-weight: 600; transition: color 0.2s, text-decoration 0.2s; display: inline-flex; align-items: center; }
+    .forgot-link:hover { color: #001a33; text-decoration: underline; }
+    .login-btn {
+      width: 100%; padding: 12px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--r-sm); font-size: 15px; font-weight: 700;
+      font-family: var(--font-body); cursor: pointer; margin-top: 6px;
+      box-shadow: 0 4px 14px rgba(0,31,63,0.25);
+      transition: background 0.2s, transform 0.15s;
+    }
+    .login-btn:hover { background: #001a33; transform: translateY(-1px); }
+    .card-footer { text-align: center; margin-top: 14px; font-size: 12px; color: var(--muted); }
+    .card-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+    /* ─── FOOTER ─── */
+    footer { background: var(--white); border-top: 1px solid var(--border); }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto; padding: 56px 28px 0;
+      display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; gap: 40px;
+    }
+    .foot-logo {
+      font-family: var(--font-display); font-size: 22px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink); text-decoration: none;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .foot-brand p { font-size: 13px; color: var(--muted); line-height: 1.7; font-weight: 300; margin-bottom: 20px; max-width: 240px; }
+    .social-row { display: flex; gap: 8px; }
+    .social-btn {
+      width: 36px; height: 36px; border: 1.5px solid var(--border);
+      border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 14px; text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .social-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .foot-col h4 { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .foot-col ul { list-style: none; }
+    .foot-col ul li { margin-bottom: 10px; }
+    .foot-col ul a { font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 300; transition: color 0.2s; }
+    .foot-col ul a:hover { color: var(--accent); }
+    .footer-bottom {
+      max-width: 1200px; margin: 0 auto; padding: 20px 28px; margin-top: 40px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-bottom p { font-size: 12px; color: var(--muted-2); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a { font-size: 12px; color: var(--muted-2); text-decoration: none; transition: color 0.2s; }
+    .footer-bottom-links a:hover { color: var(--accent); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1024px) {
+      .login-wrap { grid-template-columns: 1fr; min-height: auto; }
+      .login-left { padding-top: 0; text-align: center; }
+      .login-left h1 { font-size: 36px; }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .navbar { padding: 0 16px; }
+      .nav-links { display: none; }
+      .login-wrap { padding: 40px 16px; }
+      .login-left h1 { font-size: 28px; }
+      .login-card { padding: 28px 20px; }
+      .footer-inner { padding: 40px 16px 0; grid-template-columns: 1fr 1fr; }
+      .footer-bottom { padding: 16px; flex-direction: column; text-align: center; }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+
+.site-footer {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+
+.footer-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 24px 0;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.foot-logo {
+  font-family: var(--fD);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  display: inline-block;
+}
+
+.foot-brand p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 18px;
+  max-width: 230px;
+}
+
+.social-row {
+  display: flex;
+  gap: 7px;
+}
+
+.soc-btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rS);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.soc-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.foot-col h5 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.foot-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.foot-col ul li {
+  margin-bottom: 9px;
+}
+
+.foot-col ul a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 300;
+  transition: color .2s;
+}
+
+.foot-col ul a:hover {
+  color: var(--accent);
+}
+
+.footer-btm {
+  max-width: 1280px;
+  margin: 36px auto 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.footer-btm p {
+  font-size: 12px;
+  color: var(--muted-2);
+  margin: 0;
+}
+
+.footer-btm-links {
+  display: flex;
+  gap: 18px;
+}
+
+.footer-btm-links a {
+  font-size: 12px;
+  color: var(--muted-2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.footer-btm-links a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 36px 16px 0;
+  }
+
+  .footer-btm {
+    padding: 14px 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
+  <!-- Centralized auth helper -->
+  <script src="/js/auth.js"></script>
+  <script src="/js/auth-guard.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    window.Auth.redirectIfLoggedInToUserApp();
+  </script>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+
+  <!-- NAV -->
+  <header>
+    <nav class="navbar">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <ul class="nav-links">
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#user-types">Who It's For</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+      </ul>
+      <div class="auth-row">
+        <a href="/pages/auth/login.html" class="btn-outline">Log In</a>
+        <a href="/pages/auth/signup.html" class="btn-fill">Sign Up Free</a>
+      </div>
+    </nav>
+  </header>
+
+  <div class="login-wrap">
+    <div class="login-left">
+      <h1>Welcome Back to<br>Your Sports Network</h1>
+      <p>Continue building connections, accessing opportunities, and growing your sports career with Spopeer.</p>
+    </div>
+
+    <!-- LOGIN CARD -->
+    <div class="login-card">
+      <div id="verifiedBanner" style="display:none;margin-bottom:14px;padding:10px 12px;border-radius:8px;background:#ecfdf5;color:#047857;font-size:13px;font-weight:600;"><i class="fas fa-check-circle" style="margin-right:6px;"></i>Email verified successfully! You can now log in.</div>
+      <div class="card-heading">
+        <h2>Welcome back</h2>
+        <p>Log in to your sports network</p>
+      </div>
+      <div class="social-login">
+        <button class="social-btn" type="button" onclick="handleSocialLogin('google')">
+          <span class="social-icon"><i class="fab fa-google"></i></span> Continue with Google
+        </button>
+        <button class="social-btn" type="button" onclick="handleSocialLogin('apple')">
+          <span class="social-icon"><i class="fab fa-apple"></i></span> Continue with Apple
+        </button>
+      </div>
+      <div class="divider">
+        <span class="divider-text">Or continue with email</span>
+      </div>
+      <form id="loginForm">
+        <div id="loginError" style="display:none;margin-bottom:14px;padding:10px 12px;border-radius:8px;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:600;"></div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input id="email" type="email" placeholder="you@email.com" required autocomplete="email" />
+        </div>
+        <div class="form-group pw-group">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input id="password" type="password" placeholder="Enter your password" required autocomplete="current-password" />
+            <button type="button" class="pw-toggle" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="remember-forgot">
+          <div class="checkbox-group">
+            <input type="checkbox" id="remember" />
+            <label for="remember">Remember me</label>
+          </div>
+          <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
+        </div>
+        <button type="submit" class="login-btn">Log In</button>
+        <p class="card-footer">Don't have an account? <a href="signup.html">Create one</a></p>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+
+      <p>Connecting the global sports community � athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+
+      <div class="social-row">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+        <li><a href="/index.html#user-types">User Types</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="/pages/legal/about.html">About Us</a></li>
+        <li><a href="/pages/company/careers.html">Careers</a></li>
+        <li><a href="/pages/company/blog.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Support</h5>
+      <ul>
+        <li><a href="/pages/company/help-center.html">Help Center</a></li>
+        <li><a href="/pages/contact/index.html">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links">
+      <a href="/pages/legal/privacy.html">Privacy</a>
+      <a href="/pages/legal/terms.html">Terms</a>
+      <a href="/pages/contact/index.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+  <script>
+    // Show verified banner if redirected from email verification
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('verified') === '1') {
+        var banner = document.getElementById('verifiedBanner');
+        if (banner) banner.style.display = 'block';
+        // Clean up URL
+        history.replaceState(null, '', window.location.pathname);
+      }
+    })();
+
+    function handleSocialLogin(provider) {
+      window.SpopeerAPI.showNotification(`Social login with ${provider.charAt(0).toUpperCase() + provider.slice(1)} is not yet available. Please use email/password to log in.`, 'info');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const emailInput    = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const errorBox      = document.getElementById('loginError');
+      const loginBtn      = e.target.querySelector('.login-btn');
+
+      const email    = emailInput?.value.trim() || '';
+      const password = passwordInput?.value.trim() || '';
+
+      if (errorBox) {
+        errorBox.textContent = '';
+        errorBox.style.display = 'none';
+      }
+
+      if (!email || !password) {
+        if (errorBox) {
+          errorBox.textContent = 'Please fill in both email and password.';
+          errorBox.style.display = 'block';
+        }
+        if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Log In'; }
+        return;
+      }
+
+      if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Signing in...'; }
+
+      try {
+        const result = await window.SpopeerAPI.login({ email: email, password: password });
+        window.Auth.login(result.user, result.token);
+        window.location.href = '/feed.html';
+      } catch (err) {
+        if (errorBox) {
+          errorBox.textContent = err.message || 'Login failed.';
+          errorBox.style.display = 'block';
+        }
+      } finally {
+        if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Log In'; }
+      }
+    });
+  </script>
+  <script>
+    // Password visibility toggles for login/signup pages
+    (function(){
+      function togglePassword(btn){
+        const wrap = btn.closest('.pw-wrap');
+        if(!wrap) return;
+        const input = wrap.querySelector('input');
+        if(!input) return;
+        const shown = input.getAttribute('type') === 'text';
+        input.setAttribute('type', shown ? 'password' : 'text');
+        btn.innerHTML = shown ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
+        btn.setAttribute('aria-pressed', (!shown).toString());
+      }
+      document.addEventListener('click', (e)=>{
+        const btn = e.target.closest && e.target.closest('.pw-toggle');
+        if(btn) togglePassword(btn);
+      });
+      // also add keyboard toggle on Enter/Space
+      document.addEventListener('keydown', (e)=>{
+        if((e.key==='Enter' || e.key===' ') && document.activeElement && document.activeElement.classList.contains('pw-toggle')){
+          e.preventDefault();
+          togglePassword(document.activeElement);
+        }
+      });
+    })();
+  </script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

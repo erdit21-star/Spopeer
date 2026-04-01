@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spopeer · Library</title>
+  <script src="../../js/auth.js"></script>
+  <script>
+    window.Auth.requireAuth();
+  </script>
+  <script src="../../js/library-page.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <link rel="stylesheet" href="/css/shared-nav.css" />
+  <style>
+    .app-layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 24px 36px;
+      display: grid;
+      grid-template-columns: var(--left-w) minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .sidebar-left {
+      position: sticky;
+      top: calc(var(--nav-h) + 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--rM);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-2);
+      text-decoration: none;
+      transition: .2s;
+    }
+
+    .nav-item:visited,
+    .nav-item:hover,
+    .nav-item:focus,
+    .nav-item:active {
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .nav-item.active {
+      background: var(--accent-lt);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .library-main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .page-head {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 22px;
+    }
+
+    .page-head h1 {
+      margin: 0 0 6px;
+      font-family: var(--fD);
+      font-size: 34px;
+      letter-spacing: -.03em;
+    }
+
+    .page-head p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .library-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 12px;
+    }
+
+    .library-tab {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: .2s;
+      font-family: var(--fB);
+    }
+
+    .library-tab.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .library-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 190px;
+    }
+
+    .library-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .library-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: var(--accent-lt);
+      color: var(--accent);
+      padding: 5px 9px;
+      border-radius: var(--pill);
+    }
+
+    .library-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+
+    .library-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .library-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .meta-chip {
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--pill);
+      padding: 6px 10px;
+    }
+
+    .empty-state {
+      background: var(--white);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--rL);
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      border-radius: var(--pill);
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: .2s;
+      font-family: var(--fB);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--white);
+      border-color: var(--accent);
+    }
+
+    .site-footer {
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      margin-top: 60px;
+    }
+    .footer-grid {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 48px 24px 0;
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+      gap: 40px;
+    }
+    .foot-logo {
+      font-family: var(--fD);
+      font-size: 21px;
+      font-weight: 800;
+      color: var(--ink);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+    .foot-brand p { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 18px; max-width: 230px; }
+    .social-row { display: flex; gap: 7px; }
+    .soc-btn {
+      width: 34px;
+      height: 34px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--rS);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 13px;
+      text-decoration: none;
+      transition: .2s;
+    }
+    .soc-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-lt); }
+    .foot-col h5 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--ink); margin-bottom: 14px; }
+    .foot-col ul { list-style: none; }
+    .foot-col ul li { margin-bottom: 9px; }
+    .foot-col ul a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color .2s; }
+    .foot-col ul a:hover { color: var(--accent); }
+    .footer-btm {
+      max-width: 1280px;
+      margin: 36px auto 0;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .footer-btm p { font-size: 12px; color: var(--muted-2); }
+    .footer-btm-links { display: flex; gap: 18px; }
+    .footer-btm-links a { font-size: 12px; color: var(--muted-2); text-decoration: none; }
+    .footer-btm-links a:hover { color: var(--accent); }
+
+    @media (max-width: 960px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar-left {
+        position: static;
+      }
+
+      .library-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <header class="topnav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+      <div class="nav-right"></div>
+    </div>
+  </header>
+
+  <main class="app-layout">
+    <aside class="sidebar-left">
+      <a href="../../feed.html" class="nav-item"><i class="fa-solid fa-house"></i> Feed</a>
+      <a href="../library/index.html" class="nav-item active"><i class="fa-solid fa-bookmark"></i> Library</a>
+      <a href="../events/event.html" class="nav-item"><i class="fa-regular fa-calendar"></i> Events</a>
+      <a href="../sponsorship/sponsor.html" class="nav-item"><i class="fa-solid fa-handshake-angle"></i> Sponsorship</a>
+      <a href="../dashboard/settings.html" class="nav-item"><i class="fa-solid fa-gear"></i> Settings</a>
+    </aside>
+
+    <section class="library-main">
+      <div class="page-head">
+        <h1>Your Library</h1>
+        <p>
+          Keep everything you saved in one place — posts, links, and articles.
+          Use this space as your personal sports knowledge hub.
+        </p>
+      </div>
+
+      <div class="library-tabs">
+        <button class="library-tab active" data-library-tab="all">All</button>
+        <button class="library-tab" data-library-tab="post">Posts</button>
+        <button class="library-tab" data-library-tab="link">Links</button>
+        <button class="library-tab" data-library-tab="article">Articles</button>
+      </div>
+
+      <div id="libraryContent"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="foot-brand">
+        <a href="/index.html" class="foot-logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+        <p>Connecting the global sports community — athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+        <div class="social-row">
+          <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+          <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+          <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+
+      <div class="foot-col">
+        <h5>Platform</h5>
+        <ul>
+          <li><a href="/index.html#features">Features</a></li>
+          <li><a href="/index.html#how-it-works">How It Works</a></li>
+          <li><a href="/index.html#user-types">User Types</a></li>
+        </ul>
+      </div>
+
+      <div class="foot-col">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="/pages/legal/about.html">About Us</a></li>
+          <li><a href="/pages/company/careers.html">Careers</a></li>
+          <li><a href="/pages/company/blog.html">Blog</a></li>
+        </ul>
+      </div>
+
+      <div class="foot-col">
+        <h5>Support</h5>
+        <ul>
+          <li><a href="/pages/company/help-center.html">Help Center</a></li>
+          <li><a href="/pages/contact/index.html">Contact Us</a></li>
+        </ul>
+      </div>
+
+      <div class="foot-col">
+        <h5>Legal</h5>
+        <ul>
+          <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+          <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+          <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-btm">
+      <p>&copy; 2026 Spopeer. All rights reserved.</p>
+      <div class="footer-btm-links">
+        <a href="/pages/legal/privacy.html">Privacy</a>
+        <a href="/pages/legal/terms.html">Terms</a>
+        <a href="/pages/contact/index.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+<script src="/js/shared-ui.js"></script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>

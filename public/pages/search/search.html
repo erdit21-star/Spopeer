@@ -1,0 +1,1334 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Search People — Spopeer</title>
+  <script>
+    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+    if (!_ud || !_li) window.location.href = '../../pages/auth/login.html';
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+  <style>
+    /* ── ORIGINAL PALETTE PRESERVED ── */
+    :root {
+      --accent:       #001f3f;
+      --accent-mid:   #003366;
+      --accent-hover: #001a33;
+      --accent-light: #cce7ff;
+      --accent-lt2:   #e8f4ff;
+      --background:   #fafaf8;
+      --white:        #ffffff;
+      --ink:          #0f0f0f;
+      --ink-2:        #2e2e2e;
+      --muted:        #7a7a7a;
+      --muted-2:      #b0b0b0;
+      --border:       #e8e8e4;
+      --surface:      #f3f3ef;
+      --surface-2:    #eeeeea;
+      --blue:         #0066cc;
+      --blue-lt:      #e8f2ff;
+      --green:        #0a7c41;
+      --green-lt:     #e6f6ee;
+      --red:          #b91c1c;
+      --fD:           'Syne', sans-serif;
+      --fB:           'Plus Jakarta Sans', sans-serif;
+      --nav-h:        64px;
+      --r:            10px;
+      --rS:           7px;
+      --rL:           16px;
+      --pill:         999px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--fB);
+      background: var(--background);
+      color: var(--ink);
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+
+    /* ════════════ NAV ════════════ */
+    .topnav {
+      position: sticky; top: 0; z-index: 300;
+      height: var(--nav-h);
+      background: rgba(250,250,248,.96);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      height: 100%; padding: 0 28px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .logo {
+      font-family: var(--fD); font-size: 21px; font-weight: 800;
+      letter-spacing: -.02em; color: var(--ink);
+      text-decoration: none; display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0;
+    }
+    .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+
+    /* nav search */
+    .nav-search { flex: 1; max-width: 440px; position: relative; }
+    .nav-search i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; }
+    #mainSearchInput {
+      width: 100%; padding: 9px 16px 9px 37px;
+      background: var(--surface); border: 1.5px solid transparent;
+      border-radius: var(--pill); font-size: 13px; font-family: var(--fB);
+      color: var(--ink); transition: .2s;
+    }
+    #mainSearchInput::placeholder { color: var(--muted-2); }
+    #mainSearchInput:focus { outline: none; background: var(--white); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,31,63,.08); }
+
+    /* nav right */
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 7px; position: relative; }
+    .nav-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: none; background: transparent; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; cursor: pointer; transition: .2s; position: relative;
+    }
+    .nav-icon:hover { background: var(--surface); color: var(--ink); }
+    .notif-dot { position: absolute; top: 6px; right: 5px; width: 7px; height: 7px; background: var(--blue); border-radius: 50%; border: 2px solid var(--background); }
+    .user-chip {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 12px 5px 6px; background: var(--white);
+      border: 1.5px solid var(--border); border-radius: var(--pill);
+      cursor: pointer; transition: .2s;
+    }
+    .user-chip:hover { border-color: var(--accent); }
+    .chip-avatar {
+      width: 27px; height: 27px; border-radius: 50%;
+      background: var(--accent); color: var(--accent-light);
+      font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .chip-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .btn-back {
+      padding: 7px 14px; border: 1.5px solid var(--border);
+      border-radius: var(--pill); background: transparent;
+      color: var(--muted); font-size: 13px; font-weight: 600;
+      font-family: var(--fB); cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: .2s; text-decoration: none;
+    }
+    .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ════════════ PROFILE MENU ════════════ */
+    .profile-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      width: 260px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      box-shadow: 0 14px 40px rgba(0,0,0,.12);
+      padding: 12px 0;
+      display: none;
+      z-index: 500;
+    }
+    .profile-menu.visible { display: block; }
+
+    .profile-menu-section { padding: 0; }
+    .profile-menu-section + .profile-menu-section { border-top: 1px solid var(--border); }
+    .profile-menu-section-header {
+      padding: 12px 16px; cursor: pointer; display: flex; align-items: center;
+      justify-content: space-between; transition: background .2s; border-radius: var(--rS); margin: 2px 4px;
+    }
+    .profile-menu-section-header:hover { background: var(--surface); }
+    .profile-menu-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--muted); margin: 0;
+    }
+    .profile-menu-section-toggle { font-size: 10px; color: var(--muted-2); transition: transform .3s ease, color .2s; }
+    .profile-menu-section.collapsed .profile-menu-section-toggle { transform: rotate(-90deg); }
+    .profile-menu-section-items {
+      overflow: hidden; transition: max-height .3s ease, padding .3s ease;
+      max-height: 500px; padding: 0 16px 10px;
+    }
+    .profile-menu-section.collapsed .profile-menu-section-items { max-height: 0; padding: 0 16px; }
+    .profile-menu-item {
+      width: 100%; text-align: left;
+      font-size: 13px; color: var(--ink-2);
+      padding: 8px 10px; display: flex; align-items: center;
+      gap: 10px; background: transparent; border: none;
+      cursor: pointer; transition: background .2s;
+      border-radius: var(--rS); margin-bottom: 2px; font-family: var(--fB);
+    }
+    .profile-menu-item:hover { background: var(--surface); color: var(--ink); }
+    .profile-menu-item i { width: 18px; text-align: center; color: var(--muted); }
+
+    .profile-menu-item.logout { color: var(--accent); }
+    .profile-menu-item.logout:hover { background: rgba(0,31,63,.06); }
+
+    /* ════════════ PAGE LAYOUT ════════════ */
+    .page-wrap {
+      max-width: 1280px; margin: 0 auto;
+      padding: 28px 28px 60px;
+      display: grid;
+      grid-template-columns: 268px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    /* ════════════ FILTER SIDEBAR ════════════ */
+    .filter-sidebar {
+      position: sticky; top: calc(var(--nav-h) + 16px);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    .filter-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--rL); padding: 18px 16px;
+    }
+    .filter-card-title {
+      font-family: var(--fD); font-size: 14px; font-weight: 800;
+      color: var(--ink); margin-bottom: 13px;
+      display: flex; align-items: center; justify-content: space-between;
+      letter-spacing: -.01em;
+    }
+    .filter-clear {
+      font-size: 12px; font-weight: 600; color: var(--blue);
+      background: none; border: none; cursor: pointer;
+      font-family: var(--fB); padding: 0;
+    }
+    .filter-clear:hover { text-decoration: underline; }
+
+    /* sidebar search */
+    .sb-search { position: relative; margin-bottom: 0; }
+    .sb-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 12px; pointer-events: none; }
+    #sidebarTerm {
+      width: 100%; padding: 9px 13px 9px 34px;
+      background: var(--surface); border: 1.5px solid transparent;
+      border-radius: var(--r); font-size: 13px;
+      font-family: var(--fB); color: var(--ink); transition: .2s;
+    }
+    #sidebarTerm::placeholder { color: var(--muted-2); }
+    #sidebarTerm:focus { outline: none; background: var(--white); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,31,63,.08); }
+
+    /* role buttons */
+    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .role-btn {
+      padding: 10px 8px; border: 1.5px solid var(--border);
+      border-radius: var(--r); background: var(--white);
+      cursor: pointer; transition: .2s; text-align: center;
+      font-family: var(--fB);
+    }
+    .role-btn:hover { border-color: var(--accent); background: var(--accent-lt2); }
+    .role-btn.selected { border-color: var(--accent); background: var(--accent-light); }
+    .role-btn-icon { font-size: 16px; margin-bottom: 5px; color: var(--muted); display: block; }
+    .role-btn.selected .role-btn-icon { color: var(--accent); }
+    .role-btn-label { font-size: 12px; font-weight: 600; color: var(--ink-2); display: block; line-height: 1.2; }
+    .role-btn.selected .role-btn-label { color: var(--accent); }
+
+    /* sport select */
+    .sport-select {
+      width: 100%; padding: 9px 32px 9px 12px;
+      background: var(--surface);
+      border: 1.5px solid transparent; border-radius: var(--r);
+      font-size: 13px; font-family: var(--fB); color: var(--ink);
+      transition: .2s; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7a7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 11px center;
+      background-color: var(--surface);
+    }
+    .sport-select:focus { outline: none; background-color: var(--white); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,31,63,.08); }
+
+    /* search button */
+    .btn-search {
+      width: 100%; padding: 11px; background: var(--accent); color: var(--accent-light);
+      border: none; border-radius: var(--r); font-size: 14px; font-weight: 700;
+      font-family: var(--fB); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background .2s, transform .15s;
+    }
+    .btn-search:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn-search:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* quick searches */
+    .quick-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 10px; border-radius: var(--r);
+      cursor: pointer; transition: .15s; border: none;
+      background: transparent; width: 100%; text-align: left;
+      font-family: var(--fB);
+    }
+    .quick-item:hover { background: var(--surface); }
+    .quick-icon {
+      width: 28px; height: 28px; border-radius: var(--rS);
+      background: var(--accent-light); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; flex-shrink: 0;
+    }
+    .quick-label { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+
+    /* ════════════ RESULTS COLUMN ════════════ */
+    .results-col { min-width: 0; }
+
+    /* results header */
+    .results-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+    }
+    .results-title { font-family: var(--fD); font-size: 20px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+    .results-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .results-meta strong { color: var(--ink); font-weight: 700; }
+    .sort-wrap { display: flex; align-items: center; gap: 8px; }
+    .sort-label { font-size: 13px; color: var(--muted); }
+    .sort-select {
+      padding: 7px 28px 7px 11px; background: var(--white);
+      border: 1.5px solid var(--border); border-radius: var(--rS);
+      font-size: 13px; font-family: var(--fB); color: var(--ink);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7a7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 9px center;
+      background-color: var(--white); cursor: pointer; transition: .2s;
+    }
+    .sort-select:focus { outline: none; border-color: var(--accent); }
+
+    /* active filter tags */
+    .active-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+    .active-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; background: var(--accent-light);
+      color: var(--accent); border-radius: var(--pill);
+      font-size: 12px; font-weight: 600;
+      border: 1px solid rgba(0,31,63,.18);
+    }
+    .active-tag button {
+      background: none; border: none; color: var(--accent);
+      cursor: pointer; font-size: 10px; padding: 0; line-height: 1;
+      display: flex; align-items: center;
+    }
+    .active-tag button:hover { color: var(--red); }
+
+    /* ── RESULT CARDS ── */
+    .results-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .result-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--rL); padding: 16px 18px;
+      display: flex; align-items: center; gap: 14px;
+      transition: border-color .2s, box-shadow .2s, transform .2s;
+    }
+    .result-card:hover {
+      border-color: #ccc;
+      box-shadow: 0 4px 16px rgba(0,0,0,.06);
+      transform: translateY(-1px);
+    }
+
+    /* avatar */
+    .rc-av {
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 800; color: var(--accent-light);
+      background: var(--accent);
+    }
+    /* subtle variety based on role */
+    .rc-av.av-coach  { background: #0052a3; }
+    .rc-av.av-club   { background: #0a6634; }
+    .rc-av.av-pro    { background: #4a1d96; }
+    .rc-av.av-mixed  { background: #0f4c81; }
+
+    /* card body */
+    .rc-body { flex: 1; min-width: 0; }
+    .rc-name {
+      font-size: 15px; font-weight: 700; color: var(--ink);
+      margin-bottom: 2px; display: flex; align-items: center; gap: 7px;
+    }
+    .verified { color: var(--blue); font-size: 13px; }
+    .rc-handle { font-size: 12px; color: var(--muted); margin-bottom: 7px; }
+    .rc-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .rc-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700; padding: 3px 8px;
+      border-radius: var(--pill); letter-spacing: .01em;
+    }
+    .tag-athlete  { background: var(--accent-light); color: var(--accent); }
+    .tag-coach    { background: var(--blue-lt); color: #0052a3; }
+    .tag-club     { background: var(--green-lt); color: var(--green); }
+    .tag-pro      { background: #ede9fe; color: #4a1d96; }
+    .tag-sport    { background: var(--surface-2); color: var(--ink-2); }
+    .tag-location { background: var(--surface-2); color: var(--muted); }
+
+    /* card right */
+    .rc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; flex-shrink: 0; }
+    .btn-view {
+      padding: 8px 18px; background: var(--accent); color: var(--accent-light);
+      border: none; border-radius: var(--r); font-size: 13px; font-weight: 700;
+      font-family: var(--fB); cursor: pointer; transition: background .2s;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-view:hover { background: var(--accent-hover); }
+    .btn-connect {
+      padding: 7px 16px; background: transparent;
+      color: var(--accent); border: 1.5px solid var(--accent);
+      border-radius: var(--r); font-size: 13px; font-weight: 600;
+      font-family: var(--fB); cursor: pointer; transition: .2s;
+      white-space: nowrap;
+    }
+    .btn-connect:hover { background: var(--accent-light); }
+    .btn-connect.connected { color: var(--green); border-color: var(--green); background: var(--green-lt); }
+
+    /* ── SKELETON ── */
+    .skeleton-list { display: flex; flex-direction: column; gap: 8px; }
+    .skeleton-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--rL); padding: 16px 18px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .skel { background: var(--surface-2); border-radius: var(--rS); animation: shimmer 1.5s ease-in-out infinite; }
+    @keyframes shimmer { 0%,100%{opacity:.45} 50%{opacity:.9} }
+    .skel-av { width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; }
+    .skel-body { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .skel-line { height: 11px; border-radius: 4px; }
+    .skel-s { width: 35%; } .skel-m { width: 60%; } .skel-l { width: 80%; }
+    .skel-btn { width: 76px; height: 34px; border-radius: var(--r); flex-shrink: 0; }
+
+    /* ── STATES ── */
+    .state-box {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--rL); padding: 52px 24px; text-align: center;
+    }
+    .state-icon { font-size: 38px; color: var(--muted-2); margin-bottom: 14px; }
+    .state-title { font-family: var(--fD); font-size: 18px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .state-sub { font-size: 14px; color: var(--muted); max-width: 320px; margin: 0 auto 20px; line-height: 1.6; }
+
+    /* hero state */
+    .hero-state {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--rL); padding: 40px 28px; text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--accent-light); color: var(--accent);
+      font-size: 11px; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; padding: 4px 12px;
+      border-radius: var(--pill); margin-bottom: 14px;
+    }
+    .hero-title { font-family: var(--fD); font-size: 26px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); margin-bottom: 8px; }
+    .hero-sub { font-size: 15px; color: var(--muted); margin-bottom: 22px; font-weight: 300; line-height: 1.6; }
+    .hero-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+    .hero-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: var(--pill);
+      font-size: 13px; font-weight: 600; color: var(--ink-2);
+      cursor: pointer; transition: .2s;
+    }
+    .hero-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .hero-chip i { color: var(--accent); }
+
+    /* ── PAGINATION ── */
+    .pagination {
+      display: flex; justify-content: center; align-items: center;
+      gap: 5px; margin-top: 20px; flex-wrap: wrap;
+    }
+    .page-btn {
+      width: 34px; height: 34px; border-radius: var(--rS);
+      border: 1px solid var(--border); background: var(--white);
+      color: var(--ink-2); font-size: 13px; font-weight: 600;
+      font-family: var(--fB); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: .2s;
+    }
+    .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .page-btn.active { background: var(--accent); color: var(--accent-light); border-color: var(--accent); }
+    .page-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .page-ellipsis { font-size: 13px; color: var(--muted); padding: 0 4px; align-self: center; }
+    .page-info-text { font-size: 13px; color: var(--muted); white-space: nowrap; padding: 0 4px; }
+
+    /* ── FOOTER ── */
+    .site-footer { background: var(--white); border-top: 1px solid var(--border); margin-top: 60px; }
+    .footer-grid { max-width: 1280px; margin: 0 auto; padding: 48px 28px 0; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; gap: 40px; }
+    .foot-logo { font-family: var(--fD); font-size: 21px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); text-decoration: none; display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
+    .foot-brand p { font-size: 13px; color: var(--muted); line-height: 1.7; font-weight: 300; margin-bottom: 18px; max-width: 230px; }
+    .social-row { display: flex; gap: 7px; }
+    .soc-btn { width: 32px; height: 32px; border: 1.5px solid var(--border); border-radius: var(--rS); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; text-decoration: none; transition: .2s; }
+    .soc-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .foot-col h5 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--ink); margin-bottom: 13px; }
+    .foot-col ul { list-style: none; }
+    .foot-col ul li { margin-bottom: 9px; }
+    .foot-col ul a { font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 300; transition: color .2s; }
+    .foot-col ul a:hover { color: var(--accent); }
+    .footer-btm { max-width: 1280px; margin: 36px auto 0; padding: 16px 28px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .footer-btm p { font-size: 12px; color: var(--muted-2); }
+    .footer-btm-links { display: flex; gap: 18px; }
+    .footer-btm-links a { font-size: 12px; color: var(--muted-2); text-decoration: none; transition: color .2s; }
+    .footer-btm-links a:hover { color: var(--accent); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 960px) {
+      .page-wrap { grid-template-columns: 1fr; }
+      .filter-sidebar { position: static; }
+      .filter-card { }
+      .footer-grid { grid-template-columns: 1fr 1fr; padding: 36px 16px 0; }
+      .footer-btm { padding: 14px 16px; flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 600px) {
+      .nav-inner { padding: 0 14px; }
+      .nav-search { max-width: 170px; }
+      .page-wrap { padding: 16px 14px 40px; }
+      .rc-right { display: none; }
+      .hero-title { font-size: 20px; }
+      .role-grid { grid-template-columns: 1fr 1fr; }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav class="topnav">
+  <div class="nav-inner">
+    <a href="/index.html" class="logo" data-home-link>
+      <span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span>
+    </a>
+
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="mainSearchInput" type="text" placeholder="Search athletes, coaches, clubs…" autocomplete="off"/>
+    </div>
+
+    <div class="nav-right">
+      <button class="nav-icon" onclick="window.location.href='/feed.html'" title="Home">
+        <i class="fa-solid fa-house"></i>
+      </button>
+      <button class="nav-icon" onclick="window.location.href='../dashboard/notifications.html'" title="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="notif-dot"></span>
+      </button>
+      <div class="user-chip" id="userChip">
+        <span class="chip-avatar" id="chipAvatar">JD</span>
+        <span class="chip-name" id="chipName">Jamie</span>
+        <i class="fa-solid fa-chevron-down chip-caret"></i>
+      </div>
+      <div class="profile-menu" id="profileMenu" aria-hidden="true">
+        <div class="profile-menu-section" data-section="identity">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
+            <div class="profile-menu-title">Your Identity</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
+            <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
+            <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="account">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Account & Settings</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
+            <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
+            <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy & Safety</button>
+            <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
+            <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
+            <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="features">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Platform Features</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>
+            <button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements & Badges</button>
+            <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
+            <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
+            <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
+            <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="help">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Help & Misc</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
+            <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
+            <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
+          </div>
+        </div>
+        <div class="profile-menu-section">
+          <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
+            <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ PAGE ══ -->
+<div class="page-wrap">
+
+  <!-- FILTER SIDEBAR -->
+  <aside class="filter-sidebar">
+
+    <!-- search + button -->
+    <div class="filter-card">
+      <div class="filter-card-title">Find People</div>
+      <div class="sb-search" style="margin-bottom:10px">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="sidebarTerm" type="text" placeholder="Name or email…" autocomplete="off"/>
+      </div>
+      <button class="btn-search" id="searchBtn">
+        <i class="fa-solid fa-magnifying-glass"></i> Search
+      </button>
+    </div>
+
+    <!-- role -->
+    <div class="filter-card">
+      <div class="filter-card-title">
+        Role
+        <button class="filter-clear" id="clearRole">Clear</button>
+      </div>
+      <div class="role-grid" id="roleGrid">
+        <button class="role-btn" data-value="athlete">
+          <span class="role-btn-icon"><i class="fa-solid fa-person-running"></i></span>
+          <span class="role-btn-label">Athlete</span>
+        </button>
+        <button class="role-btn" data-value="coach">
+          <span class="role-btn-icon"><i class="fa-solid fa-bullseye"></i></span>
+          <span class="role-btn-label">Coach</span>
+        </button>
+        <button class="role-btn" data-value="club">
+          <span class="role-btn-icon"><i class="fa-solid fa-shield-halved"></i></span>
+          <span class="role-btn-label">Club</span>
+        </button>
+        <button class="role-btn" data-value="supportive_professional">
+          <span class="role-btn-icon"><i class="fa-solid fa-star"></i></span>
+          <span class="role-btn-label">Support Pro</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- sport -->
+    <div class="filter-card">
+      <div class="filter-card-title">Sport</div>
+      <select class="sport-select" id="sport">
+        <option value="">Any sport</option>
+      </select>
+    </div>
+
+    <!-- quick searches -->
+    <div class="filter-card">
+      <div class="filter-card-title">Quick Search</div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="quick-item" onclick="quickSearch('marathon runner')">
+          <span class="quick-icon"><i class="fa-solid fa-person-running" style="font-size:11px"></i></span>
+          <span class="quick-label">Marathon Runners</span>
+        </button>
+        <button class="quick-item" onclick="quickSearch('football coach')">
+          <span class="quick-icon"><i class="fa-solid fa-futbol" style="font-size:11px"></i></span>
+          <span class="quick-label">Football Coaches</span>
+        </button>
+        <button class="quick-item" onclick="quickSearch('basketball')">
+          <span class="quick-icon"><i class="fa-solid fa-basketball" style="font-size:11px"></i></span>
+          <span class="quick-label">Basketball Players</span>
+        </button>
+        <button class="quick-item" onclick="quickSearch('physiotherapist')">
+          <span class="quick-icon"><i class="fa-solid fa-heart-pulse" style="font-size:11px"></i></span>
+          <span class="quick-label">Physiotherapists</span>
+        </button>
+        <button class="quick-item" onclick="quickSearch('swimming')">
+          <span class="quick-icon"><i class="fa-solid fa-person-swimming" style="font-size:11px"></i></span>
+          <span class="quick-label">Swimmers</span>
+        </button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- RESULTS COLUMN -->
+  <div class="results-col">
+
+    <!-- TAB BAR -->
+    <div id="resultsTabBar" style="display:none; border-bottom: 1px solid var(--border); margin-bottom: 20px; display: flex; gap: 0;">
+      <button id="peopleTab" class="result-tab active" onclick="switchResultsTab('people')" style="padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; margin-bottom: -1px;">
+        <i class="fa-solid fa-users" style="margin-right: 6px;"></i> People
+      </button>
+      <button id="marketplaceTab" class="result-tab" onclick="switchResultsTab('marketplace')" style="padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; margin-bottom: -1px;">
+        <i class="fa-solid fa-store" style="margin-right: 6px;"></i> Marketplace
+      </button>
+    </div>
+
+    <style>
+      .result-tab.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent) !important;
+      }
+      .result-tab:hover {
+        color: var(--ink);
+      }
+
+      .marketplace-results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .marketplace-result-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        overflow: hidden;
+        transition: 0.2s;
+        cursor: pointer;
+      }
+
+      .marketplace-result-card:hover {
+        border-color: var(--accent);
+        box-shadow: 0 4px 12px rgba(0,31,63,0.08);
+      }
+
+      .marketplace-result-image {
+        width: 100%;
+        height: 140px;
+        background: var(--surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .marketplace-result-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .marketplace-result-content {
+        padding: 12px;
+      }
+
+      .marketplace-result-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 6px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .marketplace-result-price {
+        font-family: var(--fD);
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--accent);
+      }
+
+      .marketplace-result-seller {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+    .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+
+    <!-- header (hidden until search fires) -->
+    <div class="results-header" id="resultsHeader" style="display:none">
+      <div>
+        <div class="results-title">Results</div>
+        <div class="results-meta" id="resultsMeta"></div>
+      </div>
+      <div class="sort-wrap">
+        <span class="sort-label">Sort:</span>
+        <select class="sort-select" id="sortSelect">
+          <option value="relevance">Relevance</option>
+          <option value="name">Name A–Z</option>
+          <option value="recent">Recently joined</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- active filter pills -->
+    <div class="active-filters" id="activeFilters"></div>
+
+    <!-- hero / initial state -->
+    <div class="hero-state" id="heroState">
+      <div class="hero-eyebrow">
+        <i class="fa-solid fa-magnifying-glass" style="font-size:10px"></i>
+        Global Sports Network
+      </div>
+      <div class="hero-title">Find your next connection</div>
+      <div class="hero-sub">Search 15,000+ athletes, coaches, clubs, and sports professionals across 50+ countries</div>
+      <div class="hero-chips">
+        <div class="hero-chip" onclick="quickSearch('runner')"><i class="fa-solid fa-person-running"></i> Runners</div>
+        <div class="hero-chip" onclick="quickSearch('coach')"><i class="fa-solid fa-bullseye"></i> Coaches</div>
+        <div class="hero-chip" onclick="quickSearch('football')"><i class="fa-solid fa-futbol"></i> Football</div>
+        <div class="hero-chip" onclick="quickSearch('basketball')"><i class="fa-solid fa-basketball"></i> Basketball</div>
+        <div class="hero-chip" onclick="quickSearch('swimming')"><i class="fa-solid fa-person-swimming"></i> Swimming</div>
+        <div class="hero-chip" onclick="quickSearch('physiotherapist')"><i class="fa-solid fa-heart-pulse"></i> Physio</div>
+      </div>
+    </div>
+
+    <!-- skeleton -->
+    <div class="skeleton-list" id="skeletonList" style="display:none">
+      <div class="skeleton-card"><div class="skel skel-av"></div><div class="skel-body"><div class="skel skel-line skel-m"></div><div class="skel skel-line skel-s"></div><div class="skel skel-line skel-l"></div></div><div class="skel skel-btn"></div></div>
+      <div class="skeleton-card"><div class="skel skel-av"></div><div class="skel-body"><div class="skel skel-line skel-l"></div><div class="skel skel-line skel-s"></div><div class="skel skel-line skel-m"></div></div><div class="skel skel-btn"></div></div>
+      <div class="skeleton-card"><div class="skel skel-av"></div><div class="skel-body"><div class="skel skel-line skel-m"></div><div class="skel skel-line skel-l"></div><div class="skel skel-line skel-s"></div></div><div class="skel skel-btn"></div></div>
+      <div class="skeleton-card"><div class="skel skel-av"></div><div class="skel-body"><div class="skel skel-line skel-s"></div><div class="skel skel-line skel-m"></div><div class="skel skel-line skel-l"></div></div><div class="skel skel-btn"></div></div>
+    </div>
+
+    <!-- results -->
+    <div class="results-list" id="resultsList" style="display:none"></div>
+    
+    <!-- marketplace results -->
+    <div class="marketplace-results-grid" id="marketplaceResultsList" style="display:none"></div>
+
+    <!-- empty -->
+    <div class="state-box" id="emptyState" style="display:none">
+      <div class="state-icon"><i class="fa-regular fa-face-sad-tear"></i></div>
+      <div class="state-title">No results found</div>
+      <div class="state-sub">Try adjusting your filters or searching with different keywords</div>
+      <button class="btn-search" style="max-width:180px;margin:0 auto" onclick="resetAll()">
+        <i class="fa-solid fa-rotate-left"></i> Reset filters
+      </button>
+    </div>
+
+    <!-- error -->
+    <div class="state-box" id="errorState" style="display:none">
+      <div class="state-icon" style="color:#b91c1c"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="state-title">Something went wrong</div>
+      <div class="state-sub" id="errorMsg">Unable to load results. Please try again.</div>
+      <button class="btn-search" style="max-width:160px;margin:0 auto" id="retryBtn">
+        <i class="fa-solid fa-rotate"></i> Retry
+      </button>
+    </div>
+
+    <!-- pagination -->
+    <div class="pagination" id="paginationRow" style="display:none"></div>
+
+  </div>
+</div>
+
+<!-- ══ FOOTER ══ -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <p>Connecting the global sports community — athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+      <div class="social-row">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+        <li><a href="/index.html#user-types">User Types</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="/pages/legal/about.html">About Us</a></li>
+        <li><a href="/pages/company/careers.html">Careers</a></li>
+        <li><a href="/pages/company/blog.html">Blog</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h5>Support</h5>
+      <ul>
+        <li><a href="/pages/company/help-center.html">Help Center</a></li>
+        <li><a href="/pages/contact/index.html">Contact Us</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links">
+      <a href="/pages/legal/privacy.html">Privacy</a>
+      <a href="/pages/legal/terms.html">Terms</a>
+      <a href="/pages/contact/index.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- original external scripts preserved -->
+<script src="../../js/search-widget.js" onerror=""></script>
+<script src="../../js/main.js" onerror=""></script>
+
+<script>
+(function(){
+  const PAGE_SIZE = 10;
+  let currentPage = 1;
+  let selectedRole = '';
+  let isLoading = false;
+  let lastSearchPage = 1;
+
+  /* ── hydrate user ── */
+  const ud = JSON.parse(localStorage.getItem('spopeer_user')||'null');
+  if(ud && ud.name){
+    const init = ud.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const el = document.getElementById('chipAvatar'); if(el) el.textContent = init;
+    const cn = document.getElementById('chipName');   if(cn) cn.textContent = ud.name.split(' ')[0];
+  }
+
+
+  /* – user chip & profile menu: handled by shared-ui.js – */
+
+  /* – sync both search inputs – */
+  const mainInput   = document.getElementById('mainSearchInput');
+  const sideInput   = document.getElementById('sidebarTerm');
+  mainInput?.addEventListener('input', ()=>{ sideInput.value = mainInput.value; });
+  sideInput?.addEventListener('input', ()=>{ mainInput.value = sideInput.value; });
+  mainInput?.addEventListener('keydown', e=>{ if(e.key==='Enter') doSearch(1); });
+  sideInput?.addEventListener('keydown', e=>{ if(e.key==='Enter') doSearch(1); });
+
+  /* ── role toggle ── */
+  document.querySelectorAll('#roleGrid .role-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const val = btn.dataset.value;
+      if(selectedRole === val){ selectedRole=''; btn.classList.remove('selected'); }
+      else {
+        document.querySelectorAll('#roleGrid .role-btn').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedRole = val;
+      }
+      renderActiveTags();
+    });
+  });
+  document.getElementById('clearRole')?.addEventListener('click', ()=>{
+    selectedRole='';
+    document.querySelectorAll('#roleGrid .role-btn').forEach(b=>b.classList.remove('selected'));
+    renderActiveTags();
+  });
+
+  /* ── populate sports ── */
+  const sportSel = document.getElementById('sport');
+  if(window.masterSports && Array.isArray(window.masterSports)){
+    window.masterSports.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; sportSel.appendChild(o); });
+  } else {
+    ['Football','Basketball','Running','Swimming','Tennis','Cycling','Boxing','Volleyball','Athletics','Rugby','Cricket'].forEach(s=>{
+      const o=document.createElement('option'); o.value=s.toLowerCase(); o.textContent=s; sportSel.appendChild(o);
+    });
+  }
+  sportSel?.addEventListener('change', renderActiveTags);
+
+  /* ── active filter tags ── */
+  function renderActiveTags(){
+    const wrap = document.getElementById('activeFilters');
+    wrap.innerHTML = '';
+    if(selectedRole){
+      const map={'athlete':'Athlete','coach':'Coach','club':'Club','supportive_professional':'Support Professional'};
+      addTag(wrap, map[selectedRole]||selectedRole, ()=>{
+        selectedRole='';
+        document.querySelectorAll('#roleGrid .role-btn').forEach(b=>b.classList.remove('selected'));
+        renderActiveTags();
+      });
+    }
+    const sp = document.getElementById('sport')?.value;
+    if(sp){ addTag(wrap, sp, ()=>{ document.getElementById('sport').value=''; renderActiveTags(); }); }
+  }
+  function addTag(wrap, label, onRemove){
+    const t = document.createElement('div'); t.className='active-tag';
+    t.innerHTML = `${label} <button title="Remove"><i class="fa-solid fa-xmark" style="font-size:10px"></i></button>`;
+    t.querySelector('button').addEventListener('click', onRemove);
+    wrap.appendChild(t);
+  }
+
+  /* ── quick search ── */
+  window.quickSearch = function(term){
+    document.getElementById('sidebarTerm').value  = term;
+    document.getElementById('mainSearchInput').value = term;
+    doSearch(1);
+  };
+
+  /* ── avatar class by role ── */
+  function avClass(role){
+    return {athlete:'',coach:'av-coach',club:'av-club','supportive_professional':'av-pro'}[role]||'av-mixed';
+  }
+  function initials(name){ return (name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2); }
+
+  /* ── role tag html ── */
+  function roleTagHTML(type){
+    const map={
+      athlete:{cls:'tag-athlete',icon:'fa-person-running',label:'Athlete'},
+      coach:{cls:'tag-coach',icon:'fa-bullseye',label:'Coach'},
+      club:{cls:'tag-club',icon:'fa-shield-halved',label:'Club'},
+      'supportive_professional':{cls:'tag-pro',icon:'fa-star',label:'Support Pro'}
+    };
+    const d = map[type]||{cls:'tag-sport',icon:'fa-user',label:type||'User'};
+    return `<span class="rc-tag ${d.cls}"><i class="fa-solid ${d.icon}" style="font-size:10px"></i> ${d.label}</span>`;
+  }
+
+  /* ── show/hide UI states ── */
+  function showState(which){
+    ['heroState','skeletonList','resultsList','marketplaceResultsList','emptyState','errorState'].forEach(id=>{
+      const el = document.getElementById(id); if(el) el.style.display='none';
+    });
+    document.getElementById('resultsHeader').style.display='none';
+    document.getElementById('paginationRow').style.display='none';
+    const tabBar = document.getElementById('resultsTabBar');
+    if(tabBar) tabBar.style.display='none';
+    if(!which) return;
+    const target = document.getElementById(which);
+    if(!target) return;
+    target.style.display = (which==='resultsList'||which==='marketplaceResultsList'||which==='skeletonList') ? 'flex' : 'block';
+    if(which==='skeletonList') target.style.flexDirection='column';
+    if(which==='marketplaceResultsList') target.style.display='grid';
+  }
+
+  /* ── main search function with API + marketplace integration ── */
+  async function doSearch(page){
+    if(isLoading) return;
+    currentPage = page||1;
+    lastSearchPage = currentPage;
+
+    const term     = document.getElementById('sidebarTerm').value.trim();
+    const sport    = document.getElementById('sport').value;
+    const userType = selectedRole;
+
+    showState('skeletonList');
+    isLoading = true;
+    document.getElementById('searchBtn').disabled = true;
+
+    const params = new URLSearchParams();
+    if(term)     params.set('term', term);
+    if(sport)    params.set('sport', sport);
+    if(userType) params.set('userType', userType);
+    params.set('page', currentPage);
+    params.set('pageSize', PAGE_SIZE);
+
+    let peopleResults = null;
+    let marketplaceResults = null;
+
+    try {
+      // Try API first for people search
+      const url = '/api/search?' + params.toString();
+      console.log('Search URL:', url);
+      const res = await fetch(url);
+      if(res.ok){
+        const json = await res.json();
+        console.log('Search response:', json);
+        peopleResults = json;
+      }
+    } catch(err){
+      console.error('API search failed:', err);
+    }
+
+    // Fetch marketplace listings
+    try {
+      const mpParams = new URLSearchParams();
+      if(term) mpParams.set('search', term);
+      if(sport) mpParams.set('category', sport);
+      mpParams.set('page', currentPage);
+      mpParams.set('limit', PAGE_SIZE);
+      const mpUrl = '/api/marketplace/listings?' + mpParams.toString();
+      const mpRes = await fetch(mpUrl);
+      if(mpRes.ok){
+        const mpJson = await mpRes.json();
+        marketplaceResults = mpJson;
+      }
+    } catch(err){
+      console.log('Marketplace search failed');
+    }
+
+    // Pass both results to handler
+    if(peopleResults || marketplaceResults) {
+      handleSearchResults(peopleResults, marketplaceResults, currentPage, PAGE_SIZE);
+      return;
+    }
+
+    // If both fail, show error
+    document.getElementById('errorMsg').textContent = 'Unable to load results.';
+    showState('errorState');
+    isLoading = false;
+    document.getElementById('searchBtn').disabled = false;
+  }
+
+  // Helper function to handle search results (API + Marketplace)
+  function handleSearchResults(peopleJson, marketplaceJson, currentPage, PAGE_SIZE){
+    const peopleResults = peopleJson?.results || [];
+    const peopleTotal = peopleJson?.total || 0;
+    const peoplePages = peopleJson?.totalPages || 1;
+    const peoplePg = peopleJson?.page || currentPage;
+
+    const mpResults = marketplaceJson?.data || [];
+    const mpTotal = marketplaceJson?.total || 0;
+    const mpPages = marketplaceJson?.pages || 1;
+    const mpPg = marketplaceJson?.page || currentPage;
+
+    // Check if at least one result type exists
+    if(peopleResults.length === 0 && mpResults.length === 0){
+      showState('emptyState');
+      isLoading = false;
+      document.getElementById('searchBtn').disabled = false;
+      return;
+    }
+
+    // Show tab bar if both result types exist
+    const tabBar = document.getElementById('resultsTabBar');
+    if(tabBar){
+      if(peopleResults.length > 0 && mpResults.length > 0){
+        tabBar.style.display = 'flex';
+      } else {
+        tabBar.style.display = 'none';
+      }
+    }
+
+    // Build people results
+    if(peopleResults.length > 0){
+      const list = document.getElementById('resultsList');
+      list.innerHTML = '';
+      currentResultsTab = peopleResults.length > 0 ? 'people' : 'marketplace';
+      
+      peopleResults.forEach(r=>{
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        const sportTag = r.sport ? `<span class="rc-tag tag-sport"><i class="fa-solid fa-dumbbell" style="font-size:10px"></i> ${r.sport}</span>` : '';
+        const locTag = r.location ? `<span class="rc-tag tag-location"><i class="fa-solid fa-location-dot" style="font-size:10px"></i> ${r.location}</span>` : '';
+        card.innerHTML = `
+          <div class="rc-av ${avClass(r.userType)}">${initials(r.name||r.email||'?')}</div>
+          <div class="rc-body">
+            <div class="rc-name">${r.name||r.email||'Unknown'}</div>
+            <div class="rc-handle">@${(r.email||'user').split('@')[0]} · ${r.userType||'User'} · ${r.sport||'N/A'} · ${r.location||'N/A'}</div>
+            <div class="rc-tags">${roleTagHTML(r.userType)}${sportTag}${locTag}</div>
+          </div>
+          <div class="rc-right">
+            <button class="btn-view" onclick="window.location.href='../profiles/public-profile.html?userId=${encodeURIComponent(r.id)}'">
+              View Profile
+            </button>
+            <button class="btn-connect" data-id="${r.id}">Connect</button>
+          </div>`;
+        list.appendChild(card);
+      });
+
+      /* connect toggle */
+      list.querySelectorAll('.btn-connect').forEach(btn=>{
+        btn.addEventListener('click', function(){
+          const connected = this.classList.toggle('connected');
+          this.textContent = connected ? 'Connected' : 'Connect';
+        });
+      });
+    }
+
+    // Build marketplace results
+    if(mpResults.length > 0){
+      const mpList = document.getElementById('marketplaceResultsList');
+      mpList.innerHTML = '';
+      
+      mpResults.forEach(listing=>{
+        const card = document.createElement('div');
+        card.className = 'marketplace-result-card';
+        const image = listing.images && listing.images.length > 0 ? listing.images[0] : '/images/placeholder.png';
+        const price = listing.price ? `$${parseFloat(listing.price).toFixed(2)}` : 'Contact';
+        card.innerHTML = `
+          <img src="${image}" alt="${listing.title}" class="marketplace-result-image" onclick="window.location.href='../marketplace/listing-detail.html?id=${listing.id}'">
+          <div class="marketplace-result-content">
+            <div class="marketplace-result-title">${listing.title || 'Untitled'}</div>
+            <div class="marketplace-result-price">${price}</div>
+            <div class="marketplace-result-seller">${listing.seller_name || 'Unknown Seller'}</div>
+          </div>`;
+        mpList.appendChild(card);
+      });
+    }
+
+    showState('resultsList');
+    if(peopleResults.length > 0) document.getElementById('resultsList').style.display = 'flex';
+    if(mpResults.length > 0) document.getElementById('marketplaceResultsList').style.display = 'grid';
+
+    /* header */
+    const totalResults = peopleResults.length + mpResults.length;
+    document.getElementById('resultsHeader').style.display = 'flex';
+    document.getElementById('resultsMeta').innerHTML =
+      `Found <strong>${totalResults}</strong> results`;
+
+    /* pagination - use people pagination if people results exist, else marketplace */
+    if(peopleResults.length > 0){
+      buildPagination(peoplePg, peoplePages);
+    } else if(mpResults.length > 0){
+      buildPagination(mpPg, mpPages);
+    }
+    
+    isLoading = false;
+    document.getElementById('searchBtn').disabled = false;
+  }
+
+  // Switch between people and marketplace results tabs
+  let currentResultsTab = 'people';
+  function switchResultsTab(tab){
+    currentResultsTab = tab;
+    document.querySelectorAll('.result-tab').forEach(b => b.classList.remove('active'));
+    const activeBtn = tab === 'people' ? document.getElementById('peopleTab') : document.getElementById('marketplaceTab');
+    if(activeBtn) activeBtn.classList.add('active');
+    
+    const peopleList = document.getElementById('resultsList');
+    const mpList = document.getElementById('marketplaceResultsList');
+    
+    if(tab === 'people'){
+      if(peopleList) peopleList.style.display = 'flex';
+      if(mpList) mpList.style.display = 'none';
+    } else {
+      if(peopleList) peopleList.style.display = 'none';
+      if(mpList) mpList.style.display = 'grid';
+    }
+  }
+
+  /* ── pagination ── */
+  function buildPagination(pg, total){
+    const row = document.getElementById('paginationRow');
+    row.innerHTML = '';
+    if(total <= 1){ row.style.display='none'; return; }
+    row.style.display = 'flex';
+
+    addArrow(row,'←', pg<=1, ()=>doSearch(pg-1));
+
+    const start = Math.max(1, pg-2), end = Math.min(total, pg+2);
+    if(start>1){ addPageBtn(row,1,pg); if(start>2) addEllipsis(row); }
+    for(let i=start;i<=end;i++) addPageBtn(row,i,pg);
+    if(end<total){ if(end<total-1) addEllipsis(row); addPageBtn(row,total,pg); }
+
+    addArrow(row,'→', pg>=total, ()=>doSearch(pg+1));
+  }
+  function addPageBtn(row,i,active){
+    const b=document.createElement('button');
+    b.className='page-btn'+(i===active?' active':'');
+    b.textContent=i;
+    b.addEventListener('click',()=>doSearch(i));
+    row.appendChild(b);
+  }
+  function addArrow(row,text,disabled,fn){
+    const b=document.createElement('button'); b.className='page-btn'; b.textContent=text; b.disabled=disabled;
+    b.addEventListener('click',fn); row.appendChild(b);
+  }
+  function addEllipsis(row){
+    const s=document.createElement('span'); s.className='page-ellipsis'; s.textContent='…'; row.appendChild(s);
+  }
+
+  /* ── reset ── */
+  window.resetAll = function(){
+    document.getElementById('sidebarTerm').value='';
+    document.getElementById('mainSearchInput').value='';
+    document.getElementById('sport').value='';
+    selectedRole='';
+    document.querySelectorAll('#roleGrid .role-btn').forEach(b=>b.classList.remove('selected'));
+    renderActiveTags();
+    showState('heroState');
+  };
+
+  /* ── retry ── */
+  document.getElementById('retryBtn')?.addEventListener('click',()=>doSearch(lastSearchPage));
+
+  /* ── search button ── */
+  document.getElementById('searchBtn')?.addEventListener('click',()=>doSearch(1));
+
+  /* ── URL param handling (preserved from original) ── */
+  (function(){
+    const q = new URLSearchParams(window.location.search);
+    const t = q.get('term');
+    if(t){
+      document.getElementById('sidebarTerm').value     = t;
+      document.getElementById('mainSearchInput').value = t;
+      doSearch(1);
+    }
+  })();
+
+})();
+</script>
+<script src="../../js/shared-ui.js"></script>
+<script>
+  if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
+    window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+  }
+</script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

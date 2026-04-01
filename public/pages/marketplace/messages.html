@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages — Spopeer</title>
+  <script src="../../js/profile-sync-service.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      --bg: #fafaf8;
+      --white: #ffffff;
+      --ink: #111111;
+      --ink-2: #333333;
+      --muted: #7a7a7a;
+      --muted-2: #b8b8b8;
+      --border: #ebebE7;
+      --surface: #f3f3ef;
+      --surface-2: #eeeeea;
+      --accent: #001f3f;
+      --accent-lt: #cce7ff;
+      --accent-hover: #003366;
+      --blue: #1a6bff;
+      --green: #16a34a;
+      --fD: 'Syne', sans-serif;
+      --fB: 'Plus Jakarta Sans', sans-serif;
+      --nav-h: 64px;
+      --r: 10px;
+      --pill: 999px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--fB);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* TOPNAV */
+    .topnav {
+      position: sticky; top: 0; z-index: 300;
+      height: var(--nav-h);
+      background: rgba(250,250,248,0.94);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      height: 100%; padding: 0 24px;
+      display: flex; align-items: center; gap: 16px;
+    }
+
+    .logo {
+      font-family: var(--fD); font-size: 21px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink);
+      text-decoration: none; display: flex; align-items: center; gap: 7px;
+      flex-shrink: 0;
+    }
+
+    .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+
+    .nav-right {
+      margin-left: auto; display: flex; align-items: center; gap: 12px;
+    }
+
+    .nav-breadcrumb {
+      font-size: 13px; color: var(--muted);
+      padding-left: 12px; border-left: 1px solid var(--border);
+    }
+
+    /* LAYOUT */
+    .messages-layout {
+      max-width: 1280px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 0;
+      height: calc(100vh - var(--nav-h));
+    }
+
+    /* CONVERSATIONS LIST */
+    .conversations-panel {
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .conversations-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .conversations-header h2 {
+      font-family: var(--fD);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .conversations-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .conversation-item {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .conversation-item:hover {
+      background: var(--surface);
+    }
+
+    .conversation-item.active {
+      background: var(--accent-lt);
+      border-left: 4px solid var(--accent);
+      padding-left: 16px;
+    }
+
+    .conversation-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .conversation-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .conversation-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .conversation-listing {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 3px;
+    }
+
+    .conversation-unread {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* CONVERSATION VIEW */
+    .conversation-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--white);
+    }
+
+    .conversation-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .conversation-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .conversation-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .conversation-listing-title {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .message {
+      display: flex;
+      gap: 12px;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .message.sent {
+      justify-content: flex-end;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-bubble {
+      max-width: 60%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .message.received .message-bubble {
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .message.sent .message-bubble {
+      background: var(--accent);
+      color: var(--accent-lt);
+    }
+
+    .message-time {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .conversation-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .conversation-empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    /* MESSAGE INPUT */
+    .message-input-section {
+      padding: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .message-input-wrapper {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+    }
+
+    .message-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      font-family: var(--fB);
+      font-size: 13px;
+      color: var(--ink);
+      resize: none;
+      max-height: 120px;
+    }
+
+    .message-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--accent-lt);
+    }
+
+    .message-input::placeholder {
+      color: var(--muted-2);
+    }
+
+    .btn-send {
+      padding: 10px 20px;
+      background: var(--accent);
+      color: var(--accent-lt);
+      border: none;
+      border-radius: var(--r);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-send:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* EMPTY STATE */
+    .placeholder {
+      text-align: center;
+      padding: 100px 40px;
+      color: var(--muted);
+    }
+
+    .placeholder-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      opacity: 0.6;
+    }
+
+    .placeholder-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .placeholder-text {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .messages-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .conversations-panel {
+        display: none;
+      }
+
+      .conversation-panel.active {
+        display: flex;
+      }
+
+      .message-bubble {
+        max-width: 85%;
+      }
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <script>
+    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+    if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
+  </script>
+
+  <!-- TOPNAV -->
+  <nav class="topnav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <div class="nav-right">
+        <a href="/index.html" class="nav-breadcrumb" data-home-link>Back to Home</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN LAYOUT -->
+  <div class="messages-layout">
+    <!-- CONVERSATIONS LIST -->
+    <div class="conversations-panel">
+      <div class="conversations-header">
+        <h2>Messages</h2>
+      </div>
+      <div class="conversations-list" id="conversationsList"></div>
+    </div>
+
+    <!-- CONVERSATION VIEW -->
+    <div class="conversation-panel" id="conversationPanel">
+      <div class="placeholder">
+        <div class="placeholder-icon"><i class="fa-solid fa-inbox"></i></div>
+        <div class="placeholder-title">No Conversation Selected</div>
+        <div class="placeholder-text">Select a conversation from the list to start messaging</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/marketplace-service.js"></script>
+  <script>
+    ProfileSyncService.init();
+
+    let currentUserId = JSON.parse(localStorage.getItem('spopeer_user') || '{}').id;
+    let currentConversation = null;
+
+    // Load inquiries/conversations on page load
+    async function loadConversations() {
+      try {
+        const [received, sent] = await Promise.all([
+          fetch('/api/marketplace/inquiries/received', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}` }
+          }).then(r => r.json()),
+          fetch('/api/marketplace/inquiries/sent', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}` }
+          }).then(r => r.json())
+        ]);
+
+        const all = [...(received || []), ...(sent || [])].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+        const list = document.getElementById('conversationsList');
+        list.innerHTML = '';
+
+        if (all.length === 0) {
+          list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--muted); font-size: 13px;">No messages yet</div>';
+          return;
+        }
+
+        for (const inquiry of all) {
+          // Fetch listing and user info
+          const [listing, otherUser] = await Promise.all([
+            fetch(`/api/marketplace/listings/${inquiry.listing_id}`).then(r => r.json()),
+            fetch(`/api/profiles/${inquiry.buyer_id === currentUserId ? inquiry.seller_id : inquiry.buyer_id}`).then(r => r.json())
+          ]);
+
+          // Skip if data not available
+          if (!listing || !otherUser) continue;
+
+          const otherName = otherUser.firstName ? `${otherUser.firstName} ${otherUser.lastName}` : otherUser.email;
+          const initials = otherName.split(' ').map(n => n[0]).join('').toUpperCase();
+          const isBuyer = inquiry.buyer_id === currentUserId;
+
+          const item = document.createElement('div');
+          item.className = 'conversation-item';
+          item.innerHTML = `
+            <div class="conversation-avatar">${initials}</div>
+            <div class="conversation-info">
+              <div class="conversation-name">${otherName} ${isBuyer ? '<span style="font-size: 10px; color: var(--muted);">(seller)</span>' : '<span style="font-size: 10px; color: var(--muted);">(buyer)</span>'}</div>
+              <div class="conversation-listing">${listing.title}</div>
+            </div>
+            ${inquiry.status === 'open' ? '<div class="conversation-unread"></div>' : ''}
+          `;
+
+          item.onclick = () => openConversation(inquiry, listing, otherUser, isBuyer);
+          list.appendChild(item);
+        }
+      } catch (error) {
+        console.error('Error loading conversations:', error);
+      }
+    }
+
+    async function openConversation(inquiry, listing, otherUser, isBuyer) {
+      currentConversation = inquiry;
+      const otherName = otherUser.firstName ? `${otherUser.firstName} ${otherUser.lastName}` : otherUser.email;
+
+      // Fetch messages for this conversation
+      const messages = await fetch(`/api/messages/conversation/${inquiry.seller_id}/${inquiry.buyer_id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}` }
+      }).then(r => r.json());
+
+      // Render conversation
+      const panel = document.getElementById('conversationPanel');
+      panel.innerHTML = `
+        <div class="conversation-header">
+          <div class="conversation-header-left">
+            <div>
+              <div class="conversation-title">${otherName}</div>
+              <div class="conversation-listing-title">${listing.title}</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <select id="statusSelect" style="padding: 8px 12px; border: 1.5px solid var(--border); border-radius: var(--r); font-size: 12px; cursor: pointer;" ${isBuyer ? 'disabled' : ''}>
+              <option value="open" ${inquiry.status === 'open' ? 'selected' : ''}>Open</option>
+              <option value="accepted" ${inquiry.status === 'accepted' ? 'selected' : ''}>Accepted</option>
+              <option value="declined" ${inquiry.status === 'declined' ? 'selected' : ''}>Declined</option>
+              <option value="completed" ${inquiry.status === 'completed' ? 'selected' : ''}>Completed</option>
+            </select>
+          </div>
+        </div>
+        <div class="messages-container" id="messagesContainer"></div>
+        <div class="message-input-section">
+          <div class="message-input-wrapper">
+            <textarea class="message-input" id="messageInput" placeholder="Type a message..." rows="1"></textarea>
+          </div>
+          <button class="btn-send" id="sendBtn">Send</button>
+        </div>
+      `;
+
+      // Render messages
+      const container = document.getElementById('messagesContainer');
+      if (messages.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: var(--muted);">No messages yet. Be the first to message!</div>';
+      } else {
+        container.innerHTML = '';
+        messages.forEach(msg => {
+          const isSent = msg.fromId === currentUserId;
+          const time = new Date(msg.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          const msgEl = document.createElement('div');
+          msgEl.className = `message ${isSent ? 'sent' : 'received'}`;
+          msgEl.innerHTML = `
+            <div>
+              <div class="message-bubble">${msg.text}</div>
+              <div class="message-time">${time}</div>
+            </div>
+          `;
+          container.appendChild(msgEl);
+        });
+      }
+
+      // Handle status change (seller only)
+      if (!isBuyer) {
+        document.getElementById('statusSelect').onchange = async (e) => {
+          const newStatus = e.target.value;
+          try {
+            await fetch(`/api/marketplace/inquiries/${inquiry.id}/status`, {
+              method: 'PATCH',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ status: newStatus })
+            });
+            inquiry.status = newStatus;
+          } catch (error) {
+            console.error('Error updating status:', error);
+          }
+        };
+      }
+
+      // Send message
+      document.getElementById('sendBtn').onclick = async () => {
+        const text = document.getElementById('messageInput').value.trim();
+        if (!text) return;
+
+        try {
+          const msg = await fetch('/api/messages/send', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              toId: isBuyer ? inquiry.seller_id : inquiry.buyer_id,
+              text: text
+            })
+          }).then(r => r.json());
+
+          document.getElementById('messageInput').value = '';
+
+          // Add message to container
+          const msgEl = document.createElement('div');
+          msgEl.className = 'message sent';
+          const time = new Date(msg.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          msgEl.innerHTML = `
+            <div>
+              <div class="message-bubble">${msg.text}</div>
+              <div class="message-time">${time}</div>
+            </div>
+          `;
+          container.appendChild(msgEl);
+          container.scrollTop = container.scrollHeight;
+        } catch (error) {
+          console.error('Error sending message:', error);
+          alert('Failed to send message');
+        }
+      };
+
+      // Auto-focus on input
+      setTimeout(() => document.getElementById('messageInput')?.focus(), 100);
+    }
+
+    // Setup keyboard shortcut for send
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey && document.getElementById('sendBtn')) {
+        document.getElementById('sendBtn').click();
+      }
+    });
+
+    loadConversations();
+  </script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

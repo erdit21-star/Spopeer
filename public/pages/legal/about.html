@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Us — Spopeer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg: #fafaf8;
+      --white: #ffffff;
+      --ink: #0f0f0f;
+      --muted: #7a7a7a;
+      --muted-2: #b0b0b0;
+      --border: #e8e8e4;
+      --accent: #001f3f;
+      --accent-light: #cce7ff;
+      --surface: #f3f3ef;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --r: 12px;
+      --r-pill: 999px;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: var(--font-body);
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    /* ─── NAVBAR ─── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(250,250,248,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navbar {
+      max-width: 1200px; margin: 0 auto; padding: 0 28px; height: 66px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .logo {
+      display: inline-flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 28px; height: 28px; border-radius: 50%; overflow: hidden;
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .logo-mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .logo-text {
+      font-family: var(--font-display); font-size: 20px; font-weight: 800;
+      color: var(--ink); letter-spacing: -0.03em;
+    }
+    .nav-links {
+      display: flex; gap: 4px; list-style: none; margin: 0; padding: 0;
+    }
+    .nav-links a {
+      font-size: 14px; font-weight: 500; color: var(--muted);
+      text-decoration: none; transition: color 0.2s, background 0.2s;
+      padding: 6px 14px; border-radius: var(--r-pill);
+    }
+    .nav-links a:hover { color: var(--ink); background: var(--surface); }
+    .auth-row { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .btn-outline {
+      padding: 8px 20px; background: transparent; color: var(--ink);
+      border: 1.5px solid var(--border); border-radius: var(--r-pill);
+      font-size: 14px; font-weight: 600; text-decoration: none;
+      transition: border-color 0.2s, background 0.2s; font-family: var(--font-body);
+      cursor: pointer; display: inline-flex; align-items: center;
+    }
+    .btn-outline:hover { border-color: var(--ink); background: var(--surface); }
+    .btn-fill {
+      padding: 8px 22px; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--r-pill);
+      font-size: 14px; font-weight: 700; text-decoration: none;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0,31,63,0.25);
+      font-family: var(--font-body); cursor: pointer; display: inline-flex; align-items: center;
+    }
+    .btn-fill:hover { background: #001a33; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,31,63,0.35); }
+
+    /* ─── HERO ─── */
+    .hero {
+      background: linear-gradient(135deg, var(--accent) 0%, #000a1a 100%);
+      color: white; padding: 72px 24px; text-align: center;
+    }
+    .hero-content { max-width: 900px; margin: 0 auto; }
+    .hero h1 {
+      font-family: var(--font-display); font-size: 48px; font-weight: 800;
+      margin-bottom: 16px; line-height: 1.2; letter-spacing: -0.02em;
+    }
+    .hero p { font-size: 16px; opacity: 0.95; max-width: 600px; margin: 0 auto; }
+
+    /* ─── CONTAINER ─── */
+    .container { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
+
+    /* ─── SECTION ─── */
+    .section { margin-bottom: 56px; }
+    .section h2 {
+      font-size: 28px; font-weight: 800; color: var(--accent);
+      margin-bottom: 20px; padding-bottom: 12px;
+      border-bottom: 3px solid var(--accent);
+    }
+    .section h3 {
+      font-size: 18px; font-weight: 700; color: var(--ink);
+      margin-top: 24px; margin-bottom: 12px;
+    }
+    .section p {
+      font-size: 15px; color: var(--muted); margin-bottom: 16px; line-height: 1.8;
+    }
+    .section ul { margin-left: 24px; margin-bottom: 16px; }
+    .section li { margin-bottom: 10px; color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+    /* ─── MISSION CARD ─── */
+    .mission-card {
+      background: var(--accent-light); padding: 32px; border-radius: var(--r);
+      border-left: 4px solid var(--accent); margin: 32px 0;
+    }
+    .mission-card h3 { color: var(--accent); margin-top: 0; margin-bottom: 12px; font-size: 20px; }
+    .mission-card p { color: var(--accent); font-weight: 500; margin-bottom: 0; }
+
+    /* ─── VALUES GRID ─── */
+    .values-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px; margin-top: 24px;
+    }
+    .value-card {
+      background: var(--white); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 24px; text-align: center; transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .value-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(0,31,63,0.08); }
+    .value-icon { font-size: 32px; margin-bottom: 12px; }
+    .value-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
+    .value-card p { font-size: 13px; color: var(--muted); margin-bottom: 0; line-height: 1.6; }
+
+    /* ─── STATS ROW ─── */
+    .about-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px; margin: 32px 0;
+    }
+    .about-stat {
+      background: var(--white); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 24px; text-align: center;
+    }
+    .about-stat-number {
+      font-family: var(--font-display); font-size: 32px; font-weight: 800;
+      color: var(--accent); margin-bottom: 4px;
+    }
+    .about-stat-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+
+    /* ─── TEAM ─── */
+    .team-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px; margin-top: 24px;
+    }
+    .team-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 28px 20px; text-align: center;
+      transition: box-shadow 0.2s;
+    }
+    .team-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .team-avatar {
+      width: 72px; height: 72px; border-radius: 50%; background: var(--accent);
+      color: white; font-family: var(--font-display); font-size: 24px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+    }
+    .team-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .team-card p { font-size: 12px; color: var(--muted); margin-bottom: 0; }
+
+    /* ─── CTA ─── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--accent) 0%, #000a1a 100%);
+      color: white; padding: 56px 24px; border-radius: var(--r);
+      text-align: center; margin: 40px 0;
+    }
+    .cta-section h2 {
+      font-family: var(--font-display); font-size: 32px; font-weight: 800;
+      margin-bottom: 12px; border: none; padding: 0; color: white;
+    }
+    .cta-section p { font-size: 15px; opacity: 0.9; margin-bottom: 24px; color: rgba(255,255,255,0.9); }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 32px; background: white; color: var(--accent);
+      border-radius: var(--r-pill); font-size: 15px; font-weight: 700;
+      text-decoration: none; transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+    .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+
+    /* ─── FOOTER ─── */
+    .site-footer { background: var(--white); border-top: 1px solid var(--border); margin-top: 60px; }
+    .footer-grid {
+      max-width: 1280px; margin: 0 auto; padding: 48px 24px 0;
+      display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; gap: 40px;
+    }
+    .foot-logo {
+      font-family: var(--font-display); font-size: 21px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink); text-decoration: none;
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .foot-brand p { font-size: 13px; color: var(--muted); line-height: 1.7; font-weight: 300; margin-bottom: 18px; max-width: 230px; }
+    .social-row { display: flex; gap: 7px; }
+    .soc-btn {
+      width: 34px; height: 34px; border: 1.5px solid var(--border); border-radius: var(--r);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 13px; text-decoration: none; transition: .2s;
+    }
+    .soc-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .foot-col h5 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--ink); margin-bottom: 14px; }
+    .foot-col ul { list-style: none; padding: 0; margin: 0; }
+    .foot-col ul li { margin-bottom: 9px; }
+    .foot-col ul a { font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 300; transition: color .2s; }
+    .foot-col ul a:hover { color: var(--accent); }
+    .footer-btm {
+      max-width: 1280px; margin: 36px auto 0; padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    }
+    .footer-btm p { font-size: 12px; color: var(--muted-2); margin: 0; }
+    .footer-btm-links { display: flex; gap: 18px; }
+    .footer-btm-links a { font-size: 12px; color: var(--muted-2); text-decoration: none; transition: color .2s; }
+    .footer-btm-links a:hover { color: var(--accent); }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 36px; }
+      .section h2 { font-size: 24px; }
+      .container { padding: 40px 24px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; padding: 36px 16px 0; }
+      .footer-btm { padding: 14px 16px; flex-direction: column; text-align: center; }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/fonts.css">
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <!-- NAV -->
+  <header>
+    <nav class="navbar">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <ul class="nav-links">
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#user-types">Who It's For</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+      </ul>
+      <div class="auth-row">
+        <a href="../auth/login.html" class="btn-outline">Log In</a>
+        <a href="../auth/signup.html" class="btn-fill">Sign Up Free</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>About Spopeer</h1>
+      <p>Connecting the global sports community &mdash; athletes, coaches, clubs, and professionals on one powerful platform.</p>
+    </div>
+  </section>
+
+  <!-- CONTENT -->
+  <div class="container">
+
+    <!-- Our Mission -->
+    <section class="section" id="mission">
+      <h2>Our Mission</h2>
+      <div class="mission-card">
+        <h3>Sports For All</h3>
+        <p>Spopeer exists to break down barriers in the sports world. We believe every athlete deserves access to quality coaching, every coach deserves recognition, every club deserves visibility, and every sports professional deserves a thriving career &mdash; regardless of geography, background, or budget.</p>
+      </div>
+      <p>We are building the world&rsquo;s most inclusive sports networking platform where talent meets opportunity. Whether you&rsquo;re a weekend runner looking for training partners, an elite coach seeking new clients, a sports club recruiting talent, or a physiotherapist expanding your practice &mdash; Spopeer is your home.</p>
+    </section>
+
+    <!-- What We Do -->
+    <section class="section" id="what-we-do">
+      <h2>What We Do</h2>
+      <p>Spopeer is a professional networking and community platform purpose-built for the sports industry. We combine the connectivity of social platforms with the professional tools that athletes, coaches, clubs, and sports businesses need to grow.</p>
+
+      <h3>For Athletes</h3>
+      <p>Create a professional sports profile, showcase your achievements, connect with coaches and scouts, discover training opportunities and events, and build your personal brand in the sports world.</p>
+
+      <h3>For Coaches &amp; Trainers</h3>
+      <p>Reach athletes globally, market your services, manage client relationships, share your expertise through posts and content, and grow your coaching business with our marketplace.</p>
+
+      <h3>For Clubs &amp; Organizations</h3>
+      <p>Recruit athletes and staff, manage your club profile, promote events and tournaments, engage your community, and streamline your operations.</p>
+
+      <h3>For Supportive Professionals</h3>
+      <p>Sports nutritionists, physiotherapists, sports psychologists, agents, and other professionals can list their services, connect with athletes and clubs, and build their client base.</p>
+    </section>
+
+    <!-- Platform Highlights -->
+    <section class="section" id="platform">
+      <h2>Platform Highlights</h2>
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="value-icon">🌍</div>
+          <h4>Global Reach</h4>
+          <p>Connect with sports professionals from every corner of the world. No boundaries, no limits.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">🏪</div>
+          <h4>Marketplace</h4>
+          <p>Buy and sell sports equipment, coaching packages, training programs, and professional services.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">📰</div>
+          <h4>Community Feed</h4>
+          <p>Share updates, achievements, and insights. Engage with a community that understands your passion.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">📅</div>
+          <h4>Events</h4>
+          <p>Discover, create, and promote sporting events, tournaments, workshops, and training camps.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">💬</div>
+          <h4>Messaging</h4>
+          <p>Real-time messaging to coordinate with coaches, athletes, teammates, and business contacts.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">🔒</div>
+          <h4>Privacy First</h4>
+          <p>Your data belongs to you. We never sell personal information and give you full control over your profile visibility.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Our Values -->
+    <section class="section" id="values">
+      <h2>Our Values</h2>
+      <ul>
+        <li><strong>Inclusivity:</strong> Sport belongs to everyone. We welcome all levels, disciplines, and backgrounds.</li>
+        <li><strong>Transparency:</strong> We operate openly. Our privacy practices, pricing, and policies are straightforward.</li>
+        <li><strong>Community:</strong> We foster genuine connections and support between sports professionals.</li>
+        <li><strong>Innovation:</strong> We continuously improve our platform to serve the evolving needs of the sports industry.</li>
+        <li><strong>Integrity:</strong> We build trust through honest practices, data protection, and fair treatment of every user.</li>
+      </ul>
+    </section>
+
+    <!-- By the Numbers -->
+    <section class="section" id="numbers">
+      <h2>Growing Together</h2>
+      <p>Spopeer is a growing community of passionate sports people from around the world.</p>
+      <div class="about-stats">
+        <div class="about-stat">
+          <div class="about-stat-number">100+</div>
+          <div class="about-stat-label">Sports Covered</div>
+        </div>
+        <div class="about-stat">
+          <div class="about-stat-number">50+</div>
+          <div class="about-stat-label">Countries Reached</div>
+        </div>
+        <div class="about-stat">
+          <div class="about-stat-number">5</div>
+          <div class="about-stat-label">User Types Supported</div>
+        </div>
+        <div class="about-stat">
+          <div class="about-stat-number">24/7</div>
+          <div class="about-stat-label">Platform Availability</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- The Team -->
+    <section class="section" id="team">
+      <h2>The Team Behind Spopeer</h2>
+      <p>We are a dedicated team of sports enthusiasts, engineers, and designers committed to building the best platform for the global sports community.</p>
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-avatar">S</div>
+          <h4>Spopeer Founders</h4>
+          <p>Vision &amp; Strategy</p>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">E</div>
+          <h4>Engineering</h4>
+          <p>Platform Development</p>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">D</div>
+          <h4>Design</h4>
+          <p>User Experience</p>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">C</div>
+          <h4>Community</h4>
+          <p>Support &amp; Engagement</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <h2>Join the Sports Revolution</h2>
+      <p>Whether you're an athlete, coach, club, or sports professional &mdash; your journey starts here.</p>
+      <a href="../auth/signup.html" class="cta-btn">
+        <i class="fa-solid fa-rocket"></i> Sign Up Free
+      </a>
+    </div>
+
+    <!-- Contact -->
+    <section class="section" id="contact">
+      <h2>Get in Touch</h2>
+      <p>Have questions about Spopeer? We&rsquo;d love to hear from you.</p>
+      <ul>
+        <li><strong>General Inquiries:</strong> <a href="/pages/contact/index.html" style="color: var(--accent);">Contact Form</a></li>
+        <li><strong>Help Center:</strong> <a href="/pages/company/help-center.html" style="color: var(--accent);">Visit Help Center</a></li>
+        <li><strong>Careers:</strong> <a href="/pages/company/careers.html" style="color: var(--accent);">Join Our Team</a></li>
+      </ul>
+    </section>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+      <p>Connecting the global sports community &mdash; athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+      <div class="social-row">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+        <li><a href="/index.html#user-types">User Types</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="/pages/legal/about.html">About Us</a></li>
+        <li><a href="/pages/company/careers.html">Careers</a></li>
+        <li><a href="/pages/company/blog.html">Blog</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h5>Support</h5>
+      <ul>
+        <li><a href="/pages/company/help-center.html">Help Center</a></li>
+        <li><a href="/pages/contact/index.html">Contact Us</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links">
+      <a href="/pages/legal/privacy.html">Privacy</a>
+      <a href="/pages/legal/terms.html">Terms</a>
+      <a href="/pages/contact/index.html">Contact</a>
+    </div>
+  </div>
+</footer>
+<script src="/js/navigation.js"></script>
+</body>
+</html>

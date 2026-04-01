@@ -1,0 +1,10 @@
+node_modules
+server/node_modules
+.git
+.github
+.env
+server/.env
+coverage
+dist
+build
+.vscode

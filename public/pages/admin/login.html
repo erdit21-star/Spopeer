@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spopeer - Admin Access</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080c14;
+  --surface:#0d1320;
+  --border:#1e2d45;
+  --accent:#2563ff;
+  --text:#e8edf5;
+  --text2:#8fa3c0;
+  --font-head:'Syne',sans-serif;
+  --font-body:'Plus Jakarta Sans',sans-serif;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.wrap{width:100%;max-width:460px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px}
+.h1{font-family:var(--font-head);font-size:22px;font-weight:800;margin-bottom:10px}
+.sub{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;border:1px solid var(--border);text-decoration:none;font-size:13px;font-weight:600;cursor:pointer}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-ghost{background:transparent;color:var(--text2)}
+.note{margin-top:14px;font-size:12px;color:var(--text2)}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1 class="h1">Admin Access</h1>
+      <p class="sub">Admin access is now validated by backend roles. Use the main login page and sign in with a real admin account from the database.</p>
+      <div class="row">
+        <a class="btn btn-primary" href="/pages/auth/login.html">Go to Main Login</a>
+        <a class="btn btn-ghost" href="/feed.html">Back to Feed</a>
+      </div>
+      <p class="note">No demo credentials are accepted on this page.</p>
+    </section>
+  </main>
+<script src="/js/navigation.js"></script>
+</body>
+</html>

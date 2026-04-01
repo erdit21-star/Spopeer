@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — Spopeer</title>
+  <script src="../../js/profile-sync-service.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      --bg: #fafaf8;
+      --white: #ffffff;
+      --ink: #111111;
+      --ink-2: #333333;
+      --muted: #7a7a7a;
+      --muted-2: #b8b8b8;
+      --border: #ebebE7;
+      --surface: #f3f3ef;
+      --surface-2: #eeeeea;
+      --accent: #001f3f;
+      --accent-lt: #cce7ff;
+      --accent-hover: #003366;
+      --blue: #1a6bff;
+      --green: #16a34a;
+      --orange: #f97316;
+      --fD: 'Syne', sans-serif;
+      --fB: 'Plus Jakarta Sans', sans-serif;
+      --nav-h: 64px;
+      --r: 10px;
+      --pill: 999px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--fB);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* TOPNAV */
+    .topnav {
+      position: sticky; top: 0; z-index: 300;
+      height: var(--nav-h);
+      background: rgba(250,250,248,0.94);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      height: 100%; padding: 0 24px;
+      display: flex; align-items: center; gap: 16px;
+    }
+
+    .logo {
+      font-family: var(--fD); font-size: 21px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink);
+      text-decoration: none; display: flex; align-items: center; gap: 7px;
+      flex-shrink: 0;
+    }
+
+    .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+
+    .nav-right {
+      margin-left: auto; display: flex; align-items: center; gap: 12px;
+    }
+
+    .nav-breadcrumb {
+      font-size: 13px; color: var(--muted);
+      padding-left: 12px; border-left: 1px solid var(--border);
+    }
+
+    /* PAGE HEADER */
+    .page-header {
+      max-width: 1280px; margin: 0 auto;
+      padding: 32px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .page-header h1 {
+      font-family: var(--fD);
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--ink);
+      border-radius: var(--r);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-lt);
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    /* FILTERS */
+    .filter-bar {
+      max-width: 1280px; margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--ink);
+      border-radius: var(--pill);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      color: var(--accent-lt);
+      border-color: var(--accent);
+    }
+
+    .filter-btn:hover {
+      border-color: var(--accent);
+    }
+
+    /* NOTIFICATIONS LIST */
+    .notifications-container {
+      max-width: 1280px; margin: 0 auto;
+      padding: 24px;
+    }
+
+    .notification-item {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 20px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .notification-item:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(0,31,63,0.08);
+    }
+
+    .notification-item.unread {
+      background: var(--accent-lt);
+    }
+
+    .notification-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .notification-icon.message {
+      background: rgba(26, 107, 255, 0.1);
+      color: var(--blue);
+    }
+
+    .notification-icon.inquiry {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--green);
+    }
+
+    .notification-icon.activity {
+      background: rgba(249, 115, 22, 0.1);
+      color: var(--orange);
+    }
+
+    .notification-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .notification-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .notification-description {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .notification-time {
+      font-size: 12px;
+      color: var(--muted-2);
+    }
+
+    .notification-action {
+      margin-top: 12px;
+    }
+
+    .notification-action a,
+    .notification-action button {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+      transition: 0.2s;
+    }
+
+    .notification-action a:hover,
+    .notification-action button:hover {
+      color: var(--accent-hover);
+    }
+
+    .notification-unread-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 80px 40px;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      opacity: 0.6;
+    }
+
+    .empty-state-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .filter-bar {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .notification-item {
+        gap: 12px;
+      }
+
+      .notification-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+      }
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 40px;
+      color: var(--muted);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <script>
+    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+    if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
+  </script>
+
+  <!-- TOPNAV -->
+  <nav class="topnav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <div class="nav-right">
+        <a href="/index.html" class="nav-breadcrumb" data-home-link>Back to Home</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <h1>Notifications</h1>
+    <div class="header-buttons">
+      <button class="btn" id="markAllReadBtn">Mark all as read</button>
+      <button class="btn btn-primary" id="clearAllBtn">Clear all</button>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all" onclick="filterNotifications('all', this)">All</button>
+    <button class="filter-btn" data-filter="messages" onclick="filterNotifications('messages', this)">Messages</button>
+    <button class="filter-btn" data-filter="inquiries" onclick="filterNotifications('inquiries', this)">Inquiries</button>
+    <button class="filter-btn" data-filter="activity" onclick="filterNotifications('activity', this)">Activity</button>
+  </div>
+
+  <!-- NOTIFICATIONS LIST -->
+  <div class="notifications-container" id="notificationsContainer">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <div style="margin-top: 16px;">Loading notifications...</div>
+    </div>
+  </div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/marketplace-service.js"></script>
+  <script>
+    ProfileSyncService.init();
+
+    let currentUserId = JSON.parse(localStorage.getItem('spopeer_user') || '{}').id;
+    let allNotifications = [];
+    let currentFilter = 'all';
+
+    // Mock notification data - in production, these would come from the server
+    async function generateNotifications() {
+      const receivedInquiries = await MarketplaceService.getReceivedInquiries().catch(() => []);
+      const sentInquiries = await MarketplaceService.getSentInquiries().catch(() => []);
+
+      const notifications = [];
+
+      // Add inquiry notifications
+      for (const inquiry of receivedInquiries.slice(0, 5)) {
+        const dayAgo = Math.floor(Math.random() * 7) + 1;
+        notifications.push({
+          id: `inquiry-${inquiry.id}`,
+          type: 'inquiries',
+          title: 'New Inquiry Received',
+          description: 'Someone is interested in your listing',
+          time: `${dayAgo} day${dayAgo > 1 ? 's' : ''} ago`,
+          unread: inquiry.status === 'open',
+          action: { text: 'View Inquiry', link: '/pages/marketplace/messages.html' }
+        });
+      }
+
+      // Add activity notifications (views, inquiries, etc)
+      const activityNotifications = [
+        {
+          id: 'activity-1',
+          type: 'activity',
+          title: 'Listing Views Updated',
+          description: 'Your "Sports Equipment" listing has been viewed 12 times in the last 24 hours',
+          time: '2 hours ago',
+          unread: true,
+          action: { text: 'View Details', link: '/pages/marketplace/my-listings.html' }
+        },
+        {
+          id: 'activity-2',
+          type: 'activity',
+          title: 'Popular Listing',
+          description: 'Your listing is trending! It\'s in the top 10 most viewed items',
+          time: '5 hours ago',
+          unread: false,
+          action: { text: 'View Marketplace', link: '/pages/marketplace/marketplace.html' }
+        },
+        {
+          id: 'activity-3',
+          type: 'activity',
+          title: 'New Saved Listing',
+          description: 'A buyer has saved your "Training Package" listing',
+          time: '1 day ago',
+          unread: false,
+          action: null
+        }
+      ];
+
+      notifications.push(...activityNotifications);
+
+      // Add message notifications (for unread messages)
+      const conversations = await MarketplaceService.getConversations().catch(() => []);
+      for (const conv of conversations.slice(0, 3)) {
+        if (conv.unread > 0) {
+          notifications.push({
+            id: `message-${conv.otherId}`,
+            type: 'messages',
+            title: 'New Message',
+            description: `${conv.lastMessage.substring(0, 60)}${conv.lastMessage.length > 60 ? '...' : ''}`,
+            time: 'Recently',
+            unread: true,
+            action: { text: 'Reply', link: '/pages/marketplace/messages.html' }
+          });
+        }
+      }
+
+      return notifications.sort((a, b) => {
+        // Put unread first
+        if (a.unread && !b.unread) return -1;
+        if (!a.unread && b.unread) return 1;
+        return 0;
+      });
+    }
+
+    async function loadNotifications() {
+      try {
+        const container = document.getElementById('notificationsContainer');
+        allNotifications = await generateNotifications();
+
+        if (allNotifications.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon"><i class="fa-solid fa-bell"></i></div>
+              <div class="empty-state-title">All caught up!</div>
+              <div class="empty-state-text">You don't have any notifications right now</div>
+            </div>
+          `;
+          return;
+        }
+
+        renderNotifications();
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+        document.getElementById('notificationsContainer').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-exclamation-triangle"></i></div>
+            <div class="empty-state-title">Error Loading Notifications</div>
+            <div class="empty-state-text">Please try refreshing the page</div>
+          </div>
+        `;
+      }
+    }
+
+    function renderNotifications() {
+      const container = document.getElementById('notificationsContainer');
+      const filtered = currentFilter === 'all' 
+        ? allNotifications 
+        : allNotifications.filter(n => n.type === currentFilter);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-bell-slash"></i></div>
+            <div class="empty-state-title">No ${currentFilter} notifications</div>
+            <div class="empty-state-text">You're all set</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(notif => `
+        <div class="notification-item ${notif.unread ? 'unread' : ''}">
+          <div class="notification-icon ${notif.type}">
+            ${notif.type === 'messages' ? '<i class="fa-solid fa-envelope"></i>' : ''}
+            ${notif.type === 'inquiries' ? '<i class="fa-solid fa-question"></i>' : ''}
+            ${notif.type === 'activity' ? '<i class="fa-solid fa-chart-line"></i>' : ''}
+          </div>
+          <div class="notification-content">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="notification-title">${notif.title}</div>
+              ${notif.unread ? '<div class="notification-unread-dot"></div>' : ''}
+            </div>
+            <div class="notification-description">${notif.description}</div>
+            <div class="notification-time">${notif.time}</div>
+            ${notif.action ? `<div class="notification-action"><a href="${notif.action.link}">${notif.action.text} →</a></div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterNotifications(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderNotifications();
+    }
+
+    document.getElementById('markAllReadBtn').onclick = () => {
+      allNotifications = allNotifications.map(n => ({ ...n, unread: false }));
+      renderNotifications();
+      alert('All notifications marked as read');
+    };
+
+    document.getElementById('clearAllBtn').onclick = () => {
+      if (confirm('Are you sure you want to clear all notifications?')) {
+        allNotifications = [];
+        renderNotifications();
+      }
+    };
+
+    loadNotifications();
+  </script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketplace — Spopeer</title>
+  <script src="../../js/profile-sync-service.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <link rel="stylesheet" href="/css/shared-nav.css" />
+  <link rel="stylesheet" href="/css/components/toast.css" />
+  <style>
+    /* Marketplace-specific nav additions */
+    .nav-breadcrumb {
+      font-size: 13px; color: var(--muted);
+      padding-left: 12px; border-left: 1px solid var(--border);
+    }
+
+    .nav-icon-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--ink);
+      transition: 0.2s;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .nav-icon-btn:hover {
+      background: var(--surface);
+      color: var(--accent);
+    }
+
+    .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ef4444;
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* LAYOUT */
+    .app-layout {
+      max-width: 1280px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 24px;
+      padding: 24px;
+    }
+
+    /* SIDEBAR FILTERS */
+    .filter-sidebar {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 20px;
+      height: fit-content;
+      position: sticky;
+      top: calc(var(--nav-h) + 24px);
+    }
+
+    .filter-section {
+      margin-bottom: 20px;
+    }
+
+    .filter-section:not(:last-child) {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+
+    .filter-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 13px;
+      color: var(--ink-2);
+      cursor: pointer;
+    }
+
+    .filter-option input[type="checkbox"],
+    .filter-option input[type="radio"] {
+      cursor: pointer;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .btn-apply, .btn-reset {
+      flex: 1;
+      padding: 10px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--fB);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-apply {
+      background: var(--accent);
+      color: var(--accent-lt);
+      border-color: var(--accent);
+    }
+
+    .btn-apply:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-reset {
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .btn-reset:hover {
+      border-color: var(--ink-2);
+      color: var(--ink-2);
+    }
+
+    /* MAIN CONTENT */
+    .marketplace-main {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .marketplace-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .marketplace-header h1 {
+      font-family: var(--fD);
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .sort-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .sort-control select {
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      background: var(--white);
+      font-family: var(--fB);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .sort-control select:hover {
+      border-color: var(--accent);
+    }
+
+    /* LISTING GRID */
+    .listings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .listing-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      transition: 0.2s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .listing-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(0,31,63,0.08);
+    }
+
+    .listing-image {
+      width: 100%;
+      height: 160px;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: var(--muted-2);
+    }
+
+    .listing-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .listing-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: var(--accent);
+      color: var(--accent-lt);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-transform: capitalize;
+    }
+
+    .listing-condition {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .listing-save-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      width: 36px;
+      height: 36px;
+      background: var(--white);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .listing-save-btn:hover {
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    .listing-save-btn.saved {
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    .listing-content {
+      padding: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .listing-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .listing-price {
+      font-family: var(--fD);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .listing-price-type {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .listing-tags {
+      display: flex;
+      gap: 4px;
+      margin: 8px 0;
+      flex-wrap: wrap;
+    }
+
+    .listing-tag {
+      font-size: 10px;
+      background: var(--surface);
+      color: var(--muted);
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+
+    .listing-seller {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+
+    .listing-seller-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .listing-seller-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .listing-seller-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .listing-seller-type {
+      font-size: 9px;
+      color: var(--muted);
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      grid-column: 1 / -1;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      color: var(--muted-2);
+      margin-bottom: 16px;
+    }
+
+    .empty-state-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .empty-state-btn {
+      display: inline-block;
+      padding: 10px 24px;
+      background: var(--accent);
+      color: var(--accent-lt);
+      border: none;
+      border-radius: var(--r);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      text-decoration: none;
+    }
+
+    .empty-state-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    /* PAGINATION */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 32px;
+    }
+
+    .pagination button {
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--ink);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: 0.2s;
+    }
+
+    .pagination button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .pagination button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-lt);
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 960px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-sidebar {
+        position: static;
+      }
+
+      .listings-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .marketplace-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .listings-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      }
+
+      .listing-image {
+        height: 120px;
+      }
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <script>
+    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+    if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
+  </script>
+
+  <!-- TOPNAV -->
+  <nav class="topnav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <div class="nav-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" placeholder="Search listings…">
+      </div>
+      <div class="nav-right">
+        <a href="./messages.html" class="nav-icon-btn" title="Messages">
+          <i class="fa-solid fa-envelope"></i>
+          <span class="badge" id="messagesBadge" style="display:none;">0</span>
+        </a>
+        <a href="./notifications.html" class="nav-icon-btn" title="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="badge" id="notificationsBadge" style="display:none;">0</span>
+        </a>
+        <a href="/index.html" class="nav-breadcrumb" data-home-link>Back to Home</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- APP LAYOUT -->
+  <div class="app-layout">
+    <!-- FILTER SIDEBAR -->
+    <aside class="filter-sidebar">
+      <div class="filter-section">
+        <div class="filter-title">Listing Type</div>
+        <label class="filter-option">
+          <input type="checkbox" name="listing_type" value="equipment">
+          <span>Equipment (used)</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="listing_type" value="product">
+          <span>Products</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="listing_type" value="service">
+          <span>Services</span>
+        </label>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Category</div>
+        <label class="filter-option">
+          <input type="checkbox" name="category" value="Sports Equipment">
+          <span>Sports Equipment</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="category" value="Sportswear & Apparel">
+          <span>Sportswear & Apparel</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="category" value="Training Services">
+          <span>Training Services</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="category" value="Recovery & Wellness">
+          <span>Recovery & Wellness</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="category" value="Coaching Packages">
+          <span>Coaching Packages</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="category" value="Club Memberships">
+          <span>Club Memberships</span>
+        </label>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Price Range</div>
+        <label class="filter-option">
+          <input type="radio" name="price_range" value="0-50">
+          <span>€0 - €50</span>
+        </label>
+        <label class="filter-option">
+          <input type="radio" name="price_range" value="50-200">
+          <span>€50 - €200</span>
+        </label>
+        <label class="filter-option">
+          <input type="radio" name="price_range" value="200-500">
+          <span>€200 - €500</span>
+        </label>
+        <label class="filter-option">
+          <input type="radio" name="price_range" value="500+">
+          <span>€500+</span>
+        </label>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Seller Type</div>
+        <label class="filter-option">
+          <input type="checkbox" name="seller_type" value="athlete">
+          <span>Athletes</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="seller_type" value="coach">
+          <span>Coaches</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="seller_type" value="club">
+          <span>Clubs</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="seller_type" value="supportive_professional">
+          <span>Professionals</span>
+        </label>
+      </div>
+
+      <div class="filter-buttons">
+        <button class="btn-apply" id="applyFiltersBtn">Apply</button>
+        <button class="btn-reset" id="resetFiltersBtn">Reset</button>
+      </div>
+
+      <a href="./advanced-search.html" style="display: block; margin-top: 16px; text-align: center; padding: 10px; font-size: 12px; color: var(--accent); font-weight: 600; text-decoration: none; border: 1px solid var(--accent); border-radius: var(--r); transition: 0.2s;" onmouseenter="this.style.background='var(--accent)'; this.style.color='var(--accent-lt)'" onmouseleave="this.style.background='transparent'; this.style.color='var(--accent)'">
+        <i class="fa-solid fa-sliders"></i> Advanced Search
+      </a>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="marketplace-main">
+      <div class="marketplace-header">
+        <h1>Marketplace</h1>
+        <div class="sort-control">
+          <label for="sortSelect">Sort by:</label>
+          <select id="sortSelect">
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="popular">Most Viewed</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="loadingState" class="loading" style="display:none;">
+        <div class="loading-spinner"></div>
+      </div>
+
+      <div id="listingsGrid" class="listings-grid"></div>
+
+      <div id="paginationContainer" class="pagination"></div>
+    </div>
+  </div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/shared-ui.js"></script>
+  <script src="../../js/marketplace-service.js"></script>
+  <script>
+    ProfileSyncService.init();
+
+    let currentPage = 1;
+    const pageSize = 20;
+    let totalListings = 0;
+
+    // Update notification badges
+    async function updateNotificationBadges() {
+      try {
+        const unreadCount = await MarketplaceService.getUnreadCount();
+        const messagesBadge = document.getElementById('messagesBadge');
+        const notificationsBadge = document.getElementById('notificationsBadge');
+        
+        if (unreadCount > 0) {
+          messagesBadge.textContent = unreadCount;
+          messagesBadge.style.display = 'flex';
+        }
+        
+        // You can add more notification logic here
+        // For now, we'll show a simple count based on unread messages
+        const totalNotifications = unreadCount;
+        if (totalNotifications > 0) {
+          notificationsBadge.textContent = totalNotifications;
+          notificationsBadge.style.display = 'flex';
+        }
+      } catch (error) {
+        // Silently fail if unable to fetch unread count
+        console.debug('Could not fetch notification counts');
+      }
+    }
+
+    // Update badges on load and every 30 seconds
+    updateNotificationBadges();
+    setInterval(updateNotificationBadges, 30000);
+
+    async function loadListings() {
+      const grid = document.getElementById('listingsGrid');
+      const loading = document.getElementById('loadingState');
+      loading.style.display = 'block';
+      grid.innerHTML = '';
+
+      const filters = getActiveFilters();
+      
+      try {
+        const response = await fetch(`/api/marketplace/listings?${new URLSearchParams({
+          ...filters,
+          page: currentPage,
+          limit: pageSize
+        })}`);
+
+        if (!response.ok) throw new Error('Failed to fetch listings');
+        const data = await response.json();
+        totalListings = data.total;
+
+        loading.style.display = 'none';
+
+        if (!data.listings || data.listings.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1/-1;">
+              <div class="empty-state-icon">📦</div>
+              <div class="empty-state-title">No listings found</div>
+              <div class="empty-state-text">Try adjusting your filters or check back later</div>
+              <a href="create-listing.html" class="empty-state-btn">Create Listing</a>
+            </div>
+          `;
+          renderPagination();
+          return;
+        }
+
+        data.listings.forEach(listing => {
+          const card = createListingCard(listing);
+          grid.appendChild(card);
+        });
+
+        renderPagination();
+      } catch (error) {
+        console.error('Error loading listings:', error);
+        loading.style.display = 'none';
+        grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Error loading listings</div></div>';
+      }
+    }
+
+    function createListingCard(listing) {
+      const card = document.createElement('div');
+      card.className = 'listing-card';
+      
+      const image = listing.images && listing.images.length > 0 ? listing.images[0] : '';
+      const imgHtml = image ? `<img src="${image}" alt="${listing.title}">` : `<i class="fa-solid fa-image"></i>`;
+
+      card.innerHTML = `
+        <div class="listing-image">
+          ${imgHtml}
+          <div class="listing-badge">${listing.category}</div>
+          ${listing.condition ? `<div class="listing-condition">${listing.condition}</div>` : ''}
+          <button class="listing-save-btn" onclick="toggleSave(${listing.id}, event)">
+            <i class="fa-regular fa-heart"></i>
+          </button>
+        </div>
+        <div class="listing-content">
+          <div class="listing-title">${listing.title}</div>
+          <div class="listing-price">€${listing.price.toFixed(2)}</div>
+          <div class="listing-price-type">${listing.price_type}</div>
+          ${listing.sport_tags && listing.sport_tags.length > 0 ? `
+            <div class="listing-tags">
+              ${listing.sport_tags.slice(0, 2).map(tag => `<span class="listing-tag">${tag}</span>`).join('')}
+            </div>
+          ` : ''}
+          <div class="listing-seller" onclick="event.stopPropagation(); openSellerModal(${listing.seller_id})" style="cursor: pointer;">
+            <div class="listing-seller-avatar">${listing.seller.name.split(' ').map(n => n[0]).join('').toUpperCase()}</div>
+            <div class="listing-seller-info">
+              <div class="listing-seller-name">${listing.seller.name}</div>
+              <div class="listing-seller-type">${listing.seller.userType}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      card.onclick = () => window.location.href = `listing-detail.html?id=${listing.id}`;
+      return card;
+    }
+
+    function renderPagination() {
+      const container = document.getElementById('paginationContainer');
+      container.innerHTML = '';
+
+      const pages = Math.ceil(totalListings / pageSize);
+      if (pages <= 1) return;
+
+      if (currentPage > 1) {
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '← Previous';
+        prevBtn.onclick = () => { currentPage--; loadListings(); };
+        container.appendChild(prevBtn);
+      }
+
+      for (let i = Math.max(1, currentPage - 2); i <= Math.min(pages, currentPage + 2); i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        if (i === currentPage) btn.classList.add('active');
+        btn.onclick = () => { currentPage = i; loadListings(); };
+        container.appendChild(btn);
+      }
+
+      if (currentPage < pages) {
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Next →';
+        nextBtn.onclick = () => { currentPage++; loadListings(); };
+        container.appendChild(nextBtn);
+      }
+    }
+
+    function getActiveFilters() {
+      const filters = {};
+
+      const listingTypes = document.querySelectorAll('input[name="listing_type"]:checked');
+      if (listingTypes.length === 1) filters.listing_type = listingTypes[0].value;
+
+      const categories = document.querySelectorAll('input[name="category"]:checked');
+      if (categories.length === 1) filters.category = categories[0].value;
+
+      const priceRange = document.querySelector('input[name="price_range"]:checked');
+      if (priceRange) {
+        const [min, max] = priceRange.value.split('-');
+        if (min) filters.min_price = min;
+        if (max && max !== '+') filters.max_price = max;
+      }
+
+      const sellerTypes = document.querySelectorAll('input[name="seller_type"]:checked');
+      if (sellerTypes.length === 1) filters.seller_type = sellerTypes[0].value;
+
+      filters.sort = document.getElementById('sortSelect').value || 'newest';
+
+      return filters;
+    }
+
+    document.getElementById('applyFiltersBtn').onclick = () => {
+      currentPage = 1;
+      loadListings();
+    };
+
+    document.getElementById('resetFiltersBtn').onclick = () => {
+      document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => input.checked = false);
+      document.getElementById('sortSelect').value = 'newest';
+      currentPage = 1;
+      loadListings();
+    };
+
+    document.getElementById('sortSelect').onchange = () => {
+      currentPage = 1;
+      loadListings();
+    };
+
+    document.getElementById('searchInput').onchange = () => {
+      currentPage = 1;
+      loadListings();
+    };
+
+    async function toggleSave(listingId, event) {
+      event.stopPropagation();
+      try {
+        const response = await fetch(`/api/marketplace/saved/${listingId}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}` }
+        });
+        const data = await response.json();
+        const btn = event.target.closest('.listing-save-btn');
+        btn.classList.toggle('saved', data.saved);
+      } catch (error) {
+        console.error('Error saving listing:', error);
+      }
+    }
+
+    async function openSellerModal(sellerId) {
+      const modal = document.getElementById('sellerModal');
+      if (!modal) return;
+
+      try {
+        const response = await fetch(`/api/marketplace/seller/${sellerId}`);
+        const sellerData = await response.json();
+
+        const initials = sellerData.seller.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        document.getElementById('sellerAvatar').textContent = initials;
+        document.getElementById('sellerName').textContent = sellerData.seller.name;
+        document.getElementById('sellerType').textContent = sellerData.seller.userType;
+        document.getElementById('sellerListings').textContent = sellerData.listings.length;
+        document.getElementById('sellerAbout').textContent = sellerData.seller.bio || 'No bio provided';
+        document.getElementById('sellerLocation').textContent = sellerData.seller.location || 'Not specified';
+
+        const memberSince = new Date(sellerData.seller.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+        document.getElementById('sellerSince').textContent = `Member since ${memberSince}`;
+
+        const avgRating = 4.8 + Math.random() * 0.2;
+        document.getElementById('sellerRating').textContent = avgRating.toFixed(1);
+        document.getElementById('sellerSold').textContent = Math.floor(Math.random() * 150 + 50);
+
+        const grid = document.getElementById('sellerListingsGrid');
+        grid.innerHTML = '';
+        sellerData.listings.slice(0, 6).forEach(listing => {
+          const image = listing.images && listing.images.length > 0 ? listing.images[0] : '';
+          const preview = document.createElement('div');
+          preview.className = 'seller-listing-preview';
+          preview.onclick = () => {
+            closeSellerModal();
+            window.location.href = `listing-detail.html?id=${listing.id}`;
+          };
+          preview.innerHTML = `
+            <div class="seller-listing-preview-image">${image ? `<img src="${image}" alt="${listing.title}">` : '<i class="fa-solid fa-image"></i>'}</div>
+            <div class="seller-listing-preview-title">${listing.title}</div>
+          `;
+          grid.appendChild(preview);
+        });
+
+        if (sellerData.listings.length === 0) {
+          grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--muted); font-size: 12px;">No active listings</p>';
+        }
+
+        const reviewsList = document.getElementById('sellerReviewsList');
+        reviewsList.innerHTML = '';
+        
+        reviewsList.innerHTML = '<div class="no-reviews">No reviews available</div>';
+
+        modal.classList.add('show');
+      } catch (error) {
+        console.error('Error loading seller profile:', error);
+        alert('Could not load seller profile');
+      }
+    }
+
+    function closeSellerModal() {
+      const modal = document.getElementById('sellerModal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById('sellerModal');
+      if (modal && e.target.id === 'sellerModal') {
+        closeSellerModal();
+      }
+    });
+
+    loadListings();
+  </script>
+
+  <!-- SELLER PROFILE MODAL -->
+  <div class="modal" id="sellerModal">
+    <div class="modal-content modal-large" style="max-width: 700px;">
+      <button class="modal-close" onclick="closeSellerModal()" style="background: var(--surface); color: var(--ink); cursor: pointer; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 20px; right: 20px; z-index: 10;">
+        <i class="fa-solid fa-times"></i>
+      </button>
+      
+      <div style="padding: 32px; border-bottom: 1px solid var(--border); display: flex; gap: 24px; align-items: flex-start;">
+        <div id="sellerAvatar" style="width: 80px; height: 80px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; flex-shrink: 0;"></div>
+        <div style="flex: 1;">
+          <h2 id="sellerName" style="font-family: var(--fD); font-size: 20px; font-weight: 800; margin-bottom: 4px;"></h2>
+          <p id="sellerType" style="display: inline-block; background: var(--accent); color: var(--accent-lt); padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;"></p>
+          <div style="display: flex; gap: 24px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-family: var(--fD); font-size: 18px; font-weight: 800; color: var(--accent);" id="sellerListings">0</span>
+              <span style="font-size: 11px; color: var(--muted); font-weight: 600;">Listings</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-family: var(--fD); font-size: 18px; font-weight: 800; color: var(--accent);" id="sellerRating">4.9</span>
+              <span style="font-size: 11px; color: var(--muted); font-weight: 600;"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> Rating</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-family: var(--fD); font-size: 18px; font-weight: 800; color: var(--accent);" id="sellerSold">120</span>
+              <span style="font-size: 11px; color: var(--muted); font-weight: 600;">Sold</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 32px; display: flex; flex-direction: column; gap: 32px; max-height: 60vh; overflow-y: auto;">
+        <div>
+          <h3 style="font-family: var(--fD); font-size: 16px; font-weight: 800; margin-bottom: 16px;">About</h3>
+          <p id="sellerAbout" style="font-size: 13px; color: var(--ink); margin-bottom: 16px; line-height: 1.6;"></p>
+          <div style="display: flex; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted);">
+              <i class="fa-solid fa-map-pin" style="color: var(--accent);"></i>
+              <span id="sellerLocation"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted);">
+              <i class="fa-solid fa-calendar" style="color: var(--accent);"></i>
+              <span id="sellerSince"></span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 style="font-family: var(--fD); font-size: 16px; font-weight: 800; margin-bottom: 16px;">Active Listings</h3>
+          <div id="sellerListingsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;"></div>
+        </div>
+
+        <div>
+          <h3 style="font-family: var(--fD); font-size: 16px; font-weight: 800; margin-bottom: 16px;">Recent Reviews</h3>
+          <div id="sellerReviewsList" style="display: flex; flex-direction: column; gap: 16px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--white);
+      border-radius: var(--r);
+      position: relative;
+    }
+
+    .seller-listing-preview {
+      background: var(--surface);
+      border-radius: var(--r);
+      overflow: hidden;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .seller-listing-preview:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .seller-listing-preview-image {
+      width: 100%;
+      height: 100px;
+      background: var(--surface);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .seller-listing-preview-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .seller-listing-preview-title {
+      padding: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .review-item {
+      padding: 16px;
+      background: var(--surface);
+      border-radius: var(--r);
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .review-buyer {
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .review-rating {
+      color: #fbbf24;
+      font-size: 12px;
+    }
+
+    .review-text {
+      font-size: 12px;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .review-date {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .no-reviews {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 20px;
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+</html>
+

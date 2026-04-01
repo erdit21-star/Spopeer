@@ -1,0 +1,415 @@
+/**
+ * Post Routes
+ * GET    /api/posts                - List posts (feed)
+ * GET    /api/posts/feed/for-you   - For-you feed
+ * GET    /api/posts/feed/following  - Following feed
+ * GET    /api/posts/feed/trending   - Trending feed
+ * GET    /api/posts/feed/sport      - Sport-filtered feed
+ * POST   /api/posts                - Create post
+ * GET    /api/posts/saved          - Saved posts
+ * GET    /api/posts/:id            - Get single post
+ * PUT    /api/posts/:id            - Edit post
+ * DELETE /api/posts/:id            - Delete post
+ * POST   /api/posts/:id/like       - Toggle like
+ * POST   /api/posts/:id/comment    - Add comment
+ * POST   /api/posts/:id/view       - Register view
+ * GET    /api/posts/:id/comments   - Get comments
+ */
+const express = require('express');
+const router = express.Router();
+const { Post, User, Like, Comment, Connection, SavedPost } = require('../models');
+const { authenticate, optionalAuth } = require('../middleware/auth');
+const { uploadPost } = require('../middleware/upload');
+const { Op } = require('sequelize');
+const { sanitizeString, parsePagination, isValidId } = require('../utils/validation');
+
+// ─── FEED HELPER ───
+async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
+  try {
+    const { page, limit } = parsePagination(req.query);
+    const where = { isActive: true, ...whereExtra };
+    const offset = (page - 1) * limit;
+
+    const { rows: posts, count } = await Post.findAndCountAll({
+      where,
+      include: [{
+        model: User, as: 'author',
+        attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'avatarUrl', 'sport']
+      }],
+      limit,
+      offset,
+      order: orderBy || [['createdAt', 'DESC']]
+    });
+
+    let enrichedPosts = posts.map(p => p.toJSON());
+    if (req.userId) {
+      const likedPostIds = await Like.findAll({
+        where: { userId: req.userId, postId: posts.map(p => p.id) },
+        attributes: ['postId']
+      });
+      const likedSet = new Set(likedPostIds.map(l => l.postId));
+      enrichedPosts = enrichedPosts.map(p => ({ ...p, liked: likedSet.has(p.id) }));
+    }
+
+    res.json({
+      status: 'ok',
+      payload: enrichedPosts,
+      pagination: { total: count, page, pages: Math.ceil(count / limit) }
+    });
+  } catch (error) {
+    console.error('Feed error:', error);
+    res.status(500).json({ error: 'Failed to fetch feed.' });
+  }
+}
+
+// ─── FOR-YOU FEED ───
+router.get('/feed/for-you', optionalAuth, (req, res) => buildFeed(req, res));
+
+// ─── FOLLOWING FEED ───
+router.get('/feed/following', authenticate, async (req, res) => {
+  try {
+    const connections = await Connection.findAll({
+      where: { followerId: req.userId, status: 'active' },
+      attributes: ['followingId']
+    });
+    const followedIds = connections.map(c => c.followingId);
+    if (followedIds.length === 0) {
+      return res.json({ status: 'ok', payload: [], pagination: { total: 0, page: 1, pages: 0 } });
+    }
+    return buildFeed(req, res, { whereExtra: { userId: { [Op.in]: followedIds } } });
+  } catch (error) {
+    console.error('Following feed error:', error);
+    res.status(500).json({ error: 'Failed to fetch following feed.' });
+  }
+});
+
+// ─── TRENDING FEED ───
+router.get('/feed/trending', optionalAuth, (req, res) => {
+  return buildFeed(req, res, { orderBy: [['likesCount', 'DESC'], ['commentsCount', 'DESC'], ['createdAt', 'DESC']] });
+});
+
+// ─── SPORT FEED ───
+router.get('/feed/sport', optionalAuth, (req, res) => {
+  const sport = req.query.sport;
+  if (sport) {
+    return buildFeed(req, res, { whereExtra: { sport: { [Op.iLike]: `%${sport}%` } } });
+  }
+  return buildFeed(req, res);
+});
+
+// ─── REGISTER VIEW ───
+router.post('/:id/view', optionalAuth, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id);
+    if (!post || !post.isActive) {
+      return res.status(404).json({ error: 'Post not found.' });
+    }
+    await post.increment('viewCount');
+    res.json({ status: 'ok', viewCount: (post.viewCount || 0) + 1 });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to register view.' });
+  }
+});
+
+// ─── GET FEED (all posts) ───
+router.get('/', optionalAuth, async (req, res) => {
+  try {
+    const { page, limit } = parsePagination(req.query);
+    const { sport, authorId, following } = req.query;
+    const where = { isActive: true };
+
+    if (sport) where.sport = sport;
+    if (authorId) where.userId = authorId;
+
+    // Following-only feed: filter posts by users the requester follows
+    if (following === 'true' && req.userId) {
+      const connections = await Connection.findAll({
+        where: { followerId: req.userId, status: 'active' },
+        attributes: ['followingId']
+      });
+      const followedIds = connections.map(c => c.followingId);
+      where.userId = { [Op.in]: followedIds };
+    }
+
+    const offset = (page - 1) * limit;
+    const { rows: posts, count } = await Post.findAndCountAll({
+      where,
+      include: [{
+        model: User,
+        as: 'author',
+        attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'avatarUrl', 'sport']
+      }],
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']]
+    });
+
+    // If user is authenticated, mark which posts they've liked
+    let enrichedPosts = posts.map(p => p.toJSON());
+    if (req.userId) {
+      const likedPostIds = await Like.findAll({
+        where: { userId: req.userId, postId: posts.map(p => p.id) },
+        attributes: ['postId']
+      });
+      const likedSet = new Set(likedPostIds.map(l => l.postId));
+      enrichedPosts = enrichedPosts.map(p => ({ ...p, liked: likedSet.has(p.id) }));
+    }
+
+    res.json({
+      status: 'ok',
+      payload: enrichedPosts,
+      pagination: { total: count, page, pages: Math.ceil(count / limit) }
+    });
+  } catch (error) {
+    console.error('Get posts error:', error);
+    res.status(500).json({ error: 'Failed to fetch posts.' });
+  }
+});
+
+// ─── CREATE POST ───
+router.post('/', authenticate, uploadPost.single('image'), async (req, res) => {
+  try {
+    const { content, sport } = req.body;
+
+    const sanitizedContent = sanitizeString(content, 5000);
+    if (!sanitizedContent) {
+      return res.status(400).json({ error: 'Post content is required.' });
+    }
+
+    const postData = {
+      userId: req.userId,
+      content: sanitizedContent,
+      sport: sanitizeString(sport, 100) || req.user.sport || 'General'
+    };
+
+    if (req.file) {
+      postData.image = `/uploads/posts/${req.file.filename}`;
+    }
+
+    const post = await Post.create(postData);
+
+    // Update user's post count
+    await req.user.increment('postsCount');
+
+    // Fetch with author info
+    const fullPost = await Post.findByPk(post.id, {
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'avatarUrl', 'sport'] }]
+    });
+
+    res.status(201).json({ status: 'ok', payload: fullPost });
+  } catch (error) {
+    console.error('Create post error:', error);
+    res.status(500).json({ error: 'Failed to create post.' });
+  }
+});
+
+// ─── GET SINGLE POST ───
+router.get('/:id', optionalAuth, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id, {
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'avatarUrl', 'sport'] }]
+    });
+
+    if (!post || !post.isActive) {
+      return res.status(404).json({ error: 'Post not found.' });
+    }
+
+    const result = post.toJSON();
+    if (req.userId) {
+      const liked = await Like.findOne({ where: { userId: req.userId, postId: post.id } });
+      result.liked = !!liked;
+    }
+
+    res.json({ status: 'ok', payload: result });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch post.' });
+  }
+});
+
+// ─── EDIT POST ───
+router.put('/:id', authenticate, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id);
+    if (!post || !post.isActive) {
+      return res.status(404).json({ error: 'Post not found.' });
+    }
+
+    if (post.userId !== req.userId && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'You can only edit your own posts.' });
+    }
+
+    const { content, sport } = req.body;
+    if (content) post.content = content.trim();
+    if (sport) post.sport = sport;
+
+    await post.save();
+    res.json({ status: 'ok', payload: post });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update post.' });
+  }
+});
+
+// ─── DELETE POST ───
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id);
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found.' });
+    }
+
+    if (post.userId !== req.userId && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'You can only delete your own posts.' });
+    }
+
+    await post.update({ isActive: false });
+    await User.decrement('postsCount', { where: { id: post.userId } });
+
+    res.json({ status: 'ok', message: 'Post deleted.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete post.' });
+  }
+});
+
+// ─── TOGGLE LIKE ───
+router.post('/:id/like', authenticate, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id);
+    if (!post || !post.isActive) {
+      return res.status(404).json({ error: 'Post not found.' });
+    }
+
+    const existingLike = await Like.findOne({
+      where: { userId: req.userId, postId: post.id }
+    });
+
+    if (existingLike) {
+      await existingLike.destroy();
+      await post.decrement('likesCount');
+      return res.json({ status: 'ok', liked: false, likesCount: post.likesCount - 1 });
+    }
+
+    await Like.create({ userId: req.userId, postId: post.id });
+    await post.increment('likesCount');
+    res.json({ status: 'ok', liked: true, likesCount: post.likesCount + 1 });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to toggle like.' });
+  }
+});
+
+// ─── ADD COMMENT ───
+router.post('/:id/comment', authenticate, async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content || content.trim().length === 0) {
+      return res.status(400).json({ error: 'Comment content is required.' });
+    }
+
+    const post = await Post.findByPk(req.params.id);
+    if (!post || !post.isActive) {
+      return res.status(404).json({ error: 'Post not found.' });
+    }
+
+    const comment = await Comment.create({
+      userId: req.userId,
+      postId: post.id,
+      content: content.trim()
+    });
+
+    await post.increment('commentsCount');
+
+    const fullComment = await Comment.findByPk(comment.id, {
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }]
+    });
+
+    res.status(201).json({ status: 'ok', payload: fullComment });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add comment.' });
+  }
+});
+
+// ─── REPOST ───
+router.post('/:id/repost', authenticate, async (req, res) => {
+  try {
+    const original = await Post.findByPk(req.params.id, {
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName'] }]
+    });
+    if (!original || !original.isActive) {
+      return res.status(404).json({ error: 'Post not found.' });
+    }
+
+    const repost = await Post.create({
+      userId: req.userId,
+      content: `🔁 Reposted from ${original.author.firstName} ${original.author.lastName}:\n\n${original.content}`,
+      sport: original.sport,
+      image: original.image
+    });
+
+    await original.increment('repostsCount');
+    await req.user.increment('postsCount');
+
+    const fullPost = await Post.findByPk(repost.id, {
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'avatarUrl', 'sport'] }]
+    });
+
+    res.status(201).json({ status: 'ok', payload: fullPost, repostsCount: original.repostsCount + 1 });
+  } catch (error) {
+    console.error('Repost error:', error);
+    res.status(500).json({ error: 'Failed to repost.' });
+  }
+});
+
+// ─── TOGGLE SAVE / BOOKMARK ───
+router.post('/:id/save', authenticate, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id);
+    if (!post || !post.isActive) {
+      return res.status(404).json({ error: 'Post not found.' });
+    }
+
+    const existing = await SavedPost.findOne({ where: { userId: req.userId, postId: post.id } });
+    if (existing) {
+      await existing.destroy();
+      return res.json({ status: 'ok', saved: false });
+    }
+
+    await SavedPost.create({ userId: req.userId, postId: post.id });
+    res.json({ status: 'ok', saved: true });
+  } catch (error) {
+    console.error('Toggle save error:', error);
+    res.status(500).json({ error: 'Failed to toggle save.' });
+  }
+});
+
+// ─── GET SAVED POSTS FOR CURRENT USER ───
+router.get('/saved', authenticate, async (req, res) => {
+  try {
+    const saved = await SavedPost.findAll({
+      where: { userId: req.userId },
+      include: [{ model: Post, as: 'post', include: [{ model: User, as: 'author', attributes: ['id','firstName','lastName','avatarUrl'] }] }],
+      order: [['createdAt','DESC']]
+    });
+
+    res.json({ status: 'ok', payload: saved });
+  } catch (error) {
+    console.error('Get saved posts error:', error);
+    res.status(500).json({ error: 'Failed to fetch saved posts.' });
+  }
+});
+
+// ─── GET COMMENTS ───
+router.get('/:id/comments', optionalAuth, async (req, res) => {
+  try {
+    const comments = await Comment.findAll({
+      where: { postId: req.params.id },
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }],
+      order: [['createdAt', 'ASC']]
+    });
+
+    res.json({ status: 'ok', payload: comments });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch comments.' });
+  }
+});
+
+module.exports = router;
+

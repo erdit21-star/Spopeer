@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>For Supportive Professionals — Spopeer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; background: #f3f4f6; }
+    header { background: white; border-bottom: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.06); position: sticky; top: 0; z-index: 100; }
+    .header-content { max-width: 1200px; margin: 0 auto; padding: 0 28px; height: 66px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 22px; font-weight: 800; color: #001f3f; text-decoration: none; }
+    .back-btn { background: none; border: none; color: #7a7a7a; font-size: 14px; cursor: pointer; padding: 6px 14px; border-radius: 999px; transition: color 0.2s, background 0.2s; }
+    .back-btn:hover { background: #ffffff; color: #0f0f0f; }
+    .hero { background: linear-gradient(135deg, #0066cc 0%, #004999 100%); color: white; padding: 60px 24px; text-align: center; }
+    .hero-content { max-width: 1000px; margin: 0 auto; }
+    .hero h1 { font-size: 48px; font-weight: 700; margin-bottom: 16px; line-height: 1.2; }
+    .hero p { font-size: 18px; opacity: 0.95; margin-bottom: 32px; max-width: 700px; margin-left: auto; margin-right: auto; }
+    .cta-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn { padding: 12px 32px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
+    .btn-primary { background: white; color: #0066cc; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    .btn-secondary { background: rgba(255,255,255,0.2); color: white; border: 2px solid white; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 60px 24px; }
+    .intro { text-align: center; margin-bottom: 60px; }
+    .intro p { font-size: 18px; color: #4b5563; line-height: 1.8; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 60px; }
+    .feature-item { background: white; padding: 32px 24px; border-radius: 12px; border-left: 4px solid #0066cc; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: all 0.2s; }
+    .feature-item:hover { box-shadow: 0 8px 16px rgba(0,102,204,0.1); transform: translateY(-4px); }
+    .feature-number { display: inline-block; background: #0066cc; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-bottom: 12px; }
+    .feature-item h3 { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 12px; }
+    .feature-item p { font-size: 14px; color: #6b7280; line-height: 1.6; }
+    .cta-section { background: linear-gradient(135deg, #0066cc 0%, #004999 100%); color: white; padding: 60px 24px; text-align: center; border-radius: 12px; margin-bottom: 60px; }
+    footer { background: #111827; color: white; padding: 40px 24px; text-align: center; margin-top: 60px; }
+    footer p { margin-bottom: 12px; opacity: 0.8; }
+    footer a { color: #0066cc; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    @media (max-width: 768px) { .hero h1 { font-size: 36px; } .hero p { font-size: 16px; } .cta-buttons { flex-direction: column; } .btn { width: 100%; } .features-grid { grid-template-columns: 1fr; } .feature-item { padding: 24px 20px; } .container { padding: 40px 24px; } }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <button class="back-btn" onclick="window.location.href = window.SpopeerNavigation ? window.SpopeerNavigation.getHomeUrl() : '/index.html'">← Back to Home</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1>⭐ Welcome to Spopeer - Where Supportive Professionals Thrive</h1>
+      <p>Are you part of the sports support ecosystem—physios, scouts, journalists, photographers, or other specialists? Spopeer is designed to help you connect, share, and grow.</p>
+      <div class="cta-buttons">
+        <a href="../auth/signup.html" class="btn btn-primary">Get Started Now</a>
+        <button class="btn btn-secondary" onclick="document.querySelector('.intro').scrollIntoView({ behavior: 'smooth' })">Learn More</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <section class="intro">
+      <p>Discover features designed to elevate your supportive profession and connect you with opportunities worldwide.</p>
+    </section>
+
+    <section class="features-grid">
+      <div class="feature-item">
+        <div class="feature-number">1</div>
+        <h3>Elevate Your Profile</h3>
+        <p>Create a standout profile that showcases your expertise, achievements, and services. Attract clients and collaborators.</p>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-number">2</div>
+        <h3>Connect with Athletes and Clubs</h3>
+        <p>Forge connections with athletes, sports clubs, and organizations looking for your expertise. Offer your services and expand your network.</p>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-number">3</div>
+        <h3>Promote Your Services</h3>
+        <p>Market your services, whether it's physiotherapy, scouting, media, or performance analysis. Reach a global audience.</p>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-number">4</div>
+        <h3>Share Your Insights</h3>
+        <p>Publish articles, videos, and resources that highlight your expertise. Build credibility and influence.</p>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-number">5</div>
+        <h3>Build a Strong Network</h3>
+        <p>Network with peers, clients, and organizations. Collaborate, share best practices, and grow professionally.</p>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-number">6</div>
+        <h3>Stay Informed</h3>
+        <p>Access industry news, events, and opportunities relevant to your supportive profession.</p>
+      </div>
+
+    </section>
+
+    <section class="cta-section">
+      <h2>Ready to Transform Your Career?</h2>
+      <p>Join supportive professionals already thriving on Spopeer. Start building your portfolio and network today.</p>
+      <a href="../auth/signup.html" class="btn btn-primary" style="color: #0066cc;">Create Your Supportive Profession Profile</a>
+    </section>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Spopeer — Global Sports Networking Platform</p>
+    <p><a href="../legal/privacy.html">Privacy Policy</a> | <a href="../legal/terms.html">Terms of Use</a> | <a href="#">Contact Us</a></p>
+  </footer>
+  <script src="../../js/main.js"></script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

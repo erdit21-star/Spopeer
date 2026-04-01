@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spopeer · Events</title>
+  <script src="../../js/auth.js"></script>
+  <script>window.Auth.requireAuth();</script>
+  <script src="../../js/events-api.js"></script>
+  <script src="../../js/events-page.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <link rel="stylesheet" href="/css/shared-nav.css" />
+  <link rel="stylesheet" href="/css/fonts.css" />
+  <link rel="stylesheet" href="../../css/mobile-responsive.css" />
+  <style>
+    /* ── Layout ── */
+    .app-layout {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px 24px 48px;
+      display: grid;
+      grid-template-columns: var(--left-w, 220px) minmax(0, 1fr) 280px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .sidebar-left {
+      position: sticky;
+      top: calc(var(--nav-h) + 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--rM);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: .2s;
+      text-decoration: none;
+      border: none;
+      background: none;
+    }
+    .nav-item:hover { background: var(--surface); color: var(--ink); text-decoration: none; }
+    .nav-item.active { background: var(--accent-lt); color: var(--accent); font-weight: 700; }
+
+    /* ── Panels ── */
+    .panel {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 24px;
+    }
+    .panel h2, .panel h3 {
+      margin: 0 0 6px;
+      font-family: var(--fD);
+      letter-spacing: -.03em;
+    }
+    .text-muted { color: var(--muted); margin: 0; font-size: 13px; }
+
+    /* ── Hero ── */
+    .events-hero {
+      background: linear-gradient(135deg, #001f3f 0%, #003d7a 50%, #0059b3 100%);
+      border-radius: var(--rL);
+      padding: 40px 36px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .events-hero::after {
+      content: '';
+      position: absolute;
+      right: -30px;
+      top: -30px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.04);
+    }
+    .events-hero h1 {
+      margin: 0 0 8px;
+      font-family: var(--fD);
+      font-size: 28px;
+      letter-spacing: -.03em;
+    }
+    .events-hero p {
+      margin: 0 0 20px;
+      font-size: 14px;
+      opacity: .85;
+      max-width: 520px;
+      line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .hero-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .hero-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(4px);
+      color: rgba(255,255,255,.92);
+      padding: 5px 12px;
+      border-radius: var(--pill);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      border: none;
+      border-radius: var(--pill);
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+      font-family: var(--fB);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-white { background: #fff; color: var(--accent); }
+    .btn-white:hover { background: var(--accent-lt); }
+    .btn-secondary { background: var(--surface); color: var(--ink); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-ghost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.4); }
+    .btn-ghost:hover { background: rgba(255,255,255,.1); }
+    .btn-accept { background: var(--green-lt); color: var(--green); border: 1px solid rgba(22,163,74,.15); }
+    .btn-decline { background: var(--red-lt); color: var(--red); border: 1px solid rgba(185,28,28,.15); }
+    .btn-sm { padding: 7px 12px; font-size: 12px; }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-bar select,
+    .filter-bar input[type="text"],
+    .filter-bar input[type="date"] {
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      border-radius: var(--pill);
+      padding: 9px 14px;
+      font-family: var(--fB);
+      font-size: 13px;
+      outline: none;
+      min-width: 0;
+    }
+    .filter-bar select:focus,
+    .filter-bar input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,31,63,.06);
+    }
+    .filter-search {
+      flex: 1;
+      min-width: 140px;
+      position: relative;
+    }
+    .filter-search i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+    .filter-search input {
+      padding-left: 36px !important;
+      width: 100%;
+    }
+
+    /* ── Category chips ── */
+    .category-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .cat-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: var(--pill);
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: .2s;
+    }
+    .cat-chip:hover, .cat-chip.active {
+      background: var(--accent-lt);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* ── Featured strip ── */
+    .featured-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .featured-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      overflow: hidden;
+      transition: .2s;
+      cursor: pointer;
+    }
+    .featured-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,.06);
+      border-color: var(--accent);
+    }
+    .featured-img {
+      height: 110px;
+      background: linear-gradient(135deg, var(--accent-lt), var(--surface));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: var(--accent);
+    }
+    .featured-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .featured-body h4 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .featured-meta {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* ── Event list cards ── */
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .event-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: .2s;
+    }
+    .event-card:hover {
+      box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    }
+    .event-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .event-sport {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: var(--accent-lt);
+      color: var(--accent);
+      padding: 5px 9px;
+      border-radius: var(--pill);
+    }
+    .event-type {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: var(--surface);
+      color: var(--muted);
+      padding: 5px 9px;
+      border-radius: var(--pill);
+      border: 1px solid var(--border);
+    }
+    .event-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .event-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .meta-chip {
+      font-size: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--pill);
+      padding: 5px 10px;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .event-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .invite-box {
+      margin-top: 8px;
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .muted { color: var(--muted); margin: 0; }
+
+    /* ── Create form ── */
+    .form-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .form-grid input,
+    .form-grid textarea,
+    .form-grid select {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-family: var(--fB);
+      font-size: 14px;
+      outline: none;
+    }
+    .form-grid textarea { min-height: 100px; resize: vertical; }
+    .form-grid input:focus,
+    .form-grid textarea:focus,
+    .form-grid select:focus {
+      border-color: var(--accent);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(0,31,63,.06);
+    }
+
+    /* ── Side panel ── */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .side-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 20px;
+    }
+    .side-card h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: var(--fD);
+    }
+    .side-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .side-list li {
+      font-size: 13px;
+      color: var(--ink-2);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .side-list li i {
+      color: var(--accent);
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .role-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: var(--pill);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--ink-2);
+    }
+    .role-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 36px 20px;
+      background: var(--white);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--rL);
+    }
+    .empty-state i {
+      font-size: 28px;
+      margin-bottom: 10px;
+      display: block;
+      color: var(--muted-2);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1080px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar-left {
+        position: static;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 4px;
+        padding-bottom: 8px;
+      }
+      .sidebar-left .nav-item {
+        white-space: nowrap;
+        font-size: 13px;
+        padding: 8px 12px;
+      }
+      .side-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app-layout { padding: 16px 12px 36px; }
+      .events-hero { padding: 28px 20px; }
+      .events-hero h1 { font-size: 22px; }
+      .hero-actions { flex-direction: column; }
+      .hero-actions .btn { width: 100%; justify-content: center; }
+      .filter-bar { flex-direction: column; }
+      .filter-bar select,
+      .filter-bar input[type="text"],
+      .filter-bar input[type="date"] { width: 100%; }
+      .featured-strip { grid-template-columns: 1fr; }
+      .side-panel { grid-template-columns: 1fr; }
+      .sidebar-left { display: none; }
+    }
+  </style>
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="topnav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+      <div class="nav-right"></div>
+    </div>
+  </header>
+
+  <!-- App layout -->
+  <main class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar-left">
+      <a href="../../feed.html" class="nav-item"><i class="fa-solid fa-house"></i> Feed</a>
+      <a href="../library/index.html" class="nav-item"><i class="fa-regular fa-bookmark"></i> Library</a>
+      <a href="./event.html" class="nav-item active"><i class="fa-regular fa-calendar"></i> Events</a>
+      <a href="../sponsorship/sponsor.html" class="nav-item"><i class="fa-solid fa-handshake-angle"></i> Sponsorship</a>
+      <a href="../dashboard/settings.html" class="nav-item"><i class="fa-solid fa-gear"></i> Settings</a>
+    </aside>
+
+    <!-- Main content -->
+    <section style="min-width:0; display:flex; flex-direction:column; gap:20px;">
+
+      <!-- Hero -->
+      <div class="events-hero">
+        <h1>Discover sports events</h1>
+        <p>Find tournaments, tryouts, training camps, clinics, and local competitions that match your sport, level, and location.</p>
+        <div class="hero-actions">
+          <button class="btn btn-white" type="button" onclick="document.getElementById('eventsList').scrollIntoView({behavior:'smooth'})"><i class="fa-solid fa-compass"></i> Explore events</button>
+          <button class="btn btn-ghost" type="button" onclick="document.getElementById('createEventForm').scrollIntoView({behavior:'smooth'})"><i class="fa-solid fa-plus"></i> Host an event</button>
+        </div>
+        <div class="hero-chips">
+          <span class="hero-chip"><i class="fa-regular fa-calendar-check"></i> Upcoming</span>
+          <span class="hero-chip"><i class="fa-solid fa-trophy"></i> Tournaments</span>
+          <span class="hero-chip"><i class="fa-solid fa-bullseye"></i> Tryouts</span>
+          <span class="hero-chip"><i class="fa-solid fa-location-dot"></i> Local games</span>
+          <span class="hero-chip"><i class="fa-solid fa-dumbbell"></i> Training camps</span>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="panel" style="padding:16px 20px;">
+        <div class="filter-bar">
+          <select id="filterSport" aria-label="Filter by sport">
+            <option value="">All sports</option>
+          </select>
+          <select id="filterType" aria-label="Filter by type">
+            <option value="">All types</option>
+            <option value="game">Game</option>
+            <option value="practice">Practice</option>
+            <option value="training">Training</option>
+            <option value="workshop">Workshop</option>
+            <option value="meeting">Meeting</option>
+            <option value="other">Other</option>
+          </select>
+          <input type="date" id="filterDate" aria-label="Filter by date">
+          <div class="filter-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="filterQuery" placeholder="Search events...">
+          </div>
+          <button class="btn btn-secondary btn-sm" id="resetFilters" type="button"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+        </div>
+      </div>
+
+      <!-- Category quick-chips -->
+      <div class="category-chips">
+        <button class="cat-chip active" data-cat="all" type="button"><i class="fa-solid fa-layer-group"></i> All</button>
+        <button class="cat-chip" data-cat="game" type="button"><i class="fa-solid fa-futbol"></i> Games</button>
+        <button class="cat-chip" data-cat="training" type="button"><i class="fa-solid fa-dumbbell"></i> Training</button>
+        <button class="cat-chip" data-cat="practice" type="button"><i class="fa-solid fa-stopwatch"></i> Practice</button>
+        <button class="cat-chip" data-cat="workshop" type="button"><i class="fa-solid fa-chalkboard-user"></i> Workshops</button>
+        <button class="cat-chip" data-cat="meeting" type="button"><i class="fa-solid fa-people-group"></i> Meetups</button>
+      </div>
+
+      <!-- Featured events -->
+      <div class="panel">
+        <h2 style="font-size:18px;">Featured events</h2>
+        <p class="text-muted" style="margin-bottom:14px;">Top picks based on your sport, region, and level.</p>
+        <div class="featured-strip" id="featuredStrip">
+          <div class="featured-card">
+            <div class="featured-img"><i class="fa-solid fa-trophy"></i></div>
+            <div class="featured-body">
+              <span class="event-sport" style="align-self:flex-start; font-size:9px;">Football</span>
+              <h4>Regional Youth Championship</h4>
+              <div class="featured-meta">
+                <span><i class="fa-regular fa-calendar"></i> Jun 15</span>
+                <span><i class="fa-solid fa-location-dot"></i> Berlin</span>
+              </div>
+            </div>
+          </div>
+          <div class="featured-card">
+            <div class="featured-img" style="background:linear-gradient(135deg, var(--green-lt), var(--surface));"><i class="fa-solid fa-person-running" style="color:var(--green);"></i></div>
+            <div class="featured-body">
+              <span class="event-sport" style="align-self:flex-start; font-size:9px;">Athletics</span>
+              <h4>Sprint Training Camp</h4>
+              <div class="featured-meta">
+                <span><i class="fa-regular fa-calendar"></i> Jun 22</span>
+                <span><i class="fa-solid fa-location-dot"></i> London</span>
+              </div>
+            </div>
+          </div>
+          <div class="featured-card">
+            <div class="featured-img" style="background:linear-gradient(135deg, var(--amber-lt), var(--surface));"><i class="fa-solid fa-basketball" style="color:var(--amber);"></i></div>
+            <div class="featured-body">
+              <span class="event-sport" style="align-self:flex-start; font-size:9px;">Basketball</span>
+              <h4>Open Tryouts — U21</h4>
+              <div class="featured-meta">
+                <span><i class="fa-regular fa-calendar"></i> Jul 3</span>
+                <span><i class="fa-solid fa-location-dot"></i> Paris</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main event listing -->
+      <div class="panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div>
+            <h2 style="font-size:18px; margin:0;">Events for you</h2>
+            <p class="text-muted">Events matched to your sports and interests.</p>
+          </div>
+          <select id="sortEvents" style="border:1.5px solid var(--border);border-radius:var(--pill);padding:7px 12px;font-size:12px;font-family:var(--fB);background:var(--white);outline:none;">
+            <option value="newest">Newest first</option>
+            <option value="nearest">Nearest date</option>
+            <option value="featured">Featured</option>
+          </select>
+        </div>
+        <div id="eventsList" class="event-list"></div>
+      </div>
+
+      <!-- Create event -->
+      <div class="panel" id="createSection">
+        <h2 style="font-size:18px;">Create an event</h2>
+        <p class="text-muted">Organize a real event — invite teammates, other athletes, or coaches to join.</p>
+        <form id="createEventForm" class="form-grid">
+          <input id="eventTitle" type="text" placeholder="Event title" required>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <select id="eventType" required>
+              <option value="">Event type</option>
+              <option value="game">Game</option>
+              <option value="practice">Practice</option>
+              <option value="training">Training</option>
+              <option value="workshop">Workshop</option>
+              <option value="meeting">Meeting</option>
+              <option value="other">Other</option>
+            </select>
+            <select id="eventSport" required></select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <input id="eventLocation" type="text" placeholder="Location" required>
+            <input id="eventDate" type="datetime-local" required>
+          </div>
+          <textarea id="eventDescription" placeholder="Describe the event — goals, what to bring, who should join." required></textarea>
+          <input id="eventInvitees" type="text" placeholder="Invite people (comma-separated emails or usernames)">
+          <div>
+            <button class="btn btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Create event</button>
+          </div>
+        </form>
+      </div>
+
+    </section>
+
+    <!-- Right insight panel -->
+    <aside class="side-panel">
+      <div class="side-card">
+        <h3><i class="fa-regular fa-calendar-check" style="margin-right:6px;"></i>This week</h3>
+        <ul class="side-list">
+          <li><i class="fa-regular fa-circle-dot"></i> No events this week yet</li>
+        </ul>
+      </div>
+
+      <div class="side-card">
+        <h3><i class="fa-regular fa-bookmark" style="margin-right:6px;"></i>Saved events</h3>
+        <ul class="side-list">
+          <li><i class="fa-regular fa-circle"></i> You haven't saved any events yet</li>
+        </ul>
+      </div>
+
+      <div class="side-card">
+        <h3><i class="fa-solid fa-user-tag" style="margin-right:6px;"></i>For your role</h3>
+        <div class="role-tags" style="margin-bottom:12px;">
+          <span class="role-tag"><i class="fa-solid fa-person-running"></i> Athletes</span>
+          <span class="role-tag"><i class="fa-solid fa-user-tie"></i> Coaches</span>
+          <span class="role-tag"><i class="fa-solid fa-shield-halved"></i> Clubs</span>
+          <span class="role-tag"><i class="fa-solid fa-handshake-angle"></i> Sponsors</span>
+        </div>
+        <ul class="side-list">
+          <li><i class="fa-solid fa-trophy"></i> Tournaments &amp; showcases</li>
+          <li><i class="fa-solid fa-bullseye"></i> Tryouts &amp; scouting</li>
+          <li><i class="fa-solid fa-dumbbell"></i> Clinics &amp; camps</li>
+          <li><i class="fa-solid fa-briefcase"></i> Sponsor activations</li>
+        </ul>
+      </div>
+
+      <div class="side-card" style="background:linear-gradient(135deg, var(--accent-lt) 0%, var(--white) 100%);">
+        <h3><i class="fa-solid fa-handshake-angle" style="margin-right:6px;"></i>Sponsorship events</h3>
+        <p style="font-size:12px; color:var(--muted); margin:0 0 12px;">Events open to sponsor support or seeking partnerships.</p>
+        <a href="../sponsorship/sponsor.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-arrow-right"></i> Sponsorship Hub</a>
+      </div>
+    </aside>
+  </main>
+
+  <script src="/js/shared-ui.js"></script>
+  <script src="/js/navigation.js"></script>
+  <script>
+    (function () {
+      var user;
+      try { user = JSON.parse(localStorage.getItem('spopeer_user') || '{}'); } catch(e) { user = {}; }
+      var sports = [user.primarySport].concat(Array.isArray(user.secondarySports) ? user.secondarySports : []).filter(Boolean);
+      var sel = document.getElementById('filterSport');
+      if (sel && sports.length) {
+        sports.forEach(function (s) {
+          var o = document.createElement('option');
+          o.value = s;
+          o.textContent = s;
+          sel.appendChild(o);
+        });
+      }
+
+      /* Category chip activation */
+      document.querySelectorAll('.cat-chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          document.querySelectorAll('.cat-chip').forEach(function (c) { c.classList.remove('active'); });
+          chip.classList.add('active');
+        });
+      });
+
+      /* Reset filters */
+      var resetBtn = document.getElementById('resetFilters');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+          document.getElementById('filterSport').value = '';
+          document.getElementById('filterType').value = '';
+          document.getElementById('filterDate').value = '';
+          document.getElementById('filterQuery').value = '';
+          document.querySelectorAll('.cat-chip').forEach(function (c) { c.classList.remove('active'); });
+          var allChip = document.querySelector('.cat-chip[data-cat="all"]');
+          if (allChip) allChip.classList.add('active');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,3006 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Profile — Spopeer</title>
+  <script src="../../js/profile-runtime.js"></script>
+  <script src="../../js/profile-identity.js"></script>
+  <script>
+    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+    if (!_ud || !_li) window.location.href = '../auth/login.html';
+
+    // Onboarding: if ?role= param is present, stamp userType into localStorage
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var roleParam = params.get('role');
+      if (roleParam && _ud) {
+        var validRoles = ['athlete','coach','club','supportive_professional'];
+        if (validRoles.indexOf(roleParam) !== -1 && _ud.userType !== roleParam) {
+          _ud.userType = roleParam;
+          localStorage.setItem('spopeer_user', JSON.stringify(_ud));
+        }
+      }
+    })();
+  </script>
+  <script src="../../js/profile-sync-service.js"></script>
+  <script src="../../js/shared-ui.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="../../js/api.js"></script>
+  <style>
+    :root {
+      --accent:#001f3f; --accent-mid:#003366; --accent-hover:#001428; --accent-light:#cce7ff; --accent-lt2:#e8f4ff;
+      --bg:#fafaf8; --white:#fff; --ink:#111111; --ink-2:#333333; --ink-light:#4a4a4a;
+      --muted:#7a7a7a; --muted-2:#b8b8b8; --border:#ebebE7; --surface:#f3f3ef; --surface-2:#eeeeea;
+      --blue:#1a6bff; --blue-lt:#eef3ff; --red:#ef4444; --green:#16a34a; --green-lt:#dcfce7;
+      --fD:'Syne',sans-serif; --fB:'Plus Jakarta Sans',sans-serif;
+      --nav-h:64px; --r:10px; --rS:8px; --rL:16px; --pill:999px;
+      --sidebar-w:260px;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--fB);background:var(--bg);color:var(--ink);line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
+
+    /* ── TOP NAV ── */
+    .topnav{position:sticky;top:0;z-index:300;height:var(--nav-h);background:rgba(250,250,248,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+    .nav-inner{max-width:1360px;margin:0 auto;height:100%;padding:0 24px;display:flex;align-items:center;gap:16px}
+    .logo{font-family:var(--fD);font-size:21px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:7px;flex-shrink:0}
+    .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%}
+    .nav-search{flex:1;max-width:340px;position:relative}
+    .nav-search i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px}
+    .nav-search input{width:100%;padding:9px 16px 9px 36px;background:var(--surface);border:1.5px solid transparent;border-radius:var(--pill);font-size:13px;font-family:var(--fB);color:var(--ink);transition:.2s}
+    .nav-search input:focus{outline:none;background:var(--white);border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,31,63,.08)}
+    .nav-search input::placeholder{color:var(--muted-2)}
+    .nav-right{margin-left:auto;display:flex;align-items:center;gap:6px;position:relative}
+    .nav-icon{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);color:var(--ink-2);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;transition:.2s}
+    .nav-icon:hover{background:var(--accent-lt);color:var(--accent);border-color:var(--accent)}
+    .user-chip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--pill);cursor:pointer;transition:.2s;margin-left:4px}
+    .user-chip:hover{border-color:var(--accent)}
+    .chip-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#001f3f,#1a6bff);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .chip-name{font-size:13px;font-weight:600;color:var(--ink)}
+    .chip-caret{font-size:9px;color:var(--muted)}
+    .profile-menu{position:absolute;top:100%;right:0;margin-top:8px;width:260px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--rL);box-shadow:0 14px 40px rgba(0,0,0,.12);padding:12px 0;display:none;z-index:500}
+    .profile-menu.visible{display:block}
+    .profile-menu-section{padding:0}
+    .profile-menu-section+.profile-menu-section{border-top:1px solid var(--border)}
+    .profile-menu-section-header{padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .2s;border-radius:var(--rS);margin:2px 4px}
+    .profile-menu-section-header:hover{background:var(--surface)}
+    .profile-menu-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0}
+    .profile-menu-section-toggle{font-size:10px;color:var(--muted-2);transition:transform .3s ease,color .2s}
+    .profile-menu-section.collapsed .profile-menu-section-toggle{transform:rotate(-90deg)}
+    .profile-menu-section-items{overflow:hidden;transition:max-height .3s ease,padding .3s ease;max-height:500px;padding:0 16px 10px}
+    .profile-menu-section.collapsed .profile-menu-section-items{max-height:0;padding:0 16px}
+    .profile-menu-item{width:100%;text-align:left;font-size:13px;color:var(--ink-2);padding:8px 10px;display:flex;align-items:center;gap:10px;background:transparent;border:none;cursor:pointer;transition:background .2s;border-radius:var(--rS);margin-bottom:2px;font-family:var(--fB)}
+    .profile-menu-item:hover{background:var(--surface);color:var(--ink)}
+    .profile-menu-item i{width:18px;text-align:center;color:var(--muted)}
+    .profile-menu-item.logout{color:var(--accent)}
+    .profile-menu-item.logout:hover{background:rgba(0,31,63,.06)}
+
+    /* ── LAYOUT ── */
+    .page-shell{display:flex;flex:1;max-width:1360px;margin:0 auto;width:100%;padding:0 24px}
+
+    /* ── SIDEBAR NAV ── */
+    .edit-sidebar{width:var(--sidebar-w);flex-shrink:0;padding:36px 0 60px;position:sticky;top:calc(var(--nav-h) + 16px);align-self:flex-start;height:auto;max-height:none;overflow:visible}
+    .sidebar-back{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:28px;padding:8px 12px;border-radius:var(--r);transition:.2s;border:1.5px solid transparent}
+    .sidebar-back:hover{color:var(--accent);background:var(--accent-lt2);border-color:var(--accent-light)}
+    .sidebar-profile-mini{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--rL);margin-bottom:24px}
+    .sidebar-av{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#001f3f,#1a6bff);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+    .sidebar-profile-info{min-width:0}
+    .sidebar-name{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sidebar-type{font-size:11px;color:var(--muted);font-weight:500;text-transform:capitalize}
+    .sidebar-section-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-2);padding:0 12px;margin-bottom:6px;margin-top:20px}
+    .sidebar-nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);font-size:13px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:.18s;text-decoration:none;position:relative;border:1.5px solid transparent}
+    .sidebar-nav-item:hover{background:var(--surface);color:var(--ink)}
+    .sidebar-nav-item.active{background:var(--accent-lt2);color:var(--accent);font-weight:700;border-color:var(--accent-light)}
+    .sidebar-nav-item i{width:18px;text-align:center;font-size:13px;flex-shrink:0}
+    .sidebar-nav-item .nav-status{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+    .sidebar-nav-item .nav-status.empty{background:var(--muted-2)}
+    .sidebar-completion{margin-top:24px;padding:14px 16px;background:var(--accent);border-radius:var(--rL);color:var(--accent-light)}
+    .sidebar-completion-label{font-size:11px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+    .sidebar-completion-pct{font-family:var(--fD);font-size:28px;font-weight:800;color:#fff;line-height:1}
+    .sidebar-completion-sub{font-size:11px;opacity:.7;margin-top:3px}
+    .completion-track{height:4px;background:rgba(255,255,255,.2);border-radius:4px;margin-top:10px;overflow:hidden}
+    .completion-fill{height:100%;background:#fff;border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+    /* ── MAIN CONTENT ── */
+    .edit-main{flex:1;padding:36px 0 60px 36px;min-width:0}
+    .page-header{margin-bottom:32px}
+    .page-header-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:4px}
+    .page-title{font-family:var(--fD);font-size:28px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+    .page-subtitle{font-size:14px;color:var(--muted);margin-top:4px}
+    .btn-save-all{padding:10px 22px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fB);transition:.2s;display:flex;align-items:center;gap:7px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,31,63,.2)}
+    .btn-save-all:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,31,63,.25)}
+
+    /* ── SECTION CARDS ── */
+    .edit-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rL);margin-bottom:16px;overflow:hidden;transition:box-shadow .2s;scroll-margin-top:calc(var(--nav-h) + 24px)}
+    .edit-card:hover{box-shadow:0 4px 24px rgba(0,0,0,.06)}
+    .edit-card-header{padding:18px 24px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;transition:.15s}
+    .edit-card-header:hover{background:var(--surface)}
+    .card-icon-wrap{width:36px;height:36px;border-radius:var(--r);background:var(--accent-lt2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .card-icon-wrap i{color:var(--accent);font-size:14px}
+    .card-header-text{flex:1;min-width:0}
+    .card-title{font-size:15px;font-weight:700;color:var(--ink)}
+    .card-desc{font-size:12px;color:var(--muted);margin-top:1px}
+    .card-toggle{width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--muted-2);font-size:11px;transition:transform .3s;flex-shrink:0}
+    .edit-card.collapsed .card-toggle{transform:rotate(-90deg)}
+    .card-body{overflow:hidden;max-height:3000px;transition:max-height .35s ease}
+    .edit-card.collapsed .card-body{max-height:0}
+    .card-body-inner{padding:0 24px 24px}
+    .card-divider{height:1px;background:var(--border);margin:0 24px}
+
+    /* ── AVATAR BLOCK ── */
+    .avatar-block{display:flex;gap:20px;align-items:center;padding:20px;background:var(--surface);border-radius:var(--rL);margin-bottom:24px;position:relative;overflow:hidden}
+    .avatar-block::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--accent-lt2),transparent 60%);pointer-events:none}
+    .avatar-ring{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#001f3f,#1a6bff);padding:3px;flex-shrink:0;position:relative}
+    .avatar-img{width:100%;height:100%;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:var(--accent-light);font-size:34px;font-weight:800;overflow:hidden;border:3px solid var(--white)}
+    .avatar-upload-overlay{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;opacity:0;transition:.2s;cursor:pointer;flex-direction:column;gap:3px}
+    .avatar-upload-overlay span{font-size:10px;font-weight:600}
+    .avatar-ring:hover .avatar-upload-overlay{opacity:1}
+    .avatar-info{flex:1;position:relative}
+    .avatar-info h4{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:3px}
+    .avatar-info p{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+    .avatar-btn-row{display:flex;gap:8px;flex-wrap:wrap}
+    .btn-photo{padding:8px 16px;border:1.5px solid var(--border);background:var(--white);border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;font-family:var(--fB);color:var(--ink-2)}
+    .btn-photo:hover{border-color:var(--accent);background:var(--accent-lt2);color:var(--accent)}
+    .btn-photo.danger{color:var(--red);border-color:transparent}
+    .btn-photo.danger:hover{border-color:var(--red);background:#fff5f5}
+
+    /* ── FORM ELEMENTS ── */
+    .form-group{margin-bottom:18px}
+    .form-group:last-child{margin-bottom:0}
+    .form-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+    .form-label label{font-size:13px;font-weight:700;color:var(--ink-2)}
+    .form-label-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--pill);background:var(--accent-lt2);color:var(--accent)}
+    .form-label-badge.required{background:#fff0f0;color:var(--red)}
+    .form-label-badge.optional{background:var(--surface-2);color:var(--muted)}
+    .form-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;font-family:var(--fB);color:var(--ink);background:var(--bg);transition:.2s;appearance:none}
+    .form-input::placeholder{color:var(--muted-2)}
+    .form-input:focus{outline:none;border-color:var(--accent);background:var(--white);box-shadow:0 0 0 3px rgba(0,31,63,.08)}
+    .form-input:hover:not(:focus){border-color:var(--muted-2)}
+    textarea.form-input{resize:vertical;min-height:100px;line-height:1.6}
+    select.form-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7a7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-color:var(--bg);padding-right:38px;cursor:pointer}
+    .form-hint{font-size:11.5px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:5px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+    .input-with-icon{position:relative}
+    .input-with-icon > i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+    .input-with-icon .form-input{padding-left:37px}
+    .input-with-icon .input-prefix{position:absolute;left:0;top:0;bottom:0;padding:0 12px;display:flex;align-items:center;font-size:13px;color:var(--muted);border-right:1.5px solid var(--border);border-radius:var(--r) 0 0 var(--r);background:var(--surface)}
+    .input-with-icon.has-prefix .form-input{padding-left:44px;border-left:none;border-radius:0 var(--r) var(--r) 0}
+    .char-counter{font-size:11px;color:var(--muted-2);font-weight:500}
+    .char-counter.warn{color:#f59e0b}
+    .char-counter.over{color:var(--red)}
+
+    /* ── CHECKBOX GROUP ── */
+    .checkbox-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px;margin-top:6px}
+    .check-item{display:flex;align-items:center;gap:9px;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;transition:.18s;background:var(--bg);position:relative}
+    .check-item:hover{border-color:var(--accent);background:var(--accent-lt2)}
+    .check-item input[type="checkbox"]{position:absolute;opacity:0;width:0;height:0}
+    .check-box{width:16px;height:16px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.18s;background:var(--white)}
+    .check-item input:checked ~ .check-box{background:var(--accent);border-color:var(--accent)}
+    .check-item input:checked ~ .check-box::after{content:'';width:8px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px);display:block}
+    .check-item input:checked ~ .check-label{color:var(--accent);font-weight:600}
+    .check-item:has(input:checked){border-color:var(--accent-light);background:var(--accent-lt2)}
+    .check-label{font-size:13px;color:var(--ink-2);cursor:pointer}
+
+    /* ── SOCIAL ROW ── */
+    .social-item{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .social-item:last-child{margin-bottom:0}
+    .social-platform-icon{width:36px;height:36px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .social-platform-icon.ig{background:#fce4ec;color:#e91e63}
+    .social-platform-icon.yt{background:#ffebee;color:#f44336}
+    .social-platform-icon.li{background:#e3f2fd;color:#0077b5}
+    .social-platform-icon.web{background:var(--accent-lt2);color:var(--accent)}
+    .social-platform-icon.hl{background:#fff8e1;color:#f59e0b}
+
+    /* ── SECTION SAVE BAR ── */
+    .card-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);margin-top:4px}
+    .save-status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;min-height:20px}
+    .save-status.saved{color:var(--green)}
+    .save-status.saving{color:var(--blue)}
+    .btn-save-section{padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fB);transition:.2s;display:flex;align-items:center;gap:7px}
+    .btn-save-section:hover{background:var(--accent-hover);transform:translateY(-1px)}
+    .btn-save-section:active{transform:none}
+    .btn-save-section.saving{opacity:.7;cursor:not-allowed}
+
+    /* ── COVER PHOTO STRIP ── */
+    .cover-strip{height:100px;background:linear-gradient(135deg,var(--accent) 0%,#1a6bff 100%);border-radius:var(--rL) var(--rL) 0 0;position:relative;overflow:hidden;cursor:pointer;transition:.2s}
+    .cover-strip:hover .cover-overlay{opacity:1}
+    .cover-strip img{width:100%;height:100%;object-fit:cover;display:block}
+    .cover-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;gap:8px;opacity:0;transition:.2s}
+
+    /* ── TAG INPUT ── */
+    .tag-input-wrap{border:1.5px solid var(--border);border-radius:var(--r);padding:8px 10px;background:var(--bg);display:flex;flex-wrap:wrap;gap:6px;cursor:text;transition:.2s;min-height:48px;align-items:flex-start}
+    .tag-input-wrap:focus-within{border-color:var(--accent);background:var(--white);box-shadow:0 0 0 3px rgba(0,31,63,.08)}
+    .tag-item{display:flex;align-items:center;gap:5px;padding:3px 10px;background:var(--accent-lt2);border:1px solid var(--accent-light);border-radius:var(--pill);font-size:12px;font-weight:600;color:var(--accent)}
+    .tag-item button{border:none;background:none;color:var(--accent);cursor:pointer;font-size:11px;padding:0;line-height:1;opacity:.6}
+    .tag-item button:hover{opacity:1}
+    .tag-input{border:none;outline:none;font-family:var(--fB);font-size:13px;color:var(--ink);background:transparent;flex:1;min-width:120px;padding:2px 4px}
+
+    /* ── VISIBILITY TOGGLE ── */
+    .visibility-toggle{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--ink-2);transition:.2s;font-family:var(--fB);user-select:none}
+    .visibility-toggle[data-state="public"]{border-color:#16a34a44;background:#f0fdf4;color:#16a34a}
+    .visibility-toggle[data-state="private"]{border-color:#dc262644;background:#fff1f1;color:#dc2626}
+
+    /* ── DANGER ZONE ── */
+    .danger-zone{border-color:#fecaca !important}
+    .danger-zone .card-icon-wrap{background:#fff5f5}
+    .danger-zone .card-icon-wrap i{color:var(--red)}
+    .danger-zone .card-title{color:var(--red)}
+    .danger-btn{padding:9px 18px;background:transparent;color:var(--red);border:1.5px solid var(--red);border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fB);transition:.2s}
+    .danger-btn:hover{background:#fff5f5}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;top:80px;right:24px;padding:13px 20px;border-radius:var(--rL);color:#fff;font-size:14px;font-weight:600;z-index:9999;display:flex;align-items:center;gap:10px;transform:translateX(120%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 8px 24px rgba(0,0,0,.15);max-width:340px}
+    .toast.show{transform:translateX(0)}
+    .toast.success{background:var(--green)}
+    .toast.error{background:var(--red)}
+    .toast.info{background:var(--accent)}
+
+    /* ── FOOTER ── */
+    .site-footer{background:var(--ink);color:#fff;padding:48px 24px 0;margin-top:auto}
+    .footer-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+    .foot-logo{font-family:var(--fD);font-size:20px;font-weight:800;color:#fff;text-decoration:none;display:flex;align-items:center;gap:8px;margin-bottom:14px;letter-spacing:-.02em}
+    .foot-logo .logo-dot{background:var(--accent-light)}
+    .foot-brand p{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:18px;line-height:1.6}
+    .foot-social{display:flex;gap:8px}
+    .soc-btn{width:36px;height:36px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--rS);color:rgba(255,255,255,.65);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:14px;transition:.2s}
+    .soc-btn:hover{background:var(--accent-light);border-color:var(--accent-light);color:var(--accent)}
+    .foot-col h5{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#fff;margin-bottom:14px}
+    .foot-col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+    .foot-col a{color:rgba(255,255,255,.55);text-decoration:none;font-size:13px;transition:color .2s}
+    .foot-col a:hover{color:#fff}
+    .footer-btm{max-width:1200px;margin:0 auto;border-top:1px solid rgba(255,255,255,.08);padding:20px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:12px;color:rgba(255,255,255,.35)}
+    .footer-btm-links{display:flex;gap:20px}
+    .footer-btm-links a{color:rgba(255,255,255,.35);text-decoration:none;transition:color .2s}
+    .footer-btm-links a:hover{color:rgba(255,255,255,.8)}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:960px){
+      .page-shell{flex-direction:column;padding:0 16px}
+      .edit-sidebar{width:100%;position:static;height:auto;padding:20px 0 0;overflow:visible}
+      .edit-main{padding:20px 0 48px;padding-left:0}
+      .sidebar-completion{display:none}
+    }
+    @media(max-width:768px){
+      .form-row,.form-row-3{grid-template-columns:1fr}
+      .footer-grid{grid-template-columns:1fr 1fr;gap:28px}
+      .page-header-top{flex-direction:column;align-items:flex-start}
+      .edit-sidebar{padding:16px 0 0}
+      .sidebar-profile-mini,.sidebar-section-title,.sidebar-nav-item,.sidebar-completion{display:none}
+      .avatar-block{flex-direction:column;text-align:center}
+      .avatar-btn-row{justify-content:center}
+
+      /* mobile layout improvements */
+      .page-title{font-size:22px}
+      .page-subtitle{font-size:13px}
+      .btn-save-all{width:100%;justify-content:center}
+      .edit-card-header{padding:14px 16px}
+      .card-body-inner{padding:0 16px 16px}
+      .card-divider{margin:0 16px}
+      .edit-card{scroll-margin-top:calc(var(--nav-h) + 16px)}
+
+      /* footer stacks */
+      .card-footer,.edit-card-footer{flex-direction:column;gap:10px;align-items:stretch}
+      .card-footer .btn-save-all,.edit-card-footer .btn-save-all{width:100%}
+      .save-status{text-align:center}
+
+      /* toast fits mobile */
+      .toast{left:12px!important;right:12px!important;max-width:none!important;min-width:0!important;transform:none!important;bottom:68px!important}
+
+      /* avatar photo buttons stack on narrow phones */
+      .avatar-btn-row{flex-direction:column;width:100%}
+      .avatar-btn-row .btn-photo{width:100%;justify-content:center}
+
+      /* bottom spacing for sticky bottom nav */
+      body{padding-bottom:60px}
+    }
+    @media(max-width:480px){
+      .nav-search{display:none}
+      .checkbox-grid{grid-template-columns:1fr}
+      .page-shell{padding:0 10px}
+      .edit-card-header{padding:12px 12px}
+      .card-body-inner{padding:0 12px 12px}
+      .card-divider{margin:0 12px}
+      .edit-main{padding:12px 0 48px}
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<header>
+  <nav class="topnav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <div class="nav-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search athletes, clubs, coaches…" id="searchInput">
+      </div>
+      <div class="nav-right">
+        <button class="nav-icon" id="homeBtn" title="Home"><i class="fa-regular fa-house"></i></button>
+        <button class="nav-icon" id="messagesBtn" title="Messages"><i class="fa-regular fa-paper-plane"></i></button>
+        <button class="nav-icon" id="notifBtn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
+        <div class="user-chip" id="userChip" role="button" tabindex="0">
+          <span class="chip-avatar" id="chipAvatar">U</span>
+          <span class="chip-name" id="chipName">User</span>
+          <i class="fa-solid fa-chevron-down chip-caret"></i>
+        </div>
+
+        <div class="profile-menu" id="profileMenu" aria-hidden="true">
+          <div class="profile-menu-section" data-section="identity">
+            <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
+              <div class="profile-menu-title">Your Identity</div>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
+              <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
+              <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
+            </div>
+          </div>
+          <div class="profile-menu-section collapsed" data-section="account">
+            <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+              <div class="profile-menu-title">Account & Settings</div>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
+              <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
+              <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy & Safety</button>
+              <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
+              <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
+              <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
+            </div>
+          </div>
+          <div class="profile-menu-section collapsed" data-section="features">
+            <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+              <div class="profile-menu-title">Platform Features</div>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>
+              <button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements & Badges</button>
+              <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
+              <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
+              <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
+              <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
+            </div>
+          </div>
+          <div class="profile-menu-section collapsed" data-section="help">
+            <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+              <div class="profile-menu-title">Help & Misc</div>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
+              <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
+              <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
+            </div>
+          </div>
+          <div class="profile-menu-section">
+            <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
+              <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- PAGE -->
+<div class="page-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="edit-sidebar">
+    <div class="sidebar-profile-mini">
+      <div class="sidebar-av" id="sidebarAv">U</div>
+      <div class="sidebar-profile-info">
+        <div class="sidebar-name" id="sidebarName">Your Name</div>
+        <div class="sidebar-handle" id="sidebarHandle" style="font-size:11px;color:var(--muted);font-weight:500">@username</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+          <span class="sidebar-role-badge" id="sidebarRoleBadge" style="font-size:10px;padding:2px 8px;border-radius:999px;background:var(--accent-lt2);color:var(--accent);font-weight:700;display:inline-flex;align-items:center;gap:4px"><i class="fa-solid fa-person-running" style="font-size:8px"></i> Athlete</span>
+          <span class="sidebar-sport-badge" id="sidebarSportBadge" style="font-size:10px;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);font-weight:600;display:inline-flex;align-items:center;gap:4px"><i class="fa-solid fa-futbol" style="font-size:8px"></i> Sport</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section-title">Profile Sections</div>
+    <a href="#section-photo" class="sidebar-nav-item active" data-section="photo">
+      <i class="fa-regular fa-image"></i> Profile Photo
+      <span class="nav-status" id="status-photo"></span>
+    </a>
+    <a href="#section-basic" class="sidebar-nav-item" data-section="basic">
+      <i class="fa-regular fa-circle-user"></i> Basic Info
+      <span class="nav-status" id="status-basic"></span>
+    </a>
+    <!-- athlete -->
+    <span id="nav-sports" style="display:none">
+      <a href="#section-sports" class="sidebar-nav-item" data-section="sports">
+        <i class="fa-solid fa-futbol"></i> Sports Details
+        <span class="nav-status" id="status-sports"></span>
+      </a>
+      <a href="#section-achievements" class="sidebar-nav-item" data-section="achievements">
+        <i class="fa-solid fa-trophy"></i> Achievements
+        <span class="nav-status" id="status-achievements"></span>
+      </a>
+      <a href="#section-training" class="sidebar-nav-item" data-section="training">
+        <i class="fa-solid fa-dumbbell"></i> Training & Goals
+        <span class="nav-status" id="status-training"></span>
+      </a>
+      <a href="#section-physical" class="sidebar-nav-item" data-section="physical">
+        <i class="fa-solid fa-ruler-combined"></i> Physical Info
+        <span class="nav-status" id="status-physical"></span>
+      </a>
+      <a href="#section-competition" class="sidebar-nav-item" data-section="competition">
+        <i class="fa-solid fa-medal"></i> Competition
+        <span class="nav-status" id="status-competition"></span>
+      </a>
+      <a href="#section-health" class="sidebar-nav-item" data-section="health">
+        <i class="fa-solid fa-heart-pulse"></i> Health & Wellness
+        <span class="nav-status" id="status-health"></span>
+      </a>
+    </span>
+    <!-- coach -->
+    <span id="nav-coaching" style="display:none">
+      <a href="#section-coaching" class="sidebar-nav-item" data-section="coaching">
+        <i class="fa-solid fa-chalkboard-user"></i> Coaching Details
+        <span class="nav-status" id="status-coaching"></span>
+      </a>
+      <a href="#section-coach-training" class="sidebar-nav-item" data-section="coach-training">
+        <i class="fa-solid fa-clipboard-list"></i> Training & Dev
+        <span class="nav-status" id="status-coach-training"></span>
+      </a>
+      <a href="#section-management" class="sidebar-nav-item" data-section="management">
+        <i class="fa-solid fa-people-group"></i> Management
+        <span class="nav-status" id="status-management"></span>
+      </a>
+    </span>
+    <!-- club -->
+    <span id="nav-club" style="display:none">
+      <a href="#section-club" class="sidebar-nav-item" data-section="club">
+        <i class="fa-solid fa-building"></i> Club Info
+        <span class="nav-status" id="status-club"></span>
+      </a>
+      <a href="#section-club-staff" class="sidebar-nav-item" data-section="club-staff">
+        <i class="fa-solid fa-users-gear"></i> Staff
+        <span class="nav-status" id="status-club-staff"></span>
+      </a>
+      <a href="#section-financial" class="sidebar-nav-item" data-section="financial">
+        <i class="fa-solid fa-coins"></i> Financial
+        <span class="nav-status" id="status-financial"></span>
+      </a>
+      <a href="#section-youth" class="sidebar-nav-item" data-section="youth">
+        <i class="fa-solid fa-seedling"></i> Youth & Dev
+        <span class="nav-status" id="status-youth"></span>
+      </a>
+      <a href="#section-community" class="sidebar-nav-item" data-section="community">
+        <i class="fa-solid fa-hands-holding-child"></i> Community
+        <span class="nav-status" id="status-community"></span>
+      </a>
+      <a href="#section-facilities" class="sidebar-nav-item" data-section="facilities">
+        <i class="fa-solid fa-warehouse"></i> Facilities
+        <span class="nav-status" id="status-facilities"></span>
+      </a>
+      <a href="#section-equipment" class="sidebar-nav-item" data-section="equipment">
+        <i class="fa-solid fa-toolbox"></i> Equipment
+        <span class="nav-status" id="status-equipment"></span>
+      </a>
+      <a href="#section-club-legal" class="sidebar-nav-item" data-section="club-legal">
+        <i class="fa-solid fa-scale-balanced"></i> Legal
+        <span class="nav-status" id="status-club-legal"></span>
+      </a>
+    </span>
+    <!-- supportive_professional -->
+    <span id="nav-services" style="display:none">
+      <a href="#section-services" class="sidebar-nav-item" data-section="services">
+        <i class="fa-solid fa-briefcase-medical"></i> Professional Details
+        <span class="nav-status" id="status-services"></span>
+      </a>
+      <a href="#section-communication" class="sidebar-nav-item" data-section="communication">
+        <i class="fa-solid fa-comments"></i> Communication
+        <span class="nav-status" id="status-communication"></span>
+      </a>
+      <a href="#section-testimonials" class="sidebar-nav-item" data-section="testimonials">
+        <i class="fa-solid fa-star-half-stroke"></i> Testimonials
+        <span class="nav-status" id="status-testimonials"></span>
+      </a>
+      <a href="#section-payment" class="sidebar-nav-item" data-section="payment">
+        <i class="fa-solid fa-credit-card"></i> Payment & Rates
+        <span class="nav-status" id="status-payment"></span>
+      </a>
+      <a href="#section-prof-legal" class="sidebar-nav-item" data-section="prof-legal">
+        <i class="fa-solid fa-scale-balanced"></i> Legal
+        <span class="nav-status" id="status-prof-legal"></span>
+      </a>
+    </span>
+
+    <a href="#section-media" class="sidebar-nav-item" data-section="media">
+      <i class="fa-solid fa-photo-film"></i> Media & Social
+      <span class="nav-status" id="status-media"></span>
+    </a>
+    <a href="#section-privacy" class="sidebar-nav-item" data-section="privacy">
+      <i class="fa-solid fa-shield-halved"></i> Privacy
+      <span class="nav-status" id="status-privacy"></span>
+    </a>
+
+    <div class="sidebar-completion">
+      <div class="sidebar-completion-label">Profile Strength</div>
+      <div class="sidebar-completion-pct" id="completionPct">0%</div>
+      <div class="sidebar-completion-sub" id="completionSub">Keep going!</div>
+      <div class="completion-track"><div class="completion-fill" id="completionFill" style="width:0%"></div></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="edit-main">
+    <!-- Onboarding banner (shown only when ?onboarding=1) -->
+    <div id="onboardingBanner" style="display:none;padding:14px 20px;background:linear-gradient(135deg,var(--accent-lt2),#e0f0ff);border:1.5px solid var(--accent-light);border-radius:var(--rL);margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <i class="fa-solid fa-rocket" style="font-size:18px;color:var(--accent)"></i>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--accent)">Welcome! Let's set up your profile</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Fill in the sections below to complete your <span id="onboardingRoleLabel">athlete</span> profile. You can always come back to edit later.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <div class="page-header-top">
+        <div>
+          <h1 class="page-title" id="pageTitle">Edit Profile</h1>
+          <p class="page-subtitle" id="pageSubtitle">Update your athlete profile — changes are saved per section.</p>
+        </div>
+        <button class="btn-save-all" id="saveAllBtn">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size:12px"></i> Save All Changes
+        </button>
+      </div>
+    </div>
+
+    <!-- ── PHOTO SECTION ── -->
+    <div class="edit-card" id="section-photo">
+      <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="card-icon-wrap"><i class="fa-regular fa-image"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Profile Photo & Display Name</div>
+          <div class="card-desc">Your photo is the first thing people see on Spopeer</div>
+        </div>
+        <i class="fa-solid fa-chevron-down card-toggle"></i>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">
+          <!-- Cover Photo -->
+          <div style="margin-bottom:20px">
+            <div class="form-label" style="margin-bottom:8px"><label>Cover Photo</label><span class="form-label-badge optional">Optional</span></div>
+            <div class="cover-strip" id="coverStrip" onclick="document.getElementById('coverInput').click()">
+              <div class="cover-overlay"><i class="fa-solid fa-camera"></i> Change Cover Photo</div>
+            </div>
+            <input type="file" id="coverInput" accept="image/*" style="display:none">
+          </div>
+
+          <!-- Avatar -->
+          <div class="avatar-block">
+            <div class="avatar-ring" onclick="document.getElementById('photoFileInput').click()">
+              <div class="avatar-img" id="avatarPreviewEl">
+                <i class="fa-solid fa-user" style="font-size:34px;opacity:.6"></i>
+              </div>
+              <div class="avatar-upload-overlay">
+                <i class="fa-solid fa-camera" style="font-size:16px"></i>
+                <span>Change</span>
+              </div>
+            </div>
+            <div class="avatar-info">
+              <h4>Profile Photo</h4>
+              <p>A clear, well-lit headshot helps others recognise you across the platform. JPG, PNG or GIF — max 5 MB.</p>
+              <div class="avatar-btn-row">
+                <button type="button" class="btn-photo" id="uploadPhotoBtn">
+                  <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:11px"></i> Upload Photo
+                </button>
+                <button type="button" class="btn-photo danger" id="removePhotoBtn">
+                  <i class="fa-regular fa-trash-can" style="font-size:11px"></i> Remove
+                </button>
+              </div>
+            </div>
+            <input type="file" id="photoFileInput" accept="image/*" style="display:none">
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">
+              <label for="displayNameInput">Display Name</label>
+              <span class="form-label-badge optional">Optional</span>
+            </div>
+            <input type="text" class="form-input" id="displayNameInput" placeholder="How you'd like to appear on your profile"/>
+            <p class="form-hint"><i class="fa-regular fa-circle-info"></i> Defaults to your full name if left blank</p>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="save-status" id="status-msg-photo"></div>
+          <button type="button" class="btn-save-section" data-section="photo">
+            <i class="fa-solid fa-check" style="font-size:11px"></i> Save Photo & Name
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BASIC INFO ── -->
+    <div class="edit-card" id="section-basic">
+      <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="card-icon-wrap"><i class="fa-regular fa-circle-user"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Basic Information</div>
+          <div class="card-desc">Name, location, date of birth, and a short bio</div>
+        </div>
+        <i class="fa-solid fa-chevron-down card-toggle"></i>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">
+          <div class="form-row">
+            <div class="form-group">
+              <div class="form-label">
+                <label for="fullNameInput">Full Name</label>
+                <span class="form-label-badge required">Required</span>
+              </div>
+              <input type="text" class="form-input" id="fullNameInput" placeholder="Your full legal or professional name"/>
+            </div>
+            <div class="form-group">
+              <div class="form-label">
+                <label for="dobInput">Date of Birth</label>
+                <button type="button" class="visibility-toggle" data-field="dob" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button>
+              </div>
+              <input type="date" class="form-input" id="dobInput"/>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:16px">
+            <div class="form-label">
+              <label for="usernameInput">@Username</label>
+              <span class="form-label-badge required">Required</span>
+            </div>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-at"></i>
+              <input type="text" class="form-input" id="usernameInput" placeholder="Choose a unique username" maxlength="30" autocomplete="off" spellcheck="false" style="text-transform:lowercase"/>
+            </div>
+            <p class="form-hint" id="usernameHint"><i class="fa-regular fa-circle-info"></i> Letters, numbers, underscores and dots only. This will be your public handle.</p>
+            <p class="form-hint" id="usernameStatus" style="display:none"></p>
+          </div>
+          <div class="form-row" style="margin-top:16px">
+            <div class="form-group">
+              <div class="form-label">
+                <label for="genderInput">Gender</label>
+                <button type="button" class="visibility-toggle" data-field="gender" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button>
+              </div>
+              <select class="form-input" id="genderInput">
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="non-binary">Non-binary</option>
+                <option value="prefer-not-say">Prefer not to say</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <div class="form-label">
+                <label for="nationalityInput">Nationality</label>
+                <button type="button" class="visibility-toggle" data-field="nationality" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button>
+              </div>
+              <input type="text" class="form-input" id="nationalityInput" placeholder="e.g. Spanish, Brazilian, British"/>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:16px">
+            <div class="form-label">
+              <label for="locationInput">Location</label>
+              <button type="button" class="visibility-toggle" data-field="location" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button>
+            </div>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-location-dot"></i>
+              <input type="text" class="form-input" id="locationInput" placeholder="e.g. Madrid, Spain"/>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:16px">
+            <div class="form-label">
+              <label for="bioInput">Bio / About You</label>
+              <button type="button" class="visibility-toggle" data-field="bio" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button>
+              <span class="char-counter" id="bioCounter">0 / 500</span>
+            </div>
+            <textarea class="form-input" id="bioInput" maxlength="500" placeholder="Tell the sports community about yourself — your journey, achievements, and goals…" style="min-height:120px"></textarea>
+          </div>
+          <div style="margin-top:20px">
+            <div class="form-label" style="margin-bottom:10px"><label>Contact Information</label></div>
+            <div class="form-row">
+              <div class="form-group">
+                <div class="form-label"><label for="contactEmailInput">Email</label><button type="button" class="visibility-toggle" data-field="contactEmail" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+                <div class="input-with-icon">
+                  <i class="fa-regular fa-envelope"></i>
+                  <input type="email" class="form-input" id="contactEmailInput" placeholder="you@example.com"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="form-label"><label for="contactPhoneInput">Phone</label><button type="button" class="visibility-toggle" data-field="contactPhone" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-phone"></i>
+                  <input type="tel" class="form-input" id="contactPhoneInput" placeholder="+1 (555) 000-0000"/>
+                </div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="contactAddressInput">Address</label><button type="button" class="visibility-toggle" data-field="contactAddress" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-location-dot"></i>
+                <input type="text" class="form-input" id="contactAddressInput" placeholder="Street address, city, postal code"/>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="save-status" id="status-msg-basic"></div>
+          <button type="button" class="btn-save-section" data-section="basic">
+            <i class="fa-solid fa-check" style="font-size:11px"></i> Save Basic Info
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ATHLETE SECTIONS ── -->
+    <div id="athlete-sections" style="display:none">
+
+      <div class="edit-card" id="section-sports">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-futbol"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Sports Details</div>
+            <div class="card-desc">Your primary sport, position, team, and playing level</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-row">
+              <div class="form-group">
+                <div class="form-label">
+                  <label for="primarySportInput">Primary Sport</label>
+                  <span class="form-label-badge required">Required</span>
+                </div>
+                <select class="form-input sport-select" id="primarySportInput"></select>
+              </div>
+              <div class="form-group">
+                <div class="form-label">
+                  <label for="playingLevelInput">Playing Level</label>
+                  <button type="button" class="visibility-toggle" data-field="playingLevel" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button>
+                </div>
+                <select class="form-input" id="playingLevelInput">
+                  <option value="">Select level</option>
+                  <option value="professional">Professional</option>
+                  <option value="semi-pro">Semi-Professional</option>
+                  <option value="collegiate">Collegiate</option>
+                  <option value="amateur">Amateur / Recreational</option>
+                  <option value="youth">Youth / School</option>
+                  <option value="beginner">Beginner</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row" style="margin-top:16px">
+              <div class="form-group">
+                <div class="form-label"><label for="positionInput">Position / Role</label><button type="button" class="visibility-toggle" data-field="position" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <input type="text" class="form-input" id="positionInput" placeholder="e.g. Striker, Point Guard, Goalkeeper"/>
+              </div>
+              <div class="form-group">
+                <div class="form-label"><label for="currentTeamInput">Current Team / Club</label><button type="button" class="visibility-toggle" data-field="currentTeam" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <input type="text" class="form-input" id="currentTeamInput" placeholder="e.g. FC Barcelona Academy"/>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="sportsYearsInput">Years of Experience</label><button type="button" class="visibility-toggle" data-field="experience" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <input type="number" class="form-input" id="sportsYearsInput" min="0" max="60" placeholder="Number of years playing" style="max-width:200px"/>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-sports"></div>
+            <button type="button" class="btn-save-section" data-section="sports">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Sports Details
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit-card" id="section-achievements">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-trophy"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Achievements & Stats</div>
+            <div class="card-desc">Your highlights, awards, and key performance stats</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="achievementsInput">Key Achievements & Awards</label><button type="button" class="visibility-toggle" data-field="achievements" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="achievementsInput" placeholder="e.g. National Champion 2023, Regional MVP 2022, Top scorer with 45 goals in a single season…" style="min-height:110px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="highestLevelInput">Highest Level Achieved</label><button type="button" class="visibility-toggle" data-field="highestLevel" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <select class="form-input" id="highestLevelInput">
+                <option value="">Select the highest level</option>
+                <option value="international">International</option>
+                <option value="national">National</option>
+                <option value="state">State / Regional</option>
+                <option value="city">City / Local</option>
+                <option value="club">Club Level</option>
+                <option value="school">School Level</option>
+              </select>
+            </div>
+            <div style="margin-top:16px">
+              <div class="form-label" style="margin-bottom:10px"><label>Quick Stats</label><span class="form-label-badge optional">Optional</span></div>
+              <div class="form-row-3">
+                <div class="form-group">
+                  <div class="form-label"><label for="statGoals" style="font-weight:500">Goals / Points</label></div>
+                  <input type="number" class="form-input" id="statGoals" min="0" placeholder="0"/>
+                </div>
+                <div class="form-group">
+                  <div class="form-label"><label for="statAssists" style="font-weight:500">Assists</label></div>
+                  <input type="number" class="form-input" id="statAssists" min="0" placeholder="0"/>
+                </div>
+                <div class="form-group">
+                  <div class="form-label"><label for="statApps" style="font-weight:500">Appearances</label></div>
+                  <input type="number" class="form-input" id="statApps" min="0" placeholder="0"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-achievements"></div>
+            <button type="button" class="btn-save-section" data-section="achievements">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Achievements
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit-card" id="section-training">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-dumbbell"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Training & Goals</div>
+            <div class="card-desc">Your routine, ambitions, and what you're looking for</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-row">
+              <div class="form-group">
+                <div class="form-label"><label for="trainingDaysInput">Training Days Per Week</label><button type="button" class="visibility-toggle" data-field="trainingDays" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <select class="form-input" id="trainingDaysInput">
+                  <option value="">Select</option>
+                  <option value="1">1 day</option><option value="2">2 days</option><option value="3">3 days</option>
+                  <option value="4">4 days</option><option value="5">5 days</option><option value="6">6 days</option><option value="7">7 days</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <div class="form-label"><label for="trainingHoursInput">Hours Per Day</label><button type="button" class="visibility-toggle" data-field="trainingHours" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <input type="number" class="form-input" id="trainingHoursInput" min="0" max="12" step="0.5" placeholder="e.g. 3"/>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="trainingLocationInput">Training Location(s)</label><button type="button" class="visibility-toggle" data-field="trainingLocation" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <input type="text" class="form-input" id="trainingLocationInput" placeholder="e.g. National Sports Centre, City Gym, Home"/>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="trainingInput">Training Routine</label><button type="button" class="visibility-toggle" data-field="trainingRoutine" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <textarea class="form-input" id="trainingInput" placeholder="Describe your daily or weekly training regimen…" style="min-height:100px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label" style="margin-bottom:10px"><label>Training Focus</label></div>
+              <div class="checkbox-grid" id="trainingFocusCheckboxes">
+                <label class="check-item"><input type="checkbox" id="focus_strength"/><span class="check-box"></span><span class="check-label">Strength</span></label>
+                <label class="check-item"><input type="checkbox" id="focus_speed"/><span class="check-box"></span><span class="check-label">Speed</span></label>
+                <label class="check-item"><input type="checkbox" id="focus_agility"/><span class="check-box"></span><span class="check-label">Agility</span></label>
+                <label class="check-item"><input type="checkbox" id="focus_endurance"/><span class="check-box"></span><span class="check-label">Endurance</span></label>
+                <label class="check-item"><input type="checkbox" id="focus_flexibility"/><span class="check-box"></span><span class="check-label">Flexibility</span></label>
+                <label class="check-item"><input type="checkbox" id="focus_technique"/><span class="check-box"></span><span class="check-label">Technique</span></label>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="coachesTrainersInput">Coaches & Trainers</label><button type="button" class="visibility-toggle" data-field="coaches" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <input type="text" class="form-input" id="coachesTrainersInput" placeholder="Names of your current coaches or trainers"/>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="availabilityInput">Current Availability</label><button type="button" class="visibility-toggle" data-field="availability" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <select class="form-input" id="availabilityInput">
+                <option value="">Select availability status</option>
+                <option value="available">Available immediately</option>
+                <option value="available_soon">Available soon (1–3 months)</option>
+                <option value="available_contract">After current contract ends</option>
+                <option value="not_available">Not available (open to offers)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label" style="margin-bottom:10px"><label>What are you looking for?</label></div>
+              <div class="checkbox-grid" id="goalsCheckboxes">
+                <label class="check-item"><input type="checkbox" id="goal_scout"/><span class="check-box"></span><span class="check-label">Scout / Agent attention</span></label>
+                <label class="check-item"><input type="checkbox" id="goal_team"/><span class="check-box"></span><span class="check-label">Join a new team</span></label>
+                <label class="check-item"><input type="checkbox" id="goal_training"/><span class="check-box"></span><span class="check-label">Training partnerships</span></label>
+                <label class="check-item"><input type="checkbox" id="goal_sponsors"/><span class="check-box"></span><span class="check-label">Sponsorship opportunities</span></label>
+                <label class="check-item"><input type="checkbox" id="goal_network"/><span class="check-box"></span><span class="check-label">Network with peers</span></label>
+                <label class="check-item"><input type="checkbox" id="goal_showcase"/><span class="check-box"></span><span class="check-label">Showcase highlights</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-training"></div>
+            <button type="button" class="btn-save-section" data-section="training">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Training & Goals
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PHYSICAL INFORMATION ── -->
+      <div class="edit-card" id="section-physical">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-ruler-combined"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Physical Information</div>
+            <div class="card-desc">Height, weight, body measurements, and physical attributes</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-row">
+              <div class="form-group">
+                <div class="form-label"><label for="heightInput">Height (cm)</label><button type="button" class="visibility-toggle" data-field="height" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+                <input type="number" class="form-input" id="heightInput" min="50" max="250" placeholder="e.g. 180"/>
+              </div>
+              <div class="form-group">
+                <div class="form-label"><label for="weightInput">Weight (kg)</label><button type="button" class="visibility-toggle" data-field="weight" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+                <input type="number" class="form-input" id="weightInput" min="20" max="300" step="0.1" placeholder="e.g. 75"/>
+              </div>
+            </div>
+            <div style="margin-top:16px">
+              <div class="form-label" style="margin-bottom:10px"><label>Body Measurements (cm)</label><span class="form-label-badge optional">Optional</span></div>
+              <div class="form-row-3">
+                <div class="form-group">
+                  <div class="form-label"><label for="chestInput" style="font-weight:500">Chest</label></div>
+                  <input type="number" class="form-input" id="chestInput" min="0" placeholder="cm"/>
+                </div>
+                <div class="form-group">
+                  <div class="form-label"><label for="waistInput" style="font-weight:500">Waist</label></div>
+                  <input type="number" class="form-input" id="waistInput" min="0" placeholder="cm"/>
+                </div>
+                <div class="form-group">
+                  <div class="form-label"><label for="hipsInput" style="font-weight:500">Hips</label></div>
+                  <input type="number" class="form-input" id="hipsInput" min="0" placeholder="cm"/>
+                </div>
+              </div>
+            </div>
+            <div class="form-row" style="margin-top:16px">
+              <div class="form-group">
+                <div class="form-label"><label for="eyeColorInput">Eye Color</label><button type="button" class="visibility-toggle" data-field="eyeColor" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <select class="form-input" id="eyeColorInput">
+                  <option value="">Select</option>
+                  <option value="brown">Brown</option><option value="blue">Blue</option><option value="green">Green</option>
+                  <option value="hazel">Hazel</option><option value="gray">Gray</option><option value="amber">Amber</option><option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <div class="form-label"><label for="hairColorInput">Hair Color</label><button type="button" class="visibility-toggle" data-field="hairColor" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <select class="form-input" id="hairColorInput">
+                  <option value="">Select</option>
+                  <option value="black">Black</option><option value="brown">Brown</option><option value="blonde">Blonde</option>
+                  <option value="red">Red</option><option value="gray">Gray</option><option value="white">White</option><option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-physical"></div>
+            <button type="button" class="btn-save-section" data-section="physical">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Physical Info
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COMPETITION INFORMATION ── -->
+      <div class="edit-card" id="section-competition">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-medal"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Competition Information</div>
+            <div class="card-desc">Upcoming events, competition history, and team details</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="upcomingEventsInput">Upcoming Events / Competition Schedule</label><button type="button" class="visibility-toggle" data-field="upcomingEvents" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="upcomingEventsInput" placeholder="List upcoming competitions, dates, and locations…" style="min-height:90px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="competitionHistoryInput">Competition History</label><button type="button" class="visibility-toggle" data-field="competitionHistory" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="competitionHistoryInput" placeholder="Past events, results, personal bests…" style="min-height:100px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="teamInfoInput">Team Information</label><button type="button" class="visibility-toggle" data-field="teamInfo" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="teamInfoInput" placeholder="Current team details, role, jersey number…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-competition"></div>
+            <button type="button" class="btn-save-section" data-section="competition">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Competition Info
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── HEALTH & WELLNESS ── -->
+      <div class="edit-card" id="section-health">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-heart-pulse"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Health & Wellness</div>
+            <div class="card-desc">Injury history, medical info, and nutrition plan</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="injuryHistoryInput">Injury History</label><button type="button" class="visibility-toggle" data-field="injuryHistory" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <textarea class="form-input" id="injuryHistoryInput" placeholder="Past injuries and recovery timeline…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="currentInjuriesInput">Current Injuries or Conditions</label><button type="button" class="visibility-toggle" data-field="currentInjuries" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <textarea class="form-input" id="currentInjuriesInput" placeholder="Any active injuries, conditions, or limitations…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="medicalHistoryInput">Medical History</label><button type="button" class="visibility-toggle" data-field="medicalHistory" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <textarea class="form-input" id="medicalHistoryInput" placeholder="Relevant medical history, allergies, or conditions…"></textarea>
+              <p class="form-hint"><i class="fa-regular fa-circle-info"></i> This information is private and only visible to you unless you choose to share it</p>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="nutritionDietInput">Nutrition & Diet</label><button type="button" class="visibility-toggle" data-field="nutritionDiet" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <textarea class="form-input" id="nutritionDietInput" placeholder="Describe your diet plan, supplements, or nutritional approach…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-health"></div>
+            <button type="button" class="btn-save-section" data-section="health">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Health Info
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /athlete-sections -->
+
+    <!-- ── COACH SECTIONS ── -->
+    <div id="coach-sections" style="display:none">
+      <div class="edit-card" id="section-coaching">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-chalkboard-user"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Coaching Details</div>
+            <div class="card-desc">Sport, specialization, philosophy, and certifications</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-row">
+              <div class="form-group">
+                <div class="form-label"><label for="coachSportInput">Primary Sport</label><span class="form-label-badge required">Required</span></div>
+                <select class="form-input sport-select" id="coachSportInput"></select>
+              </div>
+              <div class="form-group">
+                <div class="form-label"><label for="specializationInput">Specialization</label><button type="button" class="visibility-toggle" data-field="specialization" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <input type="text" class="form-input" id="specializationInput" placeholder="e.g. Head Coach, Fitness Coach, Goalkeeper Coach"/>
+              </div>
+            </div>
+            <div class="form-row" style="margin-top:16px">
+              <div class="form-group">
+                <div class="form-label"><label for="experienceInput">Years of Experience</label><button type="button" class="visibility-toggle" data-field="coachExperience" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <input type="number" class="form-input" id="experienceInput" placeholder="10" min="0"/>
+              </div>
+              <div class="form-group">
+                <div class="form-label"><label for="coachTeamInput">Current Team / Organization</label><button type="button" class="visibility-toggle" data-field="coachTeam" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <input type="text" class="form-input" id="coachTeamInput" placeholder="e.g. FC Barcelona"/>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="coachEducationInput">Education & Qualifications</label><button type="button" class="visibility-toggle" data-field="education" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="coachEducationInput" placeholder="Degrees, diplomas, and academic qualifications…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="coachingStyleInput">Coaching Style</label><button type="button" class="visibility-toggle" data-field="coachingStyle" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <select class="form-input" id="coachingStyleInput">
+                <option value="">Select coaching style</option>
+                <option value="hands-on">Hands-On / Demonstrative</option>
+                <option value="collaborative">Collaborative / Democratic</option>
+                <option value="authoritative">Authoritative / Directive</option>
+                <option value="transformational">Transformational / Inspirational</option>
+                <option value="holistic">Holistic / Player-Centered</option>
+                <option value="analytical">Analytical / Data-Driven</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="philosophyInput">Coaching Philosophy</label><button type="button" class="visibility-toggle" data-field="philosophy" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="philosophyInput" placeholder="Describe your coaching approach and methodology…" style="min-height:100px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="teamsCoached">Teams Coached / Managed</label><button type="button" class="visibility-toggle" data-field="teamsCoached" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="teamsCoached" placeholder="List teams you've coached, dates, and roles…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="coachAchievementsInput">Achievements</label><button type="button" class="visibility-toggle" data-field="coachAchievements" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="coachAchievementsInput" placeholder="Championships won, accolades, player development successes…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="certificationsInput">Certifications & Licenses</label><button type="button" class="visibility-toggle" data-field="certifications" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="certificationsInput" placeholder="e.g. UEFA A Coaching License, NSCA-CSCS, First Aid…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-coaching"></div>
+            <button type="button" class="btn-save-section" data-section="coaching">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Coaching Details
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TRAINING & DEVELOPMENT ── -->
+      <div class="edit-card" id="section-coach-training">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-clipboard-list"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Training & Development</div>
+            <div class="card-desc">Training plans, player development, and techniques</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="trainingPlansInput">Training Plans & Strategies</label><button type="button" class="visibility-toggle" data-field="trainingPlans" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="trainingPlansInput" placeholder="Describe your approach to training planning and periodization…" style="min-height:100px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="playerDevelopmentInput">Player Development Approach</label><button type="button" class="visibility-toggle" data-field="playerDevelopment" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="playerDevelopmentInput" placeholder="How you develop individual players, skill assessment frameworks…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="techniquesMethodsInput">Techniques & Methods</label><button type="button" class="visibility-toggle" data-field="techniques" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="techniquesMethodsInput" placeholder="Specific coaching techniques, drills, and methodologies you use…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-coach-training"></div>
+            <button type="button" class="btn-save-section" data-section="coach-training">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Training & Development
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MANAGEMENT INFORMATION ── -->
+      <div class="edit-card" id="section-management">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-people-group"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Management Information</div>
+            <div class="card-desc">Team management, roster, and player selection</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="teamManagementInput">Team Management Strategies</label><button type="button" class="visibility-toggle" data-field="teamManagement" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="teamManagementInput" placeholder="Your approach to managing team dynamics, motivation, and discipline…" style="min-height:90px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="rosterManagementInput">Roster Management</label><button type="button" class="visibility-toggle" data-field="rosterManagement" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="rosterManagementInput" placeholder="How you handle squad rotation, depth charts, and transfers…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="playerSelectionInput">Player Selection Criteria</label><button type="button" class="visibility-toggle" data-field="playerSelection" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="playerSelectionInput" placeholder="What you look for in players: skills, attitude, potential…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-management"></div>
+            <button type="button" class="btn-save-section" data-section="management">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Management Info
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLUB SECTIONS ── -->
+    <div id="club-sections" style="display:none">
+      <div class="edit-card" id="section-club">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-building"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Club Information</div>
+            <div class="card-desc">Club name, sports offered, facilities, and contact details</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-row">
+              <div class="form-group">
+                <div class="form-label"><label for="clubNameInput">Club Name</label><span class="form-label-badge required">Required</span></div>
+                <input type="text" class="form-input" id="clubNameInput" placeholder="Official club name"/>
+              </div>
+              <div class="form-group">
+                <div class="form-label"><label for="foundedYearInput">Founded Year</label><button type="button" class="visibility-toggle" data-field="foundedYear" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <input type="number" class="form-input" id="foundedYearInput" placeholder="e.g. 1990" min="1800" max="2025"/>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="clubSportInput">Primary Sport</label><span class="form-label-badge required">Required</span></div>
+              <select class="form-input sport-select" id="clubSportInput"></select>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="teamsAndDivisionsInput">Teams & Divisions</label><button type="button" class="visibility-toggle" data-field="teamsAndDivisions" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="teamsAndDivisionsInput" placeholder="List your teams, age groups, divisions (e.g. U-15, Senior Men's, Women's First Team)…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="facilitiesInput">Facilities Overview</label><button type="button" class="visibility-toggle" data-field="facilities" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="facilitiesInput" placeholder="Describe your club's facilities, pitches, training equipment…"></textarea>
+            </div>
+            <div class="form-row" style="margin-top:16px">
+              <div class="form-group">
+                <div class="form-label"><label for="clubEmailInput">Contact Email</label><button type="button" class="visibility-toggle" data-field="clubEmail" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+                <div class="input-with-icon">
+                  <i class="fa-regular fa-envelope"></i>
+                  <input type="email" class="form-input" id="clubEmailInput" placeholder="club@example.com"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="form-label"><label for="clubPhoneInput">Phone</label><button type="button" class="visibility-toggle" data-field="clubPhone" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-phone"></i>
+                  <input type="tel" class="form-input" id="clubPhoneInput" placeholder="+1 (555) 000-0000"/>
+                </div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="clubAddressInput">Club Address</label><button type="button" class="visibility-toggle" data-field="clubAddress" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-location-dot"></i>
+                <input type="text" class="form-input" id="clubAddressInput" placeholder="Full club address"/>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="clubWebsiteInput">Website</label><button type="button" class="visibility-toggle" data-field="clubWebsite" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-globe"></i>
+                <input type="url" class="form-input" id="clubWebsiteInput" placeholder="https://yourclub.com"/>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-club"></div>
+            <button type="button" class="btn-save-section" data-section="club">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Club Info
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COACHING & MANAGEMENT STAFF ── -->
+      <div class="edit-card" id="section-club-staff">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-users-gear"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Coaching & Management Staff</div>
+            <div class="card-desc">Staff details and club philosophy</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="coachingStaffInput">Coaching Staff</label><button type="button" class="visibility-toggle" data-field="coachingStaff" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="coachingStaffInput" placeholder="List coaching staff names, roles, and qualifications…" style="min-height:90px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="managementStaffInput">Management Staff</label><button type="button" class="visibility-toggle" data-field="managementStaff" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="managementStaffInput" placeholder="List management team, directors, and administrative staff…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="clubPhilosophyInput">Club Philosophy</label><button type="button" class="visibility-toggle" data-field="clubPhilosophy" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="clubPhilosophyInput" placeholder="Describe the club's core values, playing style, and culture…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-club-staff"></div>
+            <button type="button" class="btn-save-section" data-section="club-staff">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Staff Info
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FINANCIAL INFORMATION ── -->
+      <div class="edit-card" id="section-financial">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-coins"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Financial Information</div>
+            <div class="card-desc">Budget, sponsorship, and revenue streams</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="clubBudgetInput">Annual Budget</label><button type="button" class="visibility-toggle" data-field="clubBudget" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <input type="text" class="form-input" id="clubBudgetInput" placeholder="e.g. $500,000 / €400,000"/>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="sponsorshipInput">Sponsorship Details</label><button type="button" class="visibility-toggle" data-field="sponsorship" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="sponsorshipInput" placeholder="Current sponsors, partnership opportunities…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="revenueStreamsInput">Revenue Streams</label><button type="button" class="visibility-toggle" data-field="revenueStreams" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <textarea class="form-input" id="revenueStreamsInput" placeholder="Membership fees, merchandise, match-day revenue, grants…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-financial"></div>
+            <button type="button" class="btn-save-section" data-section="financial">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Financial Info
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── YOUTH & DEVELOPMENT ── -->
+      <div class="edit-card" id="section-youth">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-seedling"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Youth & Development</div>
+            <div class="card-desc">Academy programs, recruitment, and scholarships</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="youthProgramsInput">Youth Development Programs</label><button type="button" class="visibility-toggle" data-field="youthPrograms" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="youthProgramsInput" placeholder="Academy details, age group programs, development pathways…" style="min-height:90px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="talentRecruitmentInput">Talent Recruitment</label><button type="button" class="visibility-toggle" data-field="talentRecruitment" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="talentRecruitmentInput" placeholder="Scouting strategies, tryout schedules, recruitment criteria…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="scholarshipsInput">Scholarships & Grants</label><button type="button" class="visibility-toggle" data-field="scholarships" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="scholarshipsInput" placeholder="Available scholarships, financial aid, and application process…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-youth"></div>
+            <button type="button" class="btn-save-section" data-section="youth">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Youth Info
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COMMUNITY & SOCIAL RESPONSIBILITY ── -->
+      <div class="edit-card" id="section-community">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-hands-holding-child"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Community & Social Responsibility</div>
+            <div class="card-desc">Outreach programs, initiatives, and charitable partnerships</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="communityOutreachInput">Community Outreach</label><button type="button" class="visibility-toggle" data-field="communityOutreach" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="communityOutreachInput" placeholder="Community events, local engagement, social impact programs…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="socialResponsibilityInput">Social Responsibility Initiatives</label><button type="button" class="visibility-toggle" data-field="socialResponsibility" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="socialResponsibilityInput" placeholder="Inclusion, sustainability, health awareness programs…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="charitablePartnershipsInput">Charitable Partnerships</label><button type="button" class="visibility-toggle" data-field="charitablePartnerships" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="charitablePartnershipsInput" placeholder="Partner charities, fundraising activities, foundations…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-community"></div>
+            <button type="button" class="btn-save-section" data-section="community">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Community Info
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DETAILED FACILITIES ── -->
+      <div class="edit-card" id="section-facilities">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-warehouse"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Detailed Facilities</div>
+            <div class="card-desc">Training grounds, gyms, and other venue details</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="trainingFieldsInput">Training Fields / Pitches</label><button type="button" class="visibility-toggle" data-field="trainingFields" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="trainingFieldsInput" placeholder="Number, surface types, dimensions, floodlighting…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="gymFacilitiesInput">Gym & Fitness Centre</label><button type="button" class="visibility-toggle" data-field="gymFacilities" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="gymFacilitiesInput" placeholder="Gym equipment, capacity, specialized areas…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="lockerRoomsInput">Locker Rooms & Amenities</label><button type="button" class="visibility-toggle" data-field="lockerRooms" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="lockerRoomsInput" placeholder="Changing rooms, showers, recovery ice baths, physio rooms…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="otherFacilitiesInput">Other Facilities</label><button type="button" class="visibility-toggle" data-field="otherFacilities" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="otherFacilitiesInput" placeholder="Clubhouse, meeting rooms, canteen, parking…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-facilities"></div>
+            <button type="button" class="btn-save-section" data-section="facilities">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Facilities
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EQUIPMENT INVENTORY ── -->
+      <div class="edit-card" id="section-equipment">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-toolbox"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Equipment Inventory</div>
+            <div class="card-desc">Equipment list and maintenance schedules</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="equipmentListInput">Equipment List</label><button type="button" class="visibility-toggle" data-field="equipmentList" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="equipmentListInput" placeholder="Key equipment owned: goals, bibs, cones, balls, gym machines…" style="min-height:90px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="maintenanceScheduleInput">Maintenance Schedule</label><button type="button" class="visibility-toggle" data-field="maintenanceSchedule" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="maintenanceScheduleInput" placeholder="Pitch maintenance, equipment checks, replacement cycles…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-equipment"></div>
+            <button type="button" class="btn-save-section" data-section="equipment">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Equipment
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LEGAL & COMPLIANCE (Club) ── -->
+      <div class="edit-card" id="section-club-legal">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Legal & Compliance</div>
+            <div class="card-desc">Licensing, registrations, and compliance information</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="clubLicensingInput">Licensing & Registration</label><button type="button" class="visibility-toggle" data-field="clubLicensing" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="clubLicensingInput" placeholder="FA registration, league membership, governing body affiliations…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="clubComplianceInput">Compliance & Policies</label><button type="button" class="visibility-toggle" data-field="clubCompliance" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="clubComplianceInput" placeholder="Safeguarding policies, anti-doping, health & safety, insurance…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-club-legal"></div>
+            <button type="button" class="btn-save-section" data-section="club-legal">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Legal Info
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SUPPORTIVE PROFESSION ── -->
+    <div id="supportive_professional-sections" style="display:none">
+      <div class="edit-card" id="section-services">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-briefcase-medical"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Professional Details & Services</div>
+            <div class="card-desc">Your title, company, experience, services, and credentials</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-row">
+              <div class="form-group">
+                <div class="form-label"><label for="profTitleInput">Professional Title</label><span class="form-label-badge required">Required</span></div>
+                <input type="text" class="form-input" id="profTitleInput" placeholder="e.g. Sports Physiotherapist, Nutritionist"/>
+              </div>
+              <div class="form-group">
+                <div class="form-label"><label for="companyNameInput">Company / Organization</label><button type="button" class="visibility-toggle" data-field="companyName" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+                <input type="text" class="form-input" id="companyNameInput" placeholder="e.g. Peak Performance Clinic"/>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="specializationFieldInput">Area of Specialization</label><button type="button" class="visibility-toggle" data-field="specializationField" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <select class="form-input" id="specializationFieldInput">
+                <option value="">Select specialization</option>
+                <option value="physiotherapy">Physiotherapy</option>
+                <option value="nutrition">Nutrition & Dietetics</option>
+                <option value="psychology">Sports Psychology</option>
+                <option value="medicine">Sports Medicine</option>
+                <option value="rehabilitation">Rehabilitation</option>
+                <option value="strength_conditioning">Strength & Conditioning</option>
+                <option value="performance_analysis">Performance Analysis</option>
+                <option value="sports_law">Sports Law</option>
+                <option value="sports_management">Sports Management / Agency</option>
+                <option value="journalism">Sports Journalism</option>
+                <option value="photography">Sports Photography / Video</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="profExperienceInput">Work Experience</label><button type="button" class="visibility-toggle" data-field="profExperience" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="profExperienceInput" placeholder="Describe your professional experience, previous roles, years in the field…" style="min-height:90px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="profEducationInput">Education</label><button type="button" class="visibility-toggle" data-field="profEducation" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="profEducationInput" placeholder="Degrees, institutions, areas of study…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="servicesInput">Services Offered</label><button type="button" class="visibility-toggle" data-field="services" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="servicesInput" placeholder="Describe the services you provide to athletes and teams…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="clienteleInput">Clientele</label><button type="button" class="visibility-toggle" data-field="clientele" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <input type="text" class="form-input" id="clienteleInput" placeholder="e.g. Professional athletes, amateur teams, youth players"/>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="credentialsInput">Credentials & Certifications</label><button type="button" class="visibility-toggle" data-field="credentials" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="credentialsInput" placeholder="List your professional certifications, degrees, and licenses…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="profEmailInput">Contact Email</label><button type="button" class="visibility-toggle" data-field="profEmail" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <div class="input-with-icon">
+                <i class="fa-regular fa-envelope"></i>
+                <input type="email" class="form-input" id="profEmailInput" placeholder="you@example.com"/>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-services"></div>
+            <button type="button" class="btn-save-section" data-section="services">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Professional Details
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CONTACT & COMMUNICATION ── -->
+      <div class="edit-card" id="section-communication">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-comments"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Contact & Communication</div>
+            <div class="card-desc">Preferred contact methods, availability, and tools</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="preferredContactInput">Preferred Contact Method</label><button type="button" class="visibility-toggle" data-field="preferredContact" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <select class="form-input" id="preferredContactInput">
+                <option value="">Select</option>
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+                <option value="video">Video Call</option>
+                <option value="in_person">In Person</option>
+                <option value="messaging">Platform Messaging</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="availabilityHoursInput">Availability Hours</label><button type="button" class="visibility-toggle" data-field="availabilityHours" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <input type="text" class="form-input" id="availabilityHoursInput" placeholder="e.g. Mon–Fri 9:00 AM – 5:00 PM EST"/>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="communicationToolsInput">Communication Tools</label><button type="button" class="visibility-toggle" data-field="communicationTools" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <input type="text" class="form-input" id="communicationToolsInput" placeholder="e.g. Zoom, Google Meet, WhatsApp, Skype"/>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-communication"></div>
+            <button type="button" class="btn-save-section" data-section="communication">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Communication
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TESTIMONIALS & REFERENCES ── -->
+      <div class="edit-card" id="section-testimonials">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-star-half-stroke"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Testimonials & References</div>
+            <div class="card-desc">Client reviews and professional references</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="clientReviewsInput">Client Reviews / Testimonials</label><button type="button" class="visibility-toggle" data-field="clientReviews" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="clientReviewsInput" placeholder="Paste or write client testimonials, include names with permission…" style="min-height:100px"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="professionalRefsInput">Professional References</label><button type="button" class="visibility-toggle" data-field="professionalRefs" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="professionalRefsInput" placeholder="Names, titles, and contact information of professional references…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-testimonials"></div>
+            <button type="button" class="btn-save-section" data-section="testimonials">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Testimonials
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAYMENT & RATES ── -->
+      <div class="edit-card" id="section-payment">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-credit-card"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Payment & Rates</div>
+            <div class="card-desc">Fee structure, payment methods, and billing info</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="feeStructureInput">Fee Structure</label><button type="button" class="visibility-toggle" data-field="feeStructure" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <textarea class="form-input" id="feeStructureInput" placeholder="Hourly rates, package pricing, consultation fees…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="paymentMethodsInput">Accepted Payment Methods</label><button type="button" class="visibility-toggle" data-field="paymentMethods" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <input type="text" class="form-input" id="paymentMethodsInput" placeholder="e.g. Bank transfer, PayPal, Credit card, Cash"/>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="billingInfoInput">Billing Information</label><button type="button" class="visibility-toggle" data-field="billingInfo" data-state="private" title="Click to make public"><i class="fa-solid fa-eye"></i><span class="vis-label">Private</span></button></div>
+              <textarea class="form-input" id="billingInfoInput" placeholder="Invoice terms, cancellation policy, insurance accepted…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-payment"></div>
+            <button type="button" class="btn-save-section" data-section="payment">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Payment Info
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LEGAL & COMPLIANCE (Supportive) ── -->
+      <div class="edit-card" id="section-prof-legal">
+        <div class="edit-card-header" onclick="toggleCard(this)">
+          <div class="card-icon-wrap"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="card-header-text">
+            <div class="card-title">Legal & Compliance</div>
+            <div class="card-desc">Professional licensing and regulatory compliance</div>
+          </div>
+          <i class="fa-solid fa-chevron-down card-toggle"></i>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="form-group">
+              <div class="form-label"><label for="profLicensingInput">Professional Licensing</label><button type="button" class="visibility-toggle" data-field="profLicensing" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="profLicensingInput" placeholder="License numbers, issuing bodies, expiry dates…"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:16px">
+              <div class="form-label"><label for="profComplianceInput">Regulatory Compliance</label><button type="button" class="visibility-toggle" data-field="profCompliance" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+              <textarea class="form-input" id="profComplianceInput" placeholder="Professional body memberships, insurance, data protection compliance…"></textarea>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="save-status" id="status-msg-prof-legal"></div>
+            <button type="button" class="btn-save-section" data-section="prof-legal">
+              <i class="fa-solid fa-check" style="font-size:11px"></i> Save Legal Info
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MEDIA & SOCIAL ── -->
+    <div class="edit-card" id="section-media">
+      <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="card-icon-wrap"><i class="fa-solid fa-photo-film"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Media & Social Links</div>
+          <div class="card-desc">Connect your social profiles and share highlight content</div>
+        </div>
+        <i class="fa-solid fa-chevron-down card-toggle"></i>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">
+          <div class="form-group" id="hl-video-group">
+            <div class="form-label"><label for="highlightInput">Highlight Video</label><button type="button" class="visibility-toggle" data-field="highlightVideo" data-state="public" title="Click to make private"><i class="fa-solid fa-eye"></i><span class="vis-label">Public</span></button></div>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-film" style="color:#f59e0b"></i>
+              <input type="url" class="form-input" id="highlightInput" placeholder="https://youtube.com/watch?v=..."/>
+            </div>
+            <p class="form-hint"><i class="fa-regular fa-circle-info"></i> YouTube, Vimeo, or any public video URL</p>
+          </div>
+
+          <div style="margin-top:8px">
+            <div class="form-label" style="margin-bottom:12px"><label>Social Media Profiles</label></div>
+
+            <div class="social-item">
+              <div class="social-platform-icon ig"><i class="fa-brands fa-instagram"></i></div>
+              <div style="flex:1">
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-at"></i>
+                  <input type="text" class="form-input" id="instagramInput" placeholder="yourusername (without @)"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="social-item">
+              <div class="social-platform-icon yt"><i class="fa-brands fa-youtube"></i></div>
+              <div style="flex:1">
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-link"></i>
+                  <input type="url" class="form-input" id="youtubeInput" placeholder="https://youtube.com/@yourchannel"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="social-item">
+              <div class="social-platform-icon li"><i class="fa-brands fa-linkedin-in"></i></div>
+              <div style="flex:1">
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-link"></i>
+                  <input type="url" class="form-input" id="linkedinInput" placeholder="https://linkedin.com/in/yourprofile"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="social-item" style="margin-bottom:0">
+              <div class="social-platform-icon web"><i class="fa-solid fa-globe"></i></div>
+              <div style="flex:1">
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-link"></i>
+                  <input type="url" class="form-input" id="websiteInput" placeholder="https://yourwebsite.com"/>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="save-status" id="status-msg-media"></div>
+          <button type="button" class="btn-save-section" data-section="media">
+            <i class="fa-solid fa-check" style="font-size:11px"></i> Save Media & Links
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PRIVACY & SHARING ── -->
+    <div class="edit-card" id="section-privacy">
+      <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="card-icon-wrap"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Privacy & Sharing</div>
+          <div class="card-desc">Control who can see your profile and how your data is shared</div>
+        </div>
+        <i class="fa-solid fa-chevron-down card-toggle"></i>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">
+          <div class="form-group">
+            <div class="form-label"><label for="profileVisibilityInput">Profile Visibility</label></div>
+            <select class="form-input" id="profileVisibilityInput">
+              <option value="public">Public — Anyone can view your profile</option>
+              <option value="private">Private — Only you can see your profile</option>
+              <option value="restricted">Restricted — Only approved connections</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-top:18px">
+            <div class="form-label" style="margin-bottom:10px"><label>Sharing Preferences</label></div>
+            <div class="checkbox-grid" id="sharingPreferences">
+              <label class="check-item"><input type="checkbox" id="share_contact" checked/><span class="check-box"></span><span class="check-label">Show contact info to connections</span></label>
+              <label class="check-item"><input type="checkbox" id="share_stats" checked/><span class="check-box"></span><span class="check-label">Display stats and achievements publicly</span></label>
+              <label class="check-item"><input type="checkbox" id="share_media" checked/><span class="check-box"></span><span class="check-label">Allow media to appear in feeds</span></label>
+              <label class="check-item"><input type="checkbox" id="share_searchable" checked/><span class="check-box"></span><span class="check-label">Appear in search results</span></label>
+              <label class="check-item"><input type="checkbox" id="share_messaging"/><span class="check-box"></span><span class="check-label">Allow messaging from anyone</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="save-status" id="status-msg-privacy"></div>
+          <button type="button" class="btn-save-section" data-section="privacy">
+            <i class="fa-solid fa-check" style="font-size:11px"></i> Save Privacy Settings
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DANGER ZONE ── -->
+    <div class="edit-card danger-zone" style="margin-top:32px">
+      <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="card-icon-wrap"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Danger Zone</div>
+          <div class="card-desc">Irreversible account actions — proceed with caution</div>
+        </div>
+        <i class="fa-solid fa-chevron-down card-toggle"></i>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px">Deactivate Account</div>
+            <div style="font-size:13px;color:var(--muted)">Temporarily hide your profile from the platform</div>
+          </div>
+          <button class="danger-btn" id="deactivateAccountBtn">Deactivate Account</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <p>Connecting the global sports community — athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+      <div class="foot-social">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+    <div class="foot-col"><h5>Platform</h5><ul><li><a href="/index.html#features">Features</a></li><li><a href="/index.html#how-it-works">How It Works</a></li><li><a href="/index.html#user-types">User Types</a></li></ul></div>
+    <div class="foot-col"><h5>Company</h5><ul><li><a href="/pages/legal/about.html">About Us</a></li><li><a href="/pages/company/careers.html">Careers</a></li><li><a href="/pages/company/blog.html">Blog</a></li></ul></div>
+    <div class="foot-col"><h5>Support</h5><ul><li><a href="/pages/company/help-center.html">Help Center</a></li><li><a href="/pages/contact/index.html">Contact Us</a></li></ul></div>
+    <div class="foot-col"><h5>Legal</h5><ul><li><a href="/pages/legal/privacy.html">Privacy Policy</a></li><li><a href="/pages/legal/terms.html">Terms of Use</a></li><li><a href="/pages/company/report-abuse.html">Report Abuse</a></li></ul></div>
+  </div>
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links"><a href="/pages/legal/privacy.html">Privacy</a><a href="/pages/legal/terms.html">Terms</a><a href="/pages/contact/index.html">Contact</a></div>
+  </div>
+</footer>
+
+<script src="../../js/profile-menu.js"></script>
+<script>
+if (window.profileRuntime) {
+  window.profileRuntime.wireDeactivateAccount('#deactivateAccountBtn');
+}
+</script>
+<script>
+(function() {
+  'use strict';
+
+  // ── SPORTS LIST ──
+  var SPORTS = ['Football','Basketball','Running','Swimming','Tennis','Cycling','Boxing','Volleyball','Athletics','Rugby','Cricket','Golf','Baseball','American Football','Ice Hockey','Gymnastics','Martial Arts','Table Tennis','Badminton','Rowing','Handball','Water Polo','Skiing','Snowboarding','Surfing','Skateboarding','Archery','Fencing','Wrestling','Judo','Karate','Taekwondo','Climbing','Triathlon','Sailing','Equestrian','Shooting','Weightlifting','Powerlifting','CrossFit'];
+
+  var ud = (function() {
+    try {
+      return JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+    } catch (e) {
+      console.warn('Invalid profile JSON in storage, using empty profile.', e);
+      return {};
+    }
+  })();
+
+  // ── Read URL params for role/onboarding routing ──
+  var _params = new URLSearchParams(window.location.search);
+  var _roleParam = _params.get('role');
+  var _onboarding = _params.get('onboarding') === '1';
+  var userType = _roleParam || ud.userType || 'athlete';
+
+  // Show onboarding banner when arriving from a role page redirect
+  if (_onboarding) {
+    var banner = document.getElementById('onboardingBanner');
+    if (banner) banner.style.display = '';
+    var roleLabel = document.getElementById('onboardingRoleLabel');
+    var roleLabelMap = { athlete:'athlete', coach:'coach', club:'club', 'supportive_professional':'professional' };
+    if (roleLabel) roleLabel.textContent = roleLabelMap[userType] || userType;
+    var pageTitle = document.getElementById('pageTitle');
+    if (pageTitle) pageTitle.textContent = 'Complete Your Profile';
+  }
+
+  // ── Show type sections & nav ──
+  var typeMap = {
+    athlete: ['athlete-sections','nav-sports'],
+    coach: ['coach-sections','nav-coaching'],
+    club: ['club-sections','nav-club'],
+    'supportive_professional': ['supportive_professional-sections','nav-services']
+  };
+  (typeMap[userType] || typeMap.athlete).forEach(function(id) {
+    var domEl = document.getElementById(id);
+    if (domEl) domEl.style.display = '';
+  });
+
+  // Hide highlight video for non-athletes
+  if (userType !== 'athlete') {
+    var hlg = document.getElementById('hl-video-group');
+    if (hlg) hlg.style.display = 'none';
+  }
+
+  // ── Sidebar hydration ──
+  var typeLabels = { athlete:'Athlete', coach:'Coach', club:'Club', 'supportive_professional':'Professional' };
+  var displayName = ud.displayName || ud.name || ((ud.firstName||'') + ' ' + (ud.lastName||'')).trim() || 'Your Name';
+  var initials = displayName.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
+
+  el('sidebarName', displayName);
+  el('chipName', displayName);
+
+  // Handle
+  var handle = ud.username || (ud.email ? ud.email.split('@')[0] : 'username');
+  el('sidebarHandle', '@' + handle);
+
+  // Role badge
+  var roleInfo = {
+    athlete:  { icon: 'fa-person-running', label: 'Athlete' },
+    coach:    { icon: 'fa-bullseye',       label: 'Coach' },
+    club:     { icon: 'fa-shield-halved',  label: 'Club' },
+    'supportive_professional': { icon: 'fa-star', label: 'Pro' }
+  };
+  var rInfo = roleInfo[userType] || roleInfo.athlete;
+  var rbEl = document.getElementById('sidebarRoleBadge');
+  if (rbEl) rbEl.innerHTML = '<i class="fa-solid ' + rInfo.icon + '" style="font-size:8px"></i> ' + rInfo.label;
+
+  // Sport badge
+  var sportName = ud.primarySport || ud.sport || '';
+  var sbEl = document.getElementById('sidebarSportBadge');
+  if (sbEl) {
+    if (sportName) {
+      sbEl.innerHTML = '<i class="fa-solid fa-futbol" style="font-size:8px"></i> ' + sportName.split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');
+      sbEl.style.display = 'inline-flex';
+    } else {
+      sbEl.style.display = 'none';
+    }
+  }
+
+  var sa = document.getElementById('sidebarAv');
+  var ca = document.getElementById('chipAvatar');
+  if (ud.avatarUrl) {
+    var imgHtml = '<img src="'+ud.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    if (sa) sa.innerHTML = imgHtml;
+    if (ca) ca.innerHTML = imgHtml;
+  } else {
+    if (sa) sa.textContent = initials;
+    if (ca) ca.textContent = initials;
+  }
+
+  // ── Back link stays as /feed.html (home); View My Profile uses stable id ──
+  var viewMyLink = document.getElementById('viewMyProfileLink');
+  if (viewMyLink) {
+    var stableId = (ud.id || ud.userId || ud.email || '');
+    viewMyLink.href = 'public-profile.html?userId=' + encodeURIComponent(stableId);
+  }
+
+  // ── Subtitle ──
+  el('pageSubtitle', 'Editing your ' + (typeLabels[userType]||'Athlete') + ' profile — changes are saved per section.');
+
+  // ── Populate sport selects ──
+  document.querySelectorAll('.sport-select').forEach(function(sel) {
+    sel.innerHTML = '<option value="">Select sport</option>';
+    SPORTS.forEach(function(s) {
+      var o = document.createElement('option');
+      o.value = s.toLowerCase().replace(/\s+/g,'-');
+      o.textContent = s;
+      sel.appendChild(o);
+    });
+  });
+
+  // ── Pre-fill ──
+  setVal('displayNameInput', ud.displayName);
+  setVal('fullNameInput', ud.name || ((ud.firstName||'') + ' ' + (ud.lastName||'')).trim());
+  setVal('usernameInput', ud.username || '');
+  setVal('dobInput', ud.dateOfBirth);
+  setSel('genderInput', ud.gender);
+  setVal('nationalityInput', ud.nationality);
+  setVal('locationInput', ud.location);
+  setVal('bioInput', ud.bio);
+  setVal('contactEmailInput', ud.contactEmail);
+  setVal('contactPhoneInput', ud.contactPhone);
+  setVal('contactAddressInput', ud.contactAddress);
+
+  // Athlete fields
+  setSel('primarySportInput', ud.primarySport || ud.sport);
+  setSel('playingLevelInput', ud.playingLevel || ud.sportsLevel);
+  setVal('positionInput', ud.position);
+  setVal('currentTeamInput', ud.currentTeam);
+  setVal('sportsYearsInput', ud.sportsYears);
+  setVal('achievementsInput', ud.achievements);
+  setSel('highestLevelInput', ud.highestLevelAchieved);
+  var stats = ud.stats || {};
+  setVal('statGoals', stats.goalsOrPoints);
+  setVal('statAssists', stats.assists);
+  setVal('statApps', stats.appearances);
+  setSel('trainingDaysInput', ud.trainingDays);
+  setVal('trainingHoursInput', ud.trainingHours);
+  setVal('trainingLocationInput', ud.trainingLocation);
+  setVal('trainingInput', ud.trainingRoutine);
+  setSel('availabilityInput', ud.availability);
+  setVal('coachesTrainersInput', ud.coachesTrainers);
+  if (ud.trainingFocus && Array.isArray(ud.trainingFocus)) {
+    ud.trainingFocus.forEach(function(f) { var c = document.getElementById('focus_' + f); if (c) c.checked = true; });
+  }
+  if (ud.goals && Array.isArray(ud.goals)) {
+    ud.goals.forEach(function(g) { var c = document.getElementById('goal_' + g); if (c) c.checked = true; });
+  }
+  // Physical
+  setVal('heightInput', ud.height);
+  setVal('weightInput', ud.weight);
+  setVal('chestInput', ud.chest);
+  setVal('waistInput', ud.waist);
+  setVal('hipsInput', ud.hips);
+  setSel('eyeColorInput', ud.eyeColor);
+  setSel('hairColorInput', ud.hairColor);
+  // Competition
+  setVal('upcomingEventsInput', ud.upcomingEvents);
+  setVal('competitionHistoryInput', ud.competitionHistory);
+  setVal('teamInfoInput', ud.teamInfo);
+  // Health
+  setVal('injuryHistoryInput', ud.injuryHistory);
+  setVal('currentInjuriesInput', ud.currentInjuries);
+  setVal('medicalHistoryInput', ud.medicalHistory);
+  setVal('nutritionDietInput', ud.nutritionDiet);
+
+  // Coach fields
+  setSel('coachSportInput', ud.primarySport || ud.sport);
+  setVal('specializationInput', ud.specialization);
+  setVal('experienceInput', ud.experience);
+  setVal('coachTeamInput', ud.currentTeam);
+  setVal('coachEducationInput', ud.coachEducation);
+  setSel('coachingStyleInput', ud.coachingStyle);
+  setVal('philosophyInput', ud.coachingPhilosophy);
+  setVal('teamsCoached', ud.teamsCoached);
+  setVal('coachAchievementsInput', ud.coachAchievements);
+  setVal('certificationsInput', ud.certifications);
+  setVal('trainingPlansInput', ud.trainingPlans);
+  setVal('playerDevelopmentInput', ud.playerDevelopment);
+  setVal('techniquesMethodsInput', ud.techniquesMethods);
+  setVal('teamManagementInput', ud.teamManagement);
+  setVal('rosterManagementInput', ud.rosterManagement);
+  setVal('playerSelectionInput', ud.playerSelection);
+
+  // Club fields
+  setVal('clubNameInput', ud.clubName || ud.name);
+  setSel('clubSportInput', ud.primarySport || ud.sport);
+  setVal('foundedYearInput', ud.foundedYear);
+  setVal('teamsAndDivisionsInput', ud.teamsAndDivisions);
+  setVal('facilitiesInput', ud.facilities);
+  setVal('clubEmailInput', ud.contactEmail);
+  setVal('clubPhoneInput', ud.clubPhone);
+  setVal('clubAddressInput', ud.clubAddress);
+  setVal('clubWebsiteInput', ud.website);
+  setVal('coachingStaffInput', ud.coachingStaff);
+  setVal('managementStaffInput', ud.managementStaff);
+  setVal('clubPhilosophyInput', ud.clubPhilosophy);
+  setVal('clubBudgetInput', ud.clubBudget);
+  setVal('sponsorshipInput', ud.sponsorship);
+  setVal('revenueStreamsInput', ud.revenueStreams);
+  setVal('youthProgramsInput', ud.youthPrograms);
+  setVal('talentRecruitmentInput', ud.talentRecruitment);
+  setVal('scholarshipsInput', ud.scholarships);
+  setVal('communityOutreachInput', ud.communityOutreach);
+  setVal('socialResponsibilityInput', ud.socialResponsibility);
+  setVal('charitablePartnershipsInput', ud.charitablePartnerships);
+  setVal('trainingFieldsInput', ud.trainingFields);
+  setVal('gymFacilitiesInput', ud.gymFacilities);
+  setVal('lockerRoomsInput', ud.lockerRooms);
+  setVal('otherFacilitiesInput', ud.otherFacilities);
+  setVal('equipmentListInput', ud.equipmentList);
+  setVal('maintenanceScheduleInput', ud.maintenanceSchedule);
+  setVal('clubLicensingInput', ud.clubLicensing);
+  setVal('clubComplianceInput', ud.clubCompliance);
+
+  // Supportive fields
+  setVal('profTitleInput', ud.professionalTitle || ud.specialization);
+  setVal('companyNameInput', ud.companyName);
+  setSel('specializationFieldInput', ud.specializationField);
+  setVal('profExperienceInput', ud.profExperience);
+  setVal('profEducationInput', ud.profEducation);
+  setVal('servicesInput', ud.services);
+  setVal('clienteleInput', ud.clientele);
+  setVal('credentialsInput', ud.credentials || ud.certifications);
+  setVal('profEmailInput', ud.contactEmail);
+  setSel('preferredContactInput', ud.preferredContact);
+  setVal('availabilityHoursInput', ud.availabilityHours);
+  setVal('communicationToolsInput', ud.communicationTools);
+  setVal('clientReviewsInput', ud.clientReviews);
+  setVal('professionalRefsInput', ud.professionalRefs);
+  setVal('feeStructureInput', ud.feeStructure);
+  setVal('paymentMethodsInput', ud.paymentMethods);
+  setVal('billingInfoInput', ud.billingInfo);
+  setVal('profLicensingInput', ud.profLicensing);
+  setVal('profComplianceInput', ud.profCompliance);
+
+  // Media
+  var ml = ud.mediaLinks || {};
+  setVal('highlightInput', ml.highlightVideo || ud.highlightVideo);
+  setVal('instagramInput', ml.instagram || ud.instagram);
+  setVal('youtubeInput', ml.youtubeChannel || ud.youtube);
+  setVal('linkedinInput', ml.linkedIn || ud.linkedin);
+  setVal('websiteInput', ml.website || ud.website);
+
+  // Privacy
+  setSel('profileVisibilityInput', ud.profileVisibility);
+  var sp = ud.sharingPreferences || {};
+  if (sp.contact === false) { var sc = document.getElementById('share_contact'); if(sc) sc.checked = false; }
+  if (sp.stats === false) { var ss = document.getElementById('share_stats'); if(ss) ss.checked = false; }
+  if (sp.media === false) { var sm = document.getElementById('share_media'); if(sm) sm.checked = false; }
+  if (sp.searchable === false) { var sx = document.getElementById('share_searchable'); if(sx) sx.checked = false; }
+  if (sp.messaging === true) { var sg = document.getElementById('share_messaging'); if(sg) sg.checked = true; }
+
+  // ── Avatar preview ──
+  if (ud.avatarUrl) {
+    var av = document.getElementById('avatarPreviewEl');
+    if (av) av.innerHTML = '<img src="'+ud.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  }
+
+  // ── Cover strip ──
+  if (ud.coverUrl) {
+    var cs = document.getElementById('coverStrip');
+    if (cs) cs.style.backgroundImage = 'url('+ud.coverUrl+')';
+  }
+
+  // ── Bio char counter ──
+  var bioInput = document.getElementById('bioInput');
+  var bioCounter = document.getElementById('bioCounter');
+  if (bioInput && bioCounter) {
+    function updateCounter() {
+      var len = bioInput.value.length;
+      bioCounter.textContent = len + ' / 500';
+      bioCounter.className = 'char-counter' + (len > 480 ? (len >= 500 ? ' over' : ' warn') : '');
+    }
+    bioInput.addEventListener('input', updateCounter);
+    updateCounter();
+  }
+
+  // ── Completion score ──
+  function recalcCompletion() {
+    var fresh = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+    var fields = ['name','bio','avatarUrl','location','primarySport','playingLevel','position','currentTeam','achievements'];
+    var done = fields.filter(function(f){ return fresh[f] && String(fresh[f]).trim(); }).length;
+    var pct = Math.round((done / fields.length) * 100);
+    var fill = document.getElementById('completionFill');
+    var pctEl = document.getElementById('completionPct');
+    var subEl = document.getElementById('completionSub');
+    if (fill) fill.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (subEl) subEl.textContent = pct < 40 ? 'Just getting started' : pct < 70 ? 'Looking good!' : pct < 100 ? 'Almost there!' : 'Profile complete!';
+
+    // status dots
+    var dotMap = {
+      'status-photo': ['avatarUrl','displayName'],
+      'status-basic': ['name','bio','location'],
+      'status-sports': ['primarySport','playingLevel'],
+      'status-achievements': ['achievements'],
+      'status-training': ['trainingRoutine','availability'],
+      'status-physical': ['height','weight'],
+      'status-competition': ['upcomingEvents','competitionHistory'],
+      'status-health': ['injuryHistory','nutritionDiet'],
+      'status-coaching': ['primarySport','specialization'],
+      'status-coach-training': ['trainingPlans','playerDevelopment'],
+      'status-management': ['teamManagement'],
+      'status-club': ['clubName'],
+      'status-club-staff': ['coachingStaff'],
+      'status-financial': ['clubBudget','sponsorship'],
+      'status-youth': ['youthPrograms'],
+      'status-community': ['communityOutreach'],
+      'status-facilities': ['trainingFields','gymFacilities'],
+      'status-equipment': ['equipmentList'],
+      'status-club-legal': ['clubLicensing'],
+      'status-services': ['professionalTitle'],
+      'status-communication': ['preferredContact','availabilityHours'],
+      'status-testimonials': ['clientReviews'],
+      'status-payment': ['feeStructure'],
+      'status-prof-legal': ['profLicensing'],
+      'status-media': ['mediaLinks'],
+      'status-privacy': ['profileVisibility']
+    };
+    Object.keys(dotMap).forEach(function(statusId) {
+      var dot = document.getElementById(statusId);
+      if (!dot) return;
+      var keys = dotMap[statusId];
+      var filled = keys.some(function(k){ return fresh[k] && (typeof fresh[k] === 'object' ? Object.values(fresh[k]).some(Boolean) : String(fresh[k]).trim()); });
+      dot.className = 'nav-status' + (filled ? '' : ' empty');
+    });
+  }
+  recalcCompletion();
+
+  // ── Photo upload ──
+  var uploadBtn = document.getElementById('uploadPhotoBtn');
+  var photoInput = document.getElementById('photoFileInput');
+  if (uploadBtn && photoInput) {
+    uploadBtn.addEventListener('click', function(){ photoInput.click(); });
+    photoInput.addEventListener('change', function(e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
+      if (file.size > 5*1024*1024) { showToast('File must be under 5 MB', 'error'); return; }
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var b64 = ev.target.result;
+        ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+        ud.avatarUrl = b64;
+        safeSave(ud);
+        var av = document.getElementById('avatarPreviewEl');
+        if (av) av.innerHTML = '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        var sa2 = document.getElementById('sidebarAv');
+        if (sa2) sa2.innerHTML = '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        var ca2 = document.getElementById('chipAvatar');
+        if (ca2) ca2.innerHTML = '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        showToast('Photo updated!', 'success');
+        recalcCompletion();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  var removeBtn = document.getElementById('removePhotoBtn');
+  if (removeBtn) {
+    removeBtn.addEventListener('click', function() {
+      if (!confirm('Remove your profile photo?')) return;
+      ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      delete ud.avatarUrl;
+      safeSave(ud);
+      var av = document.getElementById('avatarPreviewEl');
+      if (av) av.innerHTML = '<i class="fa-solid fa-user" style="font-size:34px;opacity:.6"></i>';
+      showToast('Photo removed', 'info');
+      recalcCompletion();
+    });
+  }
+
+  // ── Cover upload ──
+  var coverInput = document.getElementById('coverInput');
+  if (coverInput) {
+    coverInput.addEventListener('change', function(e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var b64 = ev.target.result;
+        ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+        ud.coverUrl = b64;
+        safeSave(ud);
+        var cs = document.getElementById('coverStrip');
+        if (cs) { cs.style.backgroundImage = 'url('+b64+')'; cs.style.backgroundSize = 'cover'; cs.style.backgroundPosition = 'center'; }
+        showToast('Cover photo updated!', 'success');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ── Sidebar nav active state on scroll ──
+  var sections = document.querySelectorAll('.edit-card[id]');
+  var navItems = document.querySelectorAll('.sidebar-nav-item[data-section]');
+  window.addEventListener('scroll', function() {
+    var scrollY = window.scrollY + 100;
+    sections.forEach(function(sec) {
+      if (sec.offsetTop <= scrollY && sec.offsetTop + sec.offsetHeight > scrollY) {
+        navItems.forEach(function(n){ n.classList.remove('active'); });
+        var active = document.querySelector('.sidebar-nav-item[href="#'+sec.id+'"]');
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { passive: true });
+
+  // ── Save All ──
+  document.getElementById('saveAllBtn').addEventListener('click', function() {
+    var buttons = document.querySelectorAll('.btn-save-section');
+    var idx = 0;
+    function next() {
+      if (idx >= buttons.length) { showToast('All sections saved!', 'success'); recalcCompletion(); return; }
+      buttons[idx++].click();
+      setTimeout(next, 120);
+    }
+    next();
+  });
+
+  // ── Section saves ──
+  document.querySelectorAll('.btn-save-section').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var section = btn.dataset.section;
+      var statusEl = document.getElementById('status-msg-' + section);
+
+      // Saving state
+      btn.classList.add('saving');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size:11px"></i> Saving…';
+      if (statusEl) { statusEl.className = 'save-status saving'; statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size:10px"></i> Saving…'; }
+
+      ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+
+      if (section === 'photo') {
+        var dn = v('displayNameInput');
+        if (dn) ud.displayName = dn;
+      } else if (section === 'basic') {
+        var fn = v('fullNameInput');
+        if (fn) { var sn = splitName(fn); ud.name = fn; ud.firstName = sn[0]; ud.lastName = sn[1]; }
+        var unameVal = v('usernameInput');
+        if (unameVal) {
+          unameVal = unameVal.toLowerCase().replace(/[^a-z0-9_.]/g, '');
+          if (!isUsernameAvailable(unameVal, ud.email)) {
+            showToast('Username @' + unameVal + ' is already taken. Choose another.', 'error');
+            btn.classList.remove('saving');
+            btn.innerHTML = '<i class="fa-solid fa-check" style="font-size:11px"></i> Save Basic Info';
+            if (statusEl) { statusEl.className = 'save-status'; statusEl.textContent = ''; }
+            return;
+          }
+          ud.username = unameVal;
+        }
+        var dob = v('dobInput'); if (dob) ud.dateOfBirth = dob;
+        var gen = v('genderInput'); if (gen) ud.gender = gen;
+        ud.nationality = v('nationalityInput') || '';
+        var loc = v('locationInput'); if (loc !== null) ud.location = loc;
+        var bio = v('bioInput'); if (bio !== null) ud.bio = bio;
+        ud.contactEmail = v('contactEmailInput') || '';
+        ud.contactPhone = v('contactPhoneInput') || '';
+        ud.contactAddress = v('contactAddressInput') || '';
+      } else if (section === 'sports') {
+        var ps = v('primarySportInput'); if (ps) { ud.primarySport = ps; ud.sport = ps; }
+        var pl = v('playingLevelInput'); if (pl) { ud.playingLevel = pl; ud.sportsLevel = pl; }
+        var pos = v('positionInput'); ud.position = pos;
+        var ct = v('currentTeamInput'); ud.currentTeam = ct;
+        var sy = v('sportsYearsInput'); if (sy) ud.sportsYears = sy;
+      } else if (section === 'achievements') {
+        ud.achievements = v('achievementsInput') || '';
+        var hl = v('highestLevelInput'); if (hl) ud.highestLevelAchieved = hl;
+        ud.stats = { goalsOrPoints: v('statGoals')||'', assists: v('statAssists')||'', appearances: v('statApps')||'' };
+      } else if (section === 'training') {
+        ud.trainingDays = v('trainingDaysInput') || '';
+        ud.trainingHours = v('trainingHoursInput') || '';
+        ud.trainingLocation = v('trainingLocationInput') || '';
+        ud.trainingRoutine = v('trainingInput') || '';
+        var focusArr = [];
+        document.querySelectorAll('#trainingFocusCheckboxes input:checked').forEach(function(c){ focusArr.push(c.id.replace('focus_','')); });
+        ud.trainingFocus = focusArr;
+        ud.coachesTrainers = v('coachesTrainersInput') || '';
+        var av2 = v('availabilityInput'); if (av2) ud.availability = av2;
+        var goals = [];
+        document.querySelectorAll('#goalsCheckboxes input:checked').forEach(function(c){ goals.push(c.id.replace('goal_','')); });
+        ud.goals = goals;
+      } else if (section === 'physical') {
+        ud.height = v('heightInput') || '';
+        ud.weight = v('weightInput') || '';
+        ud.chest = v('chestInput') || '';
+        ud.waist = v('waistInput') || '';
+        ud.hips = v('hipsInput') || '';
+        ud.eyeColor = v('eyeColorInput') || '';
+        ud.hairColor = v('hairColorInput') || '';
+      } else if (section === 'competition') {
+        ud.upcomingEvents = v('upcomingEventsInput') || '';
+        ud.competitionHistory = v('competitionHistoryInput') || '';
+        ud.teamInfo = v('teamInfoInput') || '';
+      } else if (section === 'health') {
+        ud.injuryHistory = v('injuryHistoryInput') || '';
+        ud.currentInjuries = v('currentInjuriesInput') || '';
+        ud.medicalHistory = v('medicalHistoryInput') || '';
+        ud.nutritionDiet = v('nutritionDietInput') || '';
+      } else if (section === 'coaching') {
+        var cs2 = v('coachSportInput'); if (cs2) { ud.primarySport = cs2; ud.sport = cs2; }
+        ud.specialization = v('specializationInput') || '';
+        var exp = v('experienceInput'); if (exp) ud.experience = parseInt(exp)||0;
+        ud.currentTeam = v('coachTeamInput') || '';
+        ud.coachEducation = v('coachEducationInput') || '';
+        ud.coachingStyle = v('coachingStyleInput') || '';
+        ud.coachingPhilosophy = v('philosophyInput') || '';
+        ud.teamsCoached = v('teamsCoached') || '';
+        ud.coachAchievements = v('coachAchievementsInput') || '';
+        ud.certifications = v('certificationsInput') || '';
+      } else if (section === 'coach-training') {
+        ud.trainingPlans = v('trainingPlansInput') || '';
+        ud.playerDevelopment = v('playerDevelopmentInput') || '';
+        ud.techniquesMethods = v('techniquesMethodsInput') || '';
+      } else if (section === 'management') {
+        ud.teamManagement = v('teamManagementInput') || '';
+        ud.rosterManagement = v('rosterManagementInput') || '';
+        ud.playerSelection = v('playerSelectionInput') || '';
+      } else if (section === 'club') {
+        var cn = v('clubNameInput'); if (cn) { ud.clubName = cn; ud.name = cn; }
+        var cbs = v('clubSportInput'); if (cbs) { ud.primarySport = cbs; ud.sport = cbs; }
+        var fy = v('foundedYearInput'); if (fy) ud.foundedYear = fy;
+        ud.teamsAndDivisions = v('teamsAndDivisionsInput') || '';
+        ud.facilities = v('facilitiesInput') || '';
+        ud.contactEmail = v('clubEmailInput') || '';
+        ud.clubPhone = v('clubPhoneInput') || '';
+        ud.clubAddress = v('clubAddressInput') || '';
+        ud.website = v('clubWebsiteInput') || '';
+      } else if (section === 'club-staff') {
+        ud.coachingStaff = v('coachingStaffInput') || '';
+        ud.managementStaff = v('managementStaffInput') || '';
+        ud.clubPhilosophy = v('clubPhilosophyInput') || '';
+      } else if (section === 'financial') {
+        ud.clubBudget = v('clubBudgetInput') || '';
+        ud.sponsorship = v('sponsorshipInput') || '';
+        ud.revenueStreams = v('revenueStreamsInput') || '';
+      } else if (section === 'youth') {
+        ud.youthPrograms = v('youthProgramsInput') || '';
+        ud.talentRecruitment = v('talentRecruitmentInput') || '';
+        ud.scholarships = v('scholarshipsInput') || '';
+      } else if (section === 'community') {
+        ud.communityOutreach = v('communityOutreachInput') || '';
+        ud.socialResponsibility = v('socialResponsibilityInput') || '';
+        ud.charitablePartnerships = v('charitablePartnershipsInput') || '';
+      } else if (section === 'facilities') {
+        ud.trainingFields = v('trainingFieldsInput') || '';
+        ud.gymFacilities = v('gymFacilitiesInput') || '';
+        ud.lockerRooms = v('lockerRoomsInput') || '';
+        ud.otherFacilities = v('otherFacilitiesInput') || '';
+      } else if (section === 'equipment') {
+        ud.equipmentList = v('equipmentListInput') || '';
+        ud.maintenanceSchedule = v('maintenanceScheduleInput') || '';
+      } else if (section === 'club-legal') {
+        ud.clubLicensing = v('clubLicensingInput') || '';
+        ud.clubCompliance = v('clubComplianceInput') || '';
+      } else if (section === 'services') {
+        var pt = v('profTitleInput'); if (pt) { ud.professionalTitle = pt; ud.specialization = pt; }
+        ud.companyName = v('companyNameInput') || '';
+        ud.specializationField = v('specializationFieldInput') || '';
+        ud.profExperience = v('profExperienceInput') || '';
+        ud.profEducation = v('profEducationInput') || '';
+        ud.services = v('servicesInput') || '';
+        ud.clientele = v('clienteleInput') || '';
+        ud.credentials = v('credentialsInput') || '';
+        ud.certifications = v('credentialsInput') || '';
+        ud.contactEmail = v('profEmailInput') || '';
+      } else if (section === 'communication') {
+        ud.preferredContact = v('preferredContactInput') || '';
+        ud.availabilityHours = v('availabilityHoursInput') || '';
+        ud.communicationTools = v('communicationToolsInput') || '';
+      } else if (section === 'testimonials') {
+        ud.clientReviews = v('clientReviewsInput') || '';
+        ud.professionalRefs = v('professionalRefsInput') || '';
+      } else if (section === 'payment') {
+        ud.feeStructure = v('feeStructureInput') || '';
+        ud.paymentMethods = v('paymentMethodsInput') || '';
+        ud.billingInfo = v('billingInfoInput') || '';
+      } else if (section === 'prof-legal') {
+        ud.profLicensing = v('profLicensingInput') || '';
+        ud.profCompliance = v('profComplianceInput') || '';
+      } else if (section === 'media') {
+        ud.mediaLinks = {
+          highlightVideo: v('highlightInput') || '',
+          instagram: v('instagramInput') || '',
+          youtubeChannel: v('youtubeInput') || '',
+          linkedIn: v('linkedinInput') || '',
+          website: v('websiteInput') || ''
+        };
+        ud.instagram = ud.mediaLinks.instagram;
+        ud.youtube = ud.mediaLinks.youtubeChannel;
+        ud.linkedin = ud.mediaLinks.linkedIn;
+        ud.website = ud.mediaLinks.website;
+        ud.highlightVideo = ud.mediaLinks.highlightVideo;
+      } else if (section === 'privacy') {
+        ud.profileVisibility = v('profileVisibilityInput') || 'public';
+        ud.sharingPreferences = {
+          contact: !!document.getElementById('share_contact').checked,
+          stats: !!document.getElementById('share_stats').checked,
+          media: !!document.getElementById('share_media').checked,
+          searchable: !!document.getElementById('share_searchable').checked,
+          messaging: !!document.getElementById('share_messaging').checked
+        };
+      }
+
+      // Canonical key aliases for cross-page sync
+      if (ud.sportsYears) ud.experience = ud.sportsYears;
+      if (ud.highestLevelAchieved) ud.highestLevel = ud.highestLevelAchieved;
+      if (ud.coachesTrainers) ud.coaches = ud.coachesTrainers;
+      if (ud.coachingPhilosophy) ud.philosophy = ud.coachingPhilosophy;
+      if (ud.coachEducation) ud.education = ud.coachEducation;
+      if (ud.coachAchievements && userType === 'coach') ud.achievements = ud.coachAchievements;
+      if (section === 'club' && v('clubEmailInput')) ud.clubEmail = v('clubEmailInput');
+      if (userType === 'club' && ud.website) ud.clubWebsite = ud.website;
+      if (section === 'services' && v('profEmailInput')) ud.profEmail = v('profEmailInput');
+      if (ud.profExperience && userType === 'supportive_professional') ud.experience = ud.profExperience;
+      if (ud.profEducation && userType === 'supportive_professional') ud.education = ud.profEducation;
+      if (userType === 'club' && ud.clubName) ud.firstName = ud.clubName;
+
+      // Include visibility in every save
+      ud.visibility = collectVisibilitySettings();
+
+      // Unified save: API + localStorage together
+      saveSection(ud).then(function(merged) {
+        ud = merged;
+        recalcCompletion();
+
+        var dispName = ud.displayName || ud.name || ((ud.firstName||'') + ' ' + (ud.lastName||'')).trim() || 'User';
+        var ini = dispName.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
+        el('chipName', dispName);
+        el('sidebarName', dispName);
+        el('sidebarHandle', '@' + (ud.username || (ud.email ? ud.email.split('@')[0] : 'user')));
+
+        // Sync avatar
+        var sa = document.getElementById('sidebarAv');
+        var ca = document.getElementById('chipAvatar');
+        if (ud.avatarUrl) {
+          var imgH = '<img src="'+ud.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+          if (sa) sa.innerHTML = imgH;
+          if (ca) ca.innerHTML = imgH;
+        } else {
+          if (sa && !sa.querySelector('img')) sa.textContent = ini;
+          if (ca && !ca.querySelector('img')) ca.textContent = ini;
+        }
+
+        // Sync role badge
+        var ri2 = roleInfo[ud.userType] || roleInfo.athlete;
+        var rb2 = document.getElementById('sidebarRoleBadge');
+        if (rb2) rb2.innerHTML = '<i class="fa-solid ' + ri2.icon + '" style="font-size:8px"></i> ' + ri2.label;
+
+        // Sync sport badge
+        var sn2 = ud.primarySport || ud.sport || '';
+        var sb2 = document.getElementById('sidebarSportBadge');
+        if (sb2) {
+          if (sn2) {
+            sb2.innerHTML = '<i class="fa-solid fa-futbol" style="font-size:8px"></i> ' + sn2.split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');
+            sb2.style.display = 'inline-flex';
+          } else {
+            sb2.style.display = 'none';
+          }
+        }
+
+        // Register username
+        if (ud.username && ud.email) registerUsername(ud.username, ud.email);
+
+        btn.classList.remove('saving');
+        btn.innerHTML = '<i class="fa-solid fa-check" style="font-size:11px"></i> Saved!';
+        if(window.clearProfileDirty) window.clearProfileDirty();
+        if (statusEl) {
+          statusEl.className = 'save-status saved';
+          statusEl.innerHTML = '<i class="fa-solid fa-circle-check" style="font-size:11px"></i> Saved successfully';
+        }
+        setTimeout(function() {
+          btn.innerHTML = '<i class="fa-solid fa-check" style="font-size:11px"></i> Save ' + sectionLabel(section);
+          if (statusEl) { statusEl.className = 'save-status'; statusEl.textContent = ''; }
+        }, 2500);
+      });
+    });
+  });
+
+  // ── Nav buttons ──
+  document.getElementById('homeBtn').addEventListener('click', function(){ window.location.href = '/feed.html'; });
+  document.getElementById('messagesBtn').addEventListener('click', function(){ window.location.href = '../messaging/inbox.html'; });
+  document.getElementById('notifBtn').addEventListener('click', function(){ window.location.href = '../dashboard/notifications.html'; });
+  document.getElementById('searchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      window.location.href = '../search/search.html?term=' + encodeURIComponent(e.target.value.trim());
+    }
+  });
+
+  // ── Profile menu: handled by shared-ui.js setupSocialFeedRuntime ──
+
+  // ── UTILITIES ──
+  function el(id, text) { var e = document.getElementById(id); if (e) e.textContent = text; }
+  function v(id) { var e = document.getElementById(id); return e ? e.value : null; }
+  function setVal(id, val) { var e = document.getElementById(id); if (e && val != null && val !== undefined) e.value = val; }
+  function setSel(id, val) {
+    var e = document.getElementById(id);
+    if (!e || !val) return;
+    // Wait for sport selects to populate
+    setTimeout(function(){
+      for (var i = 0; i < e.options.length; i++) {
+        if (e.options[i].value === val || e.options[i].value === String(val).toLowerCase().replace(/\s+/g,'-')) {
+          e.selectedIndex = i; return;
+        }
+      }
+    }, 100);
+  }
+  function splitName(full) {
+    var parts = (full||'').trim().split(/\s+/).filter(Boolean);
+    return [parts[0]||'', parts.slice(1).join(' ')];
+  }
+  function safeSave(data) {
+    try {
+      if (window.ProfileSyncService && typeof ProfileSyncService.saveProfile === 'function') {
+        ProfileSyncService.saveProfile(data);
+      } else {
+        localStorage.setItem('spopeer_user', JSON.stringify(data));
+      }
+    } catch(e) {
+      localStorage.setItem('spopeer_user', JSON.stringify(data));
+    }
+    window.dispatchEvent(new CustomEvent('profileUpdated', { detail: data }));
+    localStorage.setItem('_profileLastUpdated_', Date.now().toString());
+  }
+
+  function readStoredUserSafe() {
+    try {
+      return JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+    } catch (e) {
+      console.warn('Invalid profile JSON in storage during save. Falling back to empty object.', e);
+      return {};
+    }
+  }
+
+  async function saveSection(profileData) {
+    var tok = localStorage.getItem('spopeer_token');
+    var headers = { 'Content-Type': 'application/json' };
+    if (tok) headers['Authorization'] = 'Bearer ' + tok;
+    var response = await fetch('/api/profiles', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(profileData)
+    });
+
+    var result = {};
+    try {
+      result = await response.json();
+    } catch (parseErr) {
+      result = {};
+    }
+
+    if (!response.ok) {
+      throw new Error(result.error || result.message || 'Profile save failed.');
+    }
+
+    var saved = result.payload || profileData;
+    var existing = readStoredUserSafe();
+    var merged = Object.assign({}, existing, saved);
+    localStorage.setItem('spopeer_user', JSON.stringify(merged));
+    window.dispatchEvent(new CustomEvent('profileUpdated', { detail: { profile: merged, source: 'EditProfile' } }));
+    localStorage.setItem('_profileLastUpdated_', Date.now().toString());
+    return merged;
+  }
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.className = 'toast ' + (type||'info');
+    t.innerHTML = '<i class="fa-solid ' + ({success:'fa-circle-check',error:'fa-circle-xmark',info:'fa-circle-info'}[type]||'fa-circle-info') + '"></i> ' + msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 3200);
+  }
+  function sectionLabel(s) {
+    return {photo:'Photo & Name',basic:'Basic Info',sports:'Sports',achievements:'Achievements',training:'Training',physical:'Physical Info',competition:'Competition',health:'Health Info',coaching:'Coaching','coach-training':'Training & Dev',management:'Management',club:'Club Info','club-staff':'Staff',financial:'Financial',youth:'Youth & Dev',community:'Community',facilities:'Facilities',equipment:'Equipment','club-legal':'Legal',services:'Professional Details',communication:'Communication',testimonials:'Testimonials',payment:'Payment','prof-legal':'Legal',media:'Links',privacy:'Privacy'}[s] || 'Changes';
+  }
+
+  // ── Card collapse ──
+  function setCardExpanded(card, expanded) {
+    if (!card) return;
+    if (expanded) {
+      card.classList.remove('collapsed');
+    } else {
+      card.classList.add('collapsed');
+    }
+    var hdr = card.querySelector('.edit-card-header');
+    if (hdr) hdr.setAttribute('aria-expanded', String(expanded));
+  }
+
+  window.toggleCard = function(hdr) {
+    var card = hdr.closest('.edit-card');
+    var isCollapsed = card.classList.contains('collapsed');
+    setCardExpanded(card, isCollapsed);
+    // update active nav
+    var id = card.id;
+    document.querySelectorAll('.sidebar-nav-item').forEach(function(n){
+      n.classList.toggle('active', n.getAttribute('href') === '#' + id);
+    });
+  };
+
+  // Keyboard accessibility for card headers
+  document.querySelectorAll('.edit-card-header').forEach(function(hdr) {
+    hdr.setAttribute('tabindex', '0');
+    hdr.setAttribute('role', 'button');
+    hdr.setAttribute('aria-expanded', String(!hdr.closest('.edit-card').classList.contains('collapsed')));
+    hdr.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleCard(hdr);
+      }
+    });
+  });
+
+  // ── Sidebar nav: auto-expand target card on click ──
+  document.querySelectorAll('.sidebar-nav-item[href^="#section-"]').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      var targetId = link.getAttribute('href').slice(1);
+      var card = document.getElementById(targetId);
+      if (card) {
+        setCardExpanded(card, true);
+      }
+      // update active sidebar state + sync aria
+      document.querySelectorAll('.sidebar-nav-item').forEach(function(n) {
+        n.classList.toggle('active', n === link);
+      });
+    });
+  });
+
+  // ── Visibility toggle logic ──
+  function loadVisibilitySettings() {
+    var user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+    var vis = user.visibility || {};
+    document.querySelectorAll('.visibility-toggle').forEach(function(btn) {
+      var field = btn.dataset.field;
+      var state = vis[field] || btn.dataset.state || 'public';
+      setToggleState(btn, state);
+    });
+  }
+
+  function setToggleState(btn, state) {
+    btn.dataset.state = state;
+    btn.querySelector('.vis-label').textContent = state === 'public' ? 'Public' : 'Private';
+    btn.title = state === 'public' ? 'Click to make private' : 'Click to make public';
+  }
+
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.visibility-toggle');
+    if (!btn) return;
+    var newState = btn.dataset.state === 'public' ? 'private' : 'public';
+    setToggleState(btn, newState);
+  });
+
+  function collectVisibilitySettings() {
+    var vis = {};
+    document.querySelectorAll('.visibility-toggle').forEach(function(btn) {
+      vis[btn.dataset.field] = btn.dataset.state;
+    });
+    return vis;
+  }
+
+  loadVisibilitySettings();
+
+  // ── Username uniqueness check ──
+  function isUsernameAvailable(username, currentEmail) {
+    if (!username) return false;
+    var takenMap = JSON.parse(localStorage.getItem('spopeer_usernames') || '{}');
+    var owner = takenMap[username.toLowerCase()];
+    return !owner || owner === currentEmail;
+  }
+
+  function registerUsername(username, email) {
+    var takenMap = JSON.parse(localStorage.getItem('spopeer_usernames') || '{}');
+    // Remove old username for this user
+    Object.keys(takenMap).forEach(function(k) {
+      if (takenMap[k] === email) delete takenMap[k];
+    });
+    takenMap[username.toLowerCase()] = email;
+    localStorage.setItem('spopeer_usernames', JSON.stringify(takenMap));
+  }
+
+  // Register current username on load
+  if (ud.username && ud.email) registerUsername(ud.username, ud.email);
+
+  // ── Live username validation ──
+  var usernameInput = document.getElementById('usernameInput');
+  var usernameStatus = document.getElementById('usernameStatus');
+  if (usernameInput) {
+    var usernameTimer = null;
+    usernameInput.addEventListener('input', function() {
+      var val = usernameInput.value.toLowerCase().replace(/[^a-z0-9_.]/g, '');
+      usernameInput.value = val;
+      clearTimeout(usernameTimer);
+      if (!val || val.length < 3) {
+        usernameStatus.style.display = val ? 'flex' : 'none';
+        usernameStatus.style.color = 'var(--red)';
+        usernameStatus.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Username must be at least 3 characters';
+        usernameInput.style.borderColor = val ? 'var(--red)' : '';
+        return;
+      }
+      usernameTimer = setTimeout(function() {
+        var available = isUsernameAvailable(val, ud.email);
+        usernameStatus.style.display = 'flex';
+        if (available) {
+          usernameStatus.style.color = 'var(--green)';
+          usernameStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> @' + val + ' is available';
+          usernameInput.style.borderColor = 'var(--green)';
+          // Live update sidebar handle
+          el('sidebarHandle', '@' + val);
+        } else {
+          usernameStatus.style.color = 'var(--red)';
+          usernameStatus.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> @' + val + ' is already taken';
+          usernameInput.style.borderColor = 'var(--red)';
+        }
+      }, 300);
+    });
+  }
+
+  // ── Real-time sync: Update sidebar and chip as user types ──
+  function liveSync() {
+    // Name
+    var nameInput = document.getElementById('fullNameInput');
+    if (nameInput) {
+      nameInput.addEventListener('input', function() {
+        var name = nameInput.value.trim() || 'Your Name';
+        el('sidebarName', name);
+        el('chipName', name);
+        var ini = name.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
+        var sa = document.getElementById('sidebarAv');
+        var ca = document.getElementById('chipAvatar');
+        if (sa && !sa.querySelector('img')) sa.textContent = ini;
+        if (ca && !ca.querySelector('img')) ca.textContent = ini;
+      });
+    }
+
+    // Display Name
+    var displayInput = document.getElementById('displayNameInput');
+    if (displayInput) {
+      displayInput.addEventListener('input', function() {
+        var dn = displayInput.value.trim();
+        if (dn) {
+          el('sidebarName', dn);
+          el('chipName', dn);
+          var ini = dn.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
+          var sa = document.getElementById('sidebarAv');
+          var ca = document.getElementById('chipAvatar');
+          if (sa && !sa.querySelector('img')) sa.textContent = ini;
+          if (ca && !ca.querySelector('img')) ca.textContent = ini;
+        }
+      });
+    }
+
+    // Sport selects
+    document.querySelectorAll('.sport-select').forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        var sport = sel.options[sel.selectedIndex];
+        var sbEl = document.getElementById('sidebarSportBadge');
+        if (sbEl && sport && sport.value) {
+          sbEl.innerHTML = '<i class="fa-solid fa-futbol" style="font-size:8px"></i> ' + sport.textContent;
+          sbEl.style.display = 'inline-flex';
+        } else if (sbEl) {
+          sbEl.style.display = 'none';
+        }
+      });
+    });
+  }
+  liveSync();
+
+  // ── Update sidebar after any save ──
+  window.addEventListener('profileUpdated', function(e) {
+    var p = e.detail?.profile || e.detail;
+    if (!p) return;
+    var name = p.displayName || p.name || ((p.firstName||'') + ' ' + (p.lastName||'')).trim() || 'User';
+    var ini = name.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
+    el('sidebarName', name);
+    el('chipName', name);
+    el('sidebarHandle', '@' + (p.username || (p.email ? p.email.split('@')[0] : 'user')));
+    var sa = document.getElementById('sidebarAv');
+    var ca = document.getElementById('chipAvatar');
+    if (p.avatarUrl) {
+      var imgH = '<img src="'+p.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      if (sa) sa.innerHTML = imgH;
+      if (ca) ca.innerHTML = imgH;
+    } else {
+      if (sa && !sa.querySelector('img')) sa.textContent = ini;
+      if (ca && !ca.querySelector('img')) ca.textContent = ini;
+    }
+    // Role badge
+    var ri = roleInfo[p.userType] || roleInfo.athlete;
+    var rb = document.getElementById('sidebarRoleBadge');
+    if (rb) rb.innerHTML = '<i class="fa-solid ' + ri.icon + '" style="font-size:8px"></i> ' + ri.label;
+    // Sport badge
+    var sn = p.primarySport || p.sport || '';
+    var sb = document.getElementById('sidebarSportBadge');
+    if (sb) {
+      if (sn) {
+        sb.innerHTML = '<i class="fa-solid fa-futbol" style="font-size:8px"></i> ' + sn.split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');
+        sb.style.display = 'inline-flex';
+      } else {
+        sb.style.display = 'none';
+      }
+    }
+    // Register username
+    if (p.username && p.email) registerUsername(p.username, p.email);
+  });
+
+  // Profile menu, chip hydration, section toggles, and action routing
+  // are all handled by profile-menu.js (loaded separately).
+  // Do NOT call setupSocialFeedRuntime here — it would double-register
+  // chip-click handlers and cause a double-toggle (net zero) bug.
+
+})();
+</script>
+<script src="/js/navigation.js"></script>
+<script>
+// Collapse all edit-cards by default on load
+(function(){
+  document.querySelectorAll('.edit-card').forEach(function(card){
+    card.classList.add('collapsed');
+  });
+})();
+
+// Dirty-state tracking: warn on unsaved changes
+(function(){
+  var dirty = false;
+  function markDirty(){ dirty = true; }
+  window.clearProfileDirty = function(){ dirty = false; };
+  document.addEventListener('input', function(e){
+    if(e.target.closest('.edit-card')) markDirty();
+  }, true);
+  document.addEventListener('change', function(e){
+    if(e.target.closest('.edit-card')) markDirty();
+  }, true);
+  window.addEventListener('beforeunload', function(e){
+    if(dirty){ e.preventDefault(); e.returnValue = ''; }
+  });
+})();
+</script>
+<script>
+  // Inject mobile navigation shell
+  if (window.sharedUi && window.sharedUi.ensureMobileChrome) {
+    window.sharedUi.ensureMobileChrome('../../');
+  }
+</script>
+</body>
+</html>
+

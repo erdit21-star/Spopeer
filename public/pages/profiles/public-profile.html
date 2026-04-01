@@ -1,0 +1,1109 @@
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile — Spopeer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <link rel="stylesheet" href="/css/shared-nav.css" />
+  <style>
+    /* Profile-specific token overrides */
+    :root{--accent-mid:#003366;--accent-light:#cce7ff;--accent-lt2:#e8f4ff;--nav-h:66px;--rS:7px;--rL:16px;}
+    /* Profile page uses <header>/<nav class="navbar"> instead of .topnav/.nav-inner */
+    header{background:rgba(250,250,248,0.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:300;height:var(--nav-h)}
+    .navbar{max-width:1280px;margin:0 auto;padding:0 24px;height:100%;display:flex;align-items:center;gap:16px;position:relative}
+    .btn-nav{padding:7px 16px;border:1.5px solid var(--border);border-radius:var(--pill);background:transparent;color:var(--muted);font-size:13px;font-weight:600;font-family:var(--fB);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s}
+    .btn-nav:hover{border-color:var(--accent);color:var(--accent)}
+    /* LAYOUT */
+    .page-wrap{max-width:1280px;margin:28px auto;padding:0 24px 60px;display:grid;grid-template-columns:300px 1fr 280px;gap:22px;align-items:start}
+    /* LEFT CARD */
+    .profile-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rL);overflow:hidden;position:sticky;top:calc(var(--nav-h)+16px)}
+    .profile-cover{height:90px;background:linear-gradient(135deg,var(--accent),var(--accent-mid));position:relative}
+    .profile-av-wrap{padding:0 20px;margin-top:-36px;position:relative;z-index:1}
+    .profile-av{width:72px;height:72px;border-radius:50%;background:var(--accent-mid);color:var(--accent-light);font-family:var(--fD);font-size:24px;font-weight:800;display:flex;align-items:center;justify-content:center;border:4px solid var(--white)}
+    .profile-body{padding:12px 20px 20px}
+    .profile-name-row{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+    .profile-name{font-family:var(--fD);font-size:18px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+    .verified-icon{color:var(--blue);font-size:15px}
+    .profile-type-badge{display:inline-flex;align-items:center;gap:5px;background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--pill);margin-bottom:8px}
+    .profile-meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-bottom:5px}
+    .profile-meta-item i{width:14px;text-align:center;font-size:12px;color:var(--muted-2)}
+    .profile-bio{font-size:13px;color:var(--ink-2);line-height:1.6;margin:12px 0;font-weight:300}
+    .profile-stats-row{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:12px -20px;padding:0}
+    .pstat{flex:1;text-align:center;padding:12px 6px;border-right:1px solid var(--border)}
+    .pstat:last-child{border-right:none}
+    .pstat-num{font-family:var(--fD);font-size:18px;font-weight:800;color:var(--ink)}
+    .pstat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+    .profile-actions{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+    .btn-connect{padding:11px;background:var(--accent);color:var(--accent-light);border:none;border-radius:var(--r);font-size:14px;font-weight:700;font-family:var(--fB);cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px}
+    .btn-connect:hover{background:var(--accent-mid)}
+    .btn-connect.connected{background:var(--green-lt);color:var(--green);border:1.5px solid var(--green)}
+    .btn-message{padding:10px;background:transparent;color:var(--ink-2);border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;font-weight:600;font-family:var(--fB);cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px}
+    .btn-message:hover{border-color:var(--accent);color:var(--accent)}
+    .btn-share{padding:10px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;font-weight:600;font-family:var(--fB);cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px}
+    .btn-share:hover{border-color:var(--ink);color:var(--ink)}
+    .conn-status-label{font-size:12px;color:var(--muted);text-align:center}
+    /* MAIN CONTENT */
+    .main-content{min-width:0}
+    .tab-bar{display:flex;gap:0;background:var(--white);border:1px solid var(--border);border-radius:var(--rL);padding:5px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+    .tab-bar::-webkit-scrollbar{display:none}
+    .tab-btn{flex-shrink:0;padding:8px 18px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--muted);border-radius:var(--r);cursor:pointer;font-family:var(--fB);transition:.2s;display:flex;align-items:center;gap:7px}
+    .tab-btn.active{background:var(--accent);color:var(--accent-light)}
+    .tab-btn:not(.active):hover{background:var(--surface);color:var(--ink)}
+    .tab-content{display:none}.tab-content.active{display:block}
+    .content-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rL);padding:22px;margin-bottom:14px}
+    .content-card-title{font-family:var(--fD);font-size:15px;font-weight:800;color:var(--ink);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .content-card-title i{color:var(--accent);font-size:14px}
+    .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+    .about-item{padding:11px 0;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:3px}
+    .about-item:nth-child(odd){padding-right:20px;border-right:1px solid var(--border)}
+    .about-item:nth-child(even){padding-left:20px}
+    .about-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2)}
+    .about-value{font-size:14px;color:var(--ink-2);font-weight:500}
+    .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+    .media-placeholder{aspect-ratio:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--rS);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--muted-2);position:relative;overflow:hidden}
+    .media-placeholder .media-badge{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase}
+    .achievement-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px}
+    .achievement-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px 10px;text-align:center}
+    .achievement-icon{font-size:26px;margin-bottom:7px}
+    .achievement-name{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:3px}
+    .achievement-date{font-size:11px;color:var(--muted)}
+    .testimonial-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px}
+    .testimonial-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .t-av{width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--accent-light);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .t-name{font-size:14px;font-weight:700;color:var(--ink)}
+    .t-role{font-size:12px;color:var(--muted)}
+    .t-stars{font-size:12px;color:#f59e0b;margin-top:2px}
+    .t-text{font-size:13px;color:var(--ink-2);line-height:1.6;font-style:italic;font-weight:300}
+    .recommended-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+    .rec-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
+    .rec-av{width:48px;height:48px;border-radius:50%;background:var(--accent);color:var(--accent-light);font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+    .rec-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px}
+    .rec-type{font-size:11px;color:var(--muted);margin-bottom:10px}
+    .rec-btn{padding:6px 14px;background:var(--accent-lt2);color:var(--accent);border:1.5px solid var(--accent-light);border-radius:var(--pill);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fB);transition:.2s;width:100%}
+    .rec-btn:hover{background:var(--accent);color:var(--accent-light)}
+    /* RIGHT SIDEBAR */
+    .right-sidebar{position:sticky;top:calc(var(--nav-h)+16px);display:flex;flex-direction:column;gap:14px}
+    .side-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rL);padding:18px}
+    .side-card-title{font-family:var(--fD);font-size:14px;font-weight:800;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+    .side-card-title i{color:var(--accent)}
+    .trend-item{padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
+    .trend-item:last-child{border-bottom:none;padding-bottom:0}
+    .trend-cat{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-2)}
+    .trend-name{font-size:14px;font-weight:700;color:var(--ink);margin:2px 0}
+    .trend-count{font-size:12px;color:var(--muted)}
+    .follow-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--border)}
+    .follow-item:last-child{border-bottom:none;padding-bottom:0}
+    .follow-av{width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--accent-light);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .follow-info{flex:1;min-width:0}
+    .follow-name{font-size:13px;font-weight:700;color:var(--ink)}
+    .follow-type{font-size:11px;color:var(--muted)}
+    .follow-btn{padding:5px 12px;background:var(--accent-lt2);color:var(--accent);border:1.5px solid var(--accent-light);border-radius:var(--pill);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fB);transition:.2s;white-space:nowrap}
+    .follow-btn:hover{background:var(--accent);color:var(--accent-light)}
+    .banner{background:var(--accent);border-radius:var(--r);padding:16px;color:var(--accent-light)}
+    .banner-badge{display:inline-block;background:rgba(255,255,255,.2);font-size:10px;font-weight:800;padding:2px 8px;border-radius:var(--pill);margin-bottom:6px;letter-spacing:.04em}
+    .banner-title{font-family:var(--fD);font-size:15px;font-weight:800;margin-bottom:3px}
+    .banner-desc{font-size:12px;opacity:.75}
+    /* skeleton */
+    .skel{background:var(--surface);border-radius:var(--rS);animation:shimmer 1.4s ease-in-out infinite}
+    @keyframes shimmer{0%,100%{opacity:.45}50%{opacity:.9}}
+    /* responsive */
+    @media(max-width:1100px){.page-wrap{grid-template-columns:260px 1fr}.right-sidebar{display:none}}
+    @media(max-width:720px){
+      .page-wrap{grid-template-columns:1fr;padding:0 12px 40px;gap:14px}
+      .profile-card{position:static}
+
+      /* stats wrap instead of squeezing */
+      .profile-stats-row{flex-wrap:wrap}
+      .pstat{min-width:60px;flex:1 1 auto}
+
+      /* about grid becomes one column */
+      .about-grid{grid-template-columns:1fr}
+      .about-item:nth-child(odd){padding-right:0;border-right:none}
+      .about-item:nth-child(even){padding-left:0}
+
+      /* action buttons full width */
+      .profile-actions{flex-direction:column}
+      .btn-connect,.btn-message,.btn-share{width:100%}
+
+      /* content cards tighter spacing */
+      .content-card{padding:16px;margin-bottom:10px}
+      .content-card-title{font-size:14px}
+
+      /* media & recommendations fit narrow screens */
+      .media-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+      .achievement-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+      .recommended-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+
+      /* tab bar scroll-friendly */
+      .tab-bar{padding:4px;gap:0}
+      .tab-btn{padding:8px 14px;font-size:12px}
+
+      /* bottom spacing for mobile nav */
+      body{padding-bottom:60px}
+    }
+    @media(max-width:480px){
+      .page-wrap{padding:0 8px 40px;margin:12px auto}
+      .profile-body{padding:10px 14px 16px}
+      .profile-av-wrap{padding:0 14px}
+      .content-card{padding:12px}
+      .media-grid{grid-template-columns:repeat(2,1fr)}
+      .recommended-grid{grid-template-columns:1fr 1fr}
+      .testimonial-card{padding:12px}
+      .navbar{padding:0 12px}
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/profile-identity.js"></script>
+  <script src="../../js/profile-sync-service.js"></script>
+  <style>
+    .notif-badge { display: none; }
+  </style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+<header>
+  <nav class="navbar">
+    <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="navSearchInput" placeholder="Search athletes, clubs, coaches…"/>
+    </div>
+
+    <div class="nav-right">
+      <button class="nav-icon" id="feedBtn" title="Feed"><i class="fa-regular fa-house"></i></button>
+      <button class="nav-icon" id="exploreBtn" title="Explore"><i class="fa-regular fa-compass"></i></button>
+      <button class="nav-icon" id="messagesBtn" title="Messages"><i class="fa-regular fa-paper-plane"></i></button>
+      <button class="nav-icon" id="notifBtn" title="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="notif-badge" id="notifBadge"></span>
+      </button>
+      <div class="notif-popover" id="notifPopover" aria-hidden="true">
+        <div class="notif-popover-header">
+          <div class="notif-popover-title">Notifications</div>
+          <button class="notif-popover-clear" id="clearNotifBtn">Clear All</button>
+        </div>
+        <div class="notif-popover-list" id="notifList">No notifications yet</div>
+        <button class="notif-popover-viewall" onclick="window.location.href='../dashboard/notifications.html'">View all</button>
+      </div>
+
+      <div class="user-chip" id="userChip">
+        <span class="chip-avatar" id="chipAvatar">U</span>
+        <span class="chip-name" id="chipName">User</span>
+        <i class="fa-solid fa-chevron-down chip-caret"></i>
+      </div>
+
+      <div class="profile-menu" id="profileMenu" aria-hidden="true">
+        <div class="profile-menu-section" data-section="identity">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
+            <div class="profile-menu-title">Your Identity</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
+            <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
+            <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="account">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Account & Settings</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
+            <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
+            <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy & Safety</button>
+            <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
+            <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
+            <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="features">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Platform Features</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>
+            <button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements & Badges</button>
+            <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
+            <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
+            <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
+            <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="help">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Help & Misc</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
+            <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
+            <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
+          </div>
+        </div>
+        <div class="profile-menu-section">
+          <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
+            <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<div class="page-wrap">
+  <!-- LEFT: PROFILE CARD -->
+  <aside>
+    <div class="profile-card">
+      <div class="profile-cover"></div>
+      <div class="profile-av-wrap">
+        <div class="profile-av" id="avatar">?</div>
+      </div>
+      <div class="profile-body">
+        <div class="profile-name-row">
+          <div class="profile-name" id="name">Loading…</div>
+          <i class="fa-solid fa-circle-check verified-icon" id="verifiedBadge" style="display:none"></i>
+        </div>
+        <div class="profile-type-badge" id="userType"><i class="fa-solid fa-user" style="font-size:10px"></i> User</div>
+        <div class="profile-meta-item"><i class="fa-solid fa-futbol"></i> <span id="sport">-</span></div>
+        <div class="profile-meta-item"><i class="fa-solid fa-location-dot"></i> <span id="location">-</span></div>
+        <div class="profile-bio" id="bio"></div>
+        <div class="profile-stats-row">
+          <div class="pstat"><div class="pstat-num" id="followers">0</div><div class="pstat-label">Followers</div></div>
+          <div class="pstat"><div class="pstat-num" id="following">0</div><div class="pstat-label">Following</div></div>
+          <div class="pstat"><div class="pstat-num" id="mediaCount">0</div><div class="pstat-label">Media</div></div>
+        </div>
+        <div class="profile-actions">
+          <button class="btn-connect" id="connectBtn"><i class="fa-solid fa-user-plus" style="font-size:12px"></i> Connect</button>
+          <div class="conn-status-label" id="connStatus">Not connected</div>
+          <button class="btn-message" id="messageBtn" style="display:none"><i class="fa-regular fa-paper-plane" style="font-size:12px"></i> Message</button>
+          <button class="btn-share" id="shareProfileBtn"><i class="fa-solid fa-share-nodes" style="font-size:12px"></i> Share Profile</button>
+          <button class="btn-share" id="editProfileBtn" style="display:none;background:var(--accent);color:var(--accent-light);border:none"><i class="fa-solid fa-edit" style="font-size:12px"></i> Edit Profile</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="about"><i class="fa-regular fa-user" style="font-size:12px"></i> About</button>
+      <button class="tab-btn" data-tab="media"><i class="fa-regular fa-images" style="font-size:12px"></i> Media</button>
+      <button class="tab-btn" data-tab="achievements"><i class="fa-solid fa-trophy" style="font-size:12px"></i> Achievements</button>
+      <button class="tab-btn" data-tab="testimonials"><i class="fa-regular fa-comments" style="font-size:12px"></i> Reviews</button>
+      <button class="tab-btn" data-tab="recommended"><i class="fa-solid fa-people-arrows" style="font-size:12px"></i> Connections</button>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="tab-content active" id="about">
+      <div class="content-card">
+        <div class="content-card-title"><i class="fa-regular fa-circle-user"></i> Profile Information</div>
+        <div class="about-grid" id="about-content">
+          <div class="about-item"><div class="about-label">Member Since</div><div class="about-value" id="joined-date">-</div></div>
+          <div class="about-item"><div class="about-label">Primary Sport</div><div class="about-value" id="primary-sport">-</div></div>
+          <div class="about-item"><div class="about-label">Experience</div><div class="about-value" id="experience">-</div></div>
+          <div class="about-item"><div class="about-label">Total Media</div><div class="about-value" id="stat-media">0</div></div>
+        </div>
+        <div id="extra-info" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+    <!-- MEDIA -->
+    <div class="tab-content" id="media">
+      <div class="content-card">
+        <div class="content-card-title" style="justify-content:space-between">
+          <span><i class="fa-solid fa-photo-film"></i> Gallery</span>
+          <button id="uploadMediaBtn" style="display:none;padding:6px 14px;background:var(--accent);color:var(--accent-light);border:none;border-radius:var(--pill);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fB)"><i class="fa-solid fa-plus"></i> Upload</button>
+        </div>
+        <div id="media-container" class="media-grid"></div>
+      </div>
+    </div>
+
+    <!-- ACHIEVEMENTS -->
+    <div class="tab-content" id="achievements">
+      <div class="content-card">
+        <div class="content-card-title"><i class="fa-solid fa-trophy"></i> Achievements & Badges</div>
+        <div class="achievement-grid" id="achievements-content"></div>
+      </div>
+    </div>
+
+    <!-- TESTIMONIALS -->
+    <div class="tab-content" id="testimonials">
+      <div class="content-card">
+        <div class="content-card-title"><i class="fa-regular fa-comments"></i> Reviews & Testimonials</div>
+        <div id="testimonials-content"></div>
+      </div>
+    </div>
+
+    <!-- RECOMMENDED -->
+    <div class="tab-content" id="recommended">
+      <div class="content-card">
+        <div class="content-card-title"><i class="fa-solid fa-people-arrows"></i> Recommended Connections</div>
+        <div class="recommended-grid" id="recommended-content"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT -->
+  <aside class="right-sidebar">
+    <div class="side-card">
+      <div class="side-card-title"><i class="fa-solid fa-fire-flame-curved"></i> Trending Now</div>
+      <div class="trend-item"><div class="trend-cat">Sports · Trending</div><div class="trend-name">#Football</div><div class="trend-count">245K Posts</div></div>
+      <div class="trend-item"><div class="trend-cat">Sports · Live</div><div class="trend-name">Champions League</div><div class="trend-count">567K talking</div></div>
+      <div class="trend-item"><div class="trend-cat">Wellness</div><div class="trend-name">#Fitness</div><div class="trend-count">434K Posts</div></div>
+      <div class="trend-item"><div class="trend-cat">Health</div><div class="trend-name">#HealthyLiving</div><div class="trend-count">1.2M Posts</div></div>
+    </div>
+    <div class="side-card">
+      <div class="side-card-title"><i class="fa-regular fa-user-plus"></i> Who to Follow</div>
+      <div class="follow-item"><div class="follow-av">LM</div><div class="follow-info"><div class="follow-name">Leo Martinez</div><div class="follow-type">Athlete</div></div><button class="follow-btn">Follow</button></div>
+      <div class="follow-item"><div class="follow-av">SC</div><div class="follow-info"><div class="follow-name">Sarah Coach</div><div class="follow-type">Coach</div></div><button class="follow-btn">Follow</button></div>
+      <div class="follow-item"><div class="follow-av">MC</div><div class="follow-info"><div class="follow-name">Madrid Club</div><div class="follow-type">Club</div></div><button class="follow-btn">Follow</button></div>
+      <div class="follow-item"><div class="follow-av">EN</div><div class="follow-info"><div class="follow-name">Elena Nutrition</div><div class="follow-type">Professional</div></div><button class="follow-btn">Follow</button></div>
+    </div>
+    <div class="banner">
+      <div class="banner-badge">PRO</div>
+      <div class="banner-title">Upgrade to Pro</div>
+      <div class="banner-desc">Unlock premium features and get verified</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+/* Tab switching */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    const tab=this.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById(tab).classList.add('active');
+  });
+});
+
+/* Follow toggle */
+function bumpNumericStat(id, delta) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const current = parseInt(String(el.textContent || '0').replace(/[^0-9]/g, ''), 10) || 0;
+  el.textContent = Math.max(0, current + delta);
+}
+
+document.querySelectorAll('.follow-btn').forEach(btn=>{
+  btn.addEventListener('click', async function(){
+    const userEmail = (JSON.parse(localStorage.getItem('spopeer_user') || '{}')).email || 'user@example.com';
+    const targetEmail = btn.closest('.follow-item')?.querySelector('.follow-name')?.textContent || '';
+    
+    const isFollowing = this.textContent === 'Following';
+    this.disabled = true;
+    this.textContent = 'Loading...';
+    
+    try {
+      if (typeof followManager !== 'undefined') {
+        if (!isFollowing) {
+          // Follow
+          const success = await followManager.follow(targetEmail);
+          if (success) {
+            this.textContent = 'Following';
+            this.style.background='var(--accent)';
+            this.style.color='var(--accent-light)';
+          } else {
+            this.textContent = 'Follow';
+            this.style.background='';
+            this.style.color='';
+          }
+        } else {
+          // Unfollow
+          const success = await followManager.unfollow(targetEmail);
+          if (success) {
+            this.textContent = 'Follow';
+            this.style.background='';
+            this.style.color='';
+          } else {
+            this.textContent = 'Following';
+            this.style.background='var(--accent)';
+            this.style.color='var(--accent-light)';
+          }
+        }
+      } else {
+        // Fallback simple toggle if FollowManager not available
+        this.textContent = isFollowing ? 'Follow' : 'Following';
+        if(!isFollowing) { this.style.background='var(--accent)'; this.style.color='var(--accent-light)'; }
+        else { this.style.background=''; this.style.color=''; }
+      }
+    } catch (e) {
+      console.error('Follow toggle error:', e);
+      this.textContent = isFollowing ? 'Follow' : 'Following';
+    } finally {
+      this.disabled = false;
+    }
+  });
+});
+
+/* Connect */
+document.getElementById('connectBtn')?.addEventListener('click',async function(){
+  const userEmail = (JSON.parse(localStorage.getItem('spopeer_user') || '{}')).email || 'user@example.com';
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetEmail = urlParams.get('userId')||urlParams.get('email')||urlParams.get('userEmail')||'';
+  
+  const isConnected=this.classList.contains('connected');
+  this.disabled=true;
+  
+  try{
+    if(typeof followManager !== 'undefined'){
+      if(!isConnected){
+        const success = await followManager.follow(targetEmail);
+        if(success){
+          this.classList.add('connected');
+          this.innerHTML='<i class="fa-solid fa-check" style="font-size:12px"></i> Connected';
+          document.getElementById('connStatus').textContent='Connected · 1st';
+          document.getElementById('messageBtn').style.display='flex';
+          bumpNumericStat('followers', 1);
+        }
+      } else {
+        const success = await followManager.unfollow(targetEmail);
+        if(success){
+          this.classList.remove('connected');
+          this.innerHTML='<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Connect';
+          document.getElementById('connStatus').textContent='Not connected';
+          document.getElementById('messageBtn').style.display='none';
+          bumpNumericStat('followers', -1);
+        }
+      }
+    } else {
+      // Fallback
+      const connected=this.classList.toggle('connected');
+      this.innerHTML=connected?'<i class="fa-solid fa-check" style="font-size:12px"></i> Connected':'<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Connect';
+      document.getElementById('connStatus').textContent=connected?'Connected · 1st':'Not connected';
+      document.getElementById('messageBtn').style.display=connected?'flex':'none';
+    }
+  } catch(e){
+    console.error('Connect toggle error:', e);
+  } finally {
+    this.disabled=false;
+  }
+});
+
+/* Load profile */
+(async function(){
+  // Initialize profile sync
+  ProfileSyncService.init();
+  
+  function qs(n){return new URLSearchParams(window.location.search).get(n);}
+  const userId=qs('userId')||qs('email')||qs('userEmail')||'';
+  if(!userId){console.warn('No userId in URL params');}
+
+  window.addEventListener('followRelationChanged', function(e) {
+    const target = e?.detail?.targetUserId;
+    const delta = Number(e?.detail?.deltaFollowers || 0);
+    if (!target || !delta) return;
+    if (String(target).toLowerCase() === String(userId).toLowerCase()) {
+      bumpNumericStat('followers', delta);
+    }
+  });
+
+  // Cache invalidation when owner views their own profile
+  var currentUser = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+  var isOwnProfile = false;
+  if (window.SpopeerProfileIdentity) {
+    isOwnProfile = !!(userId && window.SpopeerProfileIdentity.matchesCurrentUser(userId));
+  } else {
+    var targetId = String(userId || '');
+    var currentId = String(currentUser.id || '');
+    var currentEmail = String(currentUser.email || '').toLowerCase();
+    isOwnProfile = !!(targetId && (targetId === currentId || targetId.toLowerCase() === currentEmail));
+  }
+  if (isOwnProfile) {
+    localStorage.removeItem('spopeer_profile_cache_' + currentUser.email);
+  }
+
+  // Toggle action buttons based on own-profile
+  (function updateActionButtons(){
+    var connectBtn=document.getElementById('connectBtn');
+    var connStatus=document.getElementById('connStatus');
+    var messageBtn=document.getElementById('messageBtn');
+    var editBtn=document.getElementById('editProfileBtn');
+    var shareBtn=document.getElementById('shareProfileBtn');
+    if(isOwnProfile){
+      if(connectBtn) connectBtn.style.display='none';
+      if(connStatus) connStatus.style.display='none';
+      if(messageBtn) messageBtn.style.display='none';
+      if(editBtn){editBtn.style.display='flex';editBtn.onclick=function(){window.location.href='edit-profile.html';};}
+    } else {
+      if(connectBtn) connectBtn.style.display='';
+      if(connStatus) connStatus.style.display='';
+      if(editBtn) editBtn.style.display='none';
+    }
+    // Share button handler
+    if(shareBtn){
+      shareBtn.addEventListener('click',function(){
+        var url=window.location.href;
+        if(navigator.share){
+          navigator.share({title:document.title,url:url}).catch(function(){});
+        } else {
+          navigator.clipboard.writeText(url).then(function(){
+            shareBtn.innerHTML='<i class="fa-solid fa-check" style="font-size:12px"></i> Link Copied!';
+            setTimeout(function(){shareBtn.innerHTML='<i class="fa-solid fa-share-nodes" style="font-size:12px"></i> Share Profile';},2000);
+          }).catch(function(){});
+        }
+      });
+    }
+  })();
+
+  let payload={};
+  let profileFound=false;
+  
+  // Try /api/users/:id first if userId is numeric (stable id path)
+  if(/^\d+$/.test(userId)){
+    try{
+      const r=await fetch(`/api/users/${encodeURIComponent(userId)}`);
+      if(r.ok){
+        const d=await r.json();
+        payload=d.user||d.payload||{};
+        profileFound=true;
+      }
+    }catch(e){
+      console.log('API users fetch failed:', e.message);
+    }
+  }
+  // Fallback: try /api/profiles/:email for email-based lookup
+  if(!profileFound && userId){
+    try{
+      const r=await fetch(`/api/profiles/${encodeURIComponent(userId)}`);
+      if(r.ok){
+        const d=await r.json();
+        payload=d.payload||{};
+        profileFound=true;
+      } else if(r.status===404){
+        console.log('Profile not found via /api/profiles');
+      }
+    }catch(e){
+      console.log('API profiles fetch failed:', e.message);
+    }
+  }
+
+  // No demo/sample fallback in production.
+  if(!payload||!Object.keys(payload).length){
+    payload={};
+    profileFound=false;
+  }
+  
+  // Visibility helper — respect per-field privacy settings
+  function isVisible(profile, fieldName) {
+    var vis = profile.visibility || {};
+    var privateByDefault = ['contactEmail','contactPhone','contactAddress',
+                            'dob','gender','height','weight','feeStructure',
+                            'medicalHistory','injuryHistory','currentInjuries',
+                            'nutritionDiet','trainingRoutine',
+                            'clubEmail','clubPhone','clubAddress','profEmail',
+                            'clubBudget','revenueStreams','billingInfo'];
+    if (vis[fieldName] !== undefined) {
+      return vis[fieldName] === 'public';
+    }
+    return privateByDefault.indexOf(fieldName) === -1;
+  }
+
+  // Update UI with profile data
+  function updateUI(profile) {
+    // STEP 7: Show "Profile not found" message if no profile data
+    if(!profile||!Object.keys(profile).length){
+      document.getElementById('avatar').innerHTML='<i class="fa-solid fa-question" style="font-size:32px; color:#999"></i>';
+      document.getElementById('name').textContent='Profile Not Found';
+      document.getElementById('name').style.color='#999';
+      document.getElementById('bio').textContent='This user\\047s profile could not be found or is not available.';
+      document.getElementById('followers').textContent='—';
+      document.getElementById('following').textContent='—';
+      document.getElementById('mediaCount').textContent='—';
+      document.getElementById('userType').textContent='Unknown';
+      return;
+    }
+    
+    const name=profile.displayName||`${profile.firstName||''} ${profile.lastName||''}`.trim()||'Spopeer User';
+    const initials=name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    document.title=`${name} — Spopeer`;
+    const avatarEl=document.getElementById('avatar');
+    if(profile.avatarUrl||profile.avatar){
+      avatarEl.innerHTML=`<img src="${profile.avatarUrl||profile.avatar}" alt="${name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    } else {
+      avatarEl.textContent=initials;
+    }
+    const coverUrl=profile.coverPhotoUrl||profile.coverUrl;
+    if(coverUrl){
+      const coverEl=document.querySelector('.profile-cover');
+      if(coverEl) coverEl.style.background=`url('${coverUrl}') center/cover no-repeat`;
+    }
+    document.getElementById('name').textContent=name;
+    document.getElementById('sport').textContent=profile.sport||profile.primarySport||'-';
+    if (isVisible(profile, 'location')) {
+      document.getElementById('location').textContent=profile.location||'-';
+    } else {
+      document.getElementById('location').textContent=isOwnProfile ? '' : '-';
+      if (isOwnProfile && profile.location) document.getElementById('location').innerHTML='<span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-lock" style="font-size:10px"></i> Hidden</span>';
+    }
+    if (isVisible(profile, 'bio')) {
+      document.getElementById('bio').textContent=profile.bio||'';
+    } else if (isOwnProfile && profile.bio) {
+      document.getElementById('bio').innerHTML='<span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-lock" style="font-size:10px"></i> Bio hidden from visitors</span>';
+    } else {
+      document.getElementById('bio').textContent='';
+    }
+    const typeMap={athlete:{label:'Athlete',icon:'fa-person-running'},coach:{label:'Coach',icon:'fa-bullseye'},club:{label:'Club',icon:'fa-shield-halved'},'supportive_professional':{label:'Support Pro',icon:'fa-star'}};
+    const t=typeMap[profile.userType]||{label:'User',icon:'fa-user'};
+    document.getElementById('userType').innerHTML=`<i class="fa-solid ${t.icon}" style="font-size:10px"></i> ${t.label}`;
+    document.getElementById('followers').textContent=String(profile.followersCount ?? profile.followers ?? 0);
+    document.getElementById('following').textContent=String(profile.followingCount ?? profile.following ?? 0);
+    document.getElementById('mediaCount').textContent=String(profile.postsCount ?? profile.mediaCount ?? 0);
+    document.getElementById('joined-date').textContent=profile.createdAt?new Date(profile.createdAt).toLocaleDateString('en',{month:'long',year:'numeric'}):'-';
+    document.getElementById('primary-sport').textContent=profile.primarySport||profile.sport||'-';
+    document.getElementById('experience').textContent=profile.experience?profile.experience+' years':'N/A';
+    document.getElementById('stat-media').textContent=String(profile.postsCount ?? profile.mediaCount ?? 0);
+
+    /* About extra info — expanded per user type */
+    const extras=[];
+    const uType=profile.userType||'athlete';
+    if(uType==='athlete'){
+      if(isVisible(profile,'position')&&profile.position) extras.push(['Position',profile.position]);
+      if(isVisible(profile,'currentTeam')&&profile.currentTeam) extras.push(['Current Team',profile.currentTeam]);
+      if(isVisible(profile,'playingLevel')&&profile.playingLevel) extras.push(['Playing Level',profile.playingLevel]);
+      if(isVisible(profile,'height')&&profile.height) extras.push(['Height',String(profile.height).includes('cm')?profile.height:profile.height+' cm']);
+      if(isVisible(profile,'weight')&&profile.weight) extras.push(['Weight',String(profile.weight).includes('kg')?profile.weight:profile.weight+' kg']);
+      if(isVisible(profile,'achievements')&&profile.achievements) extras.push(['Achievements',profile.achievements]);
+      if(isVisible(profile,'highestLevel')&&(profile.highestLevel||profile.highestLevelAchieved)) extras.push(['Highest Level',profile.highestLevel||profile.highestLevelAchieved]);
+      if(isVisible(profile,'availability')&&profile.availability) extras.push(['Availability',profile.availability]);
+      if(isVisible(profile,'upcomingEvents')&&profile.upcomingEvents) extras.push(['Upcoming',profile.upcomingEvents]);
+    } else if(uType==='coach'){
+      if(isVisible(profile,'specialization')&&profile.specialization) extras.push(['Specialization',profile.specialization]);
+      if(isVisible(profile,'certifications')&&profile.certifications) extras.push(['Certifications',profile.certifications]);
+      if(isVisible(profile,'coachingStyle')&&profile.coachingStyle) extras.push(['Style',profile.coachingStyle]);
+      if(isVisible(profile,'philosophy')&&(profile.philosophy||profile.coachingPhilosophy)) extras.push(['Philosophy',profile.philosophy||profile.coachingPhilosophy]);
+      if(isVisible(profile,'coachAchievements')&&(profile.achievements||profile.coachAchievements)) extras.push(['Achievements',profile.achievements||profile.coachAchievements]);
+    } else if(uType==='club'){
+      if(isVisible(profile,'foundedYear')&&profile.foundedYear) extras.push(['Founded',profile.foundedYear]);
+      if(isVisible(profile,'teamsAndDivisions')&&profile.teamsAndDivisions) extras.push(['Teams',profile.teamsAndDivisions]);
+      if(isVisible(profile,'facilities')&&profile.facilities) extras.push(['Facilities',profile.facilities]);
+      if(isVisible(profile,'clubWebsite')&&(profile.clubWebsite||profile.website)) extras.push(['Website',profile.clubWebsite||profile.website]);
+      if(isVisible(profile,'youthPrograms')&&profile.youthPrograms) extras.push(['Youth Program',profile.youthPrograms]);
+    } else if(uType==='supportive_professional'){
+      if(isVisible(profile,'professionalTitle')&&profile.professionalTitle) extras.push(['Title',profile.professionalTitle]);
+      if(isVisible(profile,'specializationField')&&profile.specializationField) extras.push(['Specialization',profile.specializationField]);
+      if(isVisible(profile,'services')&&profile.services) extras.push(['Services',profile.services]);
+      if(isVisible(profile,'credentials')&&profile.credentials) extras.push(['Credentials',profile.credentials]);
+      if(isVisible(profile,'availabilityHours')&&profile.availabilityHours) extras.push(['Hours',profile.availabilityHours]);
+    }
+    if(extras.length){
+      const g=document.createElement('div');g.className='about-grid';
+      extras.forEach(([l,v])=>{const d=document.createElement('div');d.className='about-item';d.innerHTML=`<div class="about-label">${l}</div><div class="about-value">${v}</div>`;g.appendChild(d);});
+      document.getElementById('extra-info').innerHTML='';
+      document.getElementById('extra-info').appendChild(g);
+    }
+
+    // Lock hints for owner viewing their own profile
+    if(isOwnProfile){
+      var hiddenFields=[];
+      var checkFields=[['bio','Bio'],['location','Location'],['dob','Date of Birth'],['gender','Gender'],
+        ['contactEmail','Contact Email'],['contactPhone','Phone'],['contactAddress','Address'],
+        ['height','Height'],['weight','Weight'],['feeStructure','Fee Structure'],
+        ['trainingRoutine','Training Routine'],['injuryHistory','Injury History'],
+        ['currentInjuries','Current Injuries'],['medicalHistory','Medical History'],['nutritionDiet','Nutrition & Diet'],
+        ['clubEmail','Club Email'],['clubPhone','Club Phone'],['clubAddress','Club Address'],
+        ['clubBudget','Annual Budget'],['revenueStreams','Revenue Streams'],
+        ['profEmail','Professional Email'],['billingInfo','Billing Info']];
+      checkFields.forEach(function(pair){
+        if(!isVisible(profile,pair[0])&&profile[pair[0]]) hiddenFields.push(pair[1]);
+      });
+      if(hiddenFields.length){
+        var hint=document.createElement('div');
+        hint.style.cssText='color:var(--muted);font-size:12px;margin-top:12px;padding:8px 12px;background:var(--surface);border-radius:8px;';
+        hint.innerHTML='<i class="fa-solid fa-lock" style="font-size:10px;margin-right:4px"></i> '+hiddenFields.length+' field(s) hidden from visitors: '+hiddenFields.join(', ');
+        document.getElementById('extra-info').appendChild(hint);
+      }
+    }
+
+    /* ===== Comprehensive Section Cards per User Type ===== */
+    document.querySelectorAll('.dynamic-section').forEach(function(el){ el.remove(); });
+    var aboutTab=document.getElementById('about');
+
+    function esc(s){ var d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+    function visVal(key,val){
+      if(val==null||val==='') return null;
+      if(!isVisible(profile,key)) return null;
+      if(Array.isArray(val)) return val.join(', ');
+      return String(val);
+    }
+    function addSection(title,iconClass,items){
+      var visible=items.filter(function(it){ return it[2]!=null&&it[2]!==''; });
+      if(!visible.length) return;
+      var card=document.createElement('div');
+      card.className='content-card dynamic-section';
+      var html='<div class="content-card-title"><i class="'+iconClass+'"></i> '+esc(title)+'</div>';
+      html+='<div class="about-grid">';
+      visible.forEach(function(it){
+        html+='<div class="about-item"><div class="about-label">'+esc(it[1])+'</div><div class="about-value">'+esc(it[2])+'</div></div>';
+      });
+      html+='</div>';
+      card.innerHTML=html;
+      aboutTab.appendChild(card);
+    }
+
+    if(uType==='athlete'){
+      /* Training & Goals (availability already in basic extras) */
+      addSection('Training & Goals','fa-solid fa-dumbbell',[
+        ['trainingDays','Training Days / Week',visVal('trainingDays',profile.trainingDays)],
+        ['trainingHours','Hours / Day',visVal('trainingHours',profile.trainingHours)],
+        ['trainingLocation','Training Location',visVal('trainingLocation',profile.trainingLocation)],
+        ['trainingRoutine','Training Routine',visVal('trainingRoutine',profile.trainingRoutine)],
+        ['trainingFocus','Training Focus',visVal('trainingFocus',profile.trainingFocus)],
+        ['coaches','Coaches & Trainers',visVal('coaches',profile.coachesTrainers||profile.coaches)],
+        ['goals','Goals',visVal('goals',profile.goals)]
+      ]);
+      /* Physical (height/weight already in basic extras) */
+      addSection('Physical Information','fa-solid fa-ruler-vertical',[
+        ['chest','Chest',visVal('chest',profile.chest)],
+        ['waist','Waist',visVal('waist',profile.waist)],
+        ['hips','Hips',visVal('hips',profile.hips)],
+        ['eyeColor','Eye Color',visVal('eyeColor',profile.eyeColor)],
+        ['hairColor','Hair Color',visVal('hairColor',profile.hairColor)]
+      ]);
+      /* Competition (upcomingEvents already in basic extras) */
+      addSection('Competition','fa-solid fa-flag-checkered',[
+        ['competitionHistory','Competition History',visVal('competitionHistory',profile.competitionHistory)],
+        ['teamInfo','Team Information',visVal('teamInfo',profile.teamInfo)]
+      ]);
+      /* Health & Wellness */
+      addSection('Health & Wellness','fa-solid fa-heart-pulse',[
+        ['injuryHistory','Injury History',visVal('injuryHistory',profile.injuryHistory)],
+        ['currentInjuries','Current Injuries',visVal('currentInjuries',profile.currentInjuries)],
+        ['medicalHistory','Medical History',visVal('medicalHistory',profile.medicalHistory)],
+        ['nutritionDiet','Nutrition & Diet',visVal('nutritionDiet',profile.nutritionDiet)]
+      ]);
+      /* Performance Stats */
+      if(profile.stats){
+        addSection('Performance Stats','fa-solid fa-chart-line',[
+          ['stats','Goals / Points',profile.stats.goalsOrPoints?String(profile.stats.goalsOrPoints):null],
+          ['stats','Assists',profile.stats.assists?String(profile.stats.assists):null],
+          ['stats','Appearances',profile.stats.appearances?String(profile.stats.appearances):null]
+        ]);
+      }
+    } else if(uType==='coach'){
+      /* Coaching Background (specialization/certifications/style/philosophy/achievements in extras) */
+      addSection('Coaching Background','fa-solid fa-clipboard',[
+        ['coachExperience','Years of Experience',visVal('coachExperience',profile.experience)],
+        ['coachTeam','Current Team',visVal('coachTeam',profile.currentTeam)],
+        ['education','Education & Qualifications',visVal('education',profile.coachEducation||profile.education)],
+        ['teamsCoached','Teams Coached',visVal('teamsCoached',profile.teamsCoached)]
+      ]);
+      /* Training & Development */
+      addSection('Training & Development','fa-solid fa-chalkboard-user',[
+        ['trainingPlans','Training Plans & Strategies',visVal('trainingPlans',profile.trainingPlans)],
+        ['playerDevelopment','Player Development',visVal('playerDevelopment',profile.playerDevelopment)],
+        ['techniques','Techniques & Methods',visVal('techniques',profile.techniquesMethods||profile.techniques)]
+      ]);
+      /* Management */
+      addSection('Management','fa-solid fa-users-gear',[
+        ['teamManagement','Team Management',visVal('teamManagement',profile.teamManagement)],
+        ['rosterManagement','Roster Management',visVal('rosterManagement',profile.rosterManagement)],
+        ['playerSelection','Player Selection Criteria',visVal('playerSelection',profile.playerSelection)]
+      ]);
+    } else if(uType==='club'){
+      /* Contact Information */
+      addSection('Contact Information','fa-solid fa-address-card',[
+        ['clubEmail','Email',visVal('clubEmail',profile.clubEmail||profile.contactEmail)],
+        ['clubPhone','Phone',visVal('clubPhone',profile.clubPhone)],
+        ['clubAddress','Address',visVal('clubAddress',profile.clubAddress)]
+      ]);
+      /* Staff */
+      addSection('Coaching & Management Staff','fa-solid fa-users',[
+        ['coachingStaff','Coaching Staff',visVal('coachingStaff',profile.coachingStaff)],
+        ['managementStaff','Management Staff',visVal('managementStaff',profile.managementStaff)],
+        ['clubPhilosophy','Club Philosophy',visVal('clubPhilosophy',profile.clubPhilosophy)]
+      ]);
+      /* Financial */
+      addSection('Financial Information','fa-solid fa-coins',[
+        ['clubBudget','Annual Budget',visVal('clubBudget',profile.clubBudget)],
+        ['sponsorship','Sponsorship Details',visVal('sponsorship',profile.sponsorship)],
+        ['revenueStreams','Revenue Streams',visVal('revenueStreams',profile.revenueStreams)]
+      ]);
+      /* Youth & Development (youthPrograms already in extras) */
+      addSection('Youth & Development','fa-solid fa-seedling',[
+        ['talentRecruitment','Talent Recruitment',visVal('talentRecruitment',profile.talentRecruitment)],
+        ['scholarships','Scholarships & Grants',visVal('scholarships',profile.scholarships)]
+      ]);
+      /* Community */
+      addSection('Community & Social Responsibility','fa-solid fa-handshake-angle',[
+        ['communityOutreach','Community Outreach',visVal('communityOutreach',profile.communityOutreach)],
+        ['socialResponsibility','Social Responsibility',visVal('socialResponsibility',profile.socialResponsibility)],
+        ['charitablePartnerships','Charitable Partnerships',visVal('charitablePartnerships',profile.charitablePartnerships)]
+      ]);
+      /* Detailed Facilities (overview already in extras) */
+      addSection('Detailed Facilities','fa-solid fa-building',[
+        ['trainingFields','Training Fields / Pitches',visVal('trainingFields',profile.trainingFields)],
+        ['gymFacilities','Gym & Fitness Centre',visVal('gymFacilities',profile.gymFacilities)],
+        ['lockerRooms','Locker Rooms & Amenities',visVal('lockerRooms',profile.lockerRooms)],
+        ['otherFacilities','Other Facilities',visVal('otherFacilities',profile.otherFacilities)]
+      ]);
+      /* Equipment */
+      addSection('Equipment Inventory','fa-solid fa-toolbox',[
+        ['equipmentList','Equipment List',visVal('equipmentList',profile.equipmentList)],
+        ['maintenanceSchedule','Maintenance Schedule',visVal('maintenanceSchedule',profile.maintenanceSchedule)]
+      ]);
+      /* Legal */
+      addSection('Legal & Compliance','fa-solid fa-scale-balanced',[
+        ['clubLicensing','Licensing & Registration',visVal('clubLicensing',profile.clubLicensing)],
+        ['clubCompliance','Compliance & Policies',visVal('clubCompliance',profile.clubCompliance)]
+      ]);
+    } else if(uType==='supportive_professional'){
+      /* Professional Background (title/specialization/services/credentials in extras) */
+      addSection('Professional Background','fa-solid fa-briefcase',[
+        ['companyName','Company / Organization',visVal('companyName',profile.companyName)],
+        ['profExperience','Work Experience',visVal('profExperience',profile.profExperience||profile.experience)],
+        ['profEducation','Education',visVal('profEducation',profile.profEducation||profile.education)],
+        ['clientele','Clientele',visVal('clientele',profile.clientele)],
+        ['profEmail','Contact Email',visVal('profEmail',profile.profEmail||profile.contactEmail)]
+      ]);
+      /* Communication (availabilityHours already in extras) */
+      addSection('Contact & Communication','fa-solid fa-comments',[
+        ['preferredContact','Preferred Contact Method',visVal('preferredContact',profile.preferredContact)],
+        ['communicationTools','Communication Tools',visVal('communicationTools',profile.communicationTools)]
+      ]);
+      /* Testimonials & References */
+      addSection('Testimonials & References','fa-solid fa-quote-left',[
+        ['clientReviews','Client Reviews',visVal('clientReviews',profile.clientReviews)],
+        ['professionalRefs','Professional References',visVal('professionalRefs',profile.professionalRefs)]
+      ]);
+      /* Payment & Rates */
+      addSection('Payment & Rates','fa-solid fa-credit-card',[
+        ['feeStructure','Fee Structure',visVal('feeStructure',profile.feeStructure)],
+        ['paymentMethods','Payment Methods',visVal('paymentMethods',profile.paymentMethods)],
+        ['billingInfo','Billing Information',visVal('billingInfo',profile.billingInfo)]
+      ]);
+      /* Legal */
+      addSection('Legal & Compliance','fa-solid fa-scale-balanced',[
+        ['profLicensing','Professional Licensing',visVal('profLicensing',profile.profLicensing)],
+        ['profCompliance','Regulatory Compliance',visVal('profCompliance',profile.profCompliance)]
+      ]);
+    }
+
+    /* Contact Information for athlete & coach */
+    if(uType==='athlete'||uType==='coach'){
+      addSection('Contact Information','fa-solid fa-address-card',[
+        ['contactEmail','Email',visVal('contactEmail',profile.contactEmail)],
+        ['contactPhone','Phone',visVal('contactPhone',profile.contactPhone)],
+        ['contactAddress','Address',visVal('contactAddress',profile.contactAddress)]
+      ]);
+    }
+
+    /* Social & Media Links (all types) */
+    var socials=[];
+    if(profile.mediaLinks){
+      if(isVisible(profile,'highlightVideo')&&profile.mediaLinks.highlightVideo) socials.push(['highlightVideo','Highlight Video',profile.mediaLinks.highlightVideo]);
+      if(profile.mediaLinks.instagram) socials.push(['instagram','Instagram',profile.mediaLinks.instagram]);
+      if(profile.mediaLinks.youtubeChannel) socials.push(['youtube','YouTube',profile.mediaLinks.youtubeChannel]);
+      if(profile.mediaLinks.linkedIn) socials.push(['linkedin','LinkedIn',profile.mediaLinks.linkedIn]);
+      if(profile.mediaLinks.website) socials.push(['website','Website',profile.mediaLinks.website]);
+    } else {
+      if(profile.instagram) socials.push(['instagram','Instagram',profile.instagram]);
+      if(profile.youtube) socials.push(['youtube','YouTube',profile.youtube]);
+      if(profile.linkedin) socials.push(['linkedin','LinkedIn',profile.linkedin]);
+      if(profile.website&&uType!=='club') socials.push(['website','Website',profile.website]);
+    }
+    if(socials.length) addSection('Social & Media Links','fa-solid fa-share-nodes',socials);
+  }
+
+  // ── Enforce profile privacy ──
+  if (!isOwnProfile) {
+    try {
+      var targetSettings = {};
+      // Check spopeer_settings (the settings page saves here)
+      var settingsRaw = localStorage.getItem('spopeer_settings');
+      if (settingsRaw) targetSettings = JSON.parse(settingsRaw);
+      // Also check profile-level privacy flag
+      var profilePrivacy = payload.privacy_public;
+      if (targetSettings.profileVisibility === false || profilePrivacy === false) {
+        // Show private profile screen
+        var wrap = document.querySelector('.page-wrap');
+        if (wrap) {
+          wrap.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:80px 20px;">' +
+            '<div style="width:80px;height:80px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">' +
+            '<i class="fa-solid fa-lock" style="font-size:28px;color:var(--muted)"></i></div>' +
+            '<h2 style="font-family:var(--fD);font-size:22px;font-weight:800;margin-bottom:8px;">This Profile is Private</h2>' +
+            '<p style="color:var(--muted);font-size:14px;max-width:340px;margin:0 auto 20px;">This user has set their profile to private. Connect with them to see their full profile.</p>' +
+            '<a href="/feed.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:var(--accent);color:#fff;border-radius:var(--pill);text-decoration:none;font-size:14px;font-weight:700;font-family:var(--fB)"><i class="fa-solid fa-arrow-left" style="font-size:12px"></i> Back to Feed</a></div>';
+        }
+        return; // stop rendering the rest of the profile
+      }
+    } catch(e) {
+      console.warn('Privacy check error:', e);
+    }
+  }
+
+  updateUI(payload);
+
+  // Listen for profile sync updates
+  window.addEventListener('profileSyncUpdated', (event) => {
+    const updated = event.detail.profile;
+    if (updated) {
+      payload = updated;
+      updateUI(updated);
+    }
+  });
+
+  /* Media — show real data or empty state */
+  const mc=document.getElementById('media-container');
+  if(payload&&payload.media&&payload.media.length){
+    payload.media.forEach(function(item){
+      const d=document.createElement('div');d.className='media-placeholder';
+      if(item.type==='video'){
+        d.innerHTML='<video src="'+item.url+'" style="width:100%;height:100%;object-fit:cover"></video><div class="media-badge">Video</div>';
+      } else {
+        d.innerHTML='<img src="'+item.url+'" alt="" style="width:100%;height:100%;object-fit:cover"><div class="media-badge">Photo</div>';
+      }
+      mc.appendChild(d);
+    });
+  } else {
+    mc.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:32px 16px;color:var(--muted)"><i class="fa-regular fa-image" style="font-size:28px;margin-bottom:8px;display:block"></i>No media yet</div>';
+  }
+
+  /* Achievements — empty state */
+  const ag=document.getElementById('achievements-content');
+  ag.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted)"><i class="fa-regular fa-trophy" style="font-size:24px;margin-bottom:8px;display:block"></i>No achievements yet</div>';
+
+  /* Testimonials — empty state */
+  const tc=document.getElementById('testimonials-content');
+  tc.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted)"><i class="fa-regular fa-comment" style="font-size:24px;margin-bottom:8px;display:block"></i>No testimonials yet</div>';
+
+  /* Recommended — empty state */
+  const rc=document.getElementById('recommended-content');
+  rc.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted)"><i class="fa-regular fa-user" style="font-size:24px;margin-bottom:8px;display:block"></i>No recommendations yet</div>';
+})();
+</script>
+<script src="../../js/follow.js"></script>
+<script src="../../js/profile-service.js"></script>
+<footer style="display:none">
+  <a href="../legal/privacy.html">Privacy Policy</a>
+  <a href="../legal/terms.html">Terms of Use</a>
+  <a href="../company/report-abuse.html">Report Abuse</a>
+</footer>
+<script>
+/* ── NAV: chip hydration, profile menu, button wiring ── */
+(function() {
+  // Hydrate chip from localStorage
+  const ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+  const fullName = ud.displayName || ud.name || ((ud.firstName||'') + ' ' + (ud.lastName||'')).trim() || 'User';
+  const initials = fullName.split(' ').map(n => n[0]||'').join('').toUpperCase().slice(0,2) || 'U';
+  const chipAvatar = document.getElementById('chipAvatar');
+  const chipName   = document.getElementById('chipName');
+  if (chipName) chipName.textContent = fullName.split(' ')[0] || 'User';
+  if (chipAvatar) {
+    if (ud.avatarUrl) {
+      chipAvatar.innerHTML = `<img src="${ud.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    } else {
+      chipAvatar.textContent = initials;
+    }
+  }
+
+  // Notif popover interaction (profile menu toggle + actions handled by shared-ui.js)
+  const notifBtn    = document.getElementById('notifBtn');
+  const notifPopover = document.getElementById('notifPopover');
+
+  function closeNotifPopover() {
+    notifPopover?.classList.remove('visible');
+    notifPopover?.setAttribute('aria-hidden','true');
+  }
+
+  // Close notif popover when opening profile menu
+  document.getElementById('userChip')?.addEventListener('click', function() {
+    closeNotifPopover();
+  });
+
+  notifBtn?.addEventListener('click', e => {
+    e.stopPropagation();
+    if (window.closeProfileMenu) window.closeProfileMenu();
+    notifPopover?.classList.toggle('visible');
+    notifPopover?.setAttribute('aria-hidden', notifPopover.classList.contains('visible') ? 'false' : 'true');
+  });
+
+  document.addEventListener('click', e => {
+    if (!notifPopover?.contains(e.target) && !notifBtn?.contains(e.target)) closeNotifPopover();
+  });
+
+  // Nav icon buttons
+  document.getElementById('feedBtn')?.addEventListener('click', () => window.location.href = '/feed.html');
+  document.getElementById('exploreBtn')?.addEventListener('click', () => window.location.href = '../search/search.html');
+  document.getElementById('messagesBtn')?.addEventListener('click', () => window.location.href = '../messaging/inbox.html');
+
+  // Search bar
+  document.getElementById('navSearchInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      window.location.href = '../search/search.html?term=' + encodeURIComponent(e.target.value.trim());
+    }
+  });
+
+  // Edit profile button logic moved to updateActionButtons() above
+
+  // Listen for profile updates and refresh chip
+  window.addEventListener('profileUpdated', e => {
+    const p = e.detail;
+    if (!p) return;
+    const n = p.displayName || p.name || ((p.firstName||'') + ' ' + (p.lastName||'')).trim() || 'User';
+    if (chipName) chipName.textContent = n.split(' ')[0];
+    if (chipAvatar) {
+      if (p.avatarUrl) chipAvatar.innerHTML = `<img src="${p.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      else chipAvatar.textContent = n.split(' ').map(x=>x[0]||'').join('').toUpperCase().slice(0,2)||'U';
+    }
+  });
+})();
+</script>
+<script src="../../js/shared-ui.js"></script>
+<script>
+  if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
+    window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+  }
+</script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

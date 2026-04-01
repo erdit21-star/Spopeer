@@ -1,0 +1,76 @@
+/* ================================================================
+   SPOPEER APP TOKENS
+   Shared design tokens for all authenticated/inner-app pages.
+
+   Pages using this: feed, notifications, marketplace, inbox,
+   sponsor, profiles, settings, library, events, search, etc.
+
+   Usage: <link rel="stylesheet" href="/css/shared-tokens.css">
+   ================================================================ */
+
+:root {
+  /* ── Surfaces ── */
+  --bg:           #fafaf8;
+  --white:        #ffffff;
+  --surface:      #f3f3ef;
+  --surface-2:    #eeeeea;
+  --border:       #ebebe7;
+
+  /* ── Text ── */
+  --ink:          #111111;
+  --ink-2:        #333333;
+  --muted:        #7a7a7a;
+  --muted-2:      #b8b8b8;
+
+  /* ── Brand / Accent ── */
+  --accent:       #001f3f;
+  --accent-lt:    #cce7ff;
+  --accent-hover: #003366;
+
+  /* ── Colour palette ── */
+  --blue:         #1a6bff;
+  --blue-lt:      #eef3ff;
+  --green:        #16a34a;
+  --green-lt:     #dcfce7;
+  --amber:        #d97706;
+  --amber-lt:     #fef3c7;
+  --red:          #b91c1c;
+  --red-lt:       #fee2e2;
+
+  /* ── Typography ── */
+  --fD: 'Syne', sans-serif;
+  --fB: 'Plus Jakarta Sans', sans-serif;
+  /* Aliases used by some pages */
+  --font-display: var(--fD);
+  --font-body:    var(--fB);
+
+  /* ── Radii ── */
+  --rS:   10px;
+  --rM:   16px;
+  --rL:   24px;
+  --rXL:  32px;
+  --pill: 999px;
+  /* Aliases */
+  --r:    12px;
+  --r-sm: 8px;
+  --r-lg: 20px;
+  --r-pill: var(--pill);
+
+  /* ── Layout constants ── */
+  --nav-h:    64px;
+  --left-w:   248px;
+  --right-w:  288px;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html  { scroll-behavior: smooth; }
+body  {
+  font-family: var(--fB);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: inherit; text-decoration: none; }

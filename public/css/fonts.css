@@ -1,0 +1,52 @@
+/* ── SPOPEER GLOBAL TYPOGRAPHY ── */
+
+:root {
+  --fD: 'Syne', sans-serif;
+  --fB: 'Plus Jakarta Sans', sans-serif;
+  /* legacy aliases — used by older pages referencing --fd / --fb */
+  --fd: var(--fD);
+  --fb: var(--fB);
+}
+
+html, body {
+  font-family: var(--fB);
+}
+
+h1, h2, h3, h4, h5, h6,
+.section-title,
+.hero-copy h1,
+.logo-text {
+  font-family: var(--fD);
+}
+
+button,
+input,
+textarea,
+select,
+label,
+.nav-item,
+.feed-tab,
+.profile-menu,
+.profile-menu-item,
+.meta-chip,
+.sport-chip,
+.auth-card,
+.card,
+.panel,
+.footer-grid,
+.footer-btm,
+.site-footer,
+.sp-btn-primary,
+.sp-btn-secondary,
+.post-card,
+.event-card,
+.library-card {
+  font-family: var(--fB);
+}
+
+.logo-text,
+.brand,
+.logo,
+.foot-logo {
+  font-family: var(--fD);
+}

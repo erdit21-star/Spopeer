@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Complete Your Coach Profile — Spopeer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:#fafaf8;color:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .loader{text-align:center}
+    .loader h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px}
+    .loader p{font-size:14px;color:#7a7a7a}
+    .spinner{width:32px;height:32px;border:3px solid #e8e8e4;border-top-color:#001f3f;border-radius:50%;animation:spin .7s linear infinite;margin:16px auto 0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+  <script>
+    (function(){
+      var ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+      var li = localStorage.getItem('spopeer_loggedIn') === 'true';
+      if (!ud || !li) { window.location.replace('../../pages/auth/login.html'); return; }
+      if (!ud.userType || ud.userType !== 'coach') {
+        ud.userType = 'coach';
+        localStorage.setItem('spopeer_user', JSON.stringify(ud));
+      }
+      window.location.replace('edit-profile.html?role=coach&onboarding=1');
+    })();
+  </script>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <div class="loader">
+    <h2>Setting up your Coach profile…</h2>
+    <p>Redirecting to profile editor</p>
+    <div class="spinner"></div>
+  </div>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Careers - Spopeer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --accent: #001f3f;
+      --accent-light: #cce7ff;
+      --background: #fafaf8;
+      --surface: #ffffff;
+      --ink: #0f0f0f;
+      --ink-light: #4a4a4a;
+      --muted: #7a7a7a;
+      --border: #e8e8e4;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-display: 'Syne', sans-serif;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--background);
+    }
+
+    /* ─── NAVBAR ─── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(250,250,248,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navbar {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 28px; height: 66px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 800;
+      color: var(--ink); text-decoration: none;
+      letter-spacing: -0.02em; flex-shrink: 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+.nav-links { display: flex; gap: 4px; list-style: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--muted);
+      font-size: 14px; font-weight: 500;
+      padding: 6px 14px; border-radius: var(--r-pill);
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-links a:hover { color: var(--ink); background: var(--surface); }
+    .auth-row { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .btn-outline {
+      padding: 8px 20px;
+      border: 1.5px solid var(--border);
+      background: transparent; color: var(--ink-2);
+      border-radius: var(--r-pill); font-size: 14px; font-weight: 600;
+      font-family: var(--font-body); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--ink); background: var(--surface); }
+    .btn-fill {
+      padding: 8px 22px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--r-pill);
+      font-size: 14px; font-weight: 700;
+      font-family: var(--font-body); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0,31,63,0.25);
+    }
+    .btn-fill:hover { background: #001a33; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,31,63,0.35); }
+
+    .hero {
+      background: linear-gradient(135deg, var(--accent) 0%, #000a1a 100%);
+      color: white;
+      padding: 100px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(204, 231, 255, 0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      top: -100px;
+      right: -100px;
+      z-index: 1;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(204, 231, 255, 0.05) 0%, transparent 70%);
+      border-radius: 50%;
+      bottom: -50px;
+      left: -50px;
+      z-index: 1;
+    }
+
+    .hero-content {
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero h1 {
+      font-size: clamp(40px, 8vw, 56px);
+      font-weight: 800;
+      margin-bottom: 16px;
+      line-height: 1.2;
+      font-family: var(--font-display);
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      font-size: 20px;
+      opacity: 0.95;
+      font-weight: 500;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 80px 28px;
+    }
+
+    h2 {
+      font-size: 40px;
+      font-weight: 800;
+      margin: 60px 0 48px;
+      color: var(--accent);
+      font-family: var(--font-display);
+      letter-spacing: -0.01em;
+      position: relative;
+      display: inline-block;
+    }
+
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -12px;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+      border-radius: 2px;
+    }
+
+    p {
+      margin-bottom: 16px;
+      line-height: 1.8;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .jobs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 32px;
+      margin: 60px 0;
+    }
+
+    .job-card {
+      background: var(--surface);
+      padding: 32px;
+      border-radius: 16px;
+      border: 1.5px solid var(--border);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .job-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease-out;
+    }
+
+    .job-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0, 31, 63, 0.12);
+    }
+
+    .job-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .job-card h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      color: var(--ink);
+      font-weight: 700;
+      font-family: var(--font-display);
+    }
+
+    .job-type {
+      display: inline-block;
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .job-card p {
+      font-size: 15px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .job-icon {
+      font-size: 32px;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .cta-section {
+      background: linear-gradient(135deg, var(--accent) 0%, #000a1a 100%);
+      color: white;
+      padding: 80px 40px;
+      text-align: center;
+      border-radius: 20px;
+      margin: 80px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(204, 231, 255, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      top: -200px;
+      right: -200px;
+      z-index: 1;
+    }
+
+    .cta-section::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(204, 231, 255, 0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      bottom: -150px;
+      left: -150px;
+      z-index: 1;
+    }
+
+    .cta-section h2 {
+      font-size: 44px;
+      margin: 0 0 16px 0;
+      color: white;
+      position: relative;
+      z-index: 2;
+      font-family: var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .cta-section h2::after {
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%);
+    }
+
+    .cta-section p {
+      font-size: 18px;
+      margin-bottom: 40px;
+      color: white;
+      position: relative;
+      z-index: 2;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .application-form {
+      background: var(--surface);
+      padding: 48px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin: 60px 0;
+      border: 1.5px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-family: var(--font-display);
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+      background: var(--background);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+      background: var(--surface);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .submit-btn {
+      background: var(--accent);
+      color: white;
+      padding: 14px 40px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+      width: 100%;
+      box-shadow: 0 4px 14px rgba(0, 31, 63, 0.25);
+    }
+
+    .submit-btn:hover {
+      background: #001a33;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 31, 63, 0.35);
+    }
+
+    .benefits {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 32px;
+      margin: 60px 0;
+    }
+
+    .benefit-item {
+      background: var(--surface);
+      padding: 32px 24px;
+      border-radius: 16px;
+      border: 1.5px solid var(--border);
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .benefit-item:hover {
+      border-color: var(--accent);
+      box-shadow: 0 12px 32px rgba(0, 31, 63, 0.12);
+      transform: translateY(-4px);
+    }
+
+    .benefit-icon {
+      font-size: 36px;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .benefit-item h4 {
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-family: var(--font-display);
+      font-size: 16px;
+    }
+
+    .benefit-item p {
+      font-size: 14px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 56px 28px 0;
+      margin-top: 60px;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0;
+      display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .foot-brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .foot-logo {
+      font-family: var(--font-display); font-size: 22px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink); text-decoration: none;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+
+    .foot-brand p {
+      font-size: 13px; color: var(--muted); line-height: 1.7; font-weight: 300; margin-bottom: 20px; max-width: 240px;
+    }
+
+    .social-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .footer-social-btn {
+      width: 36px; height: 36px; border: 1.5px solid var(--border);
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 14px; text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .footer-social-btn:hover {
+      border-color: var(--accent); color: var(--accent); background: var(--accent-light);
+    }
+
+    .footer-col h4 {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+    }
+
+    .footer-col ul {
+      list-style: none;
+    }
+
+    .foot-col ul li {
+      margin-bottom: 10px;
+    }
+
+    .footer-col a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 300;
+      transition: color 0.2s;
+    }
+
+    .footer-col a:hover {
+      color: var(--accent);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding: 20px 28px; margin-top: 40px;
+      max-width: 1200px; margin-left: auto; margin-right: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted-2);
+    }
+
+    .footer-bottom p {
+      font-size: 12px;
+      color: var(--muted-2);
+      margin: 0;
+    }
+
+    .footer-bottom-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-bottom-links a {
+      color: var(--muted-2);
+      text-decoration: none;
+      font-size: 12px;
+      transition: color 0.2s;
+    }
+
+    .footer-bottom-links a:hover {
+      color: var(--accent);
+    }
+
+    .social-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .social-links a {
+      color: #d1d5db;
+      text-decoration: none;
+      font-size: 18px;
+      transition: color 0.2s;
+    }
+
+    .social-links a:hover {
+      color: #0066cc;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .application-form {
+        padding: 24px;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+
+.site-footer {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+
+.footer-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 24px 0;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.foot-logo {
+  font-family: var(--fD);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  display: inline-block;
+}
+
+.foot-brand p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 18px;
+  max-width: 230px;
+}
+
+.social-row {
+  display: flex;
+  gap: 7px;
+}
+
+.soc-btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rS);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.soc-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.foot-col h5 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.foot-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.foot-col ul li {
+  margin-bottom: 9px;
+}
+
+.foot-col ul a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 300;
+  transition: color .2s;
+}
+
+.foot-col ul a:hover {
+  color: var(--accent);
+}
+
+.footer-btm {
+  max-width: 1280px;
+  margin: 36px auto 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.footer-btm p {
+  font-size: 12px;
+  color: var(--muted-2);
+  margin: 0;
+}
+
+.footer-btm-links {
+  display: flex;
+  gap: 18px;
+}
+
+.footer-btm-links a {
+  font-size: 12px;
+  color: var(--muted-2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.footer-btm-links a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 36px 16px 0;
+  }
+
+  .footer-btm {
+    padding: 14px 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <ul class="nav-links">
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#user-types">Who It's For</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+      </ul>
+      <div class="auth-row">
+        <a href="../auth/login.html" class="btn-outline">Log In</a>
+        <a href="../auth/signup.html" class="btn-fill">Sign Up Free</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1><i class="fas fa-briefcase"></i> Join Our Team</h1>
+      <p>Help us revolutionize the sports industry. We're hiring talented people to build the future of sports networking.</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <section>
+      <h2>We're Hiring!</h2>
+      <p>At Spopeer, we're building the world's leading sports networking platform. We need exceptional talent across all departments to continue our growth and develop innovative features that serve our global community. Whether you're a developer, designer, marketer, or business professional, we want to hear from you!</p>
+    </section>
+
+    <section>
+      <h2>Open Positions</h2>
+      <div class="jobs-grid">
+        <div class="job-card">
+          <div class="job-icon"><i class="fas fa-code"></i></div>
+          <h3>Full Stack Developer</h3>
+          <span class="job-type">Remote/On-site</span>
+          <p>Build scalable web applications using modern tech stacks. Work on both frontend and backend systems.</p>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon"><i class="fas fa-palette"></i></div>
+          <h3>UI/UX Designer</h3>
+          <span class="job-type">Remote/On-site</span>
+          <p>Design beautiful and intuitive interfaces that improve user experience across our platform.</p>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon"><i class="fas fa-chart-bar"></i></div>
+          <h3>Product Manager</h3>
+          <span class="job-type">Remote/On-site</span>
+          <p>Lead product strategy and drive features that delight our global sports community.</p>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon"><i class="fas fa-bullhorn"></i></div>
+          <h3>Marketing Specialist</h3>
+          <span class="job-type">Remote/On-site</span>
+          <p>Create engaging content and campaigns to grow our brand and community globally.</p>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon"><i class="fas fa-database"></i></div>
+          <h3>Backend Engineer</h3>
+          <span class="job-type">Remote/On-site</span>
+          <p>Develop robust APIs and microservices to power our sports platform infrastructure.</p>
+        </div>
+
+        <div class="job-card">
+          <div class="job-icon"><i class="fas fa-users"></i></div>
+          <h3>Community Manager</h3>
+          <span class="job-type">Remote/On-site</span>
+          <p>Engage with our sports community, gather feedback, and foster meaningful connections.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Why Join Spopeer?</h2>
+      <div class="benefits">
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-heart"></i></div>
+          <h4>Passion for Sports</h4>
+          <p>Work on a platform changing the sports industry</p>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-globe"></i></div>
+          <h4>Global Impact</h4>
+          <p>Reach millions of sports enthusiasts worldwide</p>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-rocket"></i></div>
+          <h4>Growth Opportunities</h4>
+          <p>Grow your career in a fast-growing startup</p>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-team"></i></div>
+          <h4>Great Team</h4>
+          <p>Work with talented and passionate professionals</p>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-laptop"></i></div>
+          <h4>Flexible Work</h4>
+          <p>Remote-friendly culture with flexible schedules</p>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-gift"></i></div>
+          <h4>Great Benefits</h4>
+          <p>Competitive salaries and comprehensive benefits</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <h2>Ready to Make an Impact?</h2>
+      <p>Send us your resume and tell us why you'd be a great fit for our team. We're excited to hear from you!</p>
+    </section>
+
+    <section class="application-form">
+      <h2><i class="fas fa-edit"></i> Apply Now</h2>
+      <p>Send us your information and we'll review your application. We're looking for people in every position to help us continue developing our platform and expanding globally.</p>
+      
+      <form onsubmit="handleSubmit(event)">
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input type="email" id="email" name="email" required />
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" />
+        </div>
+
+        <div class="form-group">
+          <label for="position">Position You're Interested In *</label>
+          <select id="position" name="position" required>
+            <option value="">Select a position</option>
+            <option value="full-stack-developer">Full Stack Developer</option>
+            <option value="ui-ux-designer">UI/UX Designer</option>
+            <option value="product-manager">Product Manager</option>
+            <option value="marketing-specialist">Marketing Specialist</option>
+            <option value="backend-engineer">Backend Engineer</option>
+            <option value="community-manager">Community Manager</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="resume">Resume / CV (PDF or Document Link) *</label>
+          <input type="text" id="resume" name="resume" placeholder="Paste your CV or provide a link to your resume" required />
+        </div>
+
+        <div class="form-group">
+          <label for="portfolio">Portfolio / GitHub (Optional)</label>
+          <input type="url" id="portfolio" name="portfolio" placeholder="https://your-portfolio.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="cover-letter">Cover Letter / Message *</label>
+          <textarea id="cover-letter" name="cover-letter" placeholder="Tell us about yourself and why you'd be a great fit for Spopeer" required></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Application</button>
+      </form>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+
+      <p>Connecting the global sports community � athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+
+      <div class="social-row">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+        <li><a href="/index.html#user-types">User Types</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="/pages/legal/about.html">About Us</a></li>
+        <li><a href="/pages/company/careers.html">Careers</a></li>
+        <li><a href="/pages/company/blog.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Support</h5>
+      <ul>
+        <li><a href="/pages/company/help-center.html">Help Center</a></li>
+        <li><a href="/pages/contact/index.html">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links">
+      <a href="/pages/legal/privacy.html">Privacy</a>
+      <a href="/pages/legal/terms.html">Terms</a>
+      <a href="/pages/contact/index.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+  <script>
+    function handleSubmit(event) {
+      event.preventDefault();
+      alert('Thank you for your application! We will review your CV and get back to you soon.');
+      event.target.reset();
+    }
+  </script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>

@@ -1,0 +1,1288 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Posts · Spopeer</title>
+  <script>
+    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+    if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+  <style>
+    /* ── TOKENS (identical to feed.html) ── */
+    :root {
+      --bg:           #fafaf8;
+      --white:        #ffffff;
+      --ink:          #111111;
+      --ink-2:        #333333;
+      --muted:        #7a7a7a;
+      --muted-2:      #b8b8b8;
+      --border:       #ebebE7;
+      --surface:      #f3f3ef;
+      --surface-2:    #eeeeea;
+      --accent:       #001f3f;
+      --accent-lt:    #cce7ff;
+      --accent-hover: #003366;
+      --blue:         #1a6bff;
+      --blue-lt:      #eef3ff;
+      --green:        #16a34a;
+      --green-lt:     #dcfce7;
+      --red:          #dc2626;
+      --red-lt:       #fee2e2;
+      --fD: 'Syne', sans-serif;
+      --fB: 'Plus Jakarta Sans', sans-serif;
+      --rS: 10px; --rM: 16px; --rL: 24px; --rXL: 32px; --pill: 999px;
+      --nav-h: 64px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--fB); background: var(--bg); color: var(--ink); line-height: 1.6; overflow-x: hidden; }
+
+    /* ── NAV (same as feed) ── */
+    .topnav {
+      position: sticky; top: 0; z-index: 300;
+      height: var(--nav-h);
+      background: rgba(250,250,248,.94);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      height: 100%; padding: 0 24px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .logo {
+      font-family: var(--fD); font-size: 21px; font-weight: 800;
+      letter-spacing: -.02em; color: var(--ink);
+      text-decoration: none; display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+    }
+    .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+
+    /* search */
+    .nav-search { flex: 1; max-width: 360px; position: relative; }
+    .nav-search i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; }
+    .nav-search input { width: 100%; padding: 9px 16px 9px 38px; background: var(--surface); border: 1.5px solid transparent; border-radius: var(--pill); font-size: 13px; font-family: var(--fB); color: var(--ink); transition: .2s; }
+    .nav-search input::placeholder { color: var(--muted-2); }
+    .nav-search input:focus { outline: none; background: var(--white); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,31,63,.08); }
+
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 6px; position: relative; }
+    .nav-icon {
+      width: 38px; height: 38px; border-radius: 50%; border: none;
+      background: transparent; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; cursor: pointer; transition: .2s; text-decoration: none; position: relative;
+    }
+    .nav-icon:hover { background: var(--surface); color: var(--ink); }
+    .notif-badge { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; border: 2px solid var(--bg); }
+
+    /* user chip */
+    .user-chip { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--pill); cursor: pointer; transition: .2s; margin-left: 4px; }
+    .user-chip:hover { border-color: var(--accent); }
+    .user-chip .chip-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#001f3f,#1a6bff); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .user-chip .chip-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .user-chip .chip-caret { font-size: 9px; color: var(--muted); }
+
+    /* profile menu */
+    .profile-menu { position: absolute; top: 100%; right: 0; margin-top: 8px; width: 260px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--rL); box-shadow: 0 14px 40px rgba(0,0,0,.12); padding: 12px 0; display: none; z-index: 500; }
+    .profile-menu.visible { display: block; }
+    .profile-menu-section { padding: 0; }
+    .profile-menu-section + .profile-menu-section { border-top: 1px solid var(--border); }
+    .profile-menu-section-header { padding: 12px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background .2s; border-radius: var(--rS); margin: 2px 4px; }
+    .profile-menu-section-header:hover { background: var(--surface); }
+    .profile-menu-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0; }
+    .profile-menu-section-toggle { font-size: 10px; color: var(--muted-2); transition: transform .3s ease, color .2s; }
+    .profile-menu-section.collapsed .profile-menu-section-toggle { transform: rotate(-90deg); }
+    .profile-menu-section-items { overflow: hidden; transition: max-height .3s ease, padding .3s ease; max-height: 500px; padding: 0 16px 10px; }
+    .profile-menu-section.collapsed .profile-menu-section-items { max-height: 0; padding: 0 16px; }
+    .profile-menu-item { width: 100%; text-align: left; font-size: 13px; color: var(--ink-2); padding: 8px 10px; display: flex; align-items: center; gap: 10px; background: transparent; border: none; cursor: pointer; transition: background .2s; border-radius: var(--rS); margin-bottom: 2px; font-family: var(--fB); }
+    .profile-menu-item:hover { background: var(--surface); color: var(--ink); }
+    .profile-menu-item i { width: 18px; text-align: center; color: var(--muted); }
+    .profile-menu-item.logout { color: var(--accent); }
+    .profile-menu-item.logout:hover { background: rgba(0,31,63,.06); }
+
+    /* ── LAYOUT ── */
+    .page-layout {
+      max-width: 1280px; margin: 0 auto;
+      padding: 28px 24px 60px;
+      display: grid;
+      grid-template-columns: 680px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    /* ── PROFILE HERO BANNER ── */
+    .profile-banner {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--rL); overflow: visible; margin-bottom: 14px;
+    }
+    .banner-cover {
+      height: 100px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 55%, var(--blue) 100%);
+      position: relative;
+    }
+    .banner-cover-pattern {
+      position: absolute; inset: 0; opacity: .08;
+      background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+    .banner-body { padding: 0 22px 20px; }
+    .banner-av-row {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-top: -28px; margin-bottom: 12px;
+    }
+    .banner-av {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      color: var(--accent-lt); font-size: 20px; font-weight: 800;
+      font-family: var(--fD);
+      display: flex; align-items: center; justify-content: center;
+      border: 4px solid var(--white);
+      box-shadow: 0 2px 10px rgba(0,0,0,.14);
+      flex-shrink: 0;
+      position: relative; z-index: 3;
+    }
+    .banner-actions { display: flex; gap: 7px; margin-bottom: 4px; }
+    .btn-sm {
+      padding: 7px 14px; border: 1.5px solid var(--border);
+      border-radius: var(--pill); background: transparent;
+      font-size: 12px; font-weight: 600; font-family: var(--fB);
+      color: var(--muted); cursor: pointer; transition: .2s;
+      display: flex; align-items: center; gap: 5px; text-decoration: none;
+    }
+    .btn-sm:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-lt); }
+    .btn-sm.primary {
+      background: var(--accent); color: var(--accent-lt);
+      border-color: var(--accent);
+      box-shadow: 0 3px 10px rgba(0,31,63,.2);
+    }
+    .btn-sm.primary:hover { background: var(--accent-hover); }
+
+    .banner-name {
+      font-family: var(--fD); font-size: 20px; font-weight: 800;
+      color: var(--ink); letter-spacing: -.02em; margin-bottom: 2px;
+    }
+    .banner-handle { font-size: 12px; color: var(--muted-2); margin-bottom: 8px; }
+    .banner-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: var(--pill);
+    }
+    .role-badge.athlete { background: var(--accent-lt); color: var(--accent); }
+    .role-badge.coach   { background: var(--blue-lt);   color: var(--blue);   }
+    .role-badge.club    { background: var(--green-lt);  color: var(--green);  }
+    .role-badge.pro     { background: #f5f3ff;           color: #5b21b6;       }
+    .sport-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      background: var(--surface-2); padding: 3px 9px;
+      border-radius: var(--pill); border: 1px solid var(--border);
+    }
+    .banner-stats {
+      display: flex; gap: 0;
+      background: var(--surface); border-radius: var(--rS);
+      overflow: hidden; border: 1px solid var(--border);
+    }
+    .bstat {
+      flex: 1; text-align: center; padding: 10px 6px;
+      border-right: 1px solid var(--border); cursor: pointer;
+      transition: background .15s;
+    }
+    .bstat:last-child { border-right: none; }
+    .bstat:hover { background: var(--accent-lt); }
+    .bstat-num {
+      font-family: var(--fD); font-size: 16px; font-weight: 800;
+      color: var(--ink); line-height: 1; margin-bottom: 2px;
+    }
+    .bstat:hover .bstat-num { color: var(--accent); }
+    .bstat-label {
+      font-size: 10px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: .04em; font-weight: 600;
+    }
+
+    /* ── FILTER + SORT BAR ── */
+    .filter-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--rL); padding: 6px;
+      margin-bottom: 14px; overflow-x: auto; scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-tab {
+      flex-shrink: 0; padding: 7px 16px; border: none; background: transparent;
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      border-radius: var(--rM); cursor: pointer; transition: .2s;
+      font-family: var(--fB); display: flex; align-items: center; gap: 6px;
+    }
+    .filter-tab.active { background: var(--accent); color: #fff; }
+    .filter-tab:not(.active):hover { background: var(--surface); color: var(--ink); }
+    .filter-tab .tab-count {
+      font-size: 10px; font-weight: 800; background: rgba(255,255,255,.25);
+      padding: 1px 6px; border-radius: var(--pill);
+    }
+    .filter-tab:not(.active) .tab-count {
+      background: var(--surface-2); color: var(--muted);
+    }
+    .filter-spacer { flex: 1; }
+    .sort-btn {
+      flex-shrink: 0; padding: 7px 13px; border: 1.5px solid var(--border);
+      border-radius: var(--rM); background: transparent;
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      font-family: var(--fB); cursor: pointer; transition: .2s;
+      display: flex; align-items: center; gap: 5px; white-space: nowrap;
+    }
+    .sort-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── POST CARDS ── */
+    .posts-col { display: flex; flex-direction: column; gap: 14px; }
+
+    .post-card {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--rL); overflow: hidden; transition: .2s;
+    }
+    .post-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,.07); border-color: #ddd; }
+
+    .post-body { padding: 18px 18px 0; }
+
+    .post-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .post-author { display: flex; align-items: center; gap: 11px; }
+    .author-av {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      color: #fff; font-size: 15px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .author-name { font-size: 14px; font-weight: 700; color: var(--ink); }
+    .author-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .role-tag {
+      display: inline-flex; align-items: center;
+      background: var(--accent-lt); color: var(--accent);
+      font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+      padding: 2px 7px; border-radius: var(--pill);
+    }
+    .role-tag.blue { background: var(--blue-lt); color: var(--blue); }
+
+    /* post menu */
+    .post-menu-wrap { position: relative; }
+    .post-menu-btn {
+      width: 34px; height: 34px; border-radius: 50%; border: none;
+      background: transparent; color: var(--muted-2); font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: .2s; flex-shrink: 0;
+    }
+    .post-menu-btn:hover { background: var(--surface); color: var(--ink); }
+    .post-dropdown {
+      position: absolute; top: 38px; right: 0;
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--rM); box-shadow: 0 10px 30px rgba(0,0,0,.1);
+      padding: 6px 0; min-width: 160px; z-index: 100; display: none;
+    }
+    .post-dropdown.open { display: block; }
+    .post-dropdown-item {
+      width: 100%; padding: 9px 14px; border: none; background: transparent;
+      font-size: 13px; font-weight: 500; color: var(--ink-2);
+      font-family: var(--fB); cursor: pointer; transition: background .15s;
+      display: flex; align-items: center; gap: 9px; text-align: left;
+    }
+    .post-dropdown-item i { width: 16px; text-align: center; color: var(--muted); font-size: 13px; }
+    .post-dropdown-item:hover { background: var(--surface); }
+    .post-dropdown-item.danger { color: var(--red); }
+    .post-dropdown-item.danger i { color: var(--red); }
+    .post-dropdown-item.danger:hover { background: var(--red-lt); }
+
+    .post-text { font-size: 14px; color: var(--ink-2); line-height: 1.7; margin-bottom: 14px; }
+
+    /* media placeholder */
+    .post-media {
+      background: var(--surface); border-radius: var(--rM);
+      height: 200px; display: flex; align-items: center; justify-content: center;
+      color: var(--muted-2); font-size: 2rem; margin-bottom: 14px;
+      border: 1.5px solid var(--border);
+    }
+
+    .post-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .tag {
+      font-size: 12px; font-weight: 600; color: var(--blue);
+      background: var(--blue-lt); padding: 3px 10px; border-radius: var(--pill);
+    }
+
+    /* post stats */
+    .post-stats {
+      display: flex; gap: 16px; padding: 10px 0;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      font-size: 12px; color: var(--muted);
+    }
+    .post-stats span { display: flex; align-items: center; gap: 5px; }
+
+    /* post actions */
+    .post-actions { display: flex; align-items: center; padding: 6px 0 14px; }
+    .act-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 4px; border: none; background: transparent;
+      font-size: 13px; font-weight: 500; color: var(--muted);
+      border-radius: var(--rM); cursor: pointer; font-family: var(--fB); transition: .2s;
+    }
+    .act-btn:hover { background: var(--surface); color: var(--ink); }
+    .act-btn.like-btn:hover { background: #fff0f0; color: var(--red); }
+    .act-btn.liked { color: var(--red); }
+    .act-btn.liked i { font-weight: 900; }
+    /* edit/delete actions specific to own posts */
+    .act-btn.edit-btn:hover { background: var(--blue-lt); color: var(--blue); }
+    .act-btn.del-btn:hover { background: var(--red-lt); color: var(--red); }
+
+    /* ── SKELETON ── */
+    .skel {
+      background: var(--surface-2); border-radius: var(--rS);
+      animation: shimmer 1.4s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0%,100%{opacity:.45} 50%{opacity:.9} }
+    .skeleton-card { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--rL); padding: 60px 24px; text-align: center;
+    }
+    .empty-icon { font-size: 48px; color: var(--muted-2); margin-bottom: 16px; }
+    .empty-title { font-family: var(--fD); font-size: 20px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .empty-text { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; font-weight: 300; }
+    .btn-create-post {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; background: var(--accent); color: #fff; border: none;
+      border-radius: var(--pill); font-size: 14px; font-weight: 700;
+      font-family: var(--fB); cursor: pointer; transition: .2s;
+      box-shadow: 0 4px 14px rgba(0,31,63,.22);
+    }
+    .btn-create-post:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+    /* ── RIGHT SIDEBAR ── */
+    .right-col { display: flex; flex-direction: column; gap: 14px; position: sticky; top: calc(var(--nav-h) + 20px); }
+
+    .side-card {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--rL); padding: 18px;
+    }
+    .side-card-title {
+      font-family: var(--fD); font-size: 15px; font-weight: 800;
+      color: var(--ink); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .side-card-title i { color: var(--accent); font-size: 14px; }
+
+    /* analytics mini chart row */
+    .analytics-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .analytic-item {
+      flex: 1; background: var(--surface); border-radius: var(--rM);
+      padding: 12px 10px; text-align: center; border: 1px solid var(--border);
+    }
+    .analytic-num {
+      font-family: var(--fD); font-size: 18px; font-weight: 800; color: var(--ink);
+      margin-bottom: 2px;
+    }
+    .analytic-label { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+    .analytic-trend { font-size: 11px; color: var(--green); font-weight: 600; margin-top: 2px; }
+
+    /* best post item */
+    .best-post-item {
+      display: flex; gap: 10px; padding: 10px 0;
+      border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+    .best-post-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .best-post-item:hover .best-post-text { color: var(--accent); }
+    .best-post-rank {
+      font-family: var(--fD); font-size: 18px; font-weight: 800;
+      color: var(--muted-2); line-height: 1; flex-shrink: 0; width: 22px;
+      text-align: center; margin-top: 2px;
+    }
+    .best-post-rank.gold { color: #f59e0b; }
+    .best-post-rank.silver { color: var(--muted); }
+    .best-post-rank.bronze { color: #b45309; }
+    .best-post-info { flex: 1; min-width: 0; }
+    .best-post-text {
+      font-size: 13px; font-weight: 600; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: color .2s; margin-bottom: 3px;
+    }
+    .best-post-meta { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+
+    /* quick links */
+    .quick-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+      text-decoration: none; color: var(--ink-2);
+      font-size: 13px; font-weight: 500; transition: .15s;
+    }
+    .quick-link:last-child { border-bottom: none; padding-bottom: 0; }
+    .quick-link:hover { color: var(--accent); }
+    .quick-link i { width: 18px; text-align: center; color: var(--muted); font-size: 14px; }
+    .quick-link:hover i { color: var(--accent); }
+    .quick-link-arrow { margin-left: auto; font-size: 11px; color: var(--muted-2); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .page-layout { grid-template-columns: 1fr; }
+      .right-col { display: none; }
+    }
+    @media (max-width: 640px) {
+      .page-layout { padding: 16px 12px 40px; }
+      .nav-breadcrumb { display: none; }
+    }
+
+    /* ══ STORIES ══ */
+    .stories-strip {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--rL); padding: 16px 18px; margin-bottom: 20px;
+      display: flex; gap: 14px; overflow-x: auto; scrollbar-width: none;
+    }
+    .stories-strip::-webkit-scrollbar { display: none; }
+    .story-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 7px; flex-shrink: 0; cursor: pointer; transition: .2s;
+    }
+    .story-item:hover { transform: translateY(-2px); }
+    .story-ring {
+      width: 64px; height: 64px; border-radius: 50%; padding: 2.5px;
+      background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .story-ring.viewed { background: linear-gradient(135deg, #ccc 0%, #999 100%); }
+    .story-ring.add-ring { background: var(--surface-2); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .story-item:hover .story-ring { transform: scale(1.08); }
+    .story-inner {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 2px solid var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 800; color: #fff;
+    }
+    .story-name {
+      font-size: 11px; font-weight: 600; color: var(--ink-2);
+      text-align: center; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .add-ring .story-inner {
+      background: var(--surface); color: var(--accent); font-size: 20px;
+    }
+
+    /* Story Viewer */
+    .story-viewer {
+      position: fixed; inset: 0; background: #000; z-index: 9999;
+      display: none; align-items: center; justify-content: center; animation: fadeIn .2s ease;
+    }
+    .story-viewer.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .story-viewer-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .story-viewer-content {
+      position: relative; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #fff; overflow: hidden;
+    }
+    .story-progress-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: rgba(255,255,255,0.3); z-index: 10;
+    }
+    .story-progress-fill { height: 100%; background: #fff; width: 0%; transition: width .1s linear; }
+    .story-header {
+      position: absolute; top: 20px; left: 20px; right: 20px;
+      display: flex; align-items: center; gap: 12px; z-index: 20; color: #fff;
+    }
+    .story-header-avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.3);
+      border: 2px solid #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
+    .story-header-info { display: flex; flex-direction: column; gap: 2px; }
+    .story-header-name { font-weight: 700; font-size: 14px; }
+    .story-header-time { font-size: 11px; opacity: 0.8; }
+    .story-close-btn {
+      position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
+      border: none; background: rgba(0,0,0,0.3); border-radius: 50%;
+      color: #fff; font-size: 20px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; z-index: 30; transition: .2s;
+    }
+    .story-close-btn:hover { background: rgba(0,0,0,0.5); }
+    .story-nav-btn {
+      position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px;
+      border: none; background: rgba(255,255,255,0.2); color: #fff; font-size: 24px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      z-index: 25; transition: .2s; border-radius: 50%;
+    }
+    .story-nav-btn:hover { background: rgba(255,255,255,0.3); }
+    .story-nav-btn.prev { left: 20px; }
+    .story-nav-btn.next { right: 20px; }
+    .story-content-text {
+      font-size: 32px; font-weight: 700; text-align: center; max-width: 80%; text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .story-actions {
+      position: absolute; bottom: 30px; left: 20px; right: 20px;
+      display: flex; gap: 12px; z-index: 20;
+    }
+    .story-action-btn {
+      flex: 1; padding: 12px 16px; border: none;
+      background: rgba(255,255,255,0.2); color: #fff; border-radius: 24px;
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: .2s;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .story-action-btn:hover { background: rgba(255,255,255,0.3); }
+    .story-action-btn.primary { background: #fff; color: #667eea; }
+    .story-action-btn.primary:hover { background: rgba(255,255,255,0.9); }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+</style>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+
+<!-- ── TOP NAV ── -->
+<nav class="topnav">
+  <div class="nav-inner">
+    <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="navSearchInput" placeholder="Search athletes, clubs, coaches">
+    </div>
+
+    <div class="nav-right">
+      <button class="nav-icon" title="Home" onclick="window.location.href='/feed.html'"><i class="fa-solid fa-house"></i></button>
+      <button class="nav-icon" title="Messages" onclick="window.location.href='../../pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
+      <button class="nav-icon" title="Notifications" onclick="window.location.href='../../pages/dashboard/notifications.html'">
+        <i class="fa-regular fa-bell"></i>
+        <span class="notif-badge"></span>
+      </button>
+      <div class="user-chip" id="userChip">
+        <span class="chip-avatar" id="chipAvatar">JD</span>
+        <span class="chip-name" id="chipName">User</span>
+        <i class="fa-solid fa-chevron-down chip-caret"></i>
+      </div>
+
+      <div class="profile-menu" id="profileMenu" aria-hidden="true">
+        <div class="profile-menu-section" data-section="identity">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
+            <div class="profile-menu-title">Your Identity</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
+            <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
+            <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="account">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Account & Settings</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
+            <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
+            <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy & Safety</button>
+            <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
+            <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
+            <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="features">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Platform Features</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>
+            <button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements & Badges</button>
+            <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
+            <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
+            <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
+            <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="help">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Help & Misc</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
+            <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
+            <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
+          </div>
+        </div>
+        <div class="profile-menu-section">
+          <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
+            <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── PAGE LAYOUT ── -->
+<div class="page-layout">
+
+  <!-- ── LEFT / MAIN COLUMN ── -->
+  <div>
+
+    <!-- PROFILE BANNER -->
+    <div class="profile-banner">
+      <div class="banner-cover"><div class="banner-cover-pattern"></div></div>
+      <div class="banner-body">
+        <div class="banner-av-row">
+          <div class="banner-av" id="headerAvatar">JS</div>
+          <div class="banner-actions">
+            <a href="#" class="btn-sm" id="editProfileBtn">
+              <i class="fa-regular fa-pen-to-square" style="font-size:11px"></i> Edit Profile
+            </a>
+            <a href="../../pages/profiles/public-profile.html" class="btn-sm primary" id="viewProfileBtn">
+              <i class="fa-regular fa-eye" style="font-size:11px"></i> View Profile
+            </a>
+          </div>
+        </div>
+        <div class="banner-name" id="headerName">User</div>
+        <div class="banner-handle" id="headerHandle">@johnsmith</div>
+        <div class="banner-badges">
+          <span class="role-badge athlete" id="roleBadge">
+            <i class="fa-solid fa-person-running" style="font-size:9px"></i> Athlete
+          </span>
+          <span class="sport-badge" id="sportBadge">
+            <i class="fa-solid fa-shoe-prints" style="font-size:9px"></i> Runner
+          </span>
+        </div>
+        <div class="banner-stats">
+          <div class="bstat" onclick="window.location.href='/feed.html'">
+            <div class="bstat-num" id="statPosts">0</div>
+            <div class="bstat-label">Posts</div>
+          </div>
+          <div class="bstat">
+            <div class="bstat-num" id="statFollowers">0</div>
+            <div class="bstat-label">Followers</div>
+          </div>
+          <div class="bstat">
+            <div class="bstat-num" id="statFollowing">0</div>
+            <div class="bstat-label">Following</div>
+          </div>
+          <div class="bstat">
+            <div class="bstat-num" id="statViews">0</div>
+            <div class="bstat-label">Total Views</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STORIES STRIP -->
+    <div class="stories-strip">
+      <div class="story-item">
+        <div class="story-ring add-ring">
+          <div class="story-inner"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <span class="story-name">Your story</span>
+      </div>
+    </div>
+
+    <!-- Story Viewer Modal -->
+    <div class="story-viewer" id="storyViewer">
+      <div class="story-viewer-container">
+        <button class="story-nav-btn prev" onclick="prevStory()"><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="story-viewer-content" id="storyContent">
+          <div class="story-progress-bar">
+            <div class="story-progress-fill" id="storyProgress"></div>
+          </div>
+          <div class="story-header">
+            <div class="story-header-avatar" id="storyAvatar"></div>
+            <div class="story-header-info">
+              <div class="story-header-name" id="storyName"></div>
+              <div class="story-header-time" id="storyTime"></div>
+            </div>
+          </div>
+          <div class="story-content-text" id="storyText"></div>
+          <div class="story-actions">
+            <button class="story-action-btn">👍 Like</button>
+            <button class="story-action-btn">💬 Reply</button>
+            <button class="story-action-btn primary">👤 View Profile</button>
+          </div>
+        </div>
+        <button class="story-nav-btn next" onclick="nextStory()"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="story-close-btn" onclick="closeStories()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+
+    <!-- FILTER / SORT BAR -->
+    <div class="filter-bar">
+      <button class="filter-tab active" data-filter="all">
+        All <span class="tab-count" id="countAll">0</span>
+      </button>
+      <button class="filter-tab" data-filter="media">
+        <i class="fa-regular fa-image" style="font-size:12px"></i> With Media
+        <span class="tab-count" id="countMedia">0</span>
+      </button>
+      <button class="filter-tab" data-filter="text">
+        <i class="fa-regular fa-align-left" style="font-size:12px"></i> Text only
+        <span class="tab-count" id="countText">0</span>
+      </button>
+      <div class="filter-spacer"></div>
+      <button class="sort-btn" id="sortBtn">
+        <i class="fa-solid fa-arrow-down-wide-short" style="font-size:11px"></i> Newest
+      </button>
+    </div>
+
+    <!-- POSTS LIST -->
+    <div class="posts-col" id="postsList"></div>
+
+    <!-- EMPTY STATE -->
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div class="empty-icon"><i class="fa-regular fa-rectangle-list"></i></div>
+      <div class="empty-title">No posts yet</div>
+      <div class="empty-text">When you share posts on Spopeer, they'll appear here for others to see.</div>
+      <button class="btn-create-post" onclick="window.location.href='/feed.html'">
+        <i class="fa-regular fa-pen-to-square"></i> Create Your First Post
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT SIDEBAR ── -->
+  <aside class="right-col">
+
+    <!-- Analytics card -->
+    <div class="side-card">
+      <div class="side-card-title"><i class="fa-solid fa-chart-line"></i> Your Analytics</div>
+      <div class="analytics-row">
+        <div class="analytic-item">
+          <div class="analytic-num" id="analyticViews">0</div>
+          <div class="analytic-label">Views</div>
+          <div class="analytic-trend">&mdash;</div>
+        </div>
+        <div class="analytic-item">
+          <div class="analytic-num" id="analyticLikes">0</div>
+          <div class="analytic-label">Likes</div>
+          <div class="analytic-trend">&mdash;</div>
+        </div>
+        <div class="analytic-item">
+          <div class="analytic-num" id="analyticComments">0</div>
+          <div class="analytic-label">Comments</div>
+          <div class="analytic-trend">&mdash;</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;font-weight:300">Last 30 days</div>
+    </div>
+
+    <!-- Top performing posts -->
+    <div class="side-card">
+      <div class="side-card-title"><i class="fa-solid fa-fire-flame-curved"></i> Top Posts</div>
+      <div id="topPostsList" style="text-align:center;padding:16px;color:var(--muted);font-size:13px">
+        <i class="fa-regular fa-rectangle-list" style="font-size:20px;margin-bottom:6px;display:block"></i>
+        No top posts yet
+      </div>
+    </div>
+
+    <!-- Quick links -->
+    <div class="side-card">
+      <div class="side-card-title"><i class="fa-regular fa-compass"></i> Quick Links</div>
+      <a href="/index.html" class="quick-link"><i class="fa-solid fa-house"></i> Back to Home
+        <i class="fa-solid fa-chevron-right quick-link-arrow"></i>
+      </a>
+      <a href="../../pages/profiles/public-profile.html" class="quick-link" id="viewPublicProfileLink">
+        <i class="fa-regular fa-id-badge"></i> View Public Profile
+        <i class="fa-solid fa-chevron-right quick-link-arrow"></i>
+      </a>
+      <a href="#" class="quick-link" id="editLink">
+        <i class="fa-regular fa-pen-to-square"></i> Edit Profile
+        <i class="fa-solid fa-chevron-right quick-link-arrow"></i>
+      </a>
+      <a href="../../pages/messaging/inbox.html" class="quick-link">
+        <i class="fa-regular fa-paper-plane"></i> Messages
+        <i class="fa-solid fa-chevron-right quick-link-arrow"></i>
+      </a>
+      <a href="../../pages/dashboard/notifications.html" class="quick-link">
+        <i class="fa-regular fa-bell"></i> Notifications
+        <i class="fa-solid fa-chevron-right quick-link-arrow"></i>
+      </a>
+      <a href="../../pages/dashboard/settings.html" class="quick-link">
+        <i class="fa-regular fa-gear"></i> Settings
+        <i class="fa-solid fa-chevron-right quick-link-arrow"></i>
+      </a>
+    </div>
+
+  </aside>
+</div>
+
+<script src="../../js/profile-identity.js"></script>
+<script src="../../js/shared-ui.js"></script>
+<script>
+(async function () {
+  const _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+  const _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+  if (!_ud || !_li) { window.location.href = '../../pages/auth/login.html'; return; }
+
+  /* ── IIFE-scope vars shared with renderPost ── */
+  const roleMap = {
+    athlete:  { cls: 'athlete', icon: 'fa-person-running',  label: 'Athlete' },
+    coach:    { cls: 'coach',   icon: 'fa-bullseye',         label: 'Coach'   },
+    club:     { cls: 'club',    icon: 'fa-shield-halved',    label: 'Club'    },
+    'supportive_professional': { cls: 'pro', icon: 'fa-star', label: 'Pro'     },
+  };
+  let initials = (() => {
+    const fi = (_ud.firstName || _ud.name?.split(' ')[0] || '')[0] || '';
+    const li = (_ud.lastName  || _ud.name?.split(' ')[1] || '')[0] || '';
+    return (fi + li).toUpperCase() || 'JS';
+  })();
+  let r = roleMap[_ud.userType] || roleMap.athlete;
+
+  /* ── Function to update header from profile data ── */
+  function updateHeaderFromProfile(profile) {
+    if (!profile) return;
+    
+    // Get name from either firstName+lastName or name field
+    const fullName = profile.firstName || profile.lastName 
+      ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim()
+      : (profile.name || 'User');
+    
+    // Get initials - handle both firstName/lastName and name fields
+    const firstInitial = (profile.firstName || profile.name?.split(' ')[0] || '')[0] || '';
+    const lastInitial = (profile.lastName || profile.name?.split(' ')[1] || '')[0] || '';
+    initials = (firstInitial + lastInitial).toUpperCase() || 'JS';
+    const handle = '@' + (profile.email ? profile.email.split('@')[0] : profile.username || 'user');
+
+    document.getElementById('headerAvatar').textContent = initials;
+    document.getElementById('headerName').textContent = fullName;
+    document.getElementById('headerHandle').textContent = handle;
+
+    // Update user chip in nav
+    const chipAv = document.getElementById('chipAvatar');
+    const chipNm = document.getElementById('chipName');
+    if (chipAv) chipAv.textContent = initials;
+    if (chipNm) chipNm.textContent = fullName.split(' ')[0] || 'User';
+
+    /* role badge */
+    r = roleMap[profile.userType] || roleMap.athlete;
+    const rb = document.getElementById('roleBadge');
+    rb.className = 'role-badge ' + r.cls;
+    rb.innerHTML = `<i class="fa-solid ${r.icon}" style="font-size:9px"></i> ${r.label}`;
+
+    if (profile.primarySport || profile.sport) {
+      document.getElementById('sportBadge').innerHTML =
+        `<i class="fa-solid fa-shoe-prints" style="font-size:9px"></i> ${profile.primarySport || profile.sport}`;
+    }
+  }
+
+  /* ── Hydrate header from user data ── */
+  updateHeaderFromProfile(_ud);
+
+  /* ── Hydrate stats from user data ── */
+  var sf = document.getElementById('statFollowers');
+  var sfg = document.getElementById('statFollowing');
+  var sv = document.getElementById('statViews');
+  if(sf) sf.textContent = _ud.followersCount || _ud.followers || '0';
+  if(sfg) sfg.textContent = _ud.followingCount || _ud.following || '0';
+  if(sv) sv.textContent = _ud.totalViews || '0';
+
+  /* ── PROFILE SYNC: Listen for profile updates ── */
+  window.addEventListener('profileUpdated', (event) => {
+    const updatedProfile = event.detail;
+    if (updatedProfile) {
+      // Update localStorage
+      const mergedProfile = { ..._ud, ...updatedProfile };
+      localStorage.setItem('spopeer_user', JSON.stringify(mergedProfile));
+      
+      // Update header in real-time
+      updateHeaderFromProfile(mergedProfile);
+    }
+  });
+
+  /* ─── PROFILE SYNC: Listen for localStorage changes (cross-tab/window) ─── */
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'spopeer_user' && event.newValue) {
+      try {
+        const updatedProfile = JSON.parse(event.newValue);
+        updateHeaderFromProfile(updatedProfile);
+      } catch (e) {
+        console.error('Error parsing updated profile:', e);
+      }
+    }
+    // Also detect the update flag from edit-profile.html
+    if (event.key === '_profileLastUpdated_') {
+      const currentUser = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      updateHeaderFromProfile(currentUser);
+    }
+  });
+
+  /* ─── PROFILE SYNC: Poll for profile changes (handles same-tab updates) ─── */
+  let lastProfileCheck = localStorage.getItem('spopeer_user');
+  setInterval(() => {
+    const currentProfile = localStorage.getItem('spopeer_user');
+    if (currentProfile !== lastProfileCheck) {
+      lastProfileCheck = currentProfile;
+      try {
+        const profile = JSON.parse(currentProfile || '{}');
+        updateHeaderFromProfile(profile);
+      } catch (e) {
+        console.error('Error parsing profile from poll:', e);
+      }
+    }
+  }, 500);  // Check every 500ms for changes
+
+  /* edit profile links */
+  const editUrl = 'edit-profile.html';
+  document.getElementById('editProfileBtn').href = editUrl;
+  document.getElementById('editLink').href = editUrl;
+
+  /* View profile links — use stable user id */
+  const stableUserId = window.SpopeerProfileIdentity
+    ? window.SpopeerProfileIdentity.getStableId(_ud)
+    : String(_ud.id || _ud.userId || _ud.email || _ud.userEmail || '');
+  const viewProfileUrl = 'public-profile.html?userId=' + encodeURIComponent(stableUserId);
+  const vpBtn = document.getElementById('viewProfileBtn');
+  const vpLink = document.getElementById('viewPublicProfileLink');
+  if (vpBtn) vpBtn.href = viewProfileUrl;
+  if (vpLink) vpLink.href = viewProfileUrl;
+
+  /* ── Posts data — fetch from API, fallback to empty ── */
+  let posts = [];
+  try {
+    const tok = localStorage.getItem('spopeer_token');
+    const hdrs = {};
+    if (tok) hdrs['Authorization'] = 'Bearer ' + tok;
+    const uid = _ud.id || _ud.userId || '';
+    if (uid) {
+      const r = await fetch('/api/posts?authorId=' + encodeURIComponent(uid), { headers: hdrs });
+      if (r.ok) {
+        const d = await r.json();
+        posts = d.payload || d.posts || [];
+      }
+    }
+  } catch (e) {
+    console.log('Failed to fetch user posts:', e.message);
+  }
+
+  /* update stat counts */
+  document.getElementById('statPosts').textContent = posts.length;
+  document.getElementById('countAll').textContent = posts.length;
+  document.getElementById('countMedia').textContent = posts.filter(p => !!(p.image || p.media)).length;
+  document.getElementById('countText').textContent = posts.filter(p => !(p.image || p.media)).length;
+
+  /* ── Time-ago helper ── */
+  function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    const days = Math.floor(hrs / 24);
+    if (days < 30) return days + 'd ago';
+    return new Date(dateStr).toLocaleDateString();
+  }
+
+  /* ── Render a single post card ── */
+  function renderPost(post) {
+    const postText = post.content || post.text || '';
+    const postTags = post.tags || [];
+    const hasMedia = !!(post.image || post.media);
+    const likes = post.likesCount ?? post.likes ?? 0;
+    const comments = post.commentsCount ?? post.comments ?? 0;
+    const reposts = post.repostsCount ?? post.shares ?? 0;
+    const timestamp = post.timestamp || timeAgo(post.createdAt) || '';
+    const authorName = post.author
+      ? ((post.author.firstName || '') + ' ' + (post.author.lastName || '')).trim() || 'User'
+      : (_ud.fullName || _ud.name || 'User');
+
+    const tagsHtml = postTags.map(t => `<span class="tag">${typeof t === 'string' && t.startsWith('#') ? t : '#' + t}</span>`).join('');
+    const div = document.createElement('div');
+    div.className = 'post-card';
+    div.id = 'post-' + post.id;
+    div.dataset.type = hasMedia ? 'media' : 'text';
+    div.innerHTML = `
+      <div class="post-body">
+        <div class="post-head">
+          <div class="post-author">
+            <div class="author-av">${initials}</div>
+            <div class="author-info">
+              <div class="author-name">${authorName}</div>
+              <div class="author-meta">
+                <span class="role-tag">${r.label}</span>
+                @${(_ud.email || '').split('@')[0] || 'user'} · ${timestamp}
+              </div>
+            </div>
+          </div>
+          <div class="post-menu-wrap">
+            <button class="post-menu-btn" data-post="${post.id}">
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+            <div class="post-dropdown" id="dropdown-${post.id}">
+              <button class="post-dropdown-item"><i class="fa-regular fa-pen-to-square"></i> Edit post</button>
+              <button class="post-dropdown-item"><i class="fa-regular fa-bookmark"></i> Save to library</button>
+              <button class="post-dropdown-item"><i class="fa-regular fa-share-from-square"></i> Share</button>
+              <button class="post-dropdown-item"><i class="fa-solid fa-chart-simple"></i> View analytics</button>
+              <button class="post-dropdown-item danger"><i class="fa-regular fa-trash-can"></i> Delete post</button>
+            </div>
+          </div>
+        </div>
+        <p class="post-text">${postText}</p>
+        ${postTags.length ? `<div class="post-tags">${tagsHtml}</div>` : ''}
+        ${hasMedia ? (post.image ? `<div class="post-media"><img src="${post.image}" alt="Post media" style="width:100%;border-radius:8px"></div>` : '<div class="post-media"><i class="fa-regular fa-image"></i></div>') : ''}
+        <div class="post-stats">
+          <span><i class="fa-regular fa-heart"></i> ${likes} likes</span>
+          <span><i class="fa-regular fa-message"></i> ${comments} comments</span>
+          <span><i class="fa-solid fa-retweet"></i> ${reposts} reposts</span>
+        </div>
+        <div class="post-actions">
+          <button class="act-btn like-btn" data-post-id="${post.id}" data-liked="${post.liked ? 'true' : 'false'}"><i class="fa-${post.liked ? 'solid' : 'regular'} fa-heart"></i> ${post.liked ? 'Liked' : 'Like'}</button>
+          <button class="act-btn"><i class="fa-regular fa-message"></i> Comment</button>
+          <button class="act-btn"><i class="fa-solid fa-retweet"></i> Repost</button>
+          <button class="act-btn edit-btn"><i class="fa-regular fa-pen-to-square"></i> Edit</button>
+          <button class="act-btn del-btn" data-post-id="${post.id}"><i class="fa-regular fa-trash-can"></i> Delete</button>
+        </div>
+      </div>`;
+
+    /* like toggle — calls API */
+    div.querySelector('.like-btn').addEventListener('click', async function () {
+      const btn = this;
+      const pid = btn.dataset.postId;
+      btn.disabled = true;
+      try {
+        const tok = localStorage.getItem('spopeer_token');
+        const hdrs = {};
+        if (tok) hdrs['Authorization'] = 'Bearer ' + tok;
+        const resp = await fetch('/api/posts/' + pid + '/like', { method: 'POST', headers: hdrs });
+        if (resp.ok) {
+          const d = await resp.json();
+          btn.dataset.liked = d.liked ? 'true' : 'false';
+          btn.innerHTML = d.liked
+            ? '<i class="fa-solid fa-heart"></i> Liked'
+            : '<i class="fa-regular fa-heart"></i> Like';
+          if (d.liked) btn.classList.add('liked'); else btn.classList.remove('liked');
+        }
+      } catch (e) {
+        console.log('Like toggle failed:', e.message);
+      }
+      btn.disabled = false;
+    });
+
+    /* post menu dropdown */
+    div.querySelector('.post-menu-btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      const dd = document.getElementById('dropdown-' + post.id);
+      document.querySelectorAll('.post-dropdown').forEach(d => { if (d !== dd) d.classList.remove('open'); });
+      dd.classList.toggle('open');
+    });
+
+    /* delete — calls real API */
+    async function deletePost(el) {
+      if (!confirm('Delete this post?')) return;
+      try {
+        const tok = localStorage.getItem('spopeer_token');
+        const hdrs = {};
+        if (tok) hdrs['Authorization'] = 'Bearer ' + tok;
+        const resp = await fetch('/api/posts/' + post.id, { method: 'DELETE', headers: hdrs });
+        if (resp.ok) {
+          posts = posts.filter(p => p.id !== post.id);
+          div.remove();
+          document.getElementById('statPosts').textContent = posts.length;
+          document.getElementById('countAll').textContent = posts.length;
+          document.getElementById('countMedia').textContent = posts.filter(p => !!(p.image || p.media)).length;
+          document.getElementById('countText').textContent = posts.filter(p => !(p.image || p.media)).length;
+          if (posts.length === 0) {
+            document.getElementById('postsList').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+          }
+        } else {
+          const d = await resp.json().catch(() => ({}));
+          alert(d.error || 'Failed to delete post.');
+        }
+      } catch (e) {
+        console.log('Delete failed:', e.message);
+      }
+    }
+    div.querySelector('.del-btn').addEventListener('click', function () { deletePost(this); });
+    div.querySelectorAll('.post-dropdown-item.danger').forEach(btn => {
+      btn.addEventListener('click', () => deletePost(btn));
+    });
+
+    return div;
+  }
+
+  /* ── Render posts list ── */
+  function renderPosts(filter = 'all') {
+    const list = document.getElementById('postsList');
+    const empty = document.getElementById('emptyState');
+    const filtered = filter === 'all' ? posts
+      : filter === 'media' ? posts.filter(p => !!(p.image || p.media))
+      : posts.filter(p => !(p.image || p.media));
+
+    list.innerHTML = '';
+    if (filtered.length === 0) {
+      list.style.display = 'none';
+      empty.style.display = 'block';
+    } else {
+      list.style.display = 'flex';
+      empty.style.display = 'none';
+      filtered.forEach(p => list.appendChild(renderPost(p)));
+    }
+  }
+
+  renderPosts();
+
+  /* ── Filter tabs ── */
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      renderPosts(this.dataset.filter);
+    });
+  });
+
+  /* ── Sort toggle newest/oldest ── */
+  let newestFirst = true;
+  document.getElementById('sortBtn').addEventListener('click', function () {
+    newestFirst = !newestFirst;
+    posts.reverse();
+    this.innerHTML = newestFirst
+      ? '<i class="fa-solid fa-arrow-down-wide-short" style="font-size:11px"></i> Newest'
+      : '<i class="fa-solid fa-arrow-up-wide-short" style="font-size:11px"></i> Oldest';
+    renderPosts(document.querySelector('.filter-tab.active')?.dataset.filter || 'all');
+  });
+
+  /* ── Close dropdowns on outside click ── */
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.post-dropdown').forEach(d => d.classList.remove('open'));
+  });
+
+  /* ══ STORIES SYSTEM ══ */
+  const storiesData = [
+    { id: 1, name: 'Alex', initials: 'AN', content: 'Just crushed my morning run! 🏃‍♂️💨', time: '2 hours ago', role: 'Athlete', sport: 'Running' },
+    { id: 2, name: 'Sarah', initials: 'SR', content: 'New coaching session went amazing! 🎯', time: '4 hours ago', role: 'Coach', sport: 'Basketball' },
+    { id: 3, name: 'Michael', initials: 'MC', content: 'Power lifting PR today! 💪🔥', time: '6 hours ago', role: 'Athlete', sport: 'Weightlifting' },
+    { id: 4, name: 'Elena', initials: 'EL', content: 'Recovery day - stretching and mobility work', time: '8 hours ago', role: 'Athlete', sport: 'Fitness' },
+  ];
+
+  let currentStoryIndex = 0;
+  let storyProgressInterval = null;
+
+  function viewStory(index) {
+    currentStoryIndex = index - 1;
+    if (currentStoryIndex < 0 || currentStoryIndex >= storiesData.length) return;
+    const story = storiesData[currentStoryIndex];
+    const viewer = document.getElementById('storyViewer');
+    document.getElementById('storyContent').style.background = `linear-gradient(135deg, ${['#667eea', '#764ba2', '#f093fb', '#4facfe'][currentStoryIndex % 4]} 0%, ${['#764ba2', '#f093fb', '#4facfe', '#fa709a'][currentStoryIndex % 4]} 100%)`;
+    document.getElementById('storyAvatar').textContent = story.initials;
+    document.getElementById('storyName').textContent = story.name;
+    document.getElementById('storyTime').textContent = story.time;
+    document.getElementById('storyText').textContent = story.content;
+    viewer.classList.add('active');
+    document.querySelector('.story-item') && document.querySelectorAll('.story-item')[index]?.querySelector('.story-ring')?.classList.add('viewed');
+    startStoryProgress();
+  }
+
+  function closeStories() {
+    document.getElementById('storyViewer').classList.remove('active');
+    if (storyProgressInterval) clearInterval(storyProgressInterval);
+  }
+
+  function nextStory() {
+    if (storyProgressInterval) clearInterval(storyProgressInterval);
+    currentStoryIndex++;
+    if (currentStoryIndex >= storiesData.length) closeStories();
+    else viewStory(currentStoryIndex + 1);
+  }
+
+  function prevStory() {
+    if (storyProgressInterval) clearInterval(storyProgressInterval);
+    currentStoryIndex--;
+    if (currentStoryIndex < 0) currentStoryIndex = 0;
+    viewStory(currentStoryIndex + 1);
+  }
+
+  function startStoryProgress() {
+    const progressBar = document.getElementById('storyProgress');
+    let progress = 0;
+    progressBar.style.width = '0%';
+    if (storyProgressInterval) clearInterval(storyProgressInterval);
+    storyProgressInterval = setInterval(() => {
+      progress += 2;
+      progressBar.style.width = progress + '%';
+      if (progress >= 100) {
+        clearInterval(storyProgressInterval);
+        setTimeout(nextStory, 300);
+      }
+    }, 50);
+  }
+
+  document.querySelectorAll('.story-item').forEach((item, index) => {
+    if (index === 0) {
+      item.addEventListener('click', () => alert('Add a new story (upload feature)'));
+    } else {
+      item.addEventListener('click', () => viewStory(index));
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const viewer = document.getElementById('storyViewer');
+    if (viewer && viewer.classList.contains('active')) {
+      if (e.key === 'ArrowRight') nextStory();
+      if (e.key === 'ArrowLeft') prevStory();
+      if (e.key === 'Escape') closeStories();
+    }
+  });
+
+  /* ── PROFILE MENU: handled by shared-ui.js setupSocialFeedRuntime ── */
+
+  /* search bar */
+  document.getElementById('navSearchInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      window.location.href = '../../pages/search/search.html?term=' + encodeURIComponent(e.target.value.trim());
+    }
+  });
+
+})();
+</script>
+<script>
+  if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
+    window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+  }
+</script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up — Spopeer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <style>
+    /* Auth-specific token overrides */
+    :root { --accent-2: #1a6bff; --accent-2-light: #eef3ff; }
+
+    /* ─── NAVBAR ─── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(250,250,248,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navbar {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 28px; height: 66px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 800;
+      color: var(--ink); text-decoration: none;
+      letter-spacing: -0.02em; flex-shrink: 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+.nav-links { display: flex; gap: 4px; list-style: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--muted);
+      font-size: 14px; font-weight: 500;
+      padding: 6px 14px; border-radius: var(--r-pill);
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-links a:hover { color: var(--ink); background: var(--surface); }
+    .auth-row { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .btn-outline {
+      padding: 8px 20px;
+      border: 1.5px solid var(--border);
+      background: transparent; color: var(--ink-2);
+      border-radius: var(--r-pill); font-size: 14px; font-weight: 600;
+      font-family: var(--font-body); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--ink); background: var(--surface); }
+    .btn-fill {
+      padding: 8px 22px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--r-pill);
+      font-size: 14px; font-weight: 700;
+      font-family: var(--font-body); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0,31,63,0.25);
+    }
+    .btn-fill:hover { background: #001a33; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,31,63,0.35); }
+
+    /* ─── SIGNUP SECTION ─── */
+    .signup-wrap {
+      max-width: 1200px; margin: 0 auto;
+      padding: 80px 28px;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 48px;
+      min-height: calc(100vh - 66px - 200px);
+      align-items: start;
+    }
+    .signup-left { padding-top: 40px; }
+    .signup-left h1 {
+      font-family: var(--font-display);
+      font-size: 48px; font-weight: 800;
+      letter-spacing: -0.03em; color: var(--ink);
+      margin-bottom: 24px;
+    }
+    .signup-left p {
+      font-size: 17px; font-weight: 300;
+      color: var(--muted); line-height: 1.75;
+      max-width: 500px;
+    }
+
+    /* ─── SIGNUP CARD ─── */
+    .signup-card {
+      background: var(--white);
+      border-radius: var(--r-lg);
+      border: 1.5px solid var(--border);
+      padding: 36px 32px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+      position: relative; overflow: hidden;
+    }
+    .signup-card::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 180px; height: 180px;
+      background: radial-gradient(circle, rgba(0,31,63,0.08) 0%, transparent 70%);
+      border-radius: 50%; pointer-events: none;
+    }
+    .card-heading { margin-bottom: 24px; }
+    .card-heading h2 {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink); margin-bottom: 4px;
+    }
+    .card-heading p { font-size: 13px; color: var(--muted); }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--ink-2); margin-bottom: 6px; letter-spacing: 0.01em;
+    }
+    .form-group input, .form-group select {
+      width: 100%; padding: 10px 14px;
+      background: var(--surface);
+      border: 1.5px solid transparent;
+      border-radius: var(--r-sm);
+      font-size: 14px; font-family: var(--font-body);
+      color: var(--ink);
+      transition: border-color 0.2s, background 0.2s;
+      appearance: none; -webkit-appearance: none;
+    }
+    .form-group input::placeholder { color: var(--muted-2); }
+    .form-group input:focus, .form-group select:focus {
+      outline: none; border-color: var(--accent);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(0,31,63,0.08);
+    }
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 44px; }
+    .pw-toggle {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      background: transparent; border: none; cursor: pointer; color: var(--muted-2); font-size: 14px; padding:6px; border-radius:6px;
+    }
+    .pw-toggle:focus { outline: 2px solid rgba(26,107,255,0.18); }
+    .form-group select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7a7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      background-color: var(--surface); padding-right: 36px; cursor: pointer;
+    }
+    .form-group select option { background: #fff; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .signup-btn {
+      width: 100%; padding: 12px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--r-sm); font-size: 15px; font-weight: 700;
+      font-family: var(--font-body); cursor: pointer; margin-top: 6px;
+      box-shadow: 0 4px 14px rgba(0,31,63,0.25);
+      transition: background 0.2s, transform 0.15s;
+    }
+    .signup-btn:hover { background: #001a33; transform: translateY(-1px); }
+    .card-footer { text-align: center; margin-top: 14px; font-size: 12px; color: var(--muted); }
+    .card-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+    /* ─── FOOTER ─── */
+    footer { background: var(--white); border-top: 1px solid var(--border); }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto; padding: 56px 28px 0;
+      display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; gap: 40px;
+    }
+    .foot-logo {
+      font-family: var(--font-display); font-size: 22px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--ink); text-decoration: none;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .foot-brand p { font-size: 13px; color: var(--muted); line-height: 1.7; font-weight: 300; margin-bottom: 20px; max-width: 240px; }
+    .social-row { display: flex; gap: 8px; }
+    .social-btn {
+      width: 36px; height: 36px; border: 1.5px solid var(--border);
+      border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 14px; text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .social-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .foot-col h4 { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .foot-col ul { list-style: none; }
+    .foot-col ul li { margin-bottom: 10px; }
+    .foot-col ul a { font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 300; transition: color 0.2s; }
+    .foot-col ul a:hover { color: var(--accent); }
+    .footer-bottom {
+      max-width: 1200px; margin: 0 auto; padding: 20px 28px; margin-top: 40px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-bottom p { font-size: 12px; color: var(--muted-2); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a { font-size: 12px; color: var(--muted-2); text-decoration: none; transition: color 0.2s; }
+    .footer-bottom-links a:hover { color: var(--accent); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1024px) {
+      .signup-wrap { grid-template-columns: 1fr; min-height: auto; }
+      .signup-left { padding-top: 0; text-align: center; }
+      .signup-left h1 { font-size: 36px; }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .navbar { padding: 0 16px; }
+      .nav-links { display: none; }
+      .signup-wrap { padding: 40px 16px; }
+      .signup-left h1 { font-size: 28px; }
+      .signup-card { padding: 28px 20px; }
+      .footer-inner { padding: 40px 16px 0; grid-template-columns: 1fr 1fr; }
+      .footer-bottom { padding: 16px; flex-direction: column; text-align: center; }
+    }
+  .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+
+.site-footer {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+
+.footer-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 24px 0;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.foot-logo {
+  font-family: var(--fD);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  display: inline-block;
+}
+
+.foot-brand p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 18px;
+  max-width: 230px;
+}
+
+.social-row {
+  display: flex;
+  gap: 7px;
+}
+
+.soc-btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rS);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.soc-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.foot-col h5 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.foot-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.foot-col ul li {
+  margin-bottom: 9px;
+}
+
+.foot-col ul a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 300;
+  transition: color .2s;
+}
+
+.foot-col ul a:hover {
+  color: var(--accent);
+}
+
+.footer-btm {
+  max-width: 1280px;
+  margin: 36px auto 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.footer-btm p {
+  font-size: 12px;
+  color: var(--muted-2);
+  margin: 0;
+}
+
+.footer-btm-links {
+  display: flex;
+  gap: 18px;
+}
+
+.footer-btm-links a {
+  font-size: 12px;
+  color: var(--muted-2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.footer-btm-links a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 36px 16px 0;
+  }
+
+  .footer-btm {
+    padding: 14px 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
+  <script src="/js/auth.js"></script>
+  <script src="/js/role-router.js"></script>
+  <link rel="stylesheet" href="/css/fonts.css">
+
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+</head>
+<body>
+
+  <!-- NAV -->
+  <header>
+    <nav class="navbar">
+      <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
+      <ul class="nav-links">
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#user-types">Who It's For</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+      </ul>
+      <div class="auth-row">
+        <a href="/pages/auth/login.html" class="btn-outline">Log In</a>
+        <a href="/pages/auth/signup.html" class="btn-fill">Sign Up Free</a>
+      </div>
+    </nav>
+  </header>
+
+  <div class="signup-wrap">
+    <div class="signup-left">
+      <h1>Join the Global<br>Sports Network</h1>
+      <p>Create your profile and connect with athletes, coaches, and clubs worldwide. Start building your sports career today.</p>
+    </div>
+
+    <!-- SIGNUP CARD -->
+    <div class="signup-card">
+      <div class="card-heading">
+        <h2>Create your account</h2>
+        <p>Join the global sports community — free</p>
+      </div>
+      <form id="signupForm">
+        <div id="signupError" style="display:none;margin-bottom:14px;padding:10px 12px;border-radius:8px;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:600;"></div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input id="fullName" type="text" placeholder="Your full name" required />
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input id="email" type="email" placeholder="you@email.com" required />
+        </div>
+        <div class="form-group pw-group">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input id="password" type="password" placeholder="Create a password" required />
+            <button type="button" class="pw-toggle" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="form-group pw-group">
+          <label>Confirm Password</label>
+          <div class="pw-wrap">
+            <input id="confirmPassword" type="password" placeholder="Confirm password" required />
+            <button type="button" class="pw-toggle" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>I am a…</label>
+          <select id="roleSelect" required>
+            <option value="">Select your role</option>
+            <option value="athlete">Athlete</option>
+            <option value="coach">Coach / Manager</option>
+            <option value="club">Sports Club</option>
+            <option value="supportive_professional">Supportive Professional</option>
+          </select>
+        </div>
+        <div class="form-group" id="sportGroup" style="display:none;">
+          <label>Primary Sport</label>
+          <select id="primarySport">
+            <option value="">Select your sport</option>
+          </select>
+          <div id="customSportWrap" style="display:none;margin-top:8px;">
+            <input type="text" id="customSportInput" placeholder="Enter your sport" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Secondary Sports</label>
+          <input id="secondarySports" type="text" placeholder="Comma separated, for example Tennis, Swimming" />
+        </div>
+        <button type="submit" id="createAccountBtn" class="signup-btn">Create Account</button>
+        <p class="card-footer">Already have an account? <a href="login.html">Log in</a></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+  <div class="footer-grid">
+    <div class="foot-brand">
+      <a href="/index.html" class="foot-logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+
+      <p>Connecting the global sports community � athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+
+      <div class="social-row">
+        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#how-it-works">How It Works</a></li>
+        <li><a href="/index.html#user-types">User Types</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="/pages/legal/about.html">About Us</a></li>
+        <li><a href="/pages/company/careers.html">Careers</a></li>
+        <li><a href="/pages/company/blog.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Support</h5>
+      <ul>
+        <li><a href="/pages/company/help-center.html">Help Center</a></li>
+        <li><a href="/pages/contact/index.html">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
+        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
+        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-btm">
+    <p>&copy; 2026 Spopeer. All rights reserved.</p>
+    <div class="footer-btm-links">
+      <a href="/pages/legal/privacy.html">Privacy</a>
+      <a href="/pages/legal/terms.html">Terms</a>
+      <a href="/pages/contact/index.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+  <script src="../../js/api.js"></script>
+  <script>
+    // Reuse password toggle logic if already defined in page
+    (function(){
+      function togglePassword(btn){
+        const wrap = btn.closest('.pw-wrap');
+        if(!wrap) return;
+        const input = wrap.querySelector('input');
+        if(!input) return;
+        const shown = input.getAttribute('type') === 'text';
+        input.setAttribute('type', shown ? 'password' : 'text');
+        btn.innerHTML = shown ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
+        btn.setAttribute('aria-pressed', (!shown).toString());
+      }
+      document.addEventListener('click', (e)=>{
+        const btn = e.target.closest && e.target.closest('.pw-toggle');
+        if(btn) togglePassword(btn);
+      });
+      document.addEventListener('keydown', (e)=>{
+        if((e.key==='Enter' || e.key===' ') && document.activeElement && document.activeElement.classList.contains('pw-toggle')){
+          e.preventDefault();
+          togglePassword(document.activeElement);
+        }
+      });
+    })();
+    (function(){
+      const role = document.getElementById('roleSelect');
+      const sportGroup = document.getElementById('sportGroup');
+      const createBtn = document.getElementById('createAccountBtn');
+      const sportSelect = document.getElementById('primarySport');
+      const customSportWrap = document.getElementById('customSportWrap');
+      const customSportInput = document.getElementById('customSportInput');
+      const errorBox = document.getElementById('signupError');
+
+      let sportsList = [];
+
+      async function loadSports(){
+        try {
+          const res = await fetch('/data/list-of-sports.txt');
+          const text = await res.text();
+          sportsList = text.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+        } catch (err) {
+          sportsList = [];
+        }
+        populateSports();
+      }
+      function populateSports(){
+        sportSelect.innerHTML = '<option value="">Select your sport</option>';
+        sportsList.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s; opt.textContent = s;
+          sportSelect.appendChild(opt);
+        });
+        const opt = document.createElement('option');
+        opt.value = 'other'; opt.textContent = 'Other';
+        sportSelect.appendChild(opt);
+      }
+      loadSports();
+      if(!role) return;
+      role.addEventListener('change',()=>{
+        sportGroup.style.display = role.value ? 'block' : 'none';
+      });
+      sportSelect.addEventListener('change',()=>{
+        if(sportSelect.value === 'other') customSportWrap.style.display = 'block';
+        else customSportWrap.style.display = 'none';
+      });
+
+      document.getElementById('signupForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+
+        const fullName = document.getElementById('fullName')?.value.trim() || '';
+        const email = document.getElementById('email')?.value.trim() || '';
+        const pass = document.getElementById('password')?.value || '';
+        const confirm = document.getElementById('confirmPassword')?.value || '';
+        const roleVal = role.value;
+        let sport = sportSelect.value;
+        if(sport === 'other') sport = customSportInput.value.trim();
+
+        if (errorBox) {
+          errorBox.textContent = '';
+          errorBox.style.display = 'none';
+        }
+
+        if(!fullName || !email || !pass || !roleVal) {
+          if (errorBox) {
+            errorBox.textContent = 'Please fill all required fields.';
+            errorBox.style.display = 'block';
+          }
+          return;
+        }
+        if(pass.length < 8) {
+          if (errorBox) {
+            errorBox.textContent = 'Password must be at least 8 characters.';
+            errorBox.style.display = 'block';
+          }
+          return;
+        }
+        if(pass !== confirm) {
+          if (errorBox) {
+            errorBox.textContent = 'Passwords do not match.';
+            errorBox.style.display = 'block';
+          }
+          return;
+        }
+
+        createBtn.disabled = true;
+        createBtn.textContent = 'Creating Account...';
+
+        try {
+          const nameParts = fullName.split(/\s+/).filter(Boolean);
+          const firstName = nameParts.shift() || '';
+          const lastName = nameParts.join(' ') || '';
+          const payload = {
+            email,
+            password: pass,
+            firstName,
+            lastName,
+            role: roleVal,
+            sport: sport || '',
+            profession: (document.getElementById('secondarySports')?.value || '').trim()
+          };
+          const result = await window.SpopeerAPI.signup(payload);
+          window.Auth.login(result.user, result.token);
+          window.location.href = '/feed.html';
+        } catch (err) {
+          console.error('[Spopeer] Signup failed:', err);
+          if (errorBox) {
+            errorBox.textContent = err.message || 'Signup failed. Please try again.';
+            errorBox.style.display = 'block';
+          }
+        } finally {
+          createBtn.disabled = false;
+          createBtn.textContent = 'Create Account';
+        }
+      });
+    })();
+  </script>
+  <script src="../../js/main.js"></script>
+<script src="/js/navigation.js"></script>
+</body>
+</html>
+
