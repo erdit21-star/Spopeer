@@ -1,27 +1,36 @@
 /**
  * Spopeer Database Configuration
  * Uses Sequelize ORM with PostgreSQL
+ * Supports DATABASE_URL (production) or individual DB_* vars (development)
  */
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const { config: env } = require('./env');
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME || 'spopeer',
-  process.env.DB_USER || 'postgres',
-  process.env.DB_PASSWORD || 'postgres',
-  {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    dialect: 'postgres',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    pool: {
-      max: 10,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
+const isProduction = env.nodeEnv === 'production';
+
+const commonOpts = {
+  dialect: 'postgres',
+  logging: env.nodeEnv === 'development' ? console.log : false,
+  pool: {
+    max: 10,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+  ...(isProduction && {
+    dialectOptions: {
+      ssl: { require: true, rejectUnauthorized: false }
     }
-  }
-);
+  })
+};
+
+const sequelize = env.db.url
+  ? new Sequelize(env.db.url, commonOpts)
+  : new Sequelize(env.db.name, env.db.user, env.db.password, {
+      ...commonOpts,
+      host: env.db.host,
+      port: env.db.port
+    });
 
 // Test connection
 async function testConnection() {

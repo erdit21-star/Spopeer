@@ -22,8 +22,15 @@ function validate() {
     process.exit(1);
   }
 
-  // Warn about recommended vars (don't exit)
+  const isProduction = process.env.NODE_ENV === 'production';
   const hasDB = process.env.DATABASE_URL || process.env.DB_HOST;
+
+  // In production, database config is mandatory
+  if (isProduction && !hasDB) {
+    console.error('❌ Production requires DATABASE_URL or DB_HOST to be set.');
+    process.exit(1);
+  }
+
   if (!hasDB) {
     console.warn('⚠️  No database config found (DATABASE_URL or DB_HOST). Using defaults.');
   }

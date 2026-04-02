@@ -95,7 +95,6 @@ router.get('/my-listings', authenticate, async (req, res) => {
 // ─── GET SAVED LISTINGS ───
 router.get('/saved', authenticate, async (req, res) => {
   try {
-    await SavedListing.sync();
     const saved = await SavedListing.findAll({ where: { userId: req.userId } });
     const listingIds = saved.map(s => s.listingId);
 
@@ -140,7 +139,6 @@ router.get('/trending-searches', async (_req, res) => {
 // ─── TOGGLE SAVE LISTING ───
 router.post('/saved/:listingId', authenticate, async (req, res) => {
   try {
-    await SavedListing.sync();
     const existing = await SavedListing.findOne({
       where: { userId: req.userId, listingId: req.params.listingId }
     });
@@ -160,7 +158,6 @@ router.post('/saved/:listingId', authenticate, async (req, res) => {
 // ─── CREATE INQUIRY ───
 router.post('/inquiries', authenticate, async (req, res) => {
   try {
-    await Inquiry.sync();
     const { listing_id, message } = req.body;
     if (!listing_id) {
       return res.status(400).json({ error: 'listing_id is required.' });
@@ -188,7 +185,6 @@ router.post('/inquiries', authenticate, async (req, res) => {
 // ─── GET RECEIVED INQUIRIES ───
 router.get('/inquiries/received', authenticate, async (req, res) => {
   try {
-    await Inquiry.sync();
     const inquiries = await Inquiry.findAll({
       where: { sellerId: req.userId },
       order: [['createdAt', 'DESC']]
@@ -202,7 +198,6 @@ router.get('/inquiries/received', authenticate, async (req, res) => {
 // ─── GET SENT INQUIRIES ───
 router.get('/inquiries/sent', authenticate, async (req, res) => {
   try {
-    await Inquiry.sync();
     const inquiries = await Inquiry.findAll({
       where: { buyerId: req.userId },
       order: [['createdAt', 'DESC']]
@@ -216,7 +211,6 @@ router.get('/inquiries/sent', authenticate, async (req, res) => {
 // ─── UPDATE INQUIRY STATUS ───
 router.patch('/inquiries/:id/status', authenticate, async (req, res) => {
   try {
-    await Inquiry.sync();
     const inquiry = await Inquiry.findByPk(req.params.id);
     if (!inquiry) {
       return res.status(404).json({ error: 'Inquiry not found.' });

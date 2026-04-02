@@ -31,7 +31,6 @@ const EventResponse = sequelize.define('EventResponse', {
 // ─── LIST EVENTS ───
 router.get('/', async (_req, res) => {
   try {
-    await Event.sync();
     const events = await Event.findAll({
       order: [['startDate', 'ASC']],
       limit: 50
@@ -47,7 +46,6 @@ router.get('/', async (_req, res) => {
 // ─── CREATE EVENT ───
 router.post('/', authenticate, async (req, res) => {
   try {
-    await Event.sync();
     const { title, description, sport, location, startDate, endDate } = req.body;
 
     if (!title || !startDate) {
@@ -74,7 +72,6 @@ router.post('/', authenticate, async (req, res) => {
 // ─── RESPOND TO EVENT ───
 router.post('/:id/respond', authenticate, async (req, res) => {
   try {
-    await EventResponse.sync();
     const { status } = req.body;
     if (!['accepted', 'declined', 'maybe'].includes(status)) {
       return res.status(400).json({ error: 'Status must be accepted, declined, or maybe.' });

@@ -6,6 +6,19 @@
 
 const isEmailConfigured = !!process.env.RESEND_API_KEY;
 
+/**
+ * Assert email readiness at startup.
+ * In production, missing RESEND_API_KEY is fatal — emails would silently drop.
+ */
+function assertEmailReady() {
+  if (process.env.NODE_ENV === 'production' && !isEmailConfigured) {
+    throw new Error('RESEND_API_KEY is required in production. Emails would silently drop without it.');
+  }
+  if (!isEmailConfigured) {
+    console.warn('⚠️  RESEND_API_KEY not set — emails will be logged to console.');
+  }
+}
+
 const BRAND_COLOR = '#001f3f';
 const APP_NAME = 'Spopeer';
 const FOOTER_TEXT = `&copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.`;
@@ -122,6 +135,7 @@ module.exports = {
   sendPasswordResetEmail,
   sendWelcomeEmail,
   sendSecurityAlertEmail,
-  isEmailConfigured
+  isEmailConfigured,
+  assertEmailReady
 };
 
