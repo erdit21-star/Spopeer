@@ -1,0 +1,51 @@
+/**
+ * Environment configuration and validation.
+ * Imported once at startup — fails fast on missing critical vars.
+ */
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+
+const REQUIRED = ['JWT_SECRET'];
+
+const RECOMMENDED = [
+  'DATABASE_URL',
+  'DB_HOST',
+  'DB_NAME',
+  'DB_USER',
+  'DB_PASSWORD'
+];
+
+function validate() {
+  const missing = REQUIRED.filter(v => !process.env[v]);
+  if (missing.length) {
+    console.error('❌ Missing required environment variables:', missing.join(', '));
+    console.error('   Copy .env.example to .env and fill in the values.');
+    process.exit(1);
+  }
+
+  // Warn about recommended vars (don't exit)
+  const hasDB = process.env.DATABASE_URL || process.env.DB_HOST;
+  if (!hasDB) {
+    console.warn('⚠️  No database config found (DATABASE_URL or DB_HOST). Using defaults.');
+  }
+}
+
+const config = {
+  port: parseInt(process.env.PORT, 10) || 5000,
+  nodeEnv: process.env.NODE_ENV || 'development',
+  isProduction: process.env.NODE_ENV === 'production',
+  jwtSecret: process.env.JWT_SECRET,
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  appUrl: process.env.APP_URL || `http://localhost:${process.env.PORT || 5000}`,
+  frontendUrl: process.env.FRONTEND_URL || '',
+  frontendUrlAlt: process.env.FRONTEND_URL_ALT || '',
+  db: {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT, 10) || 5432,
+    name: process.env.DB_NAME || 'spopeer',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    url: process.env.DATABASE_URL || null
+  }
+};
+
+module.exports = { validate, config };

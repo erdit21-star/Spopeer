@@ -2,18 +2,11 @@
  * Spopeer Backend Server
  * Express + PostgreSQL + JWT Authentication + Socket.io
  */
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
-
-// ─── VALIDATE CRITICAL ENV VARS ───
-const REQUIRED_ENV = ['JWT_SECRET'];
-const missing = REQUIRED_ENV.filter(v => !process.env[v]);
-if (missing.length) {
-  console.error('❌ Missing required environment variables:', missing.join(', '));
-  console.error('   Copy .env.example to .env and fill in the values.');
-  process.exit(1);
-}
+const { validate: validateEnv, config: env } = require('./config/env');
+validateEnv();
 
 const express = require('express');
+const compression = require('compression');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -45,11 +38,13 @@ const mediaRoutes = require('./routes/media');
 const sponsorshipRoutes = require('./routes/sponsorships');
 const moderationRoutes = require('./routes/moderation');
 
+const errorHandler = require('./middleware/errorHandler');
+
 const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1); // Render / Heroku sit behind one proxy hop
 const server = http.createServer(app);
-const PORT = process.env.PORT || 5000;
+const PORT = env.port;
 
 // Initialize Socket.io
 const { initSocket } = require('./services/socket');
@@ -61,6 +56,9 @@ app.use((req, res, next) => {
   res.setHeader('X-Request-Id', req.requestId);
   next();
 });
+
+// ─── COMPRESSION ───
+app.use(compression());
 
 // ─── SECURITY MIDDLEWARE ───
 app.use(helmet({
@@ -231,26 +229,7 @@ app.get('{*path}', (req, res) => {
 });
 
 // ─── ERROR HANDLING ───
-app.use((err, req, res, next) => {
-  console.error('Server error:', err);
-
-  if (err.type === 'entity.too.large') {
-    return res.status(413).json({ error: 'Request body too large.' });
-  }
-
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(413).json({ error: 'File too large. Maximum size is 5MB.' });
-  }
-
-  // Multer errors (file upload)
-  if (err.name === 'MulterError') {
-    return res.status(400).json({ error: `Upload error: ${err.message}` });
-  }
-
-  res.status(500).json({
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error.'
-  });
-});
+app.use(errorHandler);
 
 // ─── START SERVER ───
 async function startServer() {
@@ -278,6 +257,27 @@ async function startServer() {
     process.exit(1);
   }
 }
+
+// ─── GRACEFUL SHUTDOWN ───
+function gracefulShutdown(signal) {
+  console.log(`\n⏳ ${signal} received — shutting down gracefully...`);
+  server.close(async () => {
+    try {
+      await sequelize.close();
+      console.log('✅ Database connections closed.');
+    } catch (err) {
+      console.error('Error closing database:', err);
+    }
+    process.exit(0);
+  });
+  // Force exit after 10s if connections linger
+  setTimeout(() => {
+    console.error('⚠️  Forced shutdown after timeout.');
+    process.exit(1);
+  }, 10_000).unref();
+}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 startServer();
 
