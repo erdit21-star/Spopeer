@@ -156,12 +156,22 @@ router.get('/', optionalAuth, async (req, res) => {
   }
 });
 
-// ─── GET USER BY ID ───
+// ─── GET USER BY ID (or email) ───
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id, {
-      attributes: { exclude: ['password'] }
-    });
+    const param = req.params.id;
+    let user;
+    if (/^\d+$/.test(param)) {
+      user = await User.findByPk(param, {
+        attributes: { exclude: ['password'] }
+      });
+    } else {
+      // Treat non-numeric param as email lookup
+      user = await User.findOne({
+        where: { email: param.toLowerCase(), isActive: true },
+        attributes: { exclude: ['password'] }
+      });
+    }
 
     if (!user || !user.isActive) {
       return res.status(404).json({ error: 'User not found.' });

@@ -597,10 +597,15 @@ document.getElementById('connectBtn')?.addEventListener('click',async function()
   let payload={};
   let profileFound=false;
   
-  // Try /api/users/:id first if userId is numeric (stable id path)
-  if(/^\d+$/.test(userId)){
+  // Build headers — include auth token so server can identify the viewer
+  const _headers = {};
+  const _token = localStorage.getItem('spopeer_token') || localStorage.getItem('token');
+  if (_token) _headers['Authorization'] = 'Bearer ' + _token;
+
+  // Try /api/users/:id (handles both numeric id and email)
+  if(userId){
     try{
-      const r=await fetch(`/api/users/${encodeURIComponent(userId)}`);
+      const r=await fetch(`/api/users/${encodeURIComponent(userId)}`, { headers: _headers });
       if(r.ok){
         const d=await r.json();
         payload=d.user||d.payload||{};
@@ -608,21 +613,6 @@ document.getElementById('connectBtn')?.addEventListener('click',async function()
       }
     }catch(e){
       console.log('API users fetch failed:', e.message);
-    }
-  }
-  // Fallback: try /api/profiles/:email for email-based lookup
-  if(!profileFound && userId){
-    try{
-      const r=await fetch(`/api/profiles/${encodeURIComponent(userId)}`);
-      if(r.ok){
-        const d=await r.json();
-        payload=d.payload||{};
-        profileFound=true;
-      } else if(r.status===404){
-        console.log('Profile not found via /api/profiles');
-      }
-    }catch(e){
-      console.log('API profiles fetch failed:', e.message);
     }
   }
 
