@@ -598,7 +598,7 @@
       const loginBtn      = e.target.querySelector('.login-btn');
 
       const email    = emailInput?.value.trim() || '';
-      const password = passwordInput?.value.trim() || '';
+      const password = passwordInput?.value || '';
 
       if (errorBox) {
         errorBox.textContent = '';

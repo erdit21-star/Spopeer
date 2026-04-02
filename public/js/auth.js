@@ -129,7 +129,7 @@ const Auth = {
       return null;
     } catch (err) {
       console.warn("[Spopeer] Backend user sync failed.", err);
-      if (err.message === "UNAUTHORIZED") {
+      if (err.code === "UNAUTHORIZED" || err.message === "UNAUTHORIZED") {
         this.logout();
       }
       return null;
