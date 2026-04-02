@@ -78,11 +78,14 @@ class ProfileService {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
-        const response = await fetch(`/api/profiles/${encodeURIComponent(user.id)}`, { signal: controller.signal });
+        const headers = {};
+        const token = localStorage.getItem('spopeer_token') || localStorage.getItem('token');
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        const response = await fetch(`/api/users/${encodeURIComponent(user.id)}`, { signal: controller.signal, headers });
         clearTimeout(timeoutId);
         if (response.ok) {
           const data = await response.json();
-          profileData = data.payload || {};
+          profileData = data.payload || data.user || {};
         } else {
           throw new Error('Failed to load persisted profile');
         }

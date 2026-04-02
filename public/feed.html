@@ -3533,8 +3533,8 @@
 
   function getProfileUrl() {
     const userData = readUser(null);
-    const userEmail = userData?.email || userData?.userEmail || 'athlete@example.com';
-    return `pages/profiles/public-profile.html?userId=${encodeURIComponent(userEmail)}`;
+    const identifier = userData?.id || userData?.userId || userData?.email || userData?.userEmail || '';
+    return `pages/profiles/public-profile.html?userId=${encodeURIComponent(identifier)}`;
   }
 
   // Expose to global scope so inline onclick can reach them

@@ -610,10 +610,34 @@ document.getElementById('connectBtn')?.addEventListener('click',async function()
         const d=await r.json();
         payload=d.user||d.payload||{};
         profileFound=true;
+      } else {
+        console.warn('Profile fetch returned', r.status, await r.text().catch(()=>''));
       }
     }catch(e){
       console.log('API users fetch failed:', e.message);
     }
+  }
+
+  // Fallback: for own profile, try /api/auth/me
+  if(!profileFound && isOwnProfile && _token){
+    try{
+      const r=await fetch('/api/auth/me', { headers: _headers });
+      if(r.ok){
+        const d=await r.json();
+        payload=d.user||d.payload||{};
+        profileFound=true;
+        console.log('Loaded own profile via /api/auth/me');
+      }
+    }catch(e){
+      console.log('/api/auth/me fallback failed:', e.message);
+    }
+  }
+
+  // Last resort for own profile: use localStorage data
+  if(!profileFound && isOwnProfile && currentUser && currentUser.email){
+    payload={...currentUser};
+    profileFound=true;
+    console.log('Loaded own profile from localStorage');
   }
 
   // No demo/sample fallback in production.
