@@ -67,11 +67,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.cloudinary.com"],
-      connectSrc: ["'self'", "ws://localhost:*", "wss://localhost:*", process.env.FRONTEND_URL].filter(Boolean),
+      connectSrc: ["'self'", "ws:", "wss:"],
       mediaSrc: ["'self'", "blob:"],
       objectSrc: ["'none'"],
       frameAncestors: ["'none'"],
@@ -83,19 +83,24 @@ app.use(helmet({
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
-// CORS - allow frontend (production-only origins when deployed)
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [process.env.FRONTEND_URL, process.env.FRONTEND_URL_ALT].filter(Boolean)
-  : [
-      'http://localhost:5000',
-      'http://localhost:3000',
-      'http://127.0.0.1:5000',
-      process.env.FRONTEND_URL,
-      process.env.FRONTEND_URL_ALT
-    ].filter(Boolean);
+// CORS — in production the frontend is served from the same origin,
+// so same-origin requests bypass CORS entirely.  We still allow the
+// configured FRONTEND_URL(s) for any cross-origin callers.
+const allowedOrigins = [
+  'http://localhost:5000',
+  'http://localhost:3000',
+  'http://127.0.0.1:5000',
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL_ALT
+].filter(Boolean);
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (same-origin, mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+    callback(null, false);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
