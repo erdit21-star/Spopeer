@@ -683,8 +683,19 @@
             profession: (document.getElementById('secondarySports')?.value || '').trim()
           };
           const result = await window.SpopeerAPI.signup(payload);
-          window.Auth.login(result.user, result.token);
-          window.location.href = '/feed.html';
+          if (result.token && result.user) {
+            window.Auth.login(result.user, result.token);
+            window.location.href = '/feed.html';
+          } else {
+            // Account created but pending email verification
+            if (errorBox) {
+              errorBox.style.background = '#dcfce7';
+              errorBox.style.color = '#166534';
+              errorBox.textContent = 'Account created! Please check your email to verify your account before signing in.';
+              errorBox.style.display = 'block';
+            }
+            document.getElementById('signupForm').reset();
+          }
         } catch (err) {
           console.error('[Spopeer] Signup failed:', err);
           if (errorBox) {

@@ -130,15 +130,16 @@
         headers
       });
     } catch (networkError) {
-      const err = new Error("NETWORK_ERROR");
-      err.reason = "Cannot reach the server. Check your connection and try again.";
+      const err = new Error("Cannot reach the server. Check your connection and try again.");
+      err.code = "NETWORK_ERROR";
       throw err;
     }
 
     const data = await response.json().catch(function () { return {}; });
     if (response.status === 401) {
-      const err = new Error("UNAUTHORIZED");
-      err.reason = data.message || data.error || "Session expired";
+      const msg = data.message || data.error || "Session expired. Please log in again.";
+      const err = new Error(msg);
+      err.code = "UNAUTHORIZED";
       throw err;
     }
     if (!response.ok) {
