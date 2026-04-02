@@ -98,7 +98,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
       return res.status(409).json({ error: 'Email already registered.' });
     }
 
-    // Create user (inactive until verified)
+    // Create user (active immediately; email verification is optional enhancement)
     const user = await User.create({
       email: email.toLowerCase(),
       password,
@@ -107,11 +107,11 @@ router.post('/signup', signupLimiter, async (req, res) => {
       role: safeRole || 'athlete',
       sport: sport || null,
       profession: profession || null,
-      isActive: false,
+      isActive: true,
       emailVerified: false
     });
 
-    // Generate verification token and send email
+    // Generate verification token and send email (optional — does not block login)
     const verifyToken = crypto.randomBytes(32).toString('hex');
     await user.update({ emailVerifyToken: verifyToken });
 
@@ -120,10 +120,13 @@ router.post('/signup', signupLimiter, async (req, res) => {
       console.error('Failed to send verification email:', err.message);
     });
 
+    // Generate a session token so the user can log in immediately
+    const token = generateToken(user);
+
     res.status(201).json({
-      status: 'pending_verification',
-      message: 'Account created. Please check your email to verify your account.',
-      token: null,
+      status: 'ok',
+      message: 'Account created successfully.',
+      token,
       user: user.toJSON()
     });
   } catch (error) {
@@ -173,13 +176,6 @@ router.post('/login', loginLimiter, async (req, res) => {
     }
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password.' });
-    }
-
-    if (user.isActive === false && emailVerified === false) {
-      return res.status(403).json({
-        error: 'Please verify your email address before logging in.',
-        code: 'EMAIL_NOT_VERIFIED'
-      });
     }
 
     if (user.isActive === false) {
