@@ -15,15 +15,21 @@ const { Message, User } = require('../models');
 const { authenticate } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { sequelize } = require('../models');
+const { sanitizeString } = require('../utils/validation');
 
 // ─── SEND MESSAGE (compatibility: /api/messages/send) ───
 router.post('/send', authenticate, async (req, res) => {
   try {
     const receiverId = req.body.toId || req.body.receiverId;
-    const content = req.body.text || req.body.content;
+    const rawContent = req.body.text || req.body.content;
 
-    if (!receiverId || !content) {
+    if (!receiverId || !rawContent) {
       return res.status(400).json({ error: 'toId/receiverId and text/content are required.' });
+    }
+
+    const content = sanitizeString(rawContent, 5000);
+    if (!content) {
+      return res.status(400).json({ error: 'Message content cannot be empty.' });
     }
 
     if (parseInt(receiverId) === req.userId) {
@@ -38,7 +44,7 @@ router.post('/send', authenticate, async (req, res) => {
     const message = await Message.create({
       senderId: req.userId,
       receiverId: parseInt(receiverId),
-      content: content.trim()
+      content
     });
 
     const fullMessage = await Message.findByPk(message.id, {
@@ -78,8 +84,13 @@ router.post('/mark-read', authenticate, async (req, res) => {
 // ─── GET UNREAD COUNT ───
 router.get('/unread/:userId', authenticate, async (req, res) => {
   try {
+    // Only allow users to check their own unread count
+    if (parseInt(req.params.userId) !== req.userId) {
+      return res.status(403).json({ error: 'You can only check your own unread count.' });
+    }
+
     const count = await Message.count({
-      where: { receiverId: parseInt(req.params.userId), read: false }
+      where: { receiverId: req.userId, read: false }
     });
 
     res.json({ status: 'ok', unread: count });
@@ -93,6 +104,12 @@ router.get('/unread/:userId', authenticate, async (req, res) => {
 router.get('/conversation/:userId1/:userId2', authenticate, async (req, res) => {
   try {
     const { userId1, userId2 } = req.params;
+
+    // Only participants can read their own conversations
+    if (req.userId !== parseInt(userId1) && req.userId !== parseInt(userId2)) {
+      return res.status(403).json({ error: 'You can only view your own conversations.' });
+    }
+
     const { page = 1, limit = 50 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -122,10 +139,15 @@ router.get('/conversation/:userId1/:userId2', authenticate, async (req, res) => 
 // ─── SEND MESSAGE ───
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { receiverId, content } = req.body;
+    const { receiverId, content: rawContent } = req.body;
 
-    if (!receiverId || !content) {
+    if (!receiverId || !rawContent) {
       return res.status(400).json({ error: 'receiverId and content are required.' });
+    }
+
+    const content = sanitizeString(rawContent, 5000);
+    if (!content) {
+      return res.status(400).json({ error: 'Message content cannot be empty.' });
     }
 
     if (parseInt(receiverId) === req.userId) {
@@ -140,7 +162,7 @@ router.post('/', authenticate, async (req, res) => {
     const message = await Message.create({
       senderId: req.userId,
       receiverId: parseInt(receiverId),
-      content: content.trim()
+      content
     });
 
     const fullMessage = await Message.findByPk(message.id, {

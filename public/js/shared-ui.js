@@ -215,7 +215,8 @@
     var chipNmEl = document.getElementById('chipName');
     if (chipAvEl) {
       if (user.avatarUrl) {
-        chipAvEl.innerHTML = '<img src="' + user.avatarUrl + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        var safeUrl = user.avatarUrl.replace(/["'<>&]/g, function(c) { return '&#' + c.charCodeAt(0) + ';'; });
+        chipAvEl.innerHTML = '<img src="' + safeUrl + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
       } else {
         var fi = (user.firstName || (user.name || '').split(' ')[0] || '')[0] || '';
         var li = (user.lastName || (user.name || '').split(' ')[1] || '')[0] || '';

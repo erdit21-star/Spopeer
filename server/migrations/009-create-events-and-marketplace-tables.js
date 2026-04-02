@@ -16,7 +16,10 @@ module.exports = {
       location: { type: Sequelize.STRING },
       startDate: { type: Sequelize.DATE, allowNull: false },
       endDate: { type: Sequelize.DATE },
-      createdBy: { type: Sequelize.INTEGER, allowNull: false },
+      createdBy: {
+        type: Sequelize.INTEGER, allowNull: false,
+        references: { model: 'users', key: 'id' }, onDelete: 'CASCADE'
+      },
       status: { type: Sequelize.STRING, defaultValue: 'upcoming' },
       createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
       updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') }
@@ -25,8 +28,14 @@ module.exports = {
     // ── event_responses ──
     await queryInterface.createTable('event_responses', {
       id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-      eventId: { type: Sequelize.INTEGER, allowNull: false },
-      userId: { type: Sequelize.INTEGER, allowNull: false },
+      eventId: {
+        type: Sequelize.INTEGER, allowNull: false,
+        references: { model: 'events', key: 'id' }, onDelete: 'CASCADE'
+      },
+      userId: {
+        type: Sequelize.INTEGER, allowNull: false,
+        references: { model: 'users', key: 'id' }, onDelete: 'CASCADE'
+      },
       status: { type: Sequelize.STRING, allowNull: false, defaultValue: 'pending' },
       createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
       updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') }
@@ -35,8 +44,14 @@ module.exports = {
     // ── saved_listings ──
     await queryInterface.createTable('saved_listings', {
       id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-      userId: { type: Sequelize.INTEGER, allowNull: false },
-      listingId: { type: Sequelize.INTEGER, allowNull: false },
+      userId: {
+        type: Sequelize.INTEGER, allowNull: false,
+        references: { model: 'users', key: 'id' }, onDelete: 'CASCADE'
+      },
+      listingId: {
+        type: Sequelize.INTEGER, allowNull: false,
+        references: { model: 'listings', key: 'id' }, onDelete: 'CASCADE'
+      },
       createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
       updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') }
     });
@@ -44,9 +59,18 @@ module.exports = {
     // ── marketplace_inquiries ──
     await queryInterface.createTable('marketplace_inquiries', {
       id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-      buyerId: { type: Sequelize.INTEGER, allowNull: false },
-      sellerId: { type: Sequelize.INTEGER, allowNull: false },
-      listingId: { type: Sequelize.INTEGER, allowNull: false },
+      buyerId: {
+        type: Sequelize.INTEGER, allowNull: false,
+        references: { model: 'users', key: 'id' }, onDelete: 'CASCADE'
+      },
+      sellerId: {
+        type: Sequelize.INTEGER, allowNull: false,
+        references: { model: 'users', key: 'id' }, onDelete: 'CASCADE'
+      },
+      listingId: {
+        type: Sequelize.INTEGER, allowNull: false,
+        references: { model: 'listings', key: 'id' }, onDelete: 'CASCADE'
+      },
       message: { type: Sequelize.TEXT },
       status: { type: Sequelize.STRING, defaultValue: 'pending' },
       createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },

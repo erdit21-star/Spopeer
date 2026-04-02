@@ -12,6 +12,7 @@ const router = express.Router();
 const { Group, GroupMember, User } = require('../models');
 const { authenticate } = require('../middleware/auth');
 const { Op } = require('sequelize');
+const { sanitizeString } = require('../utils/validation');
 
 // All routes require auth
 router.use(authenticate);
@@ -53,8 +54,12 @@ router.get('/', async (req, res) => {
 // ─── CREATE GROUP ───
 router.post('/', async (req, res) => {
   try {
-    const { name, description, sport, isPrivate } = req.body;
+    const { name: rawName, description: rawDesc, sport: rawSport, isPrivate } = req.body;
+    const name = sanitizeString(rawName, 200);
     if (!name) return res.status(400).json({ error: 'Group name is required.' });
+
+    const description = sanitizeString(rawDesc, 2000);
+    const sport = sanitizeString(rawSport, 100);
 
     const group = await Group.create({
       name,

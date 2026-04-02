@@ -15,7 +15,7 @@ async function authenticate(req, res, next) {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
     const user = await User.findByPk(decoded.userId);
     if (!user || !user.isActive) {
@@ -44,7 +44,7 @@ async function optionalAuth(req, res, next) {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
       const user = await User.findByPk(decoded.userId);
       if (user && user.isActive) {
         req.user = user;
