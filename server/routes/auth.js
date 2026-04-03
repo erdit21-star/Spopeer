@@ -15,9 +15,10 @@ const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
-const { User, PasswordResetToken } = require('../models');
-const { authenticate, generateToken, setAuthCookies, clearAuthCookies, generateAccessToken, getCookieOptions } = require('../middleware/auth');
+const { User, PasswordResetToken, RefreshSession } = require('../models');
+const { authenticate, clearAuthCookies, generateAccessToken, generateRefreshToken, getCookieOptions } = require('../middleware/auth');
 const { ok, created, fail } = require('../utils/response');
+const { sha256 } = require('../utils/crypto');
 const {
   sanitizeString,
   isValidEmail,
@@ -34,7 +35,7 @@ const signupLimiter = rateLimit({
   max: 50,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many signup attempts, please try again later.' }
+  message: { success: false, error: { code: 'RATE_LIMIT_SIGNUP', message: 'Too many signup attempts, please try again later.' } }
 });
 
 // Login abuse limiter — 10 attempts per 15 minutes per IP
@@ -43,7 +44,7 @@ const loginLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many login attempts, please try again later.' }
+  message: { success: false, error: { code: 'RATE_LIMIT_LOGIN', message: 'Too many login attempts, please try again later.' } }
 });
 
 // Forgot-password limiter — 5 requests per hour per IP
@@ -52,7 +53,7 @@ const forgotLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many reset requests. Please try again later.' }
+  message: { success: false, error: { code: 'RATE_LIMIT_FORGOT', message: 'Too many reset requests. Please try again later.' } }
 });
 
 // ─── SIGNUP ───
@@ -120,15 +121,26 @@ router.post('/signup', signupLimiter, async (req, res) => {
       console.error('Failed to send verification email:', err.message);
     });
 
-    // Generate a session token so the user can log in immediately
-    const token = generateToken(user);
-    setAuthCookies(res, user);
+    // Issue DB-backed session so the user can use the app immediately (MODEL B — verification optional)
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    await RefreshSession.create({
+      userId: user.id,
+      tokenHash: sha256(refreshToken),
+      userAgent: req.get('user-agent') || null,
+      ipAddress: req.ip,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
+
+    res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
+    res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
     res.status(201).json({
       success: true,
       data: {
-        message: 'Account created successfully.',
-        token,
+        message: 'Account created successfully. A verification email has been sent.',
+        token: accessToken,
         user: user.toJSON()
       }
     });
@@ -206,14 +218,24 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     let token;
     try {
-      token = generateToken(user);
+      token = generateAccessToken(user);
     } catch (tokenErr) {
       console.error('[LOGIN] Token generation failed:', tokenErr.message);
       return fail(res, 500, 'TOKEN_GENERATION_FAILED', 'Login succeeded but session could not be created. Please contact support.');
     }
 
-    // Set HttpOnly auth cookies
-    setAuthCookies(res, user);
+    // Issue DB-backed refresh session
+    const refreshToken = generateRefreshToken(user);
+    await RefreshSession.create({
+      userId: user.id,
+      tokenHash: sha256(refreshToken),
+      userAgent: req.get('user-agent') || null,
+      ipAddress: req.ip,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
+
+    res.cookie('access_token', token, getCookieOptions(15 * 60 * 1000));
+    res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
     res.json({
       success: true,
@@ -270,6 +292,12 @@ router.post('/change-password', authenticate, async (req, res) => {
     }
 
     await user.update({ password: newPassword }); // beforeUpdate hook hashes it
+
+    // Revoke ALL refresh sessions for this user (force re-login on all devices)
+    await RefreshSession.update(
+      { revokedAt: new Date() },
+      { where: { userId: req.userId, revokedAt: null } }
+    );
 
     // Invalidate sessions by clearing cookies
     clearAuthCookies(res);
@@ -374,6 +402,12 @@ router.post('/reset-password', async (req, res) => {
     await user.update({ password });
     await PasswordResetToken.destroy({ where: { userId: record.userId } }); // one-time use
 
+    // Revoke all refresh sessions (password changed externally)
+    await RefreshSession.update(
+      { revokedAt: new Date() },
+      { where: { userId: record.userId, revokedAt: null } }
+    );
+
     // Notify user of password reset (fire-and-forget)
     sendSecurityAlertEmail(user.email, 'Password Reset', 'Your password was reset via a reset link. If you did not initiate this, contact support immediately.').catch(err => {
       console.error('Security alert email error:', err);
@@ -396,7 +430,8 @@ router.post('/resend-verification', forgotLimiter, async (req, res) => {
 
     const user = await User.findOne({ where: { email } });
     // Always return 200 — never reveal if email exists
-    if (!user || user.emailVerified || user.isActive) {
+    // MODEL B: verification is optional — resend only if not already verified
+    if (!user || user.emailVerified) {
       return ok(res, { message: 'If that account needs verification, a new link has been sent.' });
     }
 
@@ -441,22 +476,36 @@ router.get('/verify', async (req, res) => {
 });
 
 // ─── LOGOUT ───
-router.post('/logout', (req, res) => {
-  clearAuthCookies(res);
-  return ok(res, { message: 'Logged out successfully.' });
+router.post('/logout', async (req, res) => {
+  try {
+    const rawToken = req.cookies?.refresh_token;
+    if (rawToken) {
+      const tokenHash = sha256(rawToken);
+      await RefreshSession.update(
+        { revokedAt: new Date() },
+        { where: { tokenHash, revokedAt: null } }
+      );
+    }
+
+    clearAuthCookies(res);
+    return ok(res, { message: 'Logged out successfully.' });
+  } catch (error) {
+    clearAuthCookies(res);
+    return ok(res, { message: 'Logged out successfully.' });
+  }
 });
 
 // ─── REFRESH TOKEN ───
 router.post('/refresh', async (req, res) => {
   try {
-    const refreshToken = req.cookies?.refresh_token;
-    if (!refreshToken) {
+    const rawToken = req.cookies?.refresh_token;
+    if (!rawToken) {
       return fail(res, 401, 'AUTH_REQUIRED', 'No refresh token provided.');
     }
 
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+      decoded = jwt.verify(rawToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     } catch (err) {
       clearAuthCookies(res);
       return fail(res, 401, 'TOKEN_INVALID', 'Invalid or expired refresh token.');
@@ -467,15 +516,40 @@ router.post('/refresh', async (req, res) => {
       return fail(res, 401, 'TOKEN_INVALID', 'Invalid token type.');
     }
 
+    // Verify DB-backed session exists and is not revoked
+    const tokenHash = sha256(rawToken);
+    const session = await RefreshSession.findOne({
+      where: { tokenHash, revokedAt: null }
+    });
+
+    if (!session || session.expiresAt <= new Date()) {
+      clearAuthCookies(res);
+      return fail(res, 401, 'TOKEN_INVALID', 'Refresh session not found or expired.');
+    }
+
     const user = await User.findByPk(decoded.userId);
     if (!user || !user.isActive) {
       clearAuthCookies(res);
       return fail(res, 401, 'AUTH_INVALID', 'User not found or deactivated.');
     }
 
-    // Issue new access token (rotate)
+    // Revoke old session
+    await session.update({ revokedAt: new Date() });
+
+    // Issue rotated tokens
     const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+
+    await RefreshSession.create({
+      userId: user.id,
+      tokenHash: sha256(newRefreshToken),
+      userAgent: req.get('user-agent') || null,
+      ipAddress: req.ip,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
+
     res.cookie('access_token', newAccessToken, getCookieOptions(15 * 60 * 1000));
+    res.cookie('refresh_token', newRefreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
     return ok(res, { message: 'Token refreshed.' });
   } catch (error) {

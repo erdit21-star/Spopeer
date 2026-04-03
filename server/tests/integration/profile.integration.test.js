@@ -136,6 +136,12 @@ jest.mock('../../models', () => {
     Sponsorship: {},
     Media: {},
     AdminAuditLog: {},
+    RefreshSession: {
+      create: jest.fn().mockResolvedValue({}),
+      findOne: jest.fn().mockResolvedValue(null),
+      update: jest.fn().mockResolvedValue([0]),
+      destroy: jest.fn().mockResolvedValue(0)
+    },
     sequelize: {
       authenticate: jest.fn().mockResolvedValue(true),
       define: jest.fn(() => ({

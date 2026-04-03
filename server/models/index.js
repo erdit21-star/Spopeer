@@ -25,6 +25,7 @@ const Media = require('./Media')(sequelize);
 const Report = require('./Report')(sequelize);
 const Block = require('./Block')(sequelize);
 const AdminAuditLog = require('./AdminAuditLog')(sequelize);
+const RefreshSession = require('./RefreshSession')(sequelize);
 
 // ─── ASSOCIATIONS ───
 
@@ -123,6 +124,10 @@ Block.belongsTo(User, { foreignKey: 'blockedId', as: 'blocked' });
 // AdminAuditLog -> User
 AdminAuditLog.belongsTo(User, { foreignKey: 'adminId', as: 'admin' });
 
+// User <-> RefreshSession
+User.hasMany(RefreshSession, { foreignKey: 'userId', as: 'refreshSessions' });
+RefreshSession.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 module.exports = {
   sequelize,
   User,
@@ -145,6 +150,7 @@ module.exports = {
   Media,
   Report,
   Block,
-  AdminAuditLog
+  AdminAuditLog,
+  RefreshSession
 };
 

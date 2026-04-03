@@ -164,6 +164,12 @@ jest.mock('../../models', () => {
     Sponsorship: {},
     Media: {},
     AdminAuditLog: {},
+    RefreshSession: {
+      create: jest.fn().mockResolvedValue({}),
+      findOne: jest.fn().mockResolvedValue(null),
+      update: jest.fn().mockResolvedValue([0]),
+      destroy: jest.fn().mockResolvedValue(0)
+    },
     sequelize: {
       authenticate: jest.fn().mockResolvedValue(true),
       define: jest.fn(() => ({
@@ -429,7 +435,8 @@ describe('Auth Integration', () => {
     test('GET /api/health returns ok', async () => {
       const res = await request(app).get('/api/health');
       expect(res.statusCode).toBe(200);
-      expect(res.body.status).toBe('ok');
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe('ok');
     });
   });
 });

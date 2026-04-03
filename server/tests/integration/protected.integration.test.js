@@ -78,6 +78,12 @@ jest.mock('../../models', () => ({
   Sponsorship: { findAll: jest.fn().mockResolvedValue([]) },
   Media: { create: jest.fn() },
   AdminAuditLog: { create: jest.fn() },
+  RefreshSession: {
+    create: jest.fn().mockResolvedValue({}),
+    findOne: jest.fn().mockResolvedValue(null),
+    update: jest.fn().mockResolvedValue([0]),
+    destroy: jest.fn().mockResolvedValue(0)
+  },
   sequelize: {
     authenticate: jest.fn().mockResolvedValue(true),
     define: jest.fn(() => ({
@@ -121,16 +127,17 @@ describe('API Smoke Tests', () => {
   test('GET /api/health returns 200', async () => {
     const res = await request(app).get('/api/health');
     expect(res.statusCode).toBe(200);
-    expect(res.body.status).toBe('ok');
-    expect(res.body.version).toBeDefined();
-    expect(res.body.uptime).toBeDefined();
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.status).toBe('ok');
+    expect(res.body.data.version).toBeDefined();
+    expect(res.body.data.uptime).toBeDefined();
   });
 
   test('GET /api/ready returns readiness status', async () => {
     const res = await request(app).get('/api/ready');
     // May be 503 if mocked DB/secrets fail — that's OK, we just want it responding
     expect([200, 503]).toContain(res.statusCode);
-    expect(res.body.checks).toBeDefined();
+    expect(res.body.data.checks).toBeDefined();
   });
 
   test('GET /nonexistent returns HTML (SPA catch-all)', async () => {

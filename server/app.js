@@ -123,7 +123,7 @@ const apiLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later.' }
+  message: { success: false, error: { code: 'RATE_LIMIT', message: 'Too many requests, please try again later.' } }
 });
 
 const uploadLimiter = rateLimit({
@@ -131,7 +131,7 @@ const uploadLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Upload limit reached. Try again later.' }
+  message: { success: false, error: { code: 'RATE_LIMIT_UPLOAD', message: 'Upload limit reached. Try again later.' } }
 });
 
 const searchLimiter = rateLimit({
@@ -139,7 +139,7 @@ const searchLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many searches. Please slow down.' }
+  message: { success: false, error: { code: 'RATE_LIMIT_SEARCH', message: 'Too many searches. Please slow down.' } }
 });
 
 // ─── BODY PARSING ───
@@ -176,11 +176,14 @@ app.use('/api/profiles', apiLimiter, require('./routes/users'));
 // ─── HEALTH CHECK ───
 app.get('/api/health', (req, res) => {
   res.json({
-    status: 'ok',
-    version: '1.0.0',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
+    success: true,
+    data: {
+      status: 'ok',
+      version: '1.0.0',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV
+    }
   });
 });
 
@@ -210,9 +213,12 @@ app.get('/api/ready', async (req, res) => {
   if (process.env.NODE_ENV === 'production' && !emailOk) ready = false;
 
   res.status(ready ? 200 : 503).json({
-    status: ready ? 'ready' : 'not_ready',
-    checks,
-    timestamp: new Date().toISOString()
+    success: ready,
+    data: {
+      status: ready ? 'ready' : 'not_ready',
+      checks,
+      timestamp: new Date().toISOString()
+    }
   });
 });
 
@@ -227,7 +233,7 @@ app.get('/admin/{*rest}', (req, res) => {
 // ─── CATCH-ALL: serve index.html for frontend routes ───
 app.get('{*path}', (req, res) => {
   if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API endpoint not found.' });
+    return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'API endpoint not found.' } });
   }
   const filePath = path.join(__dirname, '..', 'public', req.path);
   res.sendFile(filePath, (err) => {
