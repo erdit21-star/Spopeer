@@ -11,7 +11,7 @@ const { Notification, User } = require('../models');
 const { authenticate } = require('../middleware/auth');
 
 // All routes require auth
-const { ok, created, fail } = require('../utils/response');
+const { ok, fail } = require('../utils/response');
 router.use(authenticate);
 
 // ─── GET NOTIFICATIONS ───

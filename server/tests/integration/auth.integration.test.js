@@ -82,7 +82,7 @@ function mockCreateFakeUser(data) {
     avatarUrl: null,
     lastLogin: null,
     toJSON() {
-      const { password, ...safe } = this;
+      const { password: _password, ...safe } = this;
       // Remove function properties from JSON
       const result = {};
       for (const [k, v] of Object.entries(safe)) {
@@ -119,7 +119,7 @@ jest.mock('../../models', () => {
       }
       return Promise.resolve(null);
     }),
-    findByPk: jest.fn((id, opts) => {
+    findByPk: jest.fn((id, _opts) => {
       return Promise.resolve(mockFakeUsers.find(u => u.id === id) || null);
     }),
     create: jest.fn((data) => {

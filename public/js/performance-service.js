@@ -16,7 +16,7 @@ class PerformanceService {
     // Register service worker for offline support and caching
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/js/service-worker.js')
-        .then(reg => console.log('Service Worker registered'))
+        .then(_reg => console.log('Service Worker registered'))
         .catch(err => console.debug('Service Worker registration failed'));
     }
     
@@ -355,5 +355,5 @@ class PerformanceService {
 }
 
 // Initialize globally
-const PerformanceServiceInstance = new PerformanceService();
+const _PerformanceServiceInstance = new PerformanceService();
 

@@ -87,7 +87,7 @@ class ProfileService {
         } else {
           throw new Error('Failed to load persisted profile');
         }
-      } catch (fetchErr) {
+      } catch (_fetchErr) {
         profileData = { ...user };
       }
 

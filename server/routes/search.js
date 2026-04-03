@@ -9,7 +9,7 @@ const { optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
 
 // ─── SEARCH ───
-const { ok, created, fail } = require('../utils/response');
+const { fail } = require('../utils/response');
 router.get('/', optionalAuth, async (req, res) => {
   try {
     const { term, sport, userType, location, page = 1, pageSize = 20 } = req.query;

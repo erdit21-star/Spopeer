@@ -272,7 +272,7 @@ function optimizeSEOTags() {
   };
 
   // Add to each page head
-  const seoScript = `
+  const _seoScript = `
     function addSEOTags(config) {
       // Title
       document.title = config.title;

@@ -64,7 +64,7 @@ function injectSearchWidget() {
 
   // Handle input
   let searchTimeout;
-  let lastQuery = '';
+  let _lastQuery = '';
 
   searchInput.addEventListener('input', async function(e) {
     const query = this.value.trim();
@@ -207,7 +207,7 @@ function displaySuggestions(results, suggestionsBox, query) {
   suggestionsBox.style.display = 'block';
 }
 
-function displayMentions(results, suggestionsBox, query) {
+function displayMentions(results, suggestionsBox, _query) {
   if (!results || results.length === 0) {
     suggestionsBox.innerHTML = '<div style="padding: 12px 16px; color: #9ca3af; font-size: 13px;">No people found</div>';
     suggestionsBox.style.display = 'block';
@@ -235,11 +235,11 @@ function displayMentions(results, suggestionsBox, query) {
   suggestionsBox.style.display = 'block';
 }
 
-function goToProfile(userId) {
+function goToProfile(userId) { // eslint-disable-line no-unused-vars
   window.location.href = `/pages/profiles/public-profile.html?userId=${encodeURIComponent(userId)}`;
 }
 
-function insertMention(name) {
+function insertMention(name) { // eslint-disable-line no-unused-vars
   const input = document.getElementById('search-widget-input');
   const firstName = name.split(' ')[0];
   input.value = `@${firstName} `;

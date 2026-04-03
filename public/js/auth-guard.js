@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  function getToken() {
+  function _getToken() {
     return null; // Auth is cookie-based — no client-side token
   }
 

@@ -6,7 +6,7 @@
  */
 
 class GalleryManager {
-  constructor(options = {}) {
+  constructor(_options = {}) {
     this.currentUser = this.parseUser();
     this.uploading = false;
     this.maxFileSize = 100 * 1024 * 1024; // 100MB
@@ -135,8 +135,8 @@ class GalleryManager {
 // Create global instance
 const galleryManager = new GalleryManager();
 
-// Helper function to create gallery upload modal
-function createGalleryUploadModal() {
+// Helper function to create gallery upload modal — called from HTML pages
+function createGalleryUploadModal() { // eslint-disable-line no-unused-vars
   const modalId = 'gallery-upload-modal-' + Date.now();
   const modal = document.createElement('div');
   modal.id = modalId;
@@ -239,7 +239,7 @@ function setupGalleryUploadEvents(modalId) {
     });
   }
 
-  function createMediaPreview(file, index, modalId) {
+  function createMediaPreview(file, index, _modalId) {
     const item = document.createElement('div');
     item.className = 'gallery-preview-item';
     
@@ -301,8 +301,8 @@ function setupGalleryUploadEvents(modalId) {
   });
 }
 
-// Helper to render gallery grid
-function renderGalleryGrid(media, options = {}) {
+// Helper to render gallery grid — called from HTML pages
+function renderGalleryGrid(media, options = {}) { // eslint-disable-line no-unused-vars
   const container = document.createElement('div');
   container.className = 'gallery-grid';
 

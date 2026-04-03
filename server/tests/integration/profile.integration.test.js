@@ -93,7 +93,7 @@ function mockCreateFakeUser(data) {
 }
 
 jest.mock('../../models', () => {
-  const { Op } = require('sequelize');
+  const { Op: _Op } = require('sequelize');
   const mockUser = {
     findOne: jest.fn(({ where }) => {
       if (where.email) {

@@ -514,16 +514,16 @@ function initializeForms() {
 // ===== Site Header Injection =====
 // DISABLED: Header injection removed per user request
 // Each page now uses its own navigation as defined in the original layout
-function initializeHeader() {
+function initializeHeader() { // eslint-disable-line no-unused-vars
   // Placeholder - header injection disabled
 }
 
-function renderUserArea() {
+function renderUserArea() { // eslint-disable-line no-unused-vars
   // Placeholder - header injection disabled
 }
 
 // ===== Pagination Helper for Search =====
-function renderPaginatedResults(container, results, page, pageSize) {
+function renderPaginatedResults(container, results, page, pageSize) { // eslint-disable-line no-unused-vars
   const total = results.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const start = (page - 1) * pageSize;
@@ -658,25 +658,25 @@ function showNotification(message, type = 'info') {
 }
 
 // ===== Helper Functions =====
-function getUrlParameter(name) {
+function getUrlParameter(name) { // eslint-disable-line no-unused-vars
   const url = new URL(window.location);
   return url.searchParams.get(name);
 }
 
-function setUrlParameter(name, value) {
+function setUrlParameter(name, value) { // eslint-disable-line no-unused-vars
   const url = new URL(window.location);
   url.searchParams.set(name, value);
   window.history.pushState({}, '', url);
 }
 
 // ===== Logout Function =====
-function logout() {
+function logout() { // eslint-disable-line no-unused-vars
   ['spopeer_token','spopeer_user','spopeer_loggedIn','authToken','token','user','userToken','userData'].forEach(k => localStorage.removeItem(k));
   window.location.href = 'index.html';
 }
 
 // ===== Format Functions =====
-function formatDate(date) {
+function formatDate(date) { // eslint-disable-line no-unused-vars
   return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -684,7 +684,7 @@ function formatDate(date) {
   });
 }
 
-function formatTime(date) {
+function formatTime(date) { // eslint-disable-line no-unused-vars
   return new Date(date).toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit'
@@ -729,12 +729,12 @@ document.head.appendChild(style);
 // ===== API INTEGRATION FUNCTIONS =====
 
 // Get auth token from localStorage (deprecated — auth is cookie-based)
-function getAuthToken() {
+function getAuthToken() { // eslint-disable-line no-unused-vars
   return null;
 }
 
 // Set auth token in localStorage (deprecated — auth is cookie-based)
-function setAuthToken(token) {
+function setAuthToken(_token) { // eslint-disable-line no-unused-vars
   // no-op
 }
 

@@ -127,7 +127,7 @@
         headers,
         credentials: "include"
       });
-    } catch (networkError) {
+    } catch (_networkError) {
       const err = new Error("Cannot reach the server. Check your connection and try again.");
       err.code = "NETWORK_ERROR";
       throw err;

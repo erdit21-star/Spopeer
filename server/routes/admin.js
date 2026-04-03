@@ -19,7 +19,7 @@ const { Op } = require('sequelize');
 const { sequelize } = require('../models');
 
 // All admin routes require auth + admin role
-const { ok, created, fail } = require('../utils/response');
+const { ok, fail } = require('../utils/response');
 router.use(authenticate, requireAdmin);
 
 // ─── DASHBOARD STATS ───

@@ -36,7 +36,7 @@ const SYSTEM_FIELDS = new Set([
   'extendedProfile','coverUrl','name'
 ]);
 
-const { ok, created, fail } = require('../utils/response');
+const { ok, fail } = require('../utils/response');
 function pickProfileUpdates(body) {
   const updates = {};
   const knownFields = new Set();

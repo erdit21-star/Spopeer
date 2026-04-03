@@ -6,7 +6,7 @@
 const CACHE_NAME = 'spopeer-cache-v1';
 const ASSETS_CACHE = 'spopeer-assets-v1';
 const API_CACHE = 'spopeer-api-v1';
-const STALE_WHILE_REVALIDATE_TTL = 5 * 60 * 1000; // 5 minutes
+const _STALE_WHILE_REVALIDATE_TTL = 5 * 60 * 1000; // 5 minutes
 
 const CRITICAL_ASSETS = [
   '/',

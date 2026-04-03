@@ -361,7 +361,7 @@
     /* ── 7. Highlight active tab ── */
     var path = window.location.pathname;
     bottomNav.querySelectorAll('.sp-mobile-tab').forEach(function(tab) {
-      var href = tab.getAttribute('href') || '';
+      var _href = tab.getAttribute('href') || '';
       if (path.indexOf('feed.html') !== -1 && tab.dataset.tab === 'home') tab.classList.add('active');
       else if (path.indexOf('search') !== -1 && tab.dataset.tab === 'search') tab.classList.add('active');
       else if ((path.indexOf('messaging') !== -1 || path.indexOf('inbox') !== -1) && tab.dataset.tab === 'inbox') tab.classList.add('active');

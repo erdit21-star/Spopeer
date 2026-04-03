@@ -17,7 +17,7 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { User, PasswordResetToken, RefreshSession } = require('../models');
 const { authenticate, clearAuthCookies, generateAccessToken, generateRefreshToken, getCookieOptions } = require('../middleware/auth');
-const { ok, created, fail } = require('../utils/response');
+const { ok, fail } = require('../utils/response');
 const { sha256 } = require('../utils/crypto');
 const {
   sanitizeString,
@@ -552,7 +552,7 @@ router.post('/refresh', async (req, res) => {
     }
 
     // Revoke old session
-    try { await session.update({ revokedAt: new Date() }); } catch (_) {}
+    try { await session.update({ revokedAt: new Date() }); } catch (_) { /* revoke best-effort */ }
 
     // Issue rotated tokens
     const newAccessToken = generateAccessToken(user);

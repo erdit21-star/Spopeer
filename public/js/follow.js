@@ -157,8 +157,8 @@ class FollowManager {
 // Create global instance
 const followManager = new FollowManager();
 
-// Helper to render follow button
-function renderFollowButton(userId, className = 'follow-btn') {
+// Helper to render follow button — called from HTML onclick handlers
+function renderFollowButton(userId, className = 'follow-btn') { // eslint-disable-line no-unused-vars
   const button = document.createElement('button');
   button.className = className;
   button.textContent = 'Follow';
