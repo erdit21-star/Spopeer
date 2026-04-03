@@ -9,6 +9,15 @@ process.env.DB_NAME = 'spopeer_test';
 process.env.DB_USER = 'postgres';
 process.env.DB_PASSWORD = 'postgres';
 
+jest.mock('bcryptjs', () => ({
+  hashSync: (pw) => `hashed_${pw}`,
+  hash: (pw) => Promise.resolve(`hashed_${pw}`),
+  compare: (pw, hash) => Promise.resolve(hash === `hashed_${pw}`),
+  compareSync: (pw, hash) => hash === `hashed_${pw}`,
+  genSaltSync: () => 'salt',
+  genSalt: () => Promise.resolve('salt')
+}));
+
 jest.mock('winston', () => {
   const noop = jest.fn(function () { return noop; });
   const mockFormat = new Proxy({}, { get: () => noop });
@@ -43,14 +52,15 @@ jest.mock('../../services/email', () => ({
   assertEmailReady: jest.fn()
 }));
 
-const bcrypt = require('bcryptjs');
-let fakeUsers = [];
-let fakeUserIdSeq = 1;
+const mockBcryptHashSync = (pw) => `hashed_${pw}`;
+const mockBcryptCompare = (pw, hash) => Promise.resolve(hash === `hashed_${pw}`);
+let mockFakeUsers = [];
+let mockFakeUserIdSeq = 1;
 
-function createFakeUser(data) {
-  const hash = bcrypt.hashSync(data.password, 10);
+function mockCreateFakeUser(data) {
+  const hash = mockBcryptHashSync(data.password);
   const user = {
-    id: fakeUserIdSeq++,
+    id: mockFakeUserIdSeq++,
     email: data.email.toLowerCase(),
     password: hash,
     firstName: data.firstName || 'Test',
@@ -73,12 +83,12 @@ function createFakeUser(data) {
       delete result.password;
       return result;
     },
-    async validatePassword(pw) { return bcrypt.compare(pw, this.password); },
+    async validatePassword(pw) { return mockBcryptCompare(pw, this.password); },
     async update(updates) { Object.assign(this, updates); return this; },
     getDataValue(key) { return this[key]; },
     async increment() { return this; }
   };
-  fakeUsers.push(user);
+  mockFakeUsers.push(user);
   return user;
 }
 
@@ -87,22 +97,22 @@ jest.mock('../../models', () => {
   const mockUser = {
     findOne: jest.fn(({ where }) => {
       if (where.email) {
-        return Promise.resolve(fakeUsers.find(u => u.email === where.email.toLowerCase() && u.isActive) || null);
+        return Promise.resolve(mockFakeUsers.find(u => u.email === where.email.toLowerCase() && u.isActive) || null);
       }
       if (where.username) {
-        return Promise.resolve(fakeUsers.find(u => u.username === where.username) || null);
+        return Promise.resolve(mockFakeUsers.find(u => u.username === where.username) || null);
       }
       return Promise.resolve(null);
     }),
     findByPk: jest.fn((id) => {
-      return Promise.resolve(fakeUsers.find(u => u.id === id) || null);
+      return Promise.resolve(mockFakeUsers.find(u => u.id === id) || null);
     }),
     findAndCountAll: jest.fn(({ where, limit, offset }) => {
-      let results = fakeUsers.filter(u => u.isActive);
+      let results = mockFakeUsers.filter(u => u.isActive);
       if (where && where.role) results = results.filter(u => u.role === where.role);
       return Promise.resolve({ rows: results.slice(offset || 0, (offset || 0) + (limit || 20)), count: results.length });
     }),
-    create: jest.fn((data) => Promise.resolve(createFakeUser(data)))
+    create: jest.fn((data) => Promise.resolve(mockCreateFakeUser(data)))
   };
 
   return {
@@ -126,7 +136,21 @@ jest.mock('../../models', () => {
     Sponsorship: {},
     Media: {},
     AdminAuditLog: {},
-    sequelize: { authenticate: jest.fn().mockResolvedValue(true) }
+    sequelize: {
+      authenticate: jest.fn().mockResolvedValue(true),
+      define: jest.fn(() => ({
+        findAll: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockResolvedValue(null),
+        findByPk: jest.fn().mockResolvedValue(null),
+        findAndCountAll: jest.fn().mockResolvedValue({ rows: [], count: 0 }),
+        create: jest.fn().mockResolvedValue({}),
+        destroy: jest.fn().mockResolvedValue(0),
+        count: jest.fn().mockResolvedValue(0),
+        belongsTo: jest.fn(),
+        hasMany: jest.fn(),
+        belongsToMany: jest.fn()
+      }))
+    }
   };
 });
 
@@ -134,8 +158,8 @@ const request = require('supertest');
 const app = require('../../app');
 
 beforeEach(() => {
-  fakeUsers = [];
-  fakeUserIdSeq = 1;
+  mockFakeUsers = [];
+  mockFakeUserIdSeq = 1;
   jest.clearAllMocks();
 });
 
@@ -144,7 +168,7 @@ describe('Profile Integration', () => {
 
   beforeEach(async () => {
     // Create and login a user
-    createFakeUser({
+    mockCreateFakeUser({
       email: 'profile@example.com',
       password: 'StrongPass123!',
       firstName: 'Profile',
@@ -195,7 +219,7 @@ describe('Profile Integration', () => {
   });
 
   test('PUT /api/users/:id rejects updating another user', async () => {
-    createFakeUser({
+    mockCreateFakeUser({
       email: 'other@example.com',
       password: 'StrongPass123!',
       firstName: 'Other',

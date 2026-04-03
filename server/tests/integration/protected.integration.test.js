@@ -9,6 +9,15 @@ process.env.DB_NAME = 'spopeer_test';
 process.env.DB_USER = 'postgres';
 process.env.DB_PASSWORD = 'postgres';
 
+jest.mock('bcryptjs', () => ({
+  hashSync: (pw) => `hashed_${pw}`,
+  hash: (pw) => Promise.resolve(`hashed_${pw}`),
+  compare: (pw, hash) => Promise.resolve(hash === `hashed_${pw}`),
+  compareSync: (pw, hash) => hash === `hashed_${pw}`,
+  genSaltSync: () => 'salt',
+  genSalt: () => Promise.resolve('salt')
+}));
+
 jest.mock('winston', () => {
   const noop = jest.fn(function () { return noop; });
   const mockFormat = new Proxy({}, { get: () => noop });
@@ -69,7 +78,21 @@ jest.mock('../../models', () => ({
   Sponsorship: { findAll: jest.fn().mockResolvedValue([]) },
   Media: { create: jest.fn() },
   AdminAuditLog: { create: jest.fn() },
-  sequelize: { authenticate: jest.fn().mockResolvedValue(true) }
+  sequelize: {
+    authenticate: jest.fn().mockResolvedValue(true),
+    define: jest.fn(() => ({
+      findAll: jest.fn().mockResolvedValue([]),
+      findOne: jest.fn().mockResolvedValue(null),
+      findByPk: jest.fn().mockResolvedValue(null),
+      findAndCountAll: jest.fn().mockResolvedValue({ rows: [], count: 0 }),
+      create: jest.fn().mockResolvedValue({}),
+      destroy: jest.fn().mockResolvedValue(0),
+      count: jest.fn().mockResolvedValue(0),
+      belongsTo: jest.fn(),
+      hasMany: jest.fn(),
+      belongsToMany: jest.fn()
+    }))
+  }
 }));
 
 const request = require('supertest');

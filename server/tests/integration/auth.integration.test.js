@@ -12,6 +12,15 @@ process.env.DB_USER = 'postgres';
 process.env.DB_PASSWORD = 'postgres';
 
 // Mock winston
+jest.mock('bcryptjs', () => ({
+  hashSync: (pw) => `hashed_${pw}`,
+  hash: (pw) => Promise.resolve(`hashed_${pw}`),
+  compare: (pw, hash) => Promise.resolve(hash === `hashed_${pw}`),
+  compareSync: (pw, hash) => hash === `hashed_${pw}`,
+  genSaltSync: () => 'salt',
+  genSalt: () => Promise.resolve('salt')
+}));
+
 jest.mock('winston', () => {
   const noop = jest.fn(function () { return noop; });
   const mockFormat = new Proxy({}, { get: () => noop });
@@ -50,15 +59,16 @@ jest.mock('../../services/email', () => ({
 }));
 
 // In-memory fake user store
-const bcrypt = require('bcryptjs');
-let fakeUsers = [];
-let fakeUserIdSeq = 1;
-let fakePasswordResetTokens = [];
+const mockBcryptHashSync = (pw) => `hashed_${pw}`;
+const mockBcryptCompare = (pw, hash) => Promise.resolve(hash === `hashed_${pw}`);
+let mockFakeUsers = [];
+let mockFakeUserIdSeq = 1;
+let mockFakePasswordResetTokens = [];
 
-function createFakeUser(data) {
-  const hash = bcrypt.hashSync(data.password, 10);
+function mockCreateFakeUser(data) {
+  const hash = mockBcryptHashSync(data.password);
   const user = {
-    id: fakeUserIdSeq++,
+    id: mockFakeUserIdSeq++,
     email: data.email.toLowerCase(),
     password: hash,
     firstName: data.firstName || 'Test',
@@ -81,11 +91,11 @@ function createFakeUser(data) {
       return result;
     },
     async validatePassword(pw) {
-      return bcrypt.compare(pw, this.password);
+      return mockBcryptCompare(pw, this.password);
     },
     async update(updates) {
       if (updates.password) {
-        updates.password = bcrypt.hashSync(updates.password, 10);
+        updates.password = mockBcryptHashSync(updates.password);
       }
       Object.assign(this, updates);
       return this;
@@ -93,7 +103,7 @@ function createFakeUser(data) {
     getDataValue(key) { return this[key]; },
     async increment() { return this; }
   };
-  fakeUsers.push(user);
+  mockFakeUsers.push(user);
   return user;
 }
 
@@ -102,33 +112,33 @@ jest.mock('../../models', () => {
   const mockUser = {
     findOne: jest.fn(({ where }) => {
       if (where.email) {
-        return Promise.resolve(fakeUsers.find(u => u.email === where.email.toLowerCase()) || null);
+        return Promise.resolve(mockFakeUsers.find(u => u.email === where.email.toLowerCase()) || null);
       }
       if (where.emailVerifyToken) {
-        return Promise.resolve(fakeUsers.find(u => u.emailVerifyToken === where.emailVerifyToken) || null);
+        return Promise.resolve(mockFakeUsers.find(u => u.emailVerifyToken === where.emailVerifyToken) || null);
       }
       return Promise.resolve(null);
     }),
     findByPk: jest.fn((id, opts) => {
-      return Promise.resolve(fakeUsers.find(u => u.id === id) || null);
+      return Promise.resolve(mockFakeUsers.find(u => u.id === id) || null);
     }),
     create: jest.fn((data) => {
-      return Promise.resolve(createFakeUser(data));
+      return Promise.resolve(mockCreateFakeUser(data));
     }),
     findAndCountAll: jest.fn(() => Promise.resolve({ rows: [], count: 0 }))
   };
 
   const mockPasswordResetToken = {
     findOne: jest.fn(({ where }) => {
-      const record = fakePasswordResetTokens.find(t => t.token === where.token && t.expiresAt > new Date());
+      const record = mockFakePasswordResetTokens.find(t => t.token === where.token && t.expiresAt > new Date());
       return Promise.resolve(record || null);
     }),
     create: jest.fn((data) => {
-      fakePasswordResetTokens.push(data);
+      mockFakePasswordResetTokens.push(data);
       return Promise.resolve(data);
     }),
     destroy: jest.fn(({ where }) => {
-      fakePasswordResetTokens = fakePasswordResetTokens.filter(t => t.userId !== where.userId);
+      mockFakePasswordResetTokens = mockFakePasswordResetTokens.filter(t => t.userId !== where.userId);
       return Promise.resolve();
     })
   };
@@ -155,7 +165,19 @@ jest.mock('../../models', () => {
     Media: {},
     AdminAuditLog: {},
     sequelize: {
-      authenticate: jest.fn().mockResolvedValue(true)
+      authenticate: jest.fn().mockResolvedValue(true),
+      define: jest.fn(() => ({
+        findAll: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockResolvedValue(null),
+        findByPk: jest.fn().mockResolvedValue(null),
+        findAndCountAll: jest.fn().mockResolvedValue({ rows: [], count: 0 }),
+        create: jest.fn().mockResolvedValue({}),
+        destroy: jest.fn().mockResolvedValue(0),
+        count: jest.fn().mockResolvedValue(0),
+        belongsTo: jest.fn(),
+        hasMany: jest.fn(),
+        belongsToMany: jest.fn()
+      }))
     }
   };
 });
@@ -164,9 +186,9 @@ const request = require('supertest');
 const app = require('../../app');
 
 beforeEach(() => {
-  fakeUsers = [];
-  fakeUserIdSeq = 1;
-  fakePasswordResetTokens = [];
+  mockFakeUsers = [];
+  mockFakeUserIdSeq = 1;
+  mockFakePasswordResetTokens = [];
   jest.clearAllMocks();
 });
 
@@ -226,7 +248,7 @@ describe('Auth Integration', () => {
     });
 
     test('rejects duplicate email', async () => {
-      createFakeUser({ email: 'dup@example.com', password: 'StrongPass123!' });
+      mockCreateFakeUser({ email: 'dup@example.com', password: 'StrongPass123!' });
       const res = await request(app)
         .post('/api/auth/signup')
         .send({
@@ -259,7 +281,7 @@ describe('Auth Integration', () => {
   // ─── LOGIN ───
   describe('POST /api/auth/login', () => {
     beforeEach(() => {
-      createFakeUser({
+      mockCreateFakeUser({
         email: 'user@example.com',
         password: 'CorrectPass123!',
         firstName: 'Existing',
@@ -320,7 +342,7 @@ describe('Auth Integration', () => {
     });
 
     test('returns user when authenticated via cookie', async () => {
-      const user = createFakeUser({
+      mockCreateFakeUser({
         email: 'metest@example.com',
         password: 'StrongPass123!',
         firstName: 'Me',
@@ -363,7 +385,7 @@ describe('Auth Integration', () => {
   // ─── FORGOT PASSWORD ───
   describe('POST /api/auth/forgot-password', () => {
     test('returns safe response for known email', async () => {
-      createFakeUser({ email: 'forgot@example.com', password: 'StrongPass123!' });
+      mockCreateFakeUser({ email: 'forgot@example.com', password: 'StrongPass123!' });
 
       const res = await request(app)
         .post('/api/auth/forgot-password')
