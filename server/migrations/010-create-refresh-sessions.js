@@ -4,7 +4,13 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('refresh_sessions', {
       id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true, allowNull: false },
-      userId: { type: Sequelize.INTEGER, allowNull: false },
+      userId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: { model: 'users', key: 'id' },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
+      },
       tokenHash: { type: Sequelize.STRING(64), allowNull: false, unique: true },
       userAgent: { type: Sequelize.STRING(500), allowNull: true },
       ipAddress: { type: Sequelize.STRING(45), allowNull: true },
@@ -15,8 +21,8 @@ module.exports = {
     });
 
     await queryInterface.addIndex('refresh_sessions', ['userId']);
-    await queryInterface.addIndex('refresh_sessions', ['tokenHash']);
     await queryInterface.addIndex('refresh_sessions', ['expiresAt']);
+    await queryInterface.addIndex('refresh_sessions', ['tokenHash'], { unique: true });
   },
 
   async down(queryInterface) {

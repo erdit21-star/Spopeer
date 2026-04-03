@@ -139,7 +139,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       });
     } catch (sessionErr) {
-      console.error('[SIGNUP] RefreshSession.create failed (table may not exist yet):', sessionErr.message);
+      console.error('[SIGNUP] RefreshSession.create failed:', sessionErr.message);
     }
 
     res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
@@ -243,7 +243,7 @@ router.post('/login', loginLimiter, async (req, res) => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       });
     } catch (sessionErr) {
-      console.error('[LOGIN] RefreshSession.create failed (table may not exist yet):', sessionErr.message);
+      console.error('[LOGIN] RefreshSession.create failed:', sessionErr.message);
     }
 
     res.cookie('access_token', token, getCookieOptions(15 * 60 * 1000));

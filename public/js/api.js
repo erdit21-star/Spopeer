@@ -46,14 +46,10 @@
 
   function clearAuthStorage() {
     [
-      "spopeer_token",
       "spopeer_user",
       "spopeer_loggedIn",
-      "authToken",
-      "token",
       "user",
-      "userToken",
-      "userData"
+      "_profileLastUpdated_"
     ].forEach((key) => localStorage.removeItem(key));
   }
 
