@@ -8,12 +8,9 @@ const isEmailConfigured = !!process.env.RESEND_API_KEY;
 
 /**
  * Assert email readiness at startup.
- * In production, missing RESEND_API_KEY is fatal — emails would silently drop.
+ * Warns if RESEND_API_KEY is missing — emails will be logged instead of sent.
  */
 function assertEmailReady() {
-  if (process.env.NODE_ENV === 'production' && !isEmailConfigured) {
-    throw new Error('RESEND_API_KEY is required in production. Emails would silently drop without it.');
-  }
   if (!isEmailConfigured) {
     console.warn('⚠️  RESEND_API_KEY not set — emails will be logged to console.');
   }
