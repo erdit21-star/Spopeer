@@ -14,7 +14,6 @@ const router = express.Router();
 const { Message, User } = require('../models');
 const { authenticate } = require('../middleware/auth');
 const { Op } = require('sequelize');
-const { sequelize } = require('../models');
 const { sanitizeString } = require('../utils/validation');
 
 // ─── SEND MESSAGE (compatibility: /api/messages/send) ───

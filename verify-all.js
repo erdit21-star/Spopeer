@@ -8,7 +8,6 @@ process.env.DB_NAME = 'spopeer';
 process.env.DB_USER = 'app_user';
 process.env.DB_PASSWORD = '';
 
-const path = require('path');
 const results = [];
 
 function test(label, fn) {

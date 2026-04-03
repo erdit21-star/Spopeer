@@ -21,7 +21,7 @@ const { Post, User, Like, Comment, Connection, SavedPost } = require('../models'
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { uploadPost } = require('../middleware/upload');
 const { Op } = require('sequelize');
-const { sanitizeString, parsePagination, isValidId } = require('../utils/validation');
+const { sanitizeString, parsePagination } = require('../utils/validation');
 
 // ─── FEED HELPER ───
 async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {

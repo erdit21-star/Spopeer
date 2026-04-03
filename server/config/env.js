@@ -6,7 +6,8 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 
 const REQUIRED = ['JWT_SECRET'];
 
-const RECOMMENDED = [
+// Used in validate() below
+const _RECOMMENDED = [
   'DATABASE_URL',
   'DB_HOST',
   'DB_NAME',

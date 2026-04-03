@@ -21,7 +21,7 @@
 const express = require('express');
 const router = express.Router();
 const { Listing, User } = require('../models');
-const { authenticate, optionalAuth } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { sequelize } = require('../models');
 const { DataTypes } = require('sequelize');

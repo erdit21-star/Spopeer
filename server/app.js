@@ -2,7 +2,7 @@
  * Spopeer Express Application
  * Separated from server.js so tests can require(app) without starting the listener.
  */
-const { config: env } = require('./config/env');
+require('./config/env');
 
 const express = require('express');
 const compression = require('compression');

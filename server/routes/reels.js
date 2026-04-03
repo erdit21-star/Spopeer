@@ -8,10 +8,9 @@
  */
 const express = require('express');
 const router = express.Router();
-const { Reel, User, Like } = require('../models');
+const { Reel, User } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { uploadPost } = require('../middleware/upload');
-const { Op } = require('sequelize');
 
 // ─── LIST REELS ───
 router.get('/', optionalAuth, async (req, res) => {
