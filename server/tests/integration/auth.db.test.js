@@ -11,6 +11,8 @@
 
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-for-db-tests';
+process.env.APP_URL = process.env.APP_URL || 'http://localhost:5000';
+process.env.FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5000';
 process.env.DB_HOST = process.env.DB_HOST || 'localhost';
 process.env.DB_PORT = process.env.DB_PORT || '5432';
 process.env.DB_NAME = process.env.DB_NAME || 'spopeer_test';
@@ -478,5 +480,7 @@ describe('Real-DB: Health + Readiness', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.checks.database).toBe('ok');
+    expect(res.body.data.checks.secrets).toBe('ok');
+    expect(res.body.data.checks.appUrl).toBe('ok');
   });
 });
