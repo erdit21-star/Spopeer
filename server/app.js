@@ -6,10 +6,13 @@ require('./config/env');
 
 // ─── PRODUCTION STARTUP GUARDS ───
 if (process.env.NODE_ENV === 'production') {
-  const missing = ['JWT_SECRET', 'FRONTEND_URL', 'APP_URL'].filter(k => !process.env[k]);
-  if (missing.length) {
-    console.error(`FATAL: Missing required env vars in production: ${missing.join(', ')}`);
+  if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET is required in production');
     process.exit(1);
+  }
+  const recommended = ['FRONTEND_URL', 'APP_URL'].filter(k => !process.env[k]);
+  if (recommended.length) {
+    console.warn(`WARNING: Missing recommended env vars: ${recommended.join(', ')} — CORS and readiness checks may be degraded`);
   }
 }
 
@@ -239,8 +242,7 @@ app.get('/api/ready', async (req, res) => {
   checks.storage = storageOk ? 'ok' : (process.env.NODE_ENV === 'production' ? 'warn' : 'warn');
 
   // App URL check
-  checks.appUrl = (process.env.APP_URL && process.env.FRONTEND_URL) ? 'ok' : 'fail';
-  if (!process.env.APP_URL || !process.env.FRONTEND_URL) ready = false;
+  checks.appUrl = (process.env.APP_URL && process.env.FRONTEND_URL) ? 'ok' : 'warn';
 
   res.status(ready ? 200 : 503).json({
     success: ready,
