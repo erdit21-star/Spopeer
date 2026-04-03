@@ -16,3 +16,4 @@ coverage
 uploads/
 server/uploads/
 server/logs/
+_git*.txt

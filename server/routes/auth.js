@@ -130,17 +130,13 @@ router.post('/signup', signupLimiter, async (req, res) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    try {
-      await RefreshSession.create({
-        userId: user.id,
-        tokenHash: sha256(refreshToken),
-        userAgent: req.get('user-agent') || null,
-        ipAddress: req.ip,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      });
-    } catch (sessionErr) {
-      console.error('[SIGNUP] RefreshSession.create failed:', sessionErr.message);
-    }
+    await RefreshSession.create({
+      userId: user.id,
+      tokenHash: sha256(refreshToken),
+      userAgent: req.get('user-agent') || null,
+      ipAddress: req.ip,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
 
     res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
     res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
@@ -234,17 +230,13 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     // Issue DB-backed refresh session
     const refreshToken = generateRefreshToken(user);
-    try {
-      await RefreshSession.create({
-        userId: user.id,
-        tokenHash: sha256(refreshToken),
-        userAgent: req.get('user-agent') || null,
-        ipAddress: req.ip,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      });
-    } catch (sessionErr) {
-      console.error('[LOGIN] RefreshSession.create failed:', sessionErr.message);
-    }
+    await RefreshSession.create({
+      userId: user.id,
+      tokenHash: sha256(refreshToken),
+      userAgent: req.get('user-agent') || null,
+      ipAddress: req.ip,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
 
     res.cookie('access_token', token, getCookieOptions(15 * 60 * 1000));
     res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
@@ -558,17 +550,13 @@ router.post('/refresh', async (req, res) => {
     const newAccessToken = generateAccessToken(user);
     const newRefreshToken = generateRefreshToken(user);
 
-    try {
-      await RefreshSession.create({
-        userId: user.id,
-        tokenHash: sha256(newRefreshToken),
-        userAgent: req.get('user-agent') || null,
-        ipAddress: req.ip,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      });
-    } catch (sessionErr) {
-      console.error('[REFRESH] RefreshSession.create failed:', sessionErr.message);
-    }
+    await RefreshSession.create({
+      userId: user.id,
+      tokenHash: sha256(newRefreshToken),
+      userAgent: req.get('user-agent') || null,
+      ipAddress: req.ip,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
 
     res.cookie('access_token', newAccessToken, getCookieOptions(15 * 60 * 1000));
     res.cookie('refresh_token', newRefreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));

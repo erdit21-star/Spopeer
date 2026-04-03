@@ -174,6 +174,13 @@ app.use('/api/moderation', apiLimiter, moderationRoutes);
 // ─── PROFILE ROUTES (frontend compatibility) ───
 app.use('/api/profiles', apiLimiter, require('./routes/users'));
 
+// ─── SENTRY DEBUG (non-production only) ───
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/api/debug-sentry', (_req, _res) => {
+    throw new Error('Sentry test error — verify this appears in Sentry dashboard');
+  });
+}
+
 // ─── HEALTH CHECK ───
 app.get('/api/health', (req, res) => {
   res.json({
