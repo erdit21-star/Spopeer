@@ -15,17 +15,18 @@ const { Connection, User } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 
 // ─── FOLLOW ───
+const { ok, created, fail } = require('../utils/response');
 router.post('/:userId', authenticate, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
 
     if (userId === req.userId) {
-      return res.status(400).json({ error: 'You cannot follow yourself.' });
+      return fail(res, 400, 'VALIDATION', 'You cannot follow yourself.');
     }
 
     const targetUser = await User.findByPk(userId);
     if (!targetUser || !targetUser.isActive) {
-      return res.status(404).json({ error: 'User not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
 
     const existing = await Connection.findOne({
@@ -33,7 +34,7 @@ router.post('/:userId', authenticate, async (req, res) => {
     });
 
     if (existing) {
-      return res.status(409).json({ error: 'Already following this user.' });
+      return fail(res, 409, 'CONFLICT', 'Already following this user.');
     }
 
     await Connection.create({
@@ -45,10 +46,10 @@ router.post('/:userId', authenticate, async (req, res) => {
     await req.user.increment('followingCount');
     await targetUser.increment('followersCount');
 
-    res.status(201).json({ status: 'ok', message: 'Followed successfully.' });
+    created(res, { message: 'Followed successfully.' });
   } catch (error) {
     console.error('Follow error:', error);
-    res.status(500).json({ error: 'Failed to follow user.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to follow user.');
   }
 });
 
@@ -62,7 +63,7 @@ router.delete('/:userId', authenticate, async (req, res) => {
     });
 
     if (!connection) {
-      return res.status(404).json({ error: 'Not following this user.' });
+      return fail(res, 404, 'NOT_FOUND', 'Not following this user.');
     }
 
     await connection.destroy();
@@ -71,9 +72,9 @@ router.delete('/:userId', authenticate, async (req, res) => {
     const targetUser = await User.findByPk(userId);
     if (targetUser) await targetUser.decrement('followersCount');
 
-    res.json({ status: 'ok', message: 'Unfollowed successfully.' });
+    ok(res, { message: 'Unfollowed successfully.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to unfollow user.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to unfollow user.');
   }
 });
 
@@ -90,7 +91,7 @@ router.get('/status/:userId', authenticate, async (req, res) => {
       connectionStatus: connection ? connection.status : null
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to check follow status.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to check follow status.');
   }
 });
 
@@ -107,9 +108,9 @@ router.get('/followers/:userId', optionalAuth, async (req, res) => {
     });
 
     const followers = connections.map(c => c.follower);
-    res.json({ status: 'ok', payload: followers });
+    ok(res, followers);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch followers.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch followers.');
   }
 });
 
@@ -126,9 +127,9 @@ router.get('/following/:userId', optionalAuth, async (req, res) => {
     });
 
     const following = connections.map(c => c.followedUser);
-    res.json({ status: 'ok', payload: following });
+    ok(res, following);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch following.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch following.');
   }
 });
 
@@ -140,7 +141,7 @@ router.get('/stats/:userId', optionalAuth, async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
 
     res.json({
@@ -152,7 +153,7 @@ router.get('/stats/:userId', optionalAuth, async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch stats.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch stats.');
   }
 });
 

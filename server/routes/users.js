@@ -36,6 +36,7 @@ const SYSTEM_FIELDS = new Set([
   'extendedProfile','coverUrl','name'
 ]);
 
+const { ok, created, fail } = require('../utils/response');
 function pickProfileUpdates(body) {
   const updates = {};
   const knownFields = new Set();
@@ -141,18 +142,14 @@ router.get('/', optionalAuth, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({
-      status: 'ok',
-      payload: users,
-      pagination: {
+    ok(res, users, { pagination: {
         total: count,
         page,
         pages: Math.ceil(count / limit)
-      }
-    });
+      } });
   } catch (error) {
     console.error('List users error:', error);
-    res.status(500).json({ error: 'Failed to fetch users.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch users.');
   }
 });
 
@@ -174,7 +171,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     }
 
     if (!user || !user.isActive) {
-      return res.status(404).json({ error: 'User not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
 
     // Privacy enforcement: if profile is private, only the owner can see full details
@@ -192,9 +189,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
       });
     }
 
-    res.json({ status: 'ok', payload: flattenUserPayload(user) });
+    ok(res, flattenUserPayload(user));
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch user.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
   }
 });
 
@@ -203,7 +200,7 @@ router.put('/:id', authenticate, async (req, res) => {
   try {
     // Users can only update their own profile (admins can update anyone)
     if (req.user.id !== parseInt(req.params.id) && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'You can only update your own profile.' });
+      return fail(res, 403, 'FORBIDDEN', 'You can only update your own profile.');
     }
 
     const updates = pickProfileUpdates(req.body);
@@ -212,12 +209,12 @@ router.put('/:id', authenticate, async (req, res) => {
     if (updates.username) {
       const existing = await User.findOne({ where: { username: updates.username } });
       if (existing && existing.id !== req.user.id) {
-        return res.status(409).json({ error: 'Username is already taken.' });
+        return fail(res, 409, 'CONFLICT', 'Username is already taken.');
       }
     }
 
     const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ error: 'User not found.' });
+    if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
 
     await applyExtendedMerge(user, updates);
     await user.update(updates);
@@ -229,7 +226,7 @@ router.put('/:id', authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error('Update profile error:', error);
-    res.status(500).json({ error: 'Failed to update profile.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
   }
 });
 
@@ -237,7 +234,7 @@ router.put('/:id', authenticate, async (req, res) => {
 router.post('/avatar', authenticate, uploadAvatar.single('avatar'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded.' });
+      return fail(res, 400, 'VALIDATION', 'No file uploaded.');
     }
 
     const avatarUrl = `/uploads/avatars/${req.file.filename}`;
@@ -249,7 +246,7 @@ router.post('/avatar', authenticate, uploadAvatar.single('avatar'), async (req, 
       avatarUrl
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to upload avatar.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to upload avatar.');
   }
 });
 
@@ -257,7 +254,7 @@ router.post('/avatar', authenticate, uploadAvatar.single('avatar'), async (req, 
 router.post('/cover', authenticate, uploadCover.single('cover'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded.' });
+      return fail(res, 400, 'VALIDATION', 'No file uploaded.');
     }
 
     const coverPhotoUrl = `/uploads/covers/${req.file.filename}`;
@@ -269,7 +266,7 @@ router.post('/cover', authenticate, uploadCover.single('cover'), async (req, res
       coverPhotoUrl
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to upload cover photo.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to upload cover photo.');
   }
 });
 
@@ -282,12 +279,12 @@ router.get('/profile/:email', optionalAuth, async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Profile not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Profile not found.');
     }
 
-    res.json({ status: 'ok', payload: flattenUserPayload(user) });
+    ok(res, flattenUserPayload(user));
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch profile.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');
   }
 });
 
@@ -301,7 +298,7 @@ async function saveProfileHandler(req, res) {
     if (updates.username) {
       const existing = await User.findOne({ where: { username: updates.username } });
       if (existing && existing.id !== req.user.id) {
-        return res.status(409).json({ error: 'Username is already taken.' });
+        return fail(res, 409, 'CONFLICT', 'Username is already taken.');
       }
     }
 
@@ -314,7 +311,7 @@ async function saveProfileHandler(req, res) {
       payload: flattenUserPayload(req.user)
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to save profile.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to save profile.');
   }
 }
 
@@ -328,7 +325,7 @@ router.post('/me/export', authenticate, async (req, res) => {
     const user = await User.findByPk(userId, {
       attributes: { exclude: ['password'] }
     });
-    if (!user) return res.status(404).json({ error: 'User not found.' });
+    if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
 
     const [posts, connections, comments, likes, messages, savedPosts] = await Promise.all([
       Post.findAll({ where: { userId }, raw: true }),
@@ -355,7 +352,7 @@ router.post('/me/export', authenticate, async (req, res) => {
     res.json(exportData);
   } catch (error) {
     console.error('Data export error:', error);
-    res.status(500).json({ error: 'Failed to export data.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to export data.');
   }
 });
 
@@ -364,7 +361,7 @@ router.delete('/me', authenticate, async (req, res) => {
   try {
     const userId = req.userId;
     const user = await User.findByPk(userId);
-    if (!user) return res.status(404).json({ error: 'User not found.' });
+    if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
 
     // Delete user-owned data in order (foreign key safety)
     await Promise.all([
@@ -382,10 +379,10 @@ router.delete('/me', authenticate, async (req, res) => {
 
     await user.destroy();
 
-    res.json({ status: 'ok', message: 'Account and associated data deleted.' });
+    ok(res, { message: 'Account and associated data deleted.' });
   } catch (error) {
     console.error('Account deletion error:', error);
-    res.status(500).json({ error: 'Failed to delete account.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to delete account.');
   }
 });
 

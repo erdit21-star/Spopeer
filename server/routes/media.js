@@ -14,10 +14,11 @@ const path = require('path');
 const fs = require('fs');
 
 // ─── UPLOAD ───
+const { ok, created, fail } = require('../utils/response');
 router.post('/upload', authenticate, uploadPost.single('file'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded.' });
+      return fail(res, 400, 'VALIDATION', 'No file uploaded.');
     }
 
     const mediaEntry = await Media.create({
@@ -30,14 +31,11 @@ router.post('/upload', authenticate, uploadPost.single('file'), async (req, res)
       caption: req.body.caption || ''
     });
 
-    res.status(201).json({
-      status: 'ok',
-      payload: mediaEntry,
-      url: mediaEntry.url
-    });
+    created(res, { payload: mediaEntry,
+      url: mediaEntry.url });
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ error: 'Failed to upload file.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to upload file.');
   }
 });
 
@@ -53,7 +51,7 @@ router.get('/user/:userId', async (req, res) => {
     res.json(userMedia);
   } catch (error) {
     console.error('Get media error:', error);
-    res.status(500).json({ error: 'Failed to fetch media.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch media.');
   }
 });
 
@@ -64,11 +62,11 @@ router.delete('/:mediaId', authenticate, async (req, res) => {
     const entry = await Media.findByPk(mediaId);
 
     if (!entry) {
-      return res.status(404).json({ error: 'Media not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Media not found.');
     }
 
     if (entry.userId !== req.userId) {
-      return res.status(403).json({ error: 'Not authorized.' });
+      return fail(res, 403, 'FORBIDDEN', 'Not authorized.');
     }
 
     // Remove physical file
@@ -78,10 +76,10 @@ router.delete('/:mediaId', authenticate, async (req, res) => {
     }
 
     await entry.destroy();
-    res.json({ status: 'ok', message: 'Media deleted.' });
+    ok(res, { message: 'Media deleted.' });
   } catch (error) {
     console.error('Delete media error:', error);
-    res.status(500).json({ error: 'Failed to delete media.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to delete media.');
   }
 });
 
@@ -92,21 +90,21 @@ router.put('/:mediaId', authenticate, async (req, res) => {
     const entry = await Media.findByPk(mediaId);
 
     if (!entry) {
-      return res.status(404).json({ error: 'Media not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Media not found.');
     }
 
     if (entry.userId !== req.userId) {
-      return res.status(403).json({ error: 'Not authorized.' });
+      return fail(res, 403, 'FORBIDDEN', 'Not authorized.');
     }
 
     if (req.body.caption !== undefined) {
       await entry.update({ caption: req.body.caption });
     }
 
-    res.json({ status: 'ok', payload: entry });
+    ok(res, entry);
   } catch (error) {
     console.error('Update media error:', error);
-    res.status(500).json({ error: 'Failed to update media.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update media.');
   }
 });
 

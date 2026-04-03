@@ -24,6 +24,7 @@ const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
 
 // ─── FEED HELPER ───
+const { ok, created, fail } = require('../utils/response');
 async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
   try {
     const { page, limit } = parsePagination(req.query);
@@ -51,14 +52,10 @@ async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
       enrichedPosts = enrichedPosts.map(p => ({ ...p, liked: likedSet.has(p.id) }));
     }
 
-    res.json({
-      status: 'ok',
-      payload: enrichedPosts,
-      pagination: { total: count, page, pages: Math.ceil(count / limit) }
-    });
+    ok(res, enrichedPosts, { pagination: { total: count, page, pages: Math.ceil(count / limit) } });
   } catch (error) {
     console.error('Feed error:', error);
-    res.status(500).json({ error: 'Failed to fetch feed.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch feed.');
   }
 }
 
@@ -74,12 +71,12 @@ router.get('/feed/following', authenticate, async (req, res) => {
     });
     const followedIds = connections.map(c => c.followingId);
     if (followedIds.length === 0) {
-      return res.json({ status: 'ok', payload: [], pagination: { total: 0, page: 1, pages: 0 } });
+      return ok(res, [], { pagination: { total: 0, page: 1, pages: 0 } });
     }
     return buildFeed(req, res, { whereExtra: { userId: { [Op.in]: followedIds } } });
   } catch (error) {
     console.error('Following feed error:', error);
-    res.status(500).json({ error: 'Failed to fetch following feed.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch following feed.');
   }
 });
 
@@ -102,12 +99,12 @@ router.post('/:id/view', optionalAuth, async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) {
-      return res.status(404).json({ error: 'Post not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
     await post.increment('viewCount');
-    res.json({ status: 'ok', viewCount: (post.viewCount || 0) + 1 });
+    ok(res, { viewCount: (post.viewCount || 0) + 1 });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to register view.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to register view.');
   }
 });
 
@@ -155,14 +152,10 @@ router.get('/', optionalAuth, async (req, res) => {
       enrichedPosts = enrichedPosts.map(p => ({ ...p, liked: likedSet.has(p.id) }));
     }
 
-    res.json({
-      status: 'ok',
-      payload: enrichedPosts,
-      pagination: { total: count, page, pages: Math.ceil(count / limit) }
-    });
+    ok(res, enrichedPosts, { pagination: { total: count, page, pages: Math.ceil(count / limit) } });
   } catch (error) {
     console.error('Get posts error:', error);
-    res.status(500).json({ error: 'Failed to fetch posts.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch posts.');
   }
 });
 
@@ -173,7 +166,7 @@ router.post('/', authenticate, uploadPost.single('image'), async (req, res) => {
 
     const sanitizedContent = sanitizeString(content, 5000);
     if (!sanitizedContent) {
-      return res.status(400).json({ error: 'Post content is required.' });
+      return fail(res, 400, 'VALIDATION', 'Post content is required.');
     }
 
     const postData = {
@@ -196,10 +189,10 @@ router.post('/', authenticate, uploadPost.single('image'), async (req, res) => {
       include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'avatarUrl', 'sport'] }]
     });
 
-    res.status(201).json({ status: 'ok', payload: fullPost });
+    created(res, fullPost);
   } catch (error) {
     console.error('Create post error:', error);
-    res.status(500).json({ error: 'Failed to create post.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to create post.');
   }
 });
 
@@ -211,7 +204,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     });
 
     if (!post || !post.isActive) {
-      return res.status(404).json({ error: 'Post not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
 
     const result = post.toJSON();
@@ -220,9 +213,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
       result.liked = !!liked;
     }
 
-    res.json({ status: 'ok', payload: result });
+    ok(res, result);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch post.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch post.');
   }
 });
 
@@ -231,11 +224,11 @@ router.put('/:id', authenticate, async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) {
-      return res.status(404).json({ error: 'Post not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
 
     if (post.userId !== req.userId && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'You can only edit your own posts.' });
+      return fail(res, 403, 'FORBIDDEN', 'You can only edit your own posts.');
     }
 
     const { content, sport } = req.body;
@@ -243,9 +236,9 @@ router.put('/:id', authenticate, async (req, res) => {
     if (sport) post.sport = sport;
 
     await post.save();
-    res.json({ status: 'ok', payload: post });
+    ok(res, post);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update post.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update post.');
   }
 });
 
@@ -254,19 +247,19 @@ router.delete('/:id', authenticate, async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id);
     if (!post) {
-      return res.status(404).json({ error: 'Post not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
 
     if (post.userId !== req.userId && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'You can only delete your own posts.' });
+      return fail(res, 403, 'FORBIDDEN', 'You can only delete your own posts.');
     }
 
     await post.update({ isActive: false });
     await User.decrement('postsCount', { where: { id: post.userId } });
 
-    res.json({ status: 'ok', message: 'Post deleted.' });
+    ok(res, { message: 'Post deleted.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete post.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to delete post.');
   }
 });
 
@@ -275,7 +268,7 @@ router.post('/:id/like', authenticate, async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) {
-      return res.status(404).json({ error: 'Post not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
 
     const existingLike = await Like.findOne({
@@ -285,14 +278,14 @@ router.post('/:id/like', authenticate, async (req, res) => {
     if (existingLike) {
       await existingLike.destroy();
       await post.decrement('likesCount');
-      return res.json({ status: 'ok', liked: false, likesCount: post.likesCount - 1 });
+      return ok(res, { liked: false, likesCount: post.likesCount - 1 });
     }
 
     await Like.create({ userId: req.userId, postId: post.id });
     await post.increment('likesCount');
-    res.json({ status: 'ok', liked: true, likesCount: post.likesCount + 1 });
+    ok(res, { liked: true, likesCount: post.likesCount + 1 });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to toggle like.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to toggle like.');
   }
 });
 
@@ -301,12 +294,12 @@ router.post('/:id/comment', authenticate, async (req, res) => {
   try {
     const { content } = req.body;
     if (!content || content.trim().length === 0) {
-      return res.status(400).json({ error: 'Comment content is required.' });
+      return fail(res, 400, 'VALIDATION', 'Comment content is required.');
     }
 
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) {
-      return res.status(404).json({ error: 'Post not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
 
     const comment = await Comment.create({
@@ -321,9 +314,9 @@ router.post('/:id/comment', authenticate, async (req, res) => {
       include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }]
     });
 
-    res.status(201).json({ status: 'ok', payload: fullComment });
+    created(res, fullComment);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to add comment.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to add comment.');
   }
 });
 
@@ -334,7 +327,7 @@ router.post('/:id/repost', authenticate, async (req, res) => {
       include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName'] }]
     });
     if (!original || !original.isActive) {
-      return res.status(404).json({ error: 'Post not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
 
     const repost = await Post.create({
@@ -351,10 +344,10 @@ router.post('/:id/repost', authenticate, async (req, res) => {
       include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'avatarUrl', 'sport'] }]
     });
 
-    res.status(201).json({ status: 'ok', payload: fullPost, repostsCount: original.repostsCount + 1 });
+    created(res, { payload: fullPost, repostsCount: original.repostsCount + 1 });
   } catch (error) {
     console.error('Repost error:', error);
-    res.status(500).json({ error: 'Failed to repost.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to repost.');
   }
 });
 
@@ -363,20 +356,20 @@ router.post('/:id/save', authenticate, async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) {
-      return res.status(404).json({ error: 'Post not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
 
     const existing = await SavedPost.findOne({ where: { userId: req.userId, postId: post.id } });
     if (existing) {
       await existing.destroy();
-      return res.json({ status: 'ok', saved: false });
+      return ok(res, { saved: false });
     }
 
     await SavedPost.create({ userId: req.userId, postId: post.id });
-    res.json({ status: 'ok', saved: true });
+    ok(res, { saved: true });
   } catch (error) {
     console.error('Toggle save error:', error);
-    res.status(500).json({ error: 'Failed to toggle save.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to toggle save.');
   }
 });
 
@@ -389,10 +382,10 @@ router.get('/saved', authenticate, async (req, res) => {
       order: [['createdAt','DESC']]
     });
 
-    res.json({ status: 'ok', payload: saved });
+    ok(res, saved);
   } catch (error) {
     console.error('Get saved posts error:', error);
-    res.status(500).json({ error: 'Failed to fetch saved posts.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch saved posts.');
   }
 });
 
@@ -405,9 +398,9 @@ router.get('/:id/comments', optionalAuth, async (req, res) => {
       order: [['createdAt', 'ASC']]
     });
 
-    res.json({ status: 'ok', payload: comments });
+    ok(res, comments);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch comments.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch comments.');
   }
 });
 

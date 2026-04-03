@@ -11,6 +11,7 @@ const { Notification, User } = require('../models');
 const { authenticate } = require('../middleware/auth');
 
 // All routes require auth
+const { ok, created, fail } = require('../utils/response');
 router.use(authenticate);
 
 // ─── GET NOTIFICATIONS ───
@@ -39,7 +40,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Get notifications error:', error);
-    res.status(500).json({ error: 'Failed to fetch notifications.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch notifications.');
   }
 });
 
@@ -50,9 +51,9 @@ router.patch('/read', async (req, res) => {
       { isRead: true },
       { where: { recipientId: req.userId, isRead: false } }
     );
-    res.json({ status: 'ok', message: 'All notifications marked as read.' });
+    ok(res, { message: 'All notifications marked as read.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to mark notifications as read.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to mark notifications as read.');
   }
 });
 
@@ -62,12 +63,12 @@ router.patch('/:id/read', async (req, res) => {
     const notification = await Notification.findOne({
       where: { id: req.params.id, recipientId: req.userId }
     });
-    if (!notification) return res.status(404).json({ error: 'Notification not found.' });
+    if (!notification) return fail(res, 404, 'NOT_FOUND', 'Notification not found.');
 
     await notification.update({ isRead: true });
-    res.json({ status: 'ok', message: 'Notification marked as read.' });
+    ok(res, { message: 'Notification marked as read.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update notification.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update notification.');
   }
 });
 
@@ -77,12 +78,12 @@ router.delete('/:id', async (req, res) => {
     const notification = await Notification.findOne({
       where: { id: req.params.id, recipientId: req.userId }
     });
-    if (!notification) return res.status(404).json({ error: 'Notification not found.' });
+    if (!notification) return fail(res, 404, 'NOT_FOUND', 'Notification not found.');
 
     await notification.destroy();
-    res.json({ status: 'ok', message: 'Notification deleted.' });
+    ok(res, { message: 'Notification deleted.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete notification.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to delete notification.');
   }
 });
 

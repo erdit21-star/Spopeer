@@ -9,6 +9,7 @@ const { optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
 
 // ─── SEARCH ───
+const { ok, created, fail } = require('../utils/response');
 router.get('/', optionalAuth, async (req, res) => {
   try {
     const { term, sport, userType, location, page = 1, pageSize = 20 } = req.query;
@@ -49,7 +50,7 @@ router.get('/', optionalAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('Search error:', error);
-    res.status(500).json({ error: 'Search failed.' });
+    fail(res, 500, 'SERVER_ERROR', 'Search failed.');
   }
 });
 

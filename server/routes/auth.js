@@ -2,6 +2,8 @@
  * Auth Routes
  * POST /api/auth/signup
  * POST /api/auth/login
+ * POST /api/auth/logout
+ * POST /api/auth/refresh
  * GET  /api/auth/me
  * POST /api/auth/change-password
  * POST /api/auth/forgot-password
@@ -11,9 +13,11 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { User, PasswordResetToken } = require('../models');
-const { authenticate, generateToken } = require('../middleware/auth');
+const { authenticate, generateToken, setAuthCookies, clearAuthCookies, generateAccessToken, getCookieOptions } = require('../middleware/auth');
+const { ok, created, fail } = require('../utils/response');
 const {
   sanitizeString,
   isValidEmail,
@@ -64,30 +68,26 @@ router.post('/signup', signupLimiter, async (req, res) => {
 
     // Validation
     if (!email || !password || !firstName || !lastName) {
-      return res.status(400).json({ error: 'Email, password, first name, and last name are required.' });
+      return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Email, password, first name, and last name are required.');
     }
 
     if (!isValidEmail(email)) {
-      return res.status(400).json({ error: 'Invalid email address.' });
+      return fail(res, 400, 'VALIDATION_EMAIL', 'Invalid email address.');
     }
 
     if (password.length < 10 || password.length > 128) {
-      return res.status(400).json({ error: 'Password must be between 10 and 128 characters.' });
+      return fail(res, 400, 'VALIDATION_PASSWORD', 'Password must be between 10 and 128 characters.');
     }
 
     // Normalize legacy role and prevent admin signup via API.
     const incomingRole = normalizeUserRole(role);
 
     if (incomingRole === 'admin') {
-      return res.status(403).json({
-        error: 'Admin signup is not allowed.'
-      });
+      return fail(res, 403, 'FORBIDDEN_ADMIN_SIGNUP', 'Admin signup is not allowed.');
     }
 
     if (incomingRole && !isAllowedValue(incomingRole, ALLOWED_ROLES)) {
-      return res.status(400).json({
-        error: `Invalid role. Allowed roles: ${ALLOWED_ROLES.join(', ')}.`
-      });
+      return fail(res, 400, 'VALIDATION_ROLE', `Invalid role. Allowed roles: ${ALLOWED_ROLES.join(', ')}.`);
     }
 
     const safeRole = incomingRole;
@@ -95,7 +95,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
     // Check if user exists
     const existing = await User.findOne({ where: { email: email.toLowerCase() } });
     if (existing) {
-      return res.status(409).json({ error: 'Email already registered.' });
+      return fail(res, 409, 'EMAIL_EXISTS', 'Email already registered.');
     }
 
     // Create user (active immediately; email verification is optional enhancement)
@@ -122,19 +122,22 @@ router.post('/signup', signupLimiter, async (req, res) => {
 
     // Generate a session token so the user can log in immediately
     const token = generateToken(user);
+    setAuthCookies(res, user);
 
     res.status(201).json({
-      status: 'ok',
-      message: 'Account created successfully.',
-      token,
-      user: user.toJSON()
+      success: true,
+      data: {
+        message: 'Account created successfully.',
+        token,
+        user: user.toJSON()
+      }
     });
   } catch (error) {
     console.error('Signup error:', error);
     if (error.name === 'SequelizeValidationError') {
-      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+      return fail(res, 400, 'VALIDATION', error.errors.map(e => e.message).join(', '));
     }
-    res.status(500).json({ error: 'Server error during signup.' });
+    fail(res, 500, 'SERVER_ERROR', 'Server error during signup.');
   }
 });
 
@@ -144,7 +147,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required.' });
+      return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Email and password are required.');
     }
 
     const user = await User.findOne({
@@ -175,23 +178,23 @@ router.post('/login', loginLimiter, async (req, res) => {
       }
     }
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      return fail(res, 401, 'AUTH_INVALID_CREDENTIALS', 'Invalid email or password.');
     }
 
     if (user.isActive === false) {
-      return res.status(403).json({ error: 'Account has been deactivated.' });
+      return fail(res, 403, 'ACCOUNT_DEACTIVATED', 'Account has been deactivated.');
     }
 
     // Support legacy passwordHash column during migration transition
     const storedHash = user.password || user.getDataValue('passwordHash');
     if (!storedHash) {
       console.error('[LOGIN] No password hash found for user:', user.email);
-      return res.status(500).json({ error: 'Account password is misconfigured. Please reset your password.' });
+      return fail(res, 500, 'ACCOUNT_MISCONFIGURED', 'Account password is misconfigured. Please reset your password.');
     }
 
     const validPassword = await user.validatePassword(password);
     if (!validPassword) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      return fail(res, 401, 'AUTH_INVALID_CREDENTIALS', 'Invalid email or password.');
     }
 
     // Update last login (guarded — column may not yet exist in legacy DBs)
@@ -206,36 +209,38 @@ router.post('/login', loginLimiter, async (req, res) => {
       token = generateToken(user);
     } catch (tokenErr) {
       console.error('[LOGIN] Token generation failed:', tokenErr.message);
-      return res.status(500).json({ error: 'Login succeeded but session could not be created. Please contact support.' });
+      return fail(res, 500, 'TOKEN_GENERATION_FAILED', 'Login succeeded but session could not be created. Please contact support.');
     }
 
+    // Set HttpOnly auth cookies
+    setAuthCookies(res, user);
+
     res.json({
-      status: 'ok',
-      message: 'Login successful.',
-      token,
-      user: {
-        ...user.toJSON(),
-        emailVerified,
-        avatarUrl,
-        sport,
-        lastLogin
+      success: true,
+      data: {
+        message: 'Login successful.',
+        token,
+        user: {
+          ...user.toJSON(),
+          emailVerified,
+          avatarUrl,
+          sport,
+          lastLogin
+        }
       }
     });
   } catch (error) {
     console.error('[LOGIN] Error:', { message: error.message, name: error.name, stack: error.stack, email: req.body?.email });
-    res.status(500).json({ error: 'Server error during login.' });
+    fail(res, 500, 'SERVER_ERROR', 'Server error during login.');
   }
 });
 
 // ─── GET CURRENT USER ───
 router.get('/me', authenticate, async (req, res) => {
   try {
-    res.json({
-      status: 'ok',
-      user: req.user.toJSON()
-    });
+    return ok(res, { user: req.user.toJSON() });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch user.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
   }
 });
 
@@ -245,10 +250,10 @@ router.post('/change-password', authenticate, async (req, res) => {
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Current password and new password are required.' });
+      return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Current password and new password are required.');
     }
     if (newPassword.length < 8 || newPassword.length > 128) {
-      return res.status(400).json({ error: 'New password must be 8–128 characters.' });
+      return fail(res, 400, 'VALIDATION_PASSWORD', 'New password must be 8–128 characters.');
     }
 
     // Re-fetch with password hash
@@ -256,15 +261,18 @@ router.post('/change-password', authenticate, async (req, res) => {
       attributes: ['id', 'password'],
     });
     if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
 
     const valid = await user.validatePassword(currentPassword);
     if (!valid) {
-      return res.status(401).json({ error: 'Current password is incorrect.' });
+      return fail(res, 401, 'AUTH_INVALID_CREDENTIALS', 'Current password is incorrect.');
     }
 
     await user.update({ password: newPassword }); // beforeUpdate hook hashes it
+
+    // Invalidate sessions by clearing cookies
+    clearAuthCookies(res);
 
     // Notify user of password change (fire-and-forget)
     const fullUser = await User.findByPk(req.userId, { attributes: ['email'] });
@@ -274,10 +282,10 @@ router.post('/change-password', authenticate, async (req, res) => {
       });
     }
 
-    res.json({ status: 'ok', message: 'Password updated successfully.' });
+    return ok(res, { message: 'Password updated successfully. Please log in again.' });
   } catch (error) {
     console.error('Change password error:', error);
-    res.status(500).json({ error: 'Failed to change password.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to change password.');
   }
 });
 
@@ -286,7 +294,7 @@ router.get('/user-by-email', authenticate, async (req, res) => {
   try {
     const { email } = req.query;
     if (!email) {
-      return res.status(400).json({ error: 'Email query parameter is required.' });
+      return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Email query parameter is required.');
     }
 
     const user = await User.findOne({
@@ -295,12 +303,12 @@ router.get('/user-by-email', authenticate, async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
 
-    res.json({ status: 'ok', user: user.toJSON() });
+    return ok(res, { user: user.toJSON() });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch user.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
   }
 });
 
@@ -309,13 +317,13 @@ router.post('/forgot-password', forgotLimiter, async (req, res) => {
   try {
     const email = sanitizeString(req.body.email, 254).toLowerCase();
     if (!email || !isValidEmail(email)) {
-      return res.status(400).json({ error: 'Valid email is required.' });
+      return fail(res, 400, 'VALIDATION_EMAIL', 'Valid email is required.');
     }
 
     const user = await User.findOne({ where: { email } });
     // Always return 200 — never reveal if email exists
     if (!user) {
-      return res.json({ status: 'ok', message: 'If that email exists, a reset link has been sent.' });
+      return ok(res, { message: 'If that email exists, a reset link has been sent.' });
     }
 
     const token = crypto.randomBytes(32).toString('hex');
@@ -330,10 +338,10 @@ router.post('/forgot-password', forgotLimiter, async (req, res) => {
 
     await sendPasswordResetEmail(user.email, token);
 
-    res.json({ status: 'ok', message: 'If that email exists, a reset link has been sent.' });
+    return ok(res, { message: 'If that email exists, a reset link has been sent.' });
   } catch (error) {
     console.error('Forgot password error:', error);
-    res.status(500).json({ error: 'Server error.' });
+    fail(res, 500, 'SERVER_ERROR', 'Server error.');
   }
 });
 
@@ -342,10 +350,10 @@ router.post('/reset-password', async (req, res) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) {
-      return res.status(400).json({ error: 'Token and new password are required.' });
+      return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Token and new password are required.');
     }
     if (password.length < 10 || password.length > 128) {
-      return res.status(400).json({ error: 'Password must be 10–128 characters.' });
+      return fail(res, 400, 'VALIDATION_PASSWORD', 'Password must be 10–128 characters.');
     }
 
     const record = await PasswordResetToken.findOne({
@@ -355,12 +363,12 @@ router.post('/reset-password', async (req, res) => {
       }
     });
     if (!record) {
-      return res.status(400).json({ error: 'Reset link is invalid or has expired.' });
+      return fail(res, 400, 'TOKEN_INVALID', 'Reset link is invalid or has expired.');
     }
 
     const user = await User.findByPk(record.userId);
     if (!user) {
-      return res.status(400).json({ error: 'User not found.' });
+      return fail(res, 400, 'NOT_FOUND', 'User not found.');
     }
 
     await user.update({ password });
@@ -371,10 +379,10 @@ router.post('/reset-password', async (req, res) => {
       console.error('Security alert email error:', err);
     });
 
-    res.json({ status: 'ok', message: 'Password updated. You can now log in.' });
+    return ok(res, { message: 'Password updated. You can now log in.' });
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(500).json({ error: 'Server error.' });
+    fail(res, 500, 'SERVER_ERROR', 'Server error.');
   }
 });
 
@@ -383,13 +391,13 @@ router.post('/resend-verification', forgotLimiter, async (req, res) => {
   try {
     const email = sanitizeString(req.body.email, 254).toLowerCase();
     if (!email || !isValidEmail(email)) {
-      return res.status(400).json({ error: 'Valid email is required.' });
+      return fail(res, 400, 'VALIDATION_EMAIL', 'Valid email is required.');
     }
 
     const user = await User.findOne({ where: { email } });
     // Always return 200 — never reveal if email exists
     if (!user || user.emailVerified || user.isActive) {
-      return res.json({ status: 'ok', message: 'If that account needs verification, a new link has been sent.' });
+      return ok(res, { message: 'If that account needs verification, a new link has been sent.' });
     }
 
     const verifyToken = crypto.randomBytes(32).toString('hex');
@@ -399,10 +407,10 @@ router.post('/resend-verification', forgotLimiter, async (req, res) => {
       console.error('Failed to resend verification email:', err.message);
     });
 
-    res.json({ status: 'ok', message: 'If that account needs verification, a new link has been sent.' });
+    return ok(res, { message: 'If that account needs verification, a new link has been sent.' });
   } catch (error) {
     console.error('Resend verification error:', error);
-    res.status(500).json({ error: 'Server error.' });
+    fail(res, 500, 'SERVER_ERROR', 'Server error.');
   }
 });
 
@@ -410,11 +418,11 @@ router.post('/resend-verification', forgotLimiter, async (req, res) => {
 router.get('/verify', async (req, res) => {
   try {
     const { token } = req.query;
-    if (!token) return res.status(400).json({ error: 'Token required.' });
+    if (!token) return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Token required.');
 
     const user = await User.findOne({ where: { emailVerifyToken: token } });
     if (!user) {
-      return res.status(400).json({ error: 'Invalid or expired verification link.' });
+      return fail(res, 400, 'TOKEN_INVALID', 'Invalid or expired verification link.');
     }
 
     await user.update({ isActive: true, emailVerifyToken: null, emailVerified: true });
@@ -428,7 +436,52 @@ router.get('/verify', async (req, res) => {
     res.redirect('/pages/auth/login.html?verified=1');
   } catch (error) {
     console.error('Verify error:', error);
-    res.status(500).json({ error: 'Verification failed.' });
+    fail(res, 500, 'SERVER_ERROR', 'Verification failed.');
+  }
+});
+
+// ─── LOGOUT ───
+router.post('/logout', (req, res) => {
+  clearAuthCookies(res);
+  return ok(res, { message: 'Logged out successfully.' });
+});
+
+// ─── REFRESH TOKEN ───
+router.post('/refresh', async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refresh_token;
+    if (!refreshToken) {
+      return fail(res, 401, 'AUTH_REQUIRED', 'No refresh token provided.');
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    } catch (err) {
+      clearAuthCookies(res);
+      return fail(res, 401, 'TOKEN_INVALID', 'Invalid or expired refresh token.');
+    }
+
+    if (decoded.type !== 'refresh') {
+      clearAuthCookies(res);
+      return fail(res, 401, 'TOKEN_INVALID', 'Invalid token type.');
+    }
+
+    const user = await User.findByPk(decoded.userId);
+    if (!user || !user.isActive) {
+      clearAuthCookies(res);
+      return fail(res, 401, 'AUTH_INVALID', 'User not found or deactivated.');
+    }
+
+    // Issue new access token (rotate)
+    const newAccessToken = generateAccessToken(user);
+    res.cookie('access_token', newAccessToken, getCookieOptions(15 * 60 * 1000));
+
+    return ok(res, { message: 'Token refreshed.' });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    clearAuthCookies(res);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to refresh token.');
   }
 });
 

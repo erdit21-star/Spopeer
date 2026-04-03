@@ -17,27 +17,28 @@ const { Op } = require('sequelize');
 const { sanitizeString } = require('../utils/validation');
 
 // ─── SEND MESSAGE (compatibility: /api/messages/send) ───
+const { ok, created, fail } = require('../utils/response');
 router.post('/send', authenticate, async (req, res) => {
   try {
     const receiverId = req.body.toId || req.body.receiverId;
     const rawContent = req.body.text || req.body.content;
 
     if (!receiverId || !rawContent) {
-      return res.status(400).json({ error: 'toId/receiverId and text/content are required.' });
+      return fail(res, 400, 'VALIDATION', 'toId/receiverId and text/content are required.');
     }
 
     const content = sanitizeString(rawContent, 5000);
     if (!content) {
-      return res.status(400).json({ error: 'Message content cannot be empty.' });
+      return fail(res, 400, 'VALIDATION', 'Message content cannot be empty.');
     }
 
     if (parseInt(receiverId) === req.userId) {
-      return res.status(400).json({ error: 'You cannot message yourself.' });
+      return fail(res, 400, 'VALIDATION', 'You cannot message yourself.');
     }
 
     const receiver = await User.findByPk(receiverId);
     if (!receiver || !receiver.isActive) {
-      return res.status(404).json({ error: 'Recipient not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Recipient not found.');
     }
 
     const message = await Message.create({
@@ -53,10 +54,10 @@ router.post('/send', authenticate, async (req, res) => {
       ]
     });
 
-    res.status(201).json({ status: 'ok', payload: fullMessage });
+    created(res, fullMessage);
   } catch (error) {
     console.error('Send message error:', error);
-    res.status(500).json({ error: 'Failed to send message.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to send message.');
   }
 });
 
@@ -65,7 +66,7 @@ router.post('/mark-read', authenticate, async (req, res) => {
   try {
     const fromId = req.body.fromId;
     if (!fromId) {
-      return res.status(400).json({ error: 'fromId is required.' });
+      return fail(res, 400, 'VALIDATION', 'fromId is required.');
     }
 
     await Message.update(
@@ -73,10 +74,10 @@ router.post('/mark-read', authenticate, async (req, res) => {
       { where: { senderId: parseInt(fromId), receiverId: req.userId, read: false } }
     );
 
-    res.json({ status: 'ok', message: 'Messages marked as read.' });
+    ok(res, { message: 'Messages marked as read.' });
   } catch (error) {
     console.error('Mark read error:', error);
-    res.status(500).json({ error: 'Failed to mark messages as read.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to mark messages as read.');
   }
 });
 
@@ -85,17 +86,17 @@ router.get('/unread/:userId', authenticate, async (req, res) => {
   try {
     // Only allow users to check their own unread count
     if (parseInt(req.params.userId) !== req.userId) {
-      return res.status(403).json({ error: 'You can only check your own unread count.' });
+      return fail(res, 403, 'FORBIDDEN', 'You can only check your own unread count.');
     }
 
     const count = await Message.count({
       where: { receiverId: req.userId, read: false }
     });
 
-    res.json({ status: 'ok', unread: count });
+    ok(res, { unread: count });
   } catch (error) {
     console.error('Unread count error:', error);
-    res.status(500).json({ error: 'Failed to get unread count.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to get unread count.');
   }
 });
 
@@ -106,7 +107,7 @@ router.get('/conversation/:userId1/:userId2', authenticate, async (req, res) => 
 
     // Only participants can read their own conversations
     if (req.userId !== parseInt(userId1) && req.userId !== parseInt(userId2)) {
-      return res.status(403).json({ error: 'You can only view your own conversations.' });
+      return fail(res, 403, 'FORBIDDEN', 'You can only view your own conversations.');
     }
 
     const { page = 1, limit = 50 } = req.query;
@@ -128,10 +129,10 @@ router.get('/conversation/:userId1/:userId2', authenticate, async (req, res) => 
       offset
     });
 
-    res.json({ status: 'ok', payload: messages });
+    ok(res, messages);
   } catch (error) {
     console.error('Get conversation error:', error);
-    res.status(500).json({ error: 'Failed to fetch conversation.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch conversation.');
   }
 });
 
@@ -141,21 +142,21 @@ router.post('/', authenticate, async (req, res) => {
     const { receiverId, content: rawContent } = req.body;
 
     if (!receiverId || !rawContent) {
-      return res.status(400).json({ error: 'receiverId and content are required.' });
+      return fail(res, 400, 'VALIDATION', 'receiverId and content are required.');
     }
 
     const content = sanitizeString(rawContent, 5000);
     if (!content) {
-      return res.status(400).json({ error: 'Message content cannot be empty.' });
+      return fail(res, 400, 'VALIDATION', 'Message content cannot be empty.');
     }
 
     if (parseInt(receiverId) === req.userId) {
-      return res.status(400).json({ error: 'You cannot message yourself.' });
+      return fail(res, 400, 'VALIDATION', 'You cannot message yourself.');
     }
 
     const receiver = await User.findByPk(receiverId);
     if (!receiver || !receiver.isActive) {
-      return res.status(404).json({ error: 'Recipient not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Recipient not found.');
     }
 
     const message = await Message.create({
@@ -171,10 +172,10 @@ router.post('/', authenticate, async (req, res) => {
       ]
     });
 
-    res.status(201).json({ status: 'ok', payload: fullMessage });
+    created(res, fullMessage);
   } catch (error) {
     console.error('Send message error:', error);
-    res.status(500).json({ error: 'Failed to send message.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to send message.');
   }
 });
 
@@ -216,10 +217,10 @@ router.get('/conversations', authenticate, async (req, res) => {
       }
     });
 
-    res.json({ status: 'ok', payload: Array.from(conversationsMap.values()) });
+    ok(res, Array.from(conversationsMap.values()));
   } catch (error) {
     console.error('Get conversations error:', error);
-    res.status(500).json({ error: 'Failed to fetch conversations.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch conversations.');
   }
 });
 
@@ -245,9 +246,9 @@ router.get('/:userId', authenticate, async (req, res) => {
       offset
     });
 
-    res.json({ status: 'ok', payload: messages });
+    ok(res, messages);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch messages.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch messages.');
   }
 });
 
@@ -256,17 +257,17 @@ router.put('/:id/read', authenticate, async (req, res) => {
   try {
     const message = await Message.findByPk(req.params.id);
     if (!message) {
-      return res.status(404).json({ error: 'Message not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Message not found.');
     }
 
     if (message.receiverId !== req.userId) {
-      return res.status(403).json({ error: 'You can only mark your own messages as read.' });
+      return fail(res, 403, 'FORBIDDEN', 'You can only mark your own messages as read.');
     }
 
     await message.update({ read: true });
-    res.json({ status: 'ok', message: 'Message marked as read.' });
+    ok(res, { message: 'Message marked as read.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to mark message as read.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to mark message as read.');
   }
 });
 

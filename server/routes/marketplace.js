@@ -42,6 +42,7 @@ const Inquiry = sequelize.define('Inquiry', {
 }, { tableName: 'marketplace_inquiries', timestamps: true });
 
 // ─── SEARCH LISTINGS ───
+const { ok, created, fail } = require('../utils/response');
 router.get('/search', async (req, res) => {
   try {
     const { page, limit } = parsePagination(req.query);
@@ -72,10 +73,10 @@ router.get('/search', async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({ status: 'ok', payload: listings, pagination: { total: count, page, pages: Math.ceil(count / limit) } });
+    ok(res, listings, { pagination: { total: count, page, pages: Math.ceil(count / limit) } });
   } catch (error) {
     console.error('Search listings error:', error);
-    res.status(500).json({ error: 'Search failed.' });
+    fail(res, 500, 'SERVER_ERROR', 'Search failed.');
   }
 });
 
@@ -86,9 +87,9 @@ router.get('/my-listings', authenticate, async (req, res) => {
       where: { sellerId: req.userId },
       order: [['createdAt', 'DESC']]
     });
-    res.json({ status: 'ok', payload: listings });
+    ok(res, listings);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch your listings.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch your listings.');
   }
 });
 
@@ -99,7 +100,7 @@ router.get('/saved', authenticate, async (req, res) => {
     const listingIds = saved.map(s => s.listingId);
 
     if (listingIds.length === 0) {
-      return res.json({ status: 'ok', payload: [] });
+      return ok(res, []);
     }
 
     const listings = await Listing.findAll({
@@ -107,9 +108,9 @@ router.get('/saved', authenticate, async (req, res) => {
       include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }]
     });
 
-    res.json({ status: 'ok', payload: listings });
+    ok(res, listings);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch saved listings.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch saved listings.');
   }
 });
 
@@ -121,19 +122,16 @@ router.get('/seller/:userId', async (req, res) => {
       include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }],
       order: [['createdAt', 'DESC']]
     });
-    res.json({ status: 'ok', payload: listings });
+    ok(res, listings);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch seller listings.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch seller listings.');
   }
 });
 
 // ─── TRENDING SEARCHES ───
 router.get('/trending-searches', async (_req, res) => {
   // Placeholder — replace with real analytics later
-  res.json({
-    status: 'ok',
-    payload: ['Football boots', 'Tennis racket', 'Gym equipment', 'Running shoes', 'Basketball']
-  });
+  ok(res, ['Football boots', 'Tennis racket', 'Gym equipment', 'Running shoes', 'Basketball']);
 });
 
 // ─── TOGGLE SAVE LISTING ───
@@ -145,13 +143,13 @@ router.post('/saved/:listingId', authenticate, async (req, res) => {
 
     if (existing) {
       await existing.destroy();
-      return res.json({ status: 'ok', saved: false });
+      return ok(res, { saved: false });
     }
 
     await SavedListing.create({ userId: req.userId, listingId: parseInt(req.params.listingId) });
-    res.json({ status: 'ok', saved: true });
+    ok(res, { saved: true });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to toggle save.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to toggle save.');
   }
 });
 
@@ -160,12 +158,12 @@ router.post('/inquiries', authenticate, async (req, res) => {
   try {
     const { listing_id, message } = req.body;
     if (!listing_id) {
-      return res.status(400).json({ error: 'listing_id is required.' });
+      return fail(res, 400, 'VALIDATION', 'listing_id is required.');
     }
 
     const listing = await Listing.findByPk(listing_id);
     if (!listing) {
-      return res.status(404).json({ error: 'Listing not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Listing not found.');
     }
 
     const inquiry = await Inquiry.create({
@@ -175,10 +173,10 @@ router.post('/inquiries', authenticate, async (req, res) => {
       message: message || ''
     });
 
-    res.status(201).json({ status: 'ok', payload: inquiry });
+    created(res, inquiry);
   } catch (error) {
     console.error('Create inquiry error:', error);
-    res.status(500).json({ error: 'Failed to create inquiry.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to create inquiry.');
   }
 });
 
@@ -189,9 +187,9 @@ router.get('/inquiries/received', authenticate, async (req, res) => {
       where: { sellerId: req.userId },
       order: [['createdAt', 'DESC']]
     });
-    res.json({ status: 'ok', payload: inquiries });
+    ok(res, inquiries);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch inquiries.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch inquiries.');
   }
 });
 
@@ -202,9 +200,9 @@ router.get('/inquiries/sent', authenticate, async (req, res) => {
       where: { buyerId: req.userId },
       order: [['createdAt', 'DESC']]
     });
-    res.json({ status: 'ok', payload: inquiries });
+    ok(res, inquiries);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch inquiries.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch inquiries.');
   }
 });
 
@@ -213,16 +211,16 @@ router.patch('/inquiries/:id/status', authenticate, async (req, res) => {
   try {
     const inquiry = await Inquiry.findByPk(req.params.id);
     if (!inquiry) {
-      return res.status(404).json({ error: 'Inquiry not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Inquiry not found.');
     }
     if (inquiry.sellerId !== req.userId) {
-      return res.status(403).json({ error: 'Not authorized.' });
+      return fail(res, 403, 'FORBIDDEN', 'Not authorized.');
     }
 
     await inquiry.update({ status: req.body.status });
-    res.json({ status: 'ok', payload: inquiry });
+    ok(res, inquiry);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update inquiry.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update inquiry.');
   }
 });
 
@@ -230,13 +228,13 @@ router.patch('/inquiries/:id/status', authenticate, async (req, res) => {
 router.patch('/listings/:id/status', authenticate, async (req, res) => {
   try {
     const listing = await Listing.findByPk(req.params.id);
-    if (!listing) return res.status(404).json({ error: 'Listing not found.' });
-    if (listing.sellerId !== req.userId) return res.status(403).json({ error: 'Not authorized.' });
+    if (!listing) return fail(res, 404, 'NOT_FOUND', 'Listing not found.');
+    if (listing.sellerId !== req.userId) return fail(res, 403, 'FORBIDDEN', 'Not authorized.');
 
     await listing.update({ status: req.body.status });
-    res.json({ status: 'ok', payload: listing });
+    ok(res, listing);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update listing status.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update listing status.');
   }
 });
 
@@ -244,13 +242,13 @@ router.patch('/listings/:id/status', authenticate, async (req, res) => {
 router.post('/listings/:id/flag', authenticate, async (req, res) => {
   try {
     const listing = await Listing.findByPk(req.params.id);
-    if (!listing) return res.status(404).json({ error: 'Listing not found.' });
+    if (!listing) return fail(res, 404, 'NOT_FOUND', 'Listing not found.');
 
     // For now just log the flag; in production, create a Report model
     console.log(`Listing ${req.params.id} flagged by user ${req.userId}: ${req.body.reason}`);
-    res.json({ status: 'ok', message: 'Listing flagged for review.' });
+    ok(res, { message: 'Listing flagged for review.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to flag listing.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to flag listing.');
   }
 });
 
@@ -284,14 +282,10 @@ router.get('/listings', async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({
-      status: 'ok',
-      payload: listings,
-      pagination: { total: count, page: parseInt(page), pages: Math.ceil(count / parseInt(limit)) }
-    });
+    ok(res, listings, { pagination: { total: count, page: parseInt(page), pages: Math.ceil(count / parseInt(limit)) } });
   } catch (error) {
     console.error('List listings error:', error);
-    res.status(500).json({ error: 'Failed to fetch listings.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch listings.');
   }
 });
 
@@ -299,7 +293,7 @@ router.get('/listings', async (req, res) => {
 router.post('/listings', authenticate, async (req, res) => {
   try {
     const { title, description, price, currency, category, sport, listingType, imageUrls } = req.body;
-    if (!title) return res.status(400).json({ error: 'Title is required.' });
+    if (!title) return fail(res, 400, 'VALIDATION', 'Title is required.');
 
     const listing = await Listing.create({
       sellerId: req.userId,
@@ -313,10 +307,10 @@ router.post('/listings', authenticate, async (req, res) => {
       imageUrls: imageUrls || []
     });
 
-    res.status(201).json({ status: 'ok', payload: listing });
+    created(res, listing);
   } catch (error) {
     console.error('Create listing error:', error);
-    res.status(500).json({ error: 'Failed to create listing.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to create listing.');
   }
 });
 
@@ -326,14 +320,14 @@ router.get('/listings/:id', async (req, res) => {
     const listing = await Listing.findByPk(req.params.id, {
       include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'avatarUrl', 'role', 'location'] }]
     });
-    if (!listing) return res.status(404).json({ error: 'Listing not found.' });
+    if (!listing) return fail(res, 404, 'NOT_FOUND', 'Listing not found.');
 
     // Increment view count
     await listing.increment('viewCount');
 
-    res.json({ status: 'ok', payload: listing });
+    ok(res, listing);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch listing.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch listing.');
   }
 });
 
@@ -341,8 +335,8 @@ router.get('/listings/:id', async (req, res) => {
 router.patch('/listings/:id', authenticate, async (req, res) => {
   try {
     const listing = await Listing.findByPk(req.params.id);
-    if (!listing) return res.status(404).json({ error: 'Listing not found.' });
-    if (listing.sellerId !== req.userId) return res.status(403).json({ error: 'Not authorized.' });
+    if (!listing) return fail(res, 404, 'NOT_FOUND', 'Listing not found.');
+    if (listing.sellerId !== req.userId) return fail(res, 403, 'FORBIDDEN', 'Not authorized.');
 
     const allowedFields = ['title', 'description', 'price', 'currency', 'category', 'sport', 'listingType', 'imageUrls', 'status'];
     const updates = {};
@@ -351,9 +345,9 @@ router.patch('/listings/:id', authenticate, async (req, res) => {
     });
 
     await listing.update(updates);
-    res.json({ status: 'ok', payload: listing });
+    ok(res, listing);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update listing.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update listing.');
   }
 });
 
@@ -361,13 +355,13 @@ router.patch('/listings/:id', authenticate, async (req, res) => {
 router.delete('/listings/:id', authenticate, async (req, res) => {
   try {
     const listing = await Listing.findByPk(req.params.id);
-    if (!listing) return res.status(404).json({ error: 'Listing not found.' });
-    if (listing.sellerId !== req.userId) return res.status(403).json({ error: 'Not authorized.' });
+    if (!listing) return fail(res, 404, 'NOT_FOUND', 'Listing not found.');
+    if (listing.sellerId !== req.userId) return fail(res, 403, 'FORBIDDEN', 'Not authorized.');
 
     await listing.update({ status: 'deleted' });
-    res.json({ status: 'ok', message: 'Listing deleted.' });
+    ok(res, { message: 'Listing deleted.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete listing.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to delete listing.');
   }
 });
 

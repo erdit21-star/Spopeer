@@ -19,6 +19,7 @@ const { Op } = require('sequelize');
 const { sequelize } = require('../models');
 
 // All admin routes require auth + admin role
+const { ok, created, fail } = require('../utils/response');
 router.use(authenticate, requireAdmin);
 
 // ─── DASHBOARD STATS ───
@@ -79,7 +80,7 @@ router.get('/dashboard', async (req, res) => {
     });
   } catch (error) {
     console.error('Dashboard error:', error);
-    res.status(500).json({ error: 'Failed to fetch dashboard data.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch dashboard data.');
   }
 });
 
@@ -108,13 +109,9 @@ router.get('/users', async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({
-      status: 'ok',
-      payload: users,
-      pagination: { total: count, page: parseInt(page), pages: Math.ceil(count / parseInt(limit)) }
-    });
+    ok(res, users, { pagination: { total: count, page: parseInt(page), pages: Math.ceil(count / parseInt(limit)) } });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch users.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch users.');
   }
 });
 
@@ -122,7 +119,7 @@ router.get('/users', async (req, res) => {
 router.put('/users/:id', async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ error: 'User not found.' });
+    if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
 
     const allowedFields = ['role', 'isActive', 'verified', 'subscription'];
     const updates = {};
@@ -133,9 +130,9 @@ router.put('/users/:id', async (req, res) => {
     });
 
     await user.update(updates);
-    res.json({ status: 'ok', message: 'User updated.', payload: user.toJSON() });
+    ok(res, { message: 'User updated.', payload: user.toJSON() });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update user.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update user.');
   }
 });
 
@@ -143,16 +140,16 @@ router.put('/users/:id', async (req, res) => {
 router.delete('/users/:id', async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ error: 'User not found.' });
+    if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
 
     if (user.id === req.userId) {
-      return res.status(400).json({ error: 'You cannot deactivate your own account.' });
+      return fail(res, 400, 'VALIDATION', 'You cannot deactivate your own account.');
     }
 
     await user.update({ isActive: false });
-    res.json({ status: 'ok', message: 'User deactivated.' });
+    ok(res, { message: 'User deactivated.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to deactivate user.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to deactivate user.');
   }
 });
 
@@ -176,13 +173,9 @@ router.get('/posts', async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({
-      status: 'ok',
-      payload: posts,
-      pagination: { total: count, page: parseInt(page), pages: Math.ceil(count / parseInt(limit)) }
-    });
+    ok(res, posts, { pagination: { total: count, page: parseInt(page), pages: Math.ceil(count / parseInt(limit)) } });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch posts.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch posts.');
   }
 });
 
@@ -190,12 +183,12 @@ router.get('/posts', async (req, res) => {
 router.delete('/posts/:id', async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id);
-    if (!post) return res.status(404).json({ error: 'Post not found.' });
+    if (!post) return fail(res, 404, 'NOT_FOUND', 'Post not found.');
 
     await post.update({ isActive: false });
-    res.json({ status: 'ok', message: 'Post removed.' });
+    ok(res, { message: 'Post removed.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to remove post.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to remove post.');
   }
 });
 
@@ -242,7 +235,7 @@ router.get('/analytics', async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch analytics.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch analytics.');
   }
 });
 

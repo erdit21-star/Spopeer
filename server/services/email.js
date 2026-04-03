@@ -4,15 +4,20 @@
  * Uses Resend or falls back to console logging in development
  */
 
+const isProduction = process.env.NODE_ENV === 'production';
 const isEmailConfigured = !!process.env.RESEND_API_KEY;
 
 /**
  * Assert email readiness at startup.
- * Warns if RESEND_API_KEY is missing — emails will be logged instead of sent.
+ * Throws in production if RESEND_API_KEY is missing.
  */
 function assertEmailReady() {
+  if (isProduction && !isEmailConfigured) {
+    throw new Error('RESEND_API_KEY is required in production.');
+  }
+
   if (!isEmailConfigured) {
-    console.warn('⚠️  RESEND_API_KEY not set — emails will be logged to console.');
+    console.warn('⚠️  RESEND_API_KEY not set — emails will be logged to console in development.');
   }
 }
 
@@ -49,6 +54,10 @@ function buttonHtml(href, label) {
 
 async function sendEmail({ to, subject, html }) {
   if (!isEmailConfigured) {
+    if (isProduction) {
+      throw new Error('Email provider is not configured.');
+    }
+
     console.log(`📧 [DEV EMAIL] To: ${to} | Subject: ${subject}`);
     console.log(`   Body preview: ${html.substring(0, 100)}...`);
     return { success: true, dev: true };

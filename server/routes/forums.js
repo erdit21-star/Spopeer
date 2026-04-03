@@ -14,6 +14,7 @@ const { authenticate, optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
 
 // ─── LIST THREADS ───
+const { ok, created, fail } = require('../utils/response');
 router.get('/', optionalAuth, async (req, res) => {
   try {
     const { category, sport, groupId, search, page = 1, limit = 20 } = req.query;
@@ -41,14 +42,10 @@ router.get('/', optionalAuth, async (req, res) => {
       order: [['isPinned', 'DESC'], ['createdAt', 'DESC']]
     });
 
-    res.json({
-      status: 'ok',
-      payload: threads,
-      pagination: { total: count, page: parseInt(page), pages: Math.ceil(count / parseInt(limit)) }
-    });
+    ok(res, threads, { pagination: { total: count, page: parseInt(page), pages: Math.ceil(count / parseInt(limit)) } });
   } catch (error) {
     console.error('List threads error:', error);
-    res.status(500).json({ error: 'Failed to fetch threads.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch threads.');
   }
 });
 
@@ -58,10 +55,10 @@ router.post('/', authenticate, async (req, res) => {
     const { title, body, category, sport, groupId } = req.body;
 
     if (!title || title.trim().length === 0) {
-      return res.status(400).json({ error: 'Thread title is required.' });
+      return fail(res, 400, 'VALIDATION', 'Thread title is required.');
     }
     if (!body || body.trim().length === 0) {
-      return res.status(400).json({ error: 'Thread body is required.' });
+      return fail(res, 400, 'VALIDATION', 'Thread body is required.');
     }
 
     const thread = await Thread.create({
@@ -77,10 +74,10 @@ router.post('/', authenticate, async (req, res) => {
       include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'avatarUrl', 'role', 'sport'] }]
     });
 
-    res.status(201).json({ status: 'ok', payload: full });
+    created(res, full);
   } catch (error) {
     console.error('Create thread error:', error);
-    res.status(500).json({ error: 'Failed to create thread.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to create thread.');
   }
 });
 
@@ -95,7 +92,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     });
 
     if (!thread) {
-      return res.status(404).json({ error: 'Thread not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Thread not found.');
     }
 
     // Increment view count
@@ -107,10 +104,10 @@ router.get('/:id', optionalAuth, async (req, res) => {
       order: [['createdAt', 'ASC']]
     });
 
-    res.json({ status: 'ok', payload: { ...thread.toJSON(), replies } });
+    ok(res, { ...thread.toJSON(), replies });
   } catch (error) {
     console.error('Get thread error:', error);
-    res.status(500).json({ error: 'Failed to fetch thread.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch thread.');
   }
 });
 
@@ -119,15 +116,15 @@ router.post('/:id/replies', authenticate, async (req, res) => {
   try {
     const { body } = req.body;
     if (!body || body.trim().length === 0) {
-      return res.status(400).json({ error: 'Reply body is required.' });
+      return fail(res, 400, 'VALIDATION', 'Reply body is required.');
     }
 
     const thread = await Thread.findByPk(req.params.id);
     if (!thread) {
-      return res.status(404).json({ error: 'Thread not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Thread not found.');
     }
     if (thread.isLocked) {
-      return res.status(403).json({ error: 'Thread is locked.' });
+      return fail(res, 403, 'FORBIDDEN', 'Thread is locked.');
     }
 
     const reply = await Reply.create({
@@ -142,10 +139,10 @@ router.post('/:id/replies', authenticate, async (req, res) => {
       include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'avatarUrl', 'role'] }]
     });
 
-    res.status(201).json({ status: 'ok', payload: full });
+    created(res, full);
   } catch (error) {
     console.error('Add reply error:', error);
-    res.status(500).json({ error: 'Failed to add reply.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to add reply.');
   }
 });
 
@@ -154,18 +151,18 @@ router.delete('/:id', authenticate, async (req, res) => {
   try {
     const thread = await Thread.findByPk(req.params.id);
     if (!thread) {
-      return res.status(404).json({ error: 'Thread not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Thread not found.');
     }
     if (thread.userId !== req.userId && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'You can only delete your own threads.' });
+      return fail(res, 403, 'FORBIDDEN', 'You can only delete your own threads.');
     }
 
     await Reply.destroy({ where: { threadId: thread.id } });
     await thread.destroy();
 
-    res.json({ status: 'ok', message: 'Thread deleted.' });
+    ok(res, { message: 'Thread deleted.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete thread.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to delete thread.');
   }
 });
 
@@ -174,19 +171,19 @@ router.delete('/replies/:id', authenticate, async (req, res) => {
   try {
     const reply = await Reply.findByPk(req.params.id);
     if (!reply) {
-      return res.status(404).json({ error: 'Reply not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Reply not found.');
     }
     if (reply.userId !== req.userId && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'You can only delete your own replies.' });
+      return fail(res, 403, 'FORBIDDEN', 'You can only delete your own replies.');
     }
 
     const thread = await Thread.findByPk(reply.threadId);
     await reply.destroy();
     if (thread) await thread.decrement('replyCount');
 
-    res.json({ status: 'ok', message: 'Reply deleted.' });
+    ok(res, { message: 'Reply deleted.' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete reply.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to delete reply.');
   }
 });
 

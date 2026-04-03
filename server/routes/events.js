@@ -29,6 +29,7 @@ const EventResponse = sequelize.define('EventResponse', {
 }, { tableName: 'event_responses', timestamps: true });
 
 // ─── LIST EVENTS ───
+const { ok, created, fail } = require('../utils/response');
 router.get('/', async (_req, res) => {
   try {
     const events = await Event.findAll({
@@ -36,10 +37,10 @@ router.get('/', async (_req, res) => {
       limit: 50
     });
 
-    res.json({ status: 'ok', payload: events });
+    ok(res, events);
   } catch (error) {
     console.error('List events error:', error);
-    res.status(500).json({ error: 'Failed to fetch events.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch events.');
   }
 });
 
@@ -49,7 +50,7 @@ router.post('/', authenticate, async (req, res) => {
     const { title, description, sport, location, startDate, endDate } = req.body;
 
     if (!title || !startDate) {
-      return res.status(400).json({ error: 'Title and startDate are required.' });
+      return fail(res, 400, 'VALIDATION', 'Title and startDate are required.');
     }
 
     const event = await Event.create({
@@ -62,10 +63,10 @@ router.post('/', authenticate, async (req, res) => {
       createdBy: req.userId
     });
 
-    res.status(201).json({ status: 'ok', payload: event });
+    created(res, event);
   } catch (error) {
     console.error('Create event error:', error);
-    res.status(500).json({ error: 'Failed to create event.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to create event.');
   }
 });
 
@@ -74,7 +75,7 @@ router.post('/:id/respond', authenticate, async (req, res) => {
   try {
     const { status } = req.body;
     if (!['accepted', 'declined', 'maybe'].includes(status)) {
-      return res.status(400).json({ error: 'Status must be accepted, declined, or maybe.' });
+      return fail(res, 400, 'VALIDATION', 'Status must be accepted, declined, or maybe.');
     }
 
     const [response, created] = await EventResponse.findOrCreate({
@@ -86,10 +87,10 @@ router.post('/:id/respond', authenticate, async (req, res) => {
       await response.update({ status });
     }
 
-    res.json({ status: 'ok', payload: response });
+    ok(res, response);
   } catch (error) {
     console.error('Event respond error:', error);
-    res.status(500).json({ error: 'Failed to respond to event.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to respond to event.');
   }
 });
 

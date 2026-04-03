@@ -1,25 +1,48 @@
 /**
  * JWT Authentication Middleware
+ * Supports HttpOnly cookie auth (preferred) with Bearer token fallback.
  */
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
+
+/**
+ * Extract token from cookies (preferred) or Authorization header (fallback).
+ */
+function extractToken(req) {
+  // Prefer HttpOnly cookie
+  if (req.cookies && req.cookies.access_token) {
+    return req.cookies.access_token;
+  }
+  // Fallback to Bearer header (backward compat / mobile clients)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.split(' ')[1];
+  }
+  return null;
+}
 
 /**
  * Verify JWT token and attach user to request
  */
 async function authenticate(req, res, next) {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Access denied. No token provided.' });
+    const token = extractToken(req);
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: { code: 'AUTH_REQUIRED', message: 'Authentication required.' }
+      });
     }
 
-    const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-
     const user = await User.findByPk(decoded.userId);
+
     if (!user || !user.isActive) {
-      return res.status(401).json({ error: 'Invalid token or user deactivated.' });
+      return res.status(401).json({
+        success: false,
+        error: { code: 'AUTH_INVALID', message: 'Invalid session.' }
+      });
     }
 
     req.user = user;
@@ -27,12 +50,16 @@ async function authenticate(req, res, next) {
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expired. Please login again.' });
+      return res.status(401).json({
+        success: false,
+        error: { code: 'TOKEN_EXPIRED', message: 'Session expired. Please log in again.' }
+      });
     }
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ error: 'Invalid token.' });
-    }
-    return res.status(500).json({ error: 'Authentication failed.' });
+
+    return res.status(401).json({
+      success: false,
+      error: { code: 'AUTH_INVALID', message: 'Invalid session.' }
+    });
   }
 }
 
@@ -41,9 +68,8 @@ async function authenticate(req, res, next) {
  */
 async function optionalAuth(req, res, next) {
   try {
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
+    const token = extractToken(req);
+    if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
       const user = await User.findByPk(decoded.userId);
       if (user && user.isActive) {
@@ -58,15 +84,74 @@ async function optionalAuth(req, res, next) {
 }
 
 /**
- * Generate JWT token for a user
+ * Generate short-lived access token (15 minutes)
  */
-function generateToken(user) {
+function generateAccessToken(user) {
   return jwt.sign(
     { userId: user.id, email: user.email, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    { expiresIn: '15m' }
   );
 }
 
-module.exports = { authenticate, optionalAuth, generateToken };
+/**
+ * Generate longer-lived refresh token (7 days)
+ */
+function generateRefreshToken(user) {
+  return jwt.sign(
+    { userId: user.id, type: 'refresh' },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+}
+
+/**
+ * Legacy token generator (backward compat — use generateAccessToken for new code)
+ */
+function generateToken(user) {
+  return generateAccessToken(user);
+}
+
+/**
+ * Cookie options helper
+ */
+function getCookieOptions(maxAgeMs) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: maxAgeMs
+  };
+}
+
+/**
+ * Set auth cookies on response
+ */
+function setAuthCookies(res, user) {
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+  res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
+  res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+  return { accessToken, refreshToken };
+}
+
+/**
+ * Clear auth cookies on response
+ */
+function clearAuthCookies(res) {
+  res.clearCookie('access_token');
+  res.clearCookie('refresh_token');
+}
+
+module.exports = {
+  authenticate,
+  optionalAuth,
+  generateToken,
+  generateAccessToken,
+  generateRefreshToken,
+  setAuthCookies,
+  clearAuthCookies,
+  getCookieOptions,
+  extractToken
+};
 

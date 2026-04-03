@@ -12,6 +12,7 @@ const { SavedPost, Post, User } = require('../models');
 const { authenticate } = require('../middleware/auth');
 
 // ─── LIST BOOKMARKS ───
+const { ok, created, fail } = require('../utils/response');
 router.get('/', authenticate, async (req, res) => {
   try {
     const saved = await SavedPost.findAll({
@@ -24,10 +25,10 @@ router.get('/', authenticate, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({ status: 'ok', payload: saved });
+    ok(res, saved);
   } catch (error) {
     console.error('List bookmarks error:', error);
-    res.status(500).json({ error: 'Failed to fetch bookmarks.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch bookmarks.');
   }
 });
 
@@ -36,24 +37,24 @@ router.post('/', authenticate, async (req, res) => {
   try {
     const { postId } = req.body;
     if (!postId) {
-      return res.status(400).json({ error: 'postId is required.' });
+      return fail(res, 400, 'VALIDATION', 'postId is required.');
     }
 
     const post = await Post.findByPk(postId);
     if (!post || !post.isActive) {
-      return res.status(404).json({ error: 'Post not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
 
     const existing = await SavedPost.findOne({ where: { userId: req.userId, postId } });
     if (existing) {
-      return res.status(409).json({ error: 'Already bookmarked.' });
+      return fail(res, 409, 'CONFLICT', 'Already bookmarked.');
     }
 
     const saved = await SavedPost.create({ userId: req.userId, postId });
-    res.status(201).json({ status: 'ok', payload: saved });
+    created(res, saved);
   } catch (error) {
     console.error('Create bookmark error:', error);
-    res.status(500).json({ error: 'Failed to create bookmark.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to create bookmark.');
   }
 });
 
@@ -62,17 +63,17 @@ router.delete('/:bookmarkId', authenticate, async (req, res) => {
   try {
     const saved = await SavedPost.findByPk(req.params.bookmarkId);
     if (!saved) {
-      return res.status(404).json({ error: 'Bookmark not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Bookmark not found.');
     }
     if (saved.userId !== req.userId) {
-      return res.status(403).json({ error: 'Not authorized.' });
+      return fail(res, 403, 'FORBIDDEN', 'Not authorized.');
     }
 
     await saved.destroy();
-    res.json({ status: 'ok', message: 'Bookmark removed.' });
+    ok(res, { message: 'Bookmark removed.' });
   } catch (error) {
     console.error('Remove bookmark error:', error);
-    res.status(500).json({ error: 'Failed to remove bookmark.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to remove bookmark.');
   }
 });
 

@@ -58,6 +58,8 @@
   }
 
   function logout() {
+    // Call server to clear HttpOnly cookies (fire-and-forget)
+    fetch(buildUrl("/api/auth/logout"), { method: "POST", credentials: "include" }).catch(function () {});
     clearAuthStorage();
     window.location.href = "/index.html";
   }
@@ -118,16 +120,12 @@
       headers["Content-Type"] = headers["Content-Type"] || "application/json";
     }
 
-    const token = getToken();
-    if (token) {
-      headers.Authorization = "Bearer " + token;
-    }
-
     let response;
     try {
       response = await fetch(buildUrl(path), {
         ...config,
-        headers
+        headers,
+        credentials: "include"
       });
     } catch (networkError) {
       const err = new Error("Cannot reach the server. Check your connection and try again.");
@@ -137,13 +135,27 @@
 
     const data = await response.json().catch(function () { return {}; });
     if (response.status === 401) {
-      const msg = data.message || data.error || "Session expired. Please log in again.";
+      // Try to refresh token once before giving up
+      if (!config._retried && path !== "/api/auth/refresh") {
+        try {
+          const refreshResp = await fetch(buildUrl("/api/auth/refresh"), {
+            method: "POST",
+            credentials: "include"
+          });
+          if (refreshResp.ok) {
+            config._retried = true;
+            return request(path, config);
+          }
+        } catch (_) { /* refresh failed */ }
+      }
+      clearAuthStorage();
+      const msg = (data.error && data.error.message) || data.message || data.error || "Session expired. Please log in again.";
       const err = new Error(msg);
       err.code = "UNAUTHORIZED";
       throw err;
     }
     if (!response.ok) {
-      throw new Error(data.message || data.error || "Request failed");
+      throw new Error((data.error && data.error.message) || data.message || data.error || "Request failed");
     }
 
     return data;
@@ -166,31 +178,44 @@
     const payload = typeof payloadOrEmail === "string"
       ? { email: payloadOrEmail, password }
       : payloadOrEmail;
-    return request("/api/auth/login", {
+    const data = await request("/api/auth/login", {
       method: "POST",
       body: JSON.stringify(payload)
     });
+    // Store user profile (not token) for UI — auth is cookie-based now
+    const user = (data.data && data.data.user) || data.user;
+    if (user) {
+      setUser(user, "api-login");
+    }
+    return data;
   }
 
   async function signup(payload) {
-    return request("/api/auth/signup", {
+    const data = await request("/api/auth/signup", {
       method: "POST",
       body: JSON.stringify(payload)
     });
+    const user = (data.data && data.data.user) || data.user;
+    if (user) {
+      setUser(user, "api-signup");
+    }
+    return data;
   }
 
   async function me() {
     const data = await request("/api/auth/me");
-    if (data.user) {
-      setUser(data.user, "api-me");
+    const user = (data.data && data.data.user) || data.user;
+    if (user) {
+      setUser(user, "api-me");
     }
     return data;
   }
 
   async function getProfile() {
     const data = await me();
-    if (data.user) {
-      setUser(data.user, "api-profile");
+    const user = (data.data && data.data.user) || data.user;
+    if (user) {
+      setUser(user, "api-profile");
     }
     return data;
   }
@@ -217,9 +242,9 @@
     logout,
     showNotification,
     request,
-    isAuthenticated: function () { return !!getToken(); },
+    isAuthenticated: function () { return !!getUser(); },
     requireAuth: function () {
-      if (!getToken()) {
+      if (!getUser()) {
         window.location.href = "/pages/auth/login.html";
       }
     },

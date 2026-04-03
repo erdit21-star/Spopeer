@@ -9,6 +9,7 @@ const compression = require('compression');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const { sequelize } = require('./config/database');
 const { randomUUID } = require('crypto');
@@ -48,6 +49,29 @@ app.use((req, res, next) => {
   res.setHeader('X-Request-Id', req.requestId);
   next();
 });
+
+// ─── REQUEST TIMING / OBSERVABILITY ───
+app.use((req, res, next) => {
+  const startedAt = Date.now();
+  res.on('finish', () => {
+    const durationMs = Date.now() - startedAt;
+    console.log(JSON.stringify({
+      level: 'info',
+      event: 'request_complete',
+      requestId: req.requestId,
+      method: req.method,
+      path: req.originalUrl,
+      statusCode: res.statusCode,
+      durationMs,
+      userId: req.userId || null,
+      ts: new Date().toISOString()
+    }));
+  });
+  next();
+});
+
+// ─── COOKIE PARSER ───
+app.use(cookieParser());
 
 // ─── COMPRESSION ───
 app.use(compression());

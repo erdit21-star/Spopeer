@@ -14,6 +14,7 @@ const { sanitizeString, parsePagination, isValidId } = require('../utils/validat
 const { Op } = require('sequelize');
 
 // ─── LIST SPONSORSHIPS ───
+const { ok, created, fail } = require('../utils/response');
 router.get('/', authenticate, async (req, res) => {
   try {
     const { page, limit } = parsePagination(req.query);
@@ -79,7 +80,7 @@ router.get('/', authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error('Sponsorship list error:', error);
-    res.status(500).json({ error: 'Failed to fetch sponsorships.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch sponsorships.');
   }
 });
 
@@ -89,10 +90,10 @@ router.post('/', authenticate, async (req, res) => {
     const { mode, title, sport, sponsorType, targetAudience, location, timeline, summary } = req.body;
 
     if (!title || !title.trim()) {
-      return res.status(400).json({ error: 'Title is required.' });
+      return fail(res, 400, 'VALIDATION', 'Title is required.');
     }
     if (!mode || !['offer', 'request', 'secure'].includes(mode)) {
-      return res.status(400).json({ error: 'Mode must be offer, request or secure.' });
+      return fail(res, 400, 'VALIDATION', 'Mode must be offer, request or secure.');
     }
 
     const sponsorship = await Sponsorship.create({
@@ -108,10 +109,10 @@ router.post('/', authenticate, async (req, res) => {
       status: 'active'
     });
 
-    res.status(201).json({ status: 'ok', sponsorship });
+    created(res, { sponsorship });
   } catch (error) {
     console.error('Sponsorship create error:', error);
-    res.status(500).json({ error: 'Failed to create sponsorship.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to create sponsorship.');
   }
 });
 
@@ -119,7 +120,7 @@ router.post('/', authenticate, async (req, res) => {
 router.get('/:id', authenticate, async (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid sponsorship ID.' });
+      return fail(res, 400, 'VALIDATION', 'Invalid sponsorship ID.');
     }
 
     const sponsorship = await Sponsorship.findByPk(req.params.id, {
@@ -131,13 +132,13 @@ router.get('/:id', authenticate, async (req, res) => {
     });
 
     if (!sponsorship) {
-      return res.status(404).json({ error: 'Sponsorship not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Sponsorship not found.');
     }
 
-    res.json({ status: 'ok', sponsorship });
+    ok(res, { sponsorship });
   } catch (error) {
     console.error('Sponsorship get error:', error);
-    res.status(500).json({ error: 'Failed to fetch sponsorship.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch sponsorship.');
   }
 });
 
@@ -145,15 +146,15 @@ router.get('/:id', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid sponsorship ID.' });
+      return fail(res, 400, 'VALIDATION', 'Invalid sponsorship ID.');
     }
 
     const sponsorship = await Sponsorship.findByPk(req.params.id);
     if (!sponsorship) {
-      return res.status(404).json({ error: 'Sponsorship not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Sponsorship not found.');
     }
     if (sponsorship.userId !== req.userId) {
-      return res.status(403).json({ error: 'You can only edit your own sponsorships.' });
+      return fail(res, 403, 'FORBIDDEN', 'You can only edit your own sponsorships.');
     }
 
     const allowedFields = ['title', 'sport', 'sponsorType', 'targetAudience', 'location', 'timeline', 'summary', 'status'];
@@ -165,10 +166,10 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 
     await sponsorship.update(updates);
-    res.json({ status: 'ok', sponsorship });
+    ok(res, { sponsorship });
   } catch (error) {
     console.error('Sponsorship update error:', error);
-    res.status(500).json({ error: 'Failed to update sponsorship.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update sponsorship.');
   }
 });
 
@@ -176,22 +177,22 @@ router.put('/:id', authenticate, async (req, res) => {
 router.delete('/:id', authenticate, async (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid sponsorship ID.' });
+      return fail(res, 400, 'VALIDATION', 'Invalid sponsorship ID.');
     }
 
     const sponsorship = await Sponsorship.findByPk(req.params.id);
     if (!sponsorship) {
-      return res.status(404).json({ error: 'Sponsorship not found.' });
+      return fail(res, 404, 'NOT_FOUND', 'Sponsorship not found.');
     }
     if (sponsorship.userId !== req.userId) {
-      return res.status(403).json({ error: 'You can only delete your own sponsorships.' });
+      return fail(res, 403, 'FORBIDDEN', 'You can only delete your own sponsorships.');
     }
 
     await sponsorship.destroy();
-    res.json({ status: 'ok', message: 'Sponsorship deleted.' });
+    ok(res, { message: 'Sponsorship deleted.' });
   } catch (error) {
     console.error('Sponsorship delete error:', error);
-    res.status(500).json({ error: 'Failed to delete sponsorship.' });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to delete sponsorship.');
   }
 });
 
