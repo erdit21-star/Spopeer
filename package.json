@@ -12,6 +12,8 @@
     "syntax:check": "node scripts/syntax-check.js",
     "test": "cd server && npm test",
     "test:integration": "cd server && npx jest --config tests/jest.config.cjs --testPathPattern=integration --runInBand",
+    "test:db": "cd server && npx jest --config tests/jest.db.config.cjs --runInBand",
+    "test:e2e": "npx playwright test",
     "verify": "npm run syntax:check && npm run lint && npm run test"
   },
   "dependencies": {
@@ -37,7 +39,11 @@
     "eslint": "^9.0.0",
     "@eslint/js": "^9.0.0",
     "globals": "^15.0.0",
+    "@playwright/test": "^1.52.0",
     "jest": "^30.2.0",
     "nodemon": "^3.1.14"
+  },
+  "optionalDependencies": {
+    "@sentry/node": "^9.0.0"
   }
 }

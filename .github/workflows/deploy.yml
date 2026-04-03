@@ -59,9 +59,13 @@ jobs:
         working-directory: ./server
         run: npx sequelize-cli db:migrate
 
-      - name: Run tests
+      - name: Run unit/mock tests
         working-directory: ./server
         run: npx jest --config tests/jest.config.cjs --runInBand --ci
+
+      - name: Run real-DB integration tests
+        working-directory: ./server
+        run: npx jest --config tests/jest.db.config.cjs --runInBand --ci
 
       - name: Smoke boot
         working-directory: ./server

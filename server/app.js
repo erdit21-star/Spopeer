@@ -38,6 +38,7 @@ const sponsorshipRoutes = require('./routes/sponsorships');
 const moderationRoutes = require('./routes/moderation');
 
 const errorHandler = require('./middleware/errorHandler');
+const { sentryErrorHandler } = require('./services/sentry');
 
 const app = express();
 app.disable('x-powered-by');
@@ -244,6 +245,7 @@ app.get('{*path}', (req, res) => {
 });
 
 // ─── ERROR HANDLING ───
+app.use(sentryErrorHandler);   // forwards to Sentry, then falls through
 app.use(errorHandler);
 
 module.exports = app;
