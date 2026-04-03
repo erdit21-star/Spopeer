@@ -79,9 +79,7 @@ class ProfileService {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
         const headers = {};
-        const token = localStorage.getItem('spopeer_token') || localStorage.getItem('token');
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-        const response = await fetch(`/api/users/${encodeURIComponent(user.id)}`, { signal: controller.signal, headers });
+        const response = await fetch(`/api/users/${encodeURIComponent(user.id)}`, { signal: controller.signal, headers, credentials: 'include' });
         clearTimeout(timeoutId);
         if (response.ok) {
           const data = await response.json();

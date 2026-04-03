@@ -2696,12 +2696,11 @@ if (window.profileRuntime) {
   }
 
   async function saveSection(profileData) {
-    var tok = localStorage.getItem('spopeer_token');
     var headers = { 'Content-Type': 'application/json' };
-    if (tok) headers['Authorization'] = 'Bearer ' + tok;
     var response = await fetch('/api/profiles', {
       method: 'POST',
       headers: headers,
+      credentials: 'include',
       body: JSON.stringify(profileData)
     });
 

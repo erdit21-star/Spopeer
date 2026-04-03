@@ -1027,9 +1027,9 @@
         const response = await fetch('/api/marketplace/inquiries', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+            'Content-Type': 'application/json'
           },
+          credentials: 'include',
           body: JSON.stringify({
             listing_id: listingId,
             message: document.getElementById('messageText').value
@@ -1064,9 +1064,7 @@
       try {
         const response = await fetch(`/api/marketplace/saved/${listingId}`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
-          }
+          credentials: 'include'
         });
         const data = await response.json();
         const btn = document.getElementById('saveBtn');
@@ -1084,9 +1082,9 @@
         fetch(`/api/marketplace/listings/${listingId}/flag`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+            'Content-Type': 'application/json'
           },
+          credentials: 'include',
           body: JSON.stringify({ reason })
         }).then(() => alert('Thank you for reporting. We\'ll review this listing.')).catch(() => alert('Error reporting listing'));
       }

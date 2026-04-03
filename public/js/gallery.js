@@ -7,7 +7,6 @@
 
 class GalleryManager {
   constructor(options = {}) {
-    this.token = localStorage.getItem('spopeer_token');
     this.currentUser = this.parseUser();
     this.uploading = false;
     this.maxFileSize = 100 * 1024 * 1024; // 100MB
@@ -38,7 +37,7 @@ class GalleryManager {
   }
 
   async uploadMedia(file, caption = '') {
-    if (!this.token) {
+    if (!this.currentUser) {
       alert('Please log in to upload media');
       return null;
     }
@@ -53,9 +52,7 @@ class GalleryManager {
 
       const response = await fetch('/api/media/upload', {
         method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + this.token
-        },
+        credentials: 'include',
         body: formData
       });
 
@@ -87,14 +84,12 @@ class GalleryManager {
   }
 
   async deleteMedia(mediaId) {
-    if (!this.token) return false;
+    if (!this.currentUser) return false;
 
     try {
       const response = await fetch(`/api/media/${mediaId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': 'Bearer ' + this.token
-        }
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -107,15 +102,15 @@ class GalleryManager {
   }
 
   async updateCaption(mediaId, caption) {
-    if (!this.token) return false;
+    if (!this.currentUser) return false;
 
     try {
       const response = await fetch(`/api/media/${mediaId}`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + this.token
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ caption })
       });
 

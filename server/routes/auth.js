@@ -145,7 +145,6 @@ router.post('/signup', signupLimiter, async (req, res) => {
       success: true,
       data: {
         message: 'Account created successfully. A verification email has been sent.',
-        token: accessToken,
         user: user.toJSON()
       }
     });
@@ -246,7 +245,6 @@ router.post('/login', loginLimiter, async (req, res) => {
       success: true,
       data: {
         message: 'Login successful.',
-        token,
         user: {
           ...user.toJSON(),
           emailVerified,

@@ -779,17 +779,15 @@
 
       /* ── API helpers ── */
       var API_BASE = '/api/sponsorships';
-      var token = localStorage.getItem('spopeer_token') || localStorage.getItem('token') || '';
 
       function apiHeaders() {
         return {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
+          'Content-Type': 'application/json'
         };
       }
 
       async function apiGet(path) {
-        var res = await fetch(API_BASE + (path || ''), { headers: apiHeaders() });
+        var res = await fetch(API_BASE + (path || ''), { headers: apiHeaders(), credentials: 'include' });
         if (!res.ok) throw new Error('API error ' + res.status);
         return res.json();
       }
@@ -798,6 +796,7 @@
         var res = await fetch(API_BASE + (path || ''), {
           method: 'POST',
           headers: apiHeaders(),
+          credentials: 'include',
           body: JSON.stringify(body)
         });
         if (!res.ok) {

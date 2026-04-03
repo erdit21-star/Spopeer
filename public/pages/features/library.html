@@ -6,9 +6,8 @@
   <title>Library — Spopeer</title>
   <script src="../../js/profile-sync-service.js"></script>
   <script>
-    const _t = localStorage.getItem('spopeer_token');
     const _l = localStorage.getItem('spopeer_loggedIn') === 'true';
-    if (!_t && !_l) window.location.href = '../../pages/auth/login.html';
+    if (!_l) window.location.href = '../../pages/auth/login.html';
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>

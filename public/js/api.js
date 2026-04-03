@@ -18,7 +18,7 @@
   }
 
   function getToken() {
-    return localStorage.getItem("spopeer_token") || localStorage.getItem("token");
+    return null; // Auth is cookie-based — no client-side token
   }
 
   function getUser() {
@@ -242,7 +242,7 @@
     logout,
     showNotification,
     request,
-    isAuthenticated: function () { return !!getUser(); },
+    isAuthenticated: function () { return localStorage.getItem("spopeer_loggedIn") === "true" && !!getUser(); },
     requireAuth: function () {
       if (!getUser()) {
         window.location.href = "/pages/auth/login.html";

@@ -2,10 +2,9 @@
   'use strict';
 
   function isAuthenticated() {
-    var user = localStorage.getItem('spopeer_user');
-    var token = localStorage.getItem('spopeer_token');
     var loggedIn = localStorage.getItem('spopeer_loggedIn') === 'true';
-    return Boolean(user) && Boolean(token || loggedIn);
+    var user = localStorage.getItem('spopeer_user');
+    return loggedIn && Boolean(user);
   }
 
   function ensureAuthenticated(loginPath) {

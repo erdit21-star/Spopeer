@@ -980,12 +980,10 @@
   /* ── Posts data — fetch from API, fallback to empty ── */
   let posts = [];
   try {
-    const tok = localStorage.getItem('spopeer_token');
     const hdrs = {};
-    if (tok) hdrs['Authorization'] = 'Bearer ' + tok;
     const uid = _ud.id || _ud.userId || '';
     if (uid) {
-      const r = await fetch('/api/posts?authorId=' + encodeURIComponent(uid), { headers: hdrs });
+      const r = await fetch('/api/posts?authorId=' + encodeURIComponent(uid), { headers: hdrs, credentials: 'include' });
       if (r.ok) {
         const d = await r.json();
         posts = d.payload || d.posts || [];
@@ -1082,10 +1080,8 @@
       const pid = btn.dataset.postId;
       btn.disabled = true;
       try {
-        const tok = localStorage.getItem('spopeer_token');
         const hdrs = {};
-        if (tok) hdrs['Authorization'] = 'Bearer ' + tok;
-        const resp = await fetch('/api/posts/' + pid + '/like', { method: 'POST', headers: hdrs });
+        const resp = await fetch('/api/posts/' + pid + '/like', { method: 'POST', headers: hdrs, credentials: 'include' });
         if (resp.ok) {
           const d = await resp.json();
           btn.dataset.liked = d.liked ? 'true' : 'false';
@@ -1112,10 +1108,8 @@
     async function deletePost(el) {
       if (!confirm('Delete this post?')) return;
       try {
-        const tok = localStorage.getItem('spopeer_token');
         const hdrs = {};
-        if (tok) hdrs['Authorization'] = 'Bearer ' + tok;
-        const resp = await fetch('/api/posts/' + post.id, { method: 'DELETE', headers: hdrs });
+        const resp = await fetch('/api/posts/' + post.id, { method: 'DELETE', headers: hdrs, credentials: 'include' });
         if (resp.ok) {
           posts = posts.filter(p => p.id !== post.id);
           div.remove();

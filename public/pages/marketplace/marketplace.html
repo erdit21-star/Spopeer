@@ -897,7 +897,7 @@
       try {
         const response = await fetch(`/api/marketplace/saved/${listingId}`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}` }
+          credentials: 'include'
         });
         const data = await response.json();
         const btn = event.target.closest('.listing-save-btn');

@@ -3,17 +3,11 @@ const Auth = {
   userKey: "spopeer_user",
 
   isLoggedIn() {
-    const token =
-      localStorage.getItem(this.tokenKey) ||
-      localStorage.getItem("token");
-    return !!token;
+    return localStorage.getItem("spopeer_loggedIn") === "true" && !!localStorage.getItem(this.userKey);
   },
 
   getToken() {
-    return (
-      localStorage.getItem(this.tokenKey) ||
-      localStorage.getItem("token")
-    );
+    return null; // Auth is now cookie-based — no client-side token
   },
 
   getUser() {
@@ -63,14 +57,12 @@ const Auth = {
     };
   },
 
-  login(user, token) {
+  login(user) {
     this.clearDemoSessionData();
 
     const normalizedUser = this.normalizeUserForSession({ ...this.getUser(), ...user });
 
-    localStorage.setItem(this.tokenKey, token);
     localStorage.setItem(this.userKey, JSON.stringify(normalizedUser));
-    localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(normalizedUser));
     localStorage.setItem("spopeer_loggedIn", "true");
     localStorage.setItem("_profileLastUpdated_", Date.now().toString());

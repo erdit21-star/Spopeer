@@ -169,7 +169,7 @@ function optimizeMarketplaceService() {
             page,
             limit
           })}\`, {
-            headers: { 'Authorization': \`Bearer \${localStorage.getItem('spopeer_token')}\` }
+            credentials: 'include'
           });
 
           if (!response.ok) throw new Error('Failed to fetch listings');
@@ -201,7 +201,7 @@ function optimizeMarketplaceService() {
           q: query,
           ...filters
         })}\`, {
-          headers: { 'Authorization': \`Bearer \${localStorage.getItem('spopeer_token')}\` }
+          credentials: 'include'
         });
 
         const data = await response.json();
@@ -224,7 +224,7 @@ function optimizeMarketplaceService() {
         }
 
         const response = await fetch(\`/api/marketplace/listings/\${listingId}\`, {
-          headers: { 'Authorization': \`Bearer \${localStorage.getItem('spopeer_token')}\` }
+          credentials: 'include'
         });
 
         const data = await response.json();

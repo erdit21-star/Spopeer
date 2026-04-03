@@ -48,13 +48,11 @@ function tryInjectUserMetaAndInbox() {
 }
 
 function getUserIdFromToken() {
-  const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('token') || null;
-  if (!token) return null;
   try {
-    const parts = token.split('.');
-    if (parts.length < 2) return null;
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-    return payload && (payload.id || payload.userId || payload.sub) ? String(payload.id || payload.userId || payload.sub) : null;
+    const userStr = localStorage.getItem('spopeer_user') || localStorage.getItem('user');
+    if (!userStr) return null;
+    const user = JSON.parse(userStr);
+    return user && (user.id || user.userId) ? String(user.id || user.userId) : null;
   } catch (e) {
     return null;
   }
@@ -401,9 +399,7 @@ function initializeNotifications() {
 
   async function checkUnread() {
     try {
-      const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('token');
-      const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-      const res = await fetch('/api/messages/unread/' + encodeURIComponent(userId), { headers });
+      const res = await fetch('/api/messages/unread/' + encodeURIComponent(userId), { credentials: 'include' });
       if (!res.ok) return;
       const data = await res.json();
       if (data.unread && data.unread > 0) showToast('You have ' + data.unread + ' unread message(s)');
@@ -732,14 +728,14 @@ style.innerHTML = `
 document.head.appendChild(style);
 // ===== API INTEGRATION FUNCTIONS =====
 
-// Get auth token from localStorage
+// Get auth token from localStorage (deprecated — auth is cookie-based)
 function getAuthToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  return null;
 }
 
-// Set auth token in localStorage
+// Set auth token in localStorage (deprecated — auth is cookie-based)
 function setAuthToken(token) {
-  localStorage.setItem(TOKEN_KEY, token);
+  // no-op
 }
 
 // Clear auth token
@@ -747,18 +743,17 @@ function clearAuthToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
-// Generic fetch wrapper with auth headers
+// Generic fetch wrapper with cookie auth
 async function apiFetch(endpoint, options = {}) {
-  const token = getAuthToken();
   const headers = {
     'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
     ...options.headers
   };
 
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
-    headers
+    headers,
+    credentials: 'include'
   });
 
   const data = await response.json();
@@ -890,12 +885,9 @@ const MediaAPI = {
     formData.append('file', file);
     formData.append('caption', caption);
     
-    const token = getAuthToken();
     const response = await fetch(`${API_BASE}/media/upload`, {
       method: 'POST',
-      headers: {
-        ...(token && { 'Authorization': `Bearer ${token}` })
-      },
+      credentials: 'include',
       body: formData
     });
     

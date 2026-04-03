@@ -308,10 +308,9 @@
     const toId=document.getElementById('toId').value.trim();
     const text=document.getElementById('messageText').value.trim();
     if(!fromId||!toId||!text){alert('Fill From ID, To ID, and message');return;}
-    const token=localStorage.getItem('spopeer_token');
     
     try{
-      const r=await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({toId,text})});
+      const r=await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({toId,text})});
       if(r.ok){
         document.getElementById('messageText').value='';
         document.getElementById('sendBtn').disabled=true;

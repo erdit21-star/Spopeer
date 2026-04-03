@@ -2,14 +2,11 @@
   'use strict';
 
   function getToken() {
-    return (
-      localStorage.getItem('spopeer_token') ||
-      localStorage.getItem('token')
-    );
+    return null; // Auth is cookie-based — no client-side token
   }
 
   function isLoggedIn() {
-    return !!getToken();
+    return localStorage.getItem('spopeer_loggedIn') === 'true' && !!localStorage.getItem('spopeer_user');
   }
 
   function requireAuth(loginPath) {

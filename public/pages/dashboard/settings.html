@@ -6,7 +6,7 @@
   <title>Settings — Spopeer</title>
   <script>
     var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
-    var _li = !!(localStorage.getItem('spopeer_token') || localStorage.getItem('token'));
+    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
     if (!_ud || !_li) window.location.href = '../../pages/auth/login.html';
   </script>
   <script src="../../js/api.js"></script>
@@ -788,13 +788,12 @@
     if (newP.length < 8) { showToast('Password must be at least 8 characters', 'fa-triangle-exclamation'); return; }
 
     try {
-      const token = localStorage.getItem('spopeer_token') || localStorage.getItem('token');
       const res = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ currentPassword: curP, newPassword: newP })
       });
       const data = await res.json();

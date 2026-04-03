@@ -286,10 +286,9 @@
         uploadConfirmBtn.disabled = true;
         uploadConfirmBtn.textContent = 'Uploading...';
 
-        const token = localStorage.getItem('spopeer_token');
         const response = await fetch('/api/media/upload', {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
+          credentials: 'include',
           body: formData
         });
 
@@ -373,10 +372,9 @@
       if (!confirm('Delete this media?')) return;
 
       try {
-        const token = localStorage.getItem('spopeer_token');
         const response = await fetch(`/api/media/${mediaId}`, {
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+          credentials: 'include'
         });
 
         if (!response.ok) throw new Error('Delete failed');

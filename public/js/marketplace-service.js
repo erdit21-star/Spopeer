@@ -81,9 +81,9 @@ const MarketplaceService = {
     const response = await fetch('/api/marketplace/listings', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify(listing)
     });
 
@@ -104,9 +104,9 @@ const MarketplaceService = {
     const response = await fetch(`/api/marketplace/listings/${id}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify(updates)
     });
 
@@ -125,9 +125,7 @@ const MarketplaceService = {
   deleteListing: async function(id) {
     const response = await fetch(`/api/marketplace/listings/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
-      }
+      credentials: 'include'
     });
 
     if (!response.ok) throw new Error('Failed to delete listing');
@@ -142,9 +140,9 @@ const MarketplaceService = {
     const response = await fetch(`/api/marketplace/listings/${id}/status`, {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify({ status })
     });
 
@@ -158,9 +156,7 @@ const MarketplaceService = {
    */
   getMyListings: async function() {
     const response = await fetch('/api/marketplace/my-listings', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
-      }
+      credentials: 'include'
     });
 
     if (!response.ok) throw new Error('Failed to fetch your listings');
@@ -174,9 +170,9 @@ const MarketplaceService = {
     const response = await fetch('/api/marketplace/inquiries', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify({
         listingId: listingId,
         listing_id: listingId,
@@ -193,9 +189,7 @@ const MarketplaceService = {
    */
   getReceivedInquiries: async function() {
     const response = await fetch('/api/marketplace/inquiries/received', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
-      }
+      credentials: 'include'
     });
 
     if (!response.ok) throw new Error('Failed to fetch inquiries');
@@ -207,9 +201,7 @@ const MarketplaceService = {
    */
   getSentInquiries: async function() {
     const response = await fetch('/api/marketplace/inquiries/sent', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
-      }
+      credentials: 'include'
     });
 
     if (!response.ok) throw new Error('Failed to fetch inquiries');
@@ -223,9 +215,9 @@ const MarketplaceService = {
     const response = await fetch(`/api/marketplace/inquiries/${inquiryId}/status`, {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify({ status })
     });
 
@@ -239,9 +231,7 @@ const MarketplaceService = {
   toggleSave: async function(listingId) {
     const response = await fetch(`/api/marketplace/saved/${listingId}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
-      }
+      credentials: 'include'
     });
 
     if (!response.ok) throw new Error('Failed to toggle save');
@@ -253,9 +243,7 @@ const MarketplaceService = {
    */
   getSavedListings: async function() {
     const response = await fetch('/api/marketplace/saved', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
-      }
+      credentials: 'include'
     });
 
     if (!response.ok) throw new Error('Failed to fetch saved listings');
@@ -278,9 +266,9 @@ const MarketplaceService = {
     const response = await fetch(`/api/marketplace/listings/${listingId}/flag`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify({ reason })
     });
 

@@ -5581,11 +5581,11 @@ function attachRepostListeners() {
 
     try {
       // Try real API first
-      var token = localStorage.getItem('spopeer_token');
-      if (token) {
+      var isLoggedIn = localStorage.getItem('spopeer_loggedIn') === 'true';
+      if (isLoggedIn) {
         var res = await fetch('/api/posts/' + postId + '/repost', {
           method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token }
+          credentials: 'include'
         });
         if (res.ok) {
           repostBtn.classList.add('reposted');

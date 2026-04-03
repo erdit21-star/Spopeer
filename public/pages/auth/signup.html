@@ -683,8 +683,9 @@
             profession: (document.getElementById('secondarySports')?.value || '').trim()
           };
           const result = await window.SpopeerAPI.signup(payload);
-          if (result.token && result.user) {
-            window.Auth.login(result.user, result.token);
+          const user = (result.data && result.data.user) || result.user;
+          if (user) {
+            window.Auth.login(user);
             window.location.href = '/feed.html';
           } else {
             // Account created but pending email verification

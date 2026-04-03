@@ -1,9 +1,6 @@
 (function () {
   function isLoggedIn() {
-    return !!(
-      localStorage.getItem("spopeer_token") ||
-      localStorage.getItem("token")
-    );
+    return localStorage.getItem("spopeer_loggedIn") === "true" && !!localStorage.getItem("spopeer_user");
   }
 
   function getHomeUrl() {

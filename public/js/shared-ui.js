@@ -505,11 +505,12 @@
     updateSaveBtnUI(btn, saved);
     // If user is authenticated, persist to server (best-effort, non-blocking)
     try {
-      var token = localStorage.getItem('spopeer_token') || localStorage.getItem('authToken') || localStorage.getItem('token');
-      if (token && window.fetch) {
+      var isLoggedIn = localStorage.getItem('spopeer_loggedIn') === 'true';
+      if (isLoggedIn && window.fetch) {
         fetch('/api/posts/' + encodeURIComponent(postId) + '/save', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
         }).then(function (res) {
           if (!res.ok) {
             console.warn('Server save failed, keeping local state.');

@@ -6,7 +6,6 @@
 
 class FollowManager {
   constructor() {
-    this.token = localStorage.getItem('spopeer_token');
     this.currentUser = this.parseUser();
   }
 
@@ -47,7 +46,7 @@ class FollowManager {
   }
 
   async getFollowStatus(userId) {
-    if (this.token) {
+    if (localStorage.getItem('spopeer_loggedIn') === 'true') {
       try {
         const data = await window.SpopeerAPI.getFollowStatus(userId);
         return data.relation || 'none';
@@ -66,7 +65,7 @@ class FollowManager {
         }
 
     // Require login for following
-    if (!this.token) {
+    if (localStorage.getItem('spopeer_loggedIn') !== 'true') {
       alert('Please log in to follow users');
       window.location.href = '/pages/auth/login.html';
       return false;
@@ -91,7 +90,7 @@ class FollowManager {
           return true;
         }
 
-    if (!this.token) {
+    if (localStorage.getItem('spopeer_loggedIn') !== 'true') {
       alert('Please log in to unfollow users');
       return false;
     }
@@ -119,7 +118,7 @@ class FollowManager {
   }
 
   async getFollowers(userId) {
-    if (this.token) {
+    if (localStorage.getItem('spopeer_loggedIn') === 'true') {
       try {
         const data = await window.SpopeerAPI.getFollowers(userId);
         return data.users || [];
@@ -132,7 +131,7 @@ class FollowManager {
   }
 
   async getFollowing(userId) {
-    if (this.token) {
+    if (localStorage.getItem('spopeer_loggedIn') === 'true') {
       try {
         const data = await window.SpopeerAPI.getFollowing(userId);
         return data.users || [];
@@ -145,13 +144,13 @@ class FollowManager {
   }
 
   async getPendingRequests() {
-    if (!this.token) return [];
+    if (localStorage.getItem('spopeer_loggedIn') !== 'true') return [];
     console.warn('Pending follow requests are not implemented on the current backend.');
     return [];
   }
 
   isLoggedIn() {
-    return !!this.token && !!this.currentUser;
+    return localStorage.getItem('spopeer_loggedIn') === 'true' && !!this.currentUser;
   }
 }
 

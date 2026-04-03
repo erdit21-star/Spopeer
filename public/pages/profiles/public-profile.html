@@ -597,15 +597,13 @@ document.getElementById('connectBtn')?.addEventListener('click',async function()
   let payload={};
   let profileFound=false;
   
-  // Build headers — include auth token so server can identify the viewer
+  // Build headers — include auth cookie so server can identify the viewer
   const _headers = {};
-  const _token = localStorage.getItem('spopeer_token') || localStorage.getItem('token');
-  if (_token) _headers['Authorization'] = 'Bearer ' + _token;
 
   // Try /api/users/:id (handles both numeric id and email)
   if(userId){
     try{
-      const r=await fetch(`/api/users/${encodeURIComponent(userId)}`, { headers: _headers });
+      const r=await fetch(`/api/users/${encodeURIComponent(userId)}`, { headers: _headers, credentials: 'include' });
       if(r.ok){
         const d=await r.json();
         payload=d.user||d.payload||{};

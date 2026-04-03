@@ -480,10 +480,10 @@
       try {
         const [received, sent] = await Promise.all([
           fetch('/api/marketplace/inquiries/received', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}` }
+            credentials: 'include'
           }).then(r => r.json()),
           fetch('/api/marketplace/inquiries/sent', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}` }
+            credentials: 'include'
           }).then(r => r.json())
         ]);
 
@@ -536,7 +536,7 @@
 
       // Fetch messages for this conversation
       const messages = await fetch(`/api/messages/conversation/${inquiry.seller_id}/${inquiry.buyer_id}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}` }
+        credentials: 'include'
       }).then(r => r.json());
 
       // Render conversation
@@ -596,9 +596,9 @@
             await fetch(`/api/marketplace/inquiries/${inquiry.id}/status`, {
               method: 'PATCH',
               headers: {
-                'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`,
                 'Content-Type': 'application/json'
               },
+              credentials: 'include',
               body: JSON.stringify({ status: newStatus })
             });
             inquiry.status = newStatus;
@@ -617,9 +617,9 @@
           const msg = await fetch('/api/messages/send', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('spopeer_token')}`,
               'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify({
               toId: isBuyer ? inquiry.seller_id : inquiry.buyer_id,
               text: text

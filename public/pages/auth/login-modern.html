@@ -338,7 +338,8 @@
 
       try {
         const result = await window.SpopeerAPI.login({ email: email, password: password });
-        window.Auth.login(result.user, result.token);
+        const user = (result.data && result.data.user) || result.user;
+        if (user) window.Auth.login(user);
         window.location.href = '/feed.html';
       } catch (err) {
         if (errorBox) {
