@@ -24,8 +24,11 @@ const commonOpts = {
   })
 };
 
-const sequelize = env.db.url
-  ? new Sequelize(env.db.url, commonOpts)
+// Only use DATABASE_URL if it looks like a valid postgres:// connection string
+const dbUrl = env.db.url && env.db.url.startsWith('postgres') ? env.db.url : null;
+
+const sequelize = dbUrl
+  ? new Sequelize(dbUrl, commonOpts)
   : new Sequelize(env.db.name, env.db.user, env.db.password, {
       ...commonOpts,
       host: env.db.host,
