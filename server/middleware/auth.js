@@ -141,8 +141,14 @@ function setAuthCookies(res, user) {
  * Clear auth cookies on response
  */
 function clearAuthCookies(res) {
-  res.clearCookie('access_token');
-  res.clearCookie('refresh_token');
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/'
+  };
+  res.clearCookie('access_token', options);
+  res.clearCookie('refresh_token', options);
 }
 
 module.exports = {

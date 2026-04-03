@@ -506,7 +506,7 @@
         <span class="logo-text">Spopeer</span>
       </a>
 
-      <p>Connecting the global sports community � athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+      <p>Connecting the global sports community — athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
 
       <div class="social-row">
         <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
@@ -688,11 +688,11 @@
             window.Auth.login(user);
             window.location.href = '/feed.html';
           } else {
-            // Account created but pending email verification
+            // Account created — user object missing from response (edge case)
             if (errorBox) {
               errorBox.style.background = '#dcfce7';
               errorBox.style.color = '#166534';
-              errorBox.textContent = 'Account created! Please check your email to verify your account before signing in.';
+              errorBox.textContent = 'Account created! Please verify your email to secure your account, then sign in.';
               errorBox.style.display = 'block';
             }
             document.getElementById('signupForm').reset();

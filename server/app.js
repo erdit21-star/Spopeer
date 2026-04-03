@@ -4,6 +4,15 @@
  */
 require('./config/env');
 
+// ─── PRODUCTION STARTUP GUARDS ───
+if (process.env.NODE_ENV === 'production') {
+  const missing = ['JWT_SECRET', 'FRONTEND_URL', 'APP_URL'].filter(k => !process.env[k]);
+  if (missing.length) {
+    console.error(`FATAL: Missing required env vars in production: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+}
+
 const express = require('express');
 const compression = require('compression');
 const cors = require('cors');
@@ -77,13 +86,18 @@ app.use(cookieParser());
 // ─── COMPRESSION ───
 app.use(compression());
 
+// ─── ENVIRONMENT ───
+const isProd = process.env.NODE_ENV === 'production';
+
 // ─── SECURITY MIDDLEWARE ───
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      scriptSrc: isProd ? ["'self'"] : ["'self'", "'unsafe-inline'"],
+      styleSrc: isProd
+        ? ["'self'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"]
+        : ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.cloudinary.com"],
       connectSrc: ["'self'", "ws:", "wss:"],
@@ -100,9 +114,11 @@ app.use(helmet({
 
 // CORS
 const allowedOrigins = [
-  'http://localhost:5000',
-  'http://localhost:3000',
-  'http://127.0.0.1:5000',
+  ...(isProd ? [] : [
+    'http://localhost:5000',
+    'http://localhost:3000',
+    'http://127.0.0.1:5000'
+  ]),
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL_ALT
 ].filter(Boolean);
@@ -110,8 +126,8 @@ const allowedOrigins = [
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
-    callback(null, false);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('Origin not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
@@ -197,7 +213,7 @@ app.get('/api/health', (req, res) => {
 
 // ─── READINESS CHECK ───
 app.get('/api/ready', async (req, res) => {
-  const checks = { database: 'unknown', secrets: 'unknown', email: 'unknown' };
+  const checks = { database: 'unknown', secrets: 'unknown', email: 'unknown', storage: 'unknown', appUrl: 'unknown' };
   let ready = true;
 
   // DB check
@@ -210,15 +226,21 @@ app.get('/api/ready', async (req, res) => {
   }
 
   // Required secrets check
-  const requiredSecrets = ['JWT_SECRET'];
-  const missingSecrets = requiredSecrets.filter(v => !process.env[v]);
-  checks.secrets = missingSecrets.length === 0 ? 'ok' : 'fail';
-  if (missingSecrets.length) ready = false;
+  checks.secrets = process.env.JWT_SECRET ? 'ok' : 'fail';
+  if (!process.env.JWT_SECRET) ready = false;
 
   // Email provider check (fail only in production)
   const emailOk = !!process.env.RESEND_API_KEY;
   checks.email = emailOk ? 'ok' : (process.env.NODE_ENV === 'production' ? 'fail' : 'warn');
   if (process.env.NODE_ENV === 'production' && !emailOk) ready = false;
+
+  // Storage provider check
+  const storageOk = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+  checks.storage = storageOk ? 'ok' : (process.env.NODE_ENV === 'production' ? 'warn' : 'warn');
+
+  // App URL check
+  checks.appUrl = (process.env.APP_URL && process.env.FRONTEND_URL) ? 'ok' : 'fail';
+  if (!process.env.APP_URL || !process.env.FRONTEND_URL) ready = false;
 
   res.status(ready ? 200 : 503).json({
     success: ready,
