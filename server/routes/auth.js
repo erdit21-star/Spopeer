@@ -30,11 +30,14 @@ const { sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail, sendSec
 const { Op } = require('sequelize');
 
 // Signup abuse limiter
+const isTest = process.env.NODE_ENV === 'test';
+
 const signupLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 50,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isTest,
   message: { success: false, error: { code: 'RATE_LIMIT_SIGNUP', message: 'Too many signup attempts, please try again later.' } }
 });
 
@@ -44,6 +47,7 @@ const loginLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isTest,
   message: { success: false, error: { code: 'RATE_LIMIT_LOGIN', message: 'Too many login attempts, please try again later.' } }
 });
 
@@ -53,6 +57,7 @@ const forgotLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isTest,
   message: { success: false, error: { code: 'RATE_LIMIT_FORGOT', message: 'Too many reset requests. Please try again later.' } }
 });
 

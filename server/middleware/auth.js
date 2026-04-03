@@ -3,6 +3,7 @@
  * Supports HttpOnly cookie auth (preferred) with Bearer token fallback.
  */
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { User } = require('../models');
 
 /**
@@ -99,7 +100,7 @@ function generateAccessToken(user) {
  */
 function generateRefreshToken(user) {
   return jwt.sign(
-    { userId: user.id, type: 'refresh' },
+    { userId: user.id, type: 'refresh', jti: crypto.randomBytes(16).toString('hex') },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
