@@ -73,6 +73,33 @@ module.exports = [
     }
   },
   {
+    files: ["e2e/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "commonjs",
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      "no-undef": "error"
+    }
+  },
+  {
+    files: ["server/**/*.cjs"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "commonjs",
+      globals: {
+        ...globals.node,
+        ...globals.jest
+      }
+    },
+    rules: {
+      "no-undef": "error"
+    }
+  },
+  {
     ignores: [
       "node_modules/**",
       "server/node_modules/**",
