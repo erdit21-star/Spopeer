@@ -113,18 +113,19 @@ router.post('/signup', signupLimiter, async (req, res) => {
       role: safeRole || 'athlete',
       sport: sport || null,
       profession: profession || null,
-      isActive: true,
-      emailVerified: false
+      isActive: true
     });
 
-    // Generate verification token and send email (optional — does not block login)
-    const verifyToken = crypto.randomBytes(32).toString('hex');
-    await user.update({ emailVerifyToken: verifyToken });
-
-    // Fire-and-forget — don't block signup on email send
-    sendVerificationEmail(user.email, verifyToken).catch(err => {
-      console.error('Failed to send verification email:', err.message);
-    });
+    // Generate verification token and send email (optional — does not block signup)
+    try {
+      const verifyToken = crypto.randomBytes(32).toString('hex');
+      await user.update({ emailVerifyToken: verifyToken, emailVerified: false });
+      sendVerificationEmail(user.email, verifyToken).catch(err => {
+        console.error('Failed to send verification email:', err.message);
+      });
+    } catch (verifyErr) {
+      console.error('[SIGNUP] emailVerifyToken update failed (column may not exist):', verifyErr.message);
+    }
 
     // Issue DB-backed session so the user can use the app immediately (MODEL B — verification optional)
     const accessToken = generateAccessToken(user);
