@@ -1,13 +1,8 @@
 'use strict';
 
 /**
- * Migration: Add extended profile fields to users table.
- * Run with: node server/migrations/002-add-profile-fields.js
+ * Migration 004: Add extended profile fields to users table.
  */
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
-
-const { sequelize } = require('../models');
 
 const COLUMNS = [
   { name: 'displayName',        sql: 'VARCHAR(150)' },
@@ -32,34 +27,25 @@ const COLUMNS = [
   { name: 'extendedProfile',   sql: "JSONB DEFAULT '{}'" }
 ];
 
-async function up() {
-  const qi = sequelize.getQueryInterface();
-
-  for (const col of COLUMNS) {
-    try {
-      await qi.sequelize.query(
-        `ALTER TABLE users ADD COLUMN IF NOT EXISTS "${col.name}" ${col.sql};`
-      );
-      console.log(`  ✓ ${col.name}`);
-    } catch (err) {
-      // Column might already exist (non-PG databases don't support IF NOT EXISTS)
-      if (err.message && err.message.includes('already exists')) {
-        console.log(`  · ${col.name} (already exists)`);
-      } else {
-        console.error(`  ✗ ${col.name}:`, err.message);
+module.exports = {
+  async up(queryInterface) {
+    for (const col of COLUMNS) {
+      try {
+        await queryInterface.sequelize.query(
+          `ALTER TABLE users ADD COLUMN IF NOT EXISTS "${col.name}" ${col.sql};`
+        );
+        console.log(`  ✓ ${col.name}`);
+      } catch (err) {
+        if (err.message && err.message.includes('already exists')) {
+          console.log(`  · ${col.name} (already exists)`);
+        } else {
+          console.error(`  ✗ ${col.name}:`, err.message);
+        }
       }
     }
-  }
-}
+  },
 
-(async () => {
-  try {
-    console.log('Adding profile columns to users table…');
-    await up();
-    console.log('Done.');
-  } catch (err) {
-    console.error('Migration failed:', err);
-  } finally {
-    await sequelize.close();
+  async down() {
+    // Intentionally left empty — additive migration, safe to skip rollback
   }
-})();
+};

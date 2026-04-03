@@ -11,13 +11,7 @@
  *
  * Safe to run on databases that already have the new schema — every ALTER uses
  * IF NOT EXISTS on PostgreSQL.
- *
- * Run with: node server/migrations/003-patch-legacy-users.js
  */
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
-
-const { sequelize } = require('../models');
 
 const COLUMNS = [
   // Core auth / identity
@@ -72,14 +66,13 @@ const COLUMNS = [
   { name: 'emailVerifyToken',  sql: 'VARCHAR(128)' }
 ];
 
-async function up() {
-  const qi = sequelize.getQueryInterface();
-
+module.exports = {
+  async up(queryInterface) {
   // Step 1: Add missing columns
   console.log('\n── Step 1: Add missing columns ──');
   for (const col of COLUMNS) {
     try {
-      await qi.sequelize.query(
+      await queryInterface.sequelize.query(
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS "${col.name}" ${col.sql};`
       );
       console.log(`  ✓ ${col.name}`);
@@ -96,12 +89,12 @@ async function up() {
   console.log('\n── Step 2: Copy passwordHash → password ──');
   try {
     // Check if passwordHash column exists
-    const [cols] = await qi.sequelize.query(
+    const [cols] = await queryInterface.sequelize.query(
       `SELECT column_name FROM information_schema.columns
        WHERE table_name = 'users' AND column_name = 'passwordHash';`
     );
     if (cols.length > 0) {
-      const [, meta] = await qi.sequelize.query(
+      const [, meta] = await queryInterface.sequelize.query(
         `UPDATE users SET password = "passwordHash"
          WHERE password IS NULL AND "passwordHash" IS NOT NULL;`
       );
@@ -125,7 +118,7 @@ async function up() {
   ];
   for (const [sql, label] of backfills) {
     try {
-      const [, meta] = await qi.sequelize.query(sql);
+      const [, meta] = await queryInterface.sequelize.query(sql);
       console.log(`  ✓ ${label}: ${meta && meta.rowCount != null ? meta.rowCount : '?'} rows`);
     } catch (err) {
       console.error(`  ✗ ${label}:`, err.message);
@@ -133,16 +126,9 @@ async function up() {
   }
 
   console.log('\n✅ Legacy patch complete.\n');
-}
+  },
 
-(async () => {
-  try {
-    console.log('Patching legacy users table…');
-    await up();
-  } catch (err) {
-    console.error('Migration failed:', err);
-    process.exit(1);
-  } finally {
-    await sequelize.close();
+  async down() {
+    // Intentionally left empty — additive migration, safe to skip rollback
   }
-})();
+};
