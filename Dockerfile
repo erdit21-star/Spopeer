@@ -25,4 +25,4 @@ USER spopeer
 ENV NODE_ENV=production
 EXPOSE 5000
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["node", "server/server.js"]
+CMD ["sh", "-c", "cd server && npx sequelize-cli db:migrate && node server.js"]

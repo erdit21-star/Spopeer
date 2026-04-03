@@ -130,13 +130,17 @@ router.post('/signup', signupLimiter, async (req, res) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    await RefreshSession.create({
-      userId: user.id,
-      tokenHash: sha256(refreshToken),
-      userAgent: req.get('user-agent') || null,
-      ipAddress: req.ip,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    });
+    try {
+      await RefreshSession.create({
+        userId: user.id,
+        tokenHash: sha256(refreshToken),
+        userAgent: req.get('user-agent') || null,
+        ipAddress: req.ip,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      });
+    } catch (sessionErr) {
+      console.error('[SIGNUP] RefreshSession.create failed (table may not exist yet):', sessionErr.message);
+    }
 
     res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
     res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
@@ -230,13 +234,17 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     // Issue DB-backed refresh session
     const refreshToken = generateRefreshToken(user);
-    await RefreshSession.create({
-      userId: user.id,
-      tokenHash: sha256(refreshToken),
-      userAgent: req.get('user-agent') || null,
-      ipAddress: req.ip,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    });
+    try {
+      await RefreshSession.create({
+        userId: user.id,
+        tokenHash: sha256(refreshToken),
+        userAgent: req.get('user-agent') || null,
+        ipAddress: req.ip,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      });
+    } catch (sessionErr) {
+      console.error('[LOGIN] RefreshSession.create failed (table may not exist yet):', sessionErr.message);
+    }
 
     res.cookie('access_token', token, getCookieOptions(15 * 60 * 1000));
     res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
@@ -521,9 +529,16 @@ router.post('/refresh', async (req, res) => {
 
     // Verify DB-backed session exists and is not revoked
     const tokenHash = sha256(rawToken);
-    const session = await RefreshSession.findOne({
-      where: { tokenHash, revokedAt: null }
-    });
+    let session;
+    try {
+      session = await RefreshSession.findOne({
+        where: { tokenHash, revokedAt: null }
+      });
+    } catch (sessionErr) {
+      console.error('[REFRESH] RefreshSession lookup failed:', sessionErr.message);
+      clearAuthCookies(res);
+      return fail(res, 401, 'TOKEN_INVALID', 'Refresh session unavailable.');
+    }
 
     if (!session || session.expiresAt <= new Date()) {
       clearAuthCookies(res);
@@ -537,19 +552,23 @@ router.post('/refresh', async (req, res) => {
     }
 
     // Revoke old session
-    await session.update({ revokedAt: new Date() });
+    try { await session.update({ revokedAt: new Date() }); } catch (_) {}
 
     // Issue rotated tokens
     const newAccessToken = generateAccessToken(user);
     const newRefreshToken = generateRefreshToken(user);
 
-    await RefreshSession.create({
-      userId: user.id,
-      tokenHash: sha256(newRefreshToken),
-      userAgent: req.get('user-agent') || null,
-      ipAddress: req.ip,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    });
+    try {
+      await RefreshSession.create({
+        userId: user.id,
+        tokenHash: sha256(newRefreshToken),
+        userAgent: req.get('user-agent') || null,
+        ipAddress: req.ip,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      });
+    } catch (sessionErr) {
+      console.error('[REFRESH] RefreshSession.create failed:', sessionErr.message);
+    }
 
     res.cookie('access_token', newAccessToken, getCookieOptions(15 * 60 * 1000));
     res.cookie('refresh_token', newRefreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
