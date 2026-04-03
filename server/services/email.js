@@ -13,10 +13,8 @@ const isEmailConfigured = !!process.env.RESEND_API_KEY;
  */
 function assertEmailReady() {
   if (isProduction && !isEmailConfigured) {
-    throw new Error('RESEND_API_KEY is required in production.');
-  }
-
-  if (!isEmailConfigured) {
+    console.warn('⚠️  RESEND_API_KEY not set in production — email features (verification, password reset) will be unavailable.');
+  } else if (!isEmailConfigured) {
     console.warn('⚠️  RESEND_API_KEY not set — emails will be logged to console in development.');
   }
 }
