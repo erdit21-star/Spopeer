@@ -12,10 +12,10 @@
   }
 
   function requireAdmin() {
-    const token = localStorage.getItem("spopeer_token");
+    const loggedIn = localStorage.getItem("spopeer_loggedIn") === "true";
     const user = getUser();
 
-    if (!token) {
+    if (!loggedIn) {
       window.location.href = "/pages/auth/login.html";
       return;
     }

@@ -148,7 +148,8 @@
           }
         } catch (_) { /* refresh failed */ }
       }
-      clearAuthStorage();
+      // Don't clear storage here — let the caller decide (e.g. show
+      // "session expired" UI vs. silently retrying on next navigation).
       const msg = (data.error && data.error.message) || data.message || data.error || "Session expired. Please log in again.";
       const err = new Error(msg);
       err.code = "UNAUTHORIZED";

@@ -121,9 +121,10 @@ const Auth = {
       return null;
     } catch (err) {
       console.warn("[Spopeer] Backend user sync failed.", err);
-      if (err.code === "UNAUTHORIZED" || err.message === "UNAUTHORIZED") {
-        this.logout();
-      }
+      // Do NOT logout here — the user may have just logged in and
+      // the access-token cookie is valid.  A transient 401 (e.g.
+      // refresh_sessions table not yet migrated) should not kick
+      // the user out.  The next navigation will re-check auth.
       return null;
     }
   }
@@ -132,7 +133,9 @@ const Auth = {
 window.Auth = Auth;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (window.Auth && window.Auth.isLoggedIn()) {
-    await window.Auth.syncUserFromBackend();
+  if (window.Auth && window.Auth.isLoggedIn() && window.SpopeerAPI) {
+    try {
+      await window.Auth.syncUserFromBackend();
+    } catch (_) { /* best-effort */ }
   }
 });

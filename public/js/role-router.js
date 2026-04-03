@@ -8,7 +8,7 @@
   }
 
   function isLoggedIn() {
-    return !!localStorage.getItem("spopeer_token");
+    return localStorage.getItem('spopeer_loggedIn') === 'true';
   }
 
   function isAdmin(user) {
