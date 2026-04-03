@@ -105,7 +105,7 @@ jest.mock('../../models', () => {
       return Promise.resolve(null);
     }),
     findByPk: jest.fn((id) => {
-      return Promise.resolve(mockFakeUsers.find(u => u.id === id) || null);
+      return Promise.resolve(mockFakeUsers.find(u => u.id === Number(id)) || null);
     }),
     findAndCountAll: jest.fn(({ where, limit, offset }) => {
       let results = mockFakeUsers.filter(u => u.isActive);
