@@ -206,7 +206,7 @@ module.exports = (sequelize) => {
     const hash = this.password || this.getDataValue('passwordHash');
     if (!hash) return false;
 
-    const isBcryptHash = typeof hash === 'string' && /^\$2[aby]\$\d{2}\/.test(hash);
+    const isBcryptHash = typeof hash === 'string' && /^\$2[aby]\$\d{2}\$/.test(hash);
 
     try {
       if (isBcryptHash) {
