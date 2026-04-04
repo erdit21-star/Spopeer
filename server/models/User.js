@@ -1,3 +1,4 @@
+// Updated
 /**
  * User Model
  * Roles: athlete, coach, club, supportive_professional, admin
@@ -204,7 +205,28 @@ module.exports = (sequelize) => {
   User.prototype.validatePassword = async function (password) {
     const hash = this.password || this.getDataValue('passwordHash');
     if (!hash) return false;
-    return bcrypt.compare(password, hash);
+
+    // Detect bcrypt hash
+    const isBcrypt = typeof hash === 'string' && hash.startsWith('$2');
+
+    try {
+      if (isBcrypt) {
+        return await bcrypt.compare(password, hash);
+      }
+
+      // 🔥 LEGACY SUPPORT: plain text password
+      if (password === hash) {
+        // Upgrade to bcrypt automatically
+        this.password = password;
+        await this.save();
+        return true;
+      }
+
+      return false;
+    } catch (err) {
+      console.error('[PASSWORD] Validation error:', err.message);
+      return false;
+    }
   };
 
   User.prototype.toJSON = function () {
