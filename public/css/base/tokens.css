@@ -1,0 +1,92 @@
+/* ================================================================
+   SPOPEER DESIGN TOKENS
+   Shared design foundation for all public-facing pages.
+   Defines colour palette, typography, spacing, radii, shadows.
+   Import first in every page.
+   ================================================================ */
+
+:root {
+  /* ── Surfaces ── */
+  --bg: #fafaf8;
+  --white: #ffffff;
+  --ink: #0f0f0f;
+  --ink-2: #1a2938;
+  --muted: #7a7a7a;
+  --muted-2: #b0b0b0;
+  --border: #e8e8e4;
+  --surface: #f4f4f1;
+
+  /* ── Brand / Accent ── */
+  --accent: #001f3f;
+  --accent-light: #cce7ff;
+  --accent-2: #1a6bff;
+  --accent-2-light: #eef3ff;
+
+  /* ── Typography ── */
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+
+  /* ── Font aliases (used by some pages) ── */
+  --fD: var(--font-display);
+  --fB: var(--font-body);
+  --fd: var(--font-display);
+  --fb: var(--font-body);
+
+  /* ── Accent aliases ── */
+  --accent-lt: var(--accent-light);
+
+  /* ── Radii ── */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 12px;
+  --r-lg: 20px;
+  --r-xl: 24px;
+  --r-pill: 999px;
+
+  /* Aliases */
+  --r: 12px;
+  --rS: 10px;
+  --rM: 16px;
+  --rL: 24px;
+  --rXL: 32px;
+  --pill: 999px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-md: 0 12px 32px rgba(0,0,0,0.08);
+  --shadow-lg: 0 24px 64px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+}
+
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}

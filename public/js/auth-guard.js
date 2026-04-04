@@ -1,21 +1,26 @@
 (function () {
   'use strict';
 
-  function _getToken() {
-    return null; // Auth is cookie-based — no client-side token
-  }
-
   function isLoggedIn() {
     return localStorage.getItem('spopeer_loggedIn') === 'true' && !!localStorage.getItem('spopeer_user');
   }
 
-  function requireAuth(loginPath) {
+  function clearLocalAuth() {
+    localStorage.removeItem('spopeer_user');
+    localStorage.removeItem('spopeer_loggedIn');
+    localStorage.removeItem('user');
+  }
+
+  async function requireAuth(loginPath) {
     if (!loginPath) loginPath = '/pages/auth/login.html';
-    if (!isLoggedIn()) {
+    try {
+      await window.SpopeerAPI.me();
+      return true;
+    } catch (_) {
+      clearLocalAuth();
       window.location.href = loginPath;
       return false;
     }
-    return true;
   }
 
   window.authGuard = {

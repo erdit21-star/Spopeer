@@ -91,15 +91,24 @@ const Auth = {
     window.location.href = "/index.html";
   },
 
-  requireAuth() {
-    if (!this.isLoggedIn()) {
+  async requireAuth() {
+    try {
+      await window.SpopeerAPI.me();
+    } catch (_) {
+      localStorage.removeItem('spopeer_user');
+      localStorage.removeItem('spopeer_loggedIn');
+      localStorage.removeItem('user');
       window.location.href = "/pages/auth/login.html";
     }
   },
 
-  redirectIfLoggedInToUserApp() {
-    if (this.isLoggedIn()) {
+  async redirectIfLoggedInToUserApp() {
+    if (!window.SpopeerAPI) return;
+    try {
+      await window.SpopeerAPI.me();
       window.location.href = "/feed.html";
+    } catch (_) {
+      // Not authenticated — stay on page
     }
   },
 
@@ -120,11 +129,13 @@ const Auth = {
 
       return null;
     } catch (err) {
-      console.warn("[Spopeer] Backend user sync failed.", err);
-      // Do NOT logout here — the user may have just logged in and
-      // the access-token cookie is valid.  A transient 401 (e.g.
-      // refresh_sessions table not yet migrated) should not kick
-      // the user out.  The next navigation will re-check auth.
+      if (err && err.code === 'UNAUTHORIZED') {
+        localStorage.removeItem(this.userKey);
+        localStorage.removeItem("user");
+        localStorage.removeItem("spopeer_loggedIn");
+      } else {
+        console.warn("[Spopeer] Backend user sync failed.", err);
+      }
       return null;
     }
   }

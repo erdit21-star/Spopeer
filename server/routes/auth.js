@@ -131,7 +131,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    try {
+    if (process.env.NODE_ENV === 'production') {
       await RefreshSession.create({
         userId: user.id,
         tokenHash: sha256(refreshToken),
@@ -139,8 +139,18 @@ router.post('/signup', signupLimiter, async (req, res) => {
         ipAddress: req.ip,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       });
-    } catch (sessionErr) {
-      console.error('[SIGNUP] RefreshSession.create failed (table may not exist):', sessionErr.message);
+    } else {
+      try {
+        await RefreshSession.create({
+          userId: user.id,
+          tokenHash: sha256(refreshToken),
+          userAgent: req.get('user-agent') || null,
+          ipAddress: req.ip,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
+      } catch (sessionErr) {
+        console.error('[SIGNUP] RefreshSession.create failed (table may not exist):', sessionErr.message);
+      }
     }
 
     res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
@@ -235,7 +245,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     // Issue DB-backed refresh session
     const refreshToken = generateRefreshToken(user);
-    try {
+    if (process.env.NODE_ENV === 'production') {
       await RefreshSession.create({
         userId: user.id,
         tokenHash: sha256(refreshToken),
@@ -243,8 +253,18 @@ router.post('/login', loginLimiter, async (req, res) => {
         ipAddress: req.ip,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       });
-    } catch (sessionErr) {
-      console.error('[LOGIN] RefreshSession.create failed (table may not exist):', sessionErr.message);
+    } else {
+      try {
+        await RefreshSession.create({
+          userId: user.id,
+          tokenHash: sha256(refreshToken),
+          userAgent: req.get('user-agent') || null,
+          ipAddress: req.ip,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
+      } catch (sessionErr) {
+        console.error('[LOGIN] RefreshSession.create failed (table may not exist):', sessionErr.message);
+      }
     }
 
     res.cookie('access_token', token, getCookieOptions(15 * 60 * 1000));

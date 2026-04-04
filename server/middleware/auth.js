@@ -117,10 +117,13 @@ function generateToken(user) {
  * Cookie options helper
  */
 function getCookieOptions(maxAgeMs) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const sameSite = process.env.COOKIE_SAME_SITE || 'lax';
+  const secure = sameSite === 'none' ? true : isProd;
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure,
+    sameSite,
     path: '/',
     maxAge: maxAgeMs
   };
@@ -141,10 +144,13 @@ function setAuthCookies(res, user) {
  * Clear auth cookies on response
  */
 function clearAuthCookies(res) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const sameSite = process.env.COOKIE_SAME_SITE || 'lax';
+  const secure = sameSite === 'none' ? true : isProd;
   const options = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure,
+    sameSite,
     path: '/'
   };
   res.clearCookie('access_token', options);
