@@ -206,19 +206,17 @@ module.exports = (sequelize) => {
     const hash = this.password || this.getDataValue('passwordHash');
     if (!hash) return false;
 
-    // Detect bcrypt hash
-    const isBcrypt = typeof hash === 'string' && hash.startsWith('$2');
+    const isBcryptHash = typeof hash === 'string' && /^\$2[aby]\$\d{2}\/.test(hash);
 
     try {
-      if (isBcrypt) {
+      if (isBcryptHash) {
         return await bcrypt.compare(password, hash);
       }
 
-      // 🔥 LEGACY SUPPORT: plain text password
-      if (password === hash) {
-        // Upgrade to bcrypt automatically
-        this.password = password;
-        await this.save();
+      // Legacy fallback for older rows that may still contain plain text
+      if (typeof hash === 'string' && password === hash) {
+        this.set('password', password);
+        await this.save({ hooks: true, silent: true });
         return true;
       }
 
