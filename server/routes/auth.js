@@ -1,3 +1,4 @@
+// Updated
 /**
  * Auth Routes
  * POST /api/auth/signup
@@ -59,6 +60,19 @@ const forgotLimiter = rateLimit({
   legacyHeaders: false,
   skip: () => isTest,
   message: { success: false, error: { code: 'RATE_LIMIT_FORGOT', message: 'Too many reset requests. Please try again later.' } }
+});
+
+// Temporary request logger for auth routes — masks sensitive fields.
+router.use((req, res, next) => {
+  try {
+    const safeBody = { ...(req.body || {}) };
+    if (safeBody.password) safeBody.password = '***MASKED***';
+    if (safeBody.newPassword) safeBody.newPassword = '***MASKED***';
+    console.info(`[AUTH] ${req.method} ${req.path} body=${JSON.stringify(safeBody)} ua=${req.get('user-agent') || ''}`);
+  } catch (e) {
+    console.warn('[AUTH] Request logging failed:', e && e.message);
+  }
+  next();
 });
 
 // ─── SIGNUP ───
@@ -173,7 +187,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
 });
 
 // ─── LOGIN ───
-router.post('/login', loginLimiter, async (req, res) => {
+router.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -284,8 +298,16 @@ router.post('/login', loginLimiter, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[LOGIN] Error:', { message: error.message, name: error.name, stack: error.stack, email: req.body?.email });
-    fail(res, 500, 'SERVER_ERROR', 'Server error during login.');
+    // Log detailed context then forward to central error handler
+    console.error('[LOGIN] Error:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      email: req.body?.email,
+      ip: req.ip,
+      ua: req.get('user-agent')
+    });
+    return next(error);
   }
 });
 
