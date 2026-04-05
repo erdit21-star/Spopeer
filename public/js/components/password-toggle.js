@@ -1,3 +1,4 @@
+// Updated
 /**
  * Password toggle component.
  * Drop-in replacement for the inline toggle code repeated across auth pages.

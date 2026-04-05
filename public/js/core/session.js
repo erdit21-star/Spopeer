@@ -1,3 +1,4 @@
+// Updated
 /**
  * SpopeerSession — single source of truth for client-side session state.
  * Replaces duplicated isLoggedIn/getUser/setUser across api.js, auth.js,

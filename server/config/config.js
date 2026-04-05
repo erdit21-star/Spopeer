@@ -1,3 +1,4 @@
+// Updated
 /**
  * Sequelize CLI configuration.
  * Reads from the same env vars used by database.js.

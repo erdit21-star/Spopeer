@@ -1,3 +1,4 @@
+// Updated
 /**
  * Gallery Upload Manager
  * Handles photo and video uploads for user profiles

@@ -1,3 +1,4 @@
+// Updated
 /**
  * Integration tests for auth endpoints.
  * Uses supertest against the Express app with mocked database models.

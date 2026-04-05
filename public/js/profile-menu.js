@@ -1,3 +1,4 @@
+// Updated
 /**
  * profile-menu.js — Shared profile-menu logic for all profile pages.
  * Handles: chip hydration, menu toggle, section collapse, actions, edit URL routing.

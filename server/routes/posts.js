@@ -1,3 +1,4 @@
+// Updated
 /**
  * Post Routes
  * GET    /api/posts                - List posts (feed)

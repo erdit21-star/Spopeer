@@ -1,3 +1,4 @@
+// Updated
 /**
  * RefreshSession Model — DB-backed refresh token sessions for server-side revocation.
  */

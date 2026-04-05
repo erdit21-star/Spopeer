@@ -1,3 +1,4 @@
+// Updated
 /**
  * Events Routes
  * GET  /api/events              - List events

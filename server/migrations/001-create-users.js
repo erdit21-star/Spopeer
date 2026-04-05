@@ -1,3 +1,4 @@
+// Updated
 /**
  * Migration 001: Create users table
  * Matches server/models/User.js (INTEGER id, password column, all core fields)

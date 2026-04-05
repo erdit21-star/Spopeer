@@ -1,3 +1,4 @@
+// Updated
 (function () {
   if (!window.SpopeerAPI || typeof window.SpopeerAPI.request !== "function") {
     return;

@@ -1,3 +1,4 @@
+<!-- Updated  -->
 # Staging Release Rehearsal Checklist
 
 Use this checklist before every production deploy. Run against the **staging** environment.

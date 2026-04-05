@@ -1,3 +1,4 @@
+// Updated
 /**
  * JWT Authentication Middleware
  * Supports HttpOnly cookie auth (preferred) with Bearer token fallback.

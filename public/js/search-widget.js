@@ -1,3 +1,4 @@
+// Updated
 /* Search Widget - Add to header for quick search from any page */
 
 document.addEventListener('DOMContentLoaded', function() {

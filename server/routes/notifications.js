@@ -1,3 +1,4 @@
+// Updated
 /**
  * Notifications Routes
  * GET    /api/notifications            - Get notifications for logged-in user

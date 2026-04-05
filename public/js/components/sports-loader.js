@@ -1,3 +1,4 @@
+// Updated
 /**
  * SpopeerSports — single sports data loader.
  * Fetches from /data/list-of-sports.txt once, caches in memory.

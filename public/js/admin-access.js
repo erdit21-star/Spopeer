@@ -1,3 +1,4 @@
+// Updated
 (function () {
   function getUser() {
     try {

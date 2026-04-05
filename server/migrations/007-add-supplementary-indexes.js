@@ -1,3 +1,4 @@
+// Updated
 /**
  * Migration 006: Add supplementary indexes for performance
  *

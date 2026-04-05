@@ -1,3 +1,4 @@
+// Updated
 /**
  * Environment configuration and validation.
  * Imported once at startup — fails fast on missing critical vars.

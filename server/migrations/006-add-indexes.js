@@ -1,3 +1,4 @@
+// Updated
 /**
  * Migration 002: Add database indexes for query performance
  *

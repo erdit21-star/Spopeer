@@ -1,3 +1,4 @@
+// Updated
 /**
  * Connection (Follow) Routes
  * POST   /api/connections/follow   - Follow a user

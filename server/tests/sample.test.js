@@ -1,3 +1,4 @@
+// Updated
 // Mock winston to avoid needing it installed in test context
 jest.mock('winston', () => {
   const mockNoop = jest.fn(function() { return mockNoop; });

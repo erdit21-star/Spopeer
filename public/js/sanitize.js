@@ -1,3 +1,4 @@
+// Updated
 /**
  * Shared HTML sanitization utilities.
  *

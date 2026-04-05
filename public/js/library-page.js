@@ -1,3 +1,4 @@
+// Updated
 (function () {
   function typeIcon(type) {
     if (type === "post") return "fa-regular fa-note-sticky";

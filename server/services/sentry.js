@@ -1,3 +1,4 @@
+// Updated
 /**
  * Sentry integration for production error monitoring.
  *

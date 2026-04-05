@@ -1,3 +1,4 @@
+// Updated
 /**
  * Spopeer Database Configuration
  * Uses Sequelize ORM with PostgreSQL

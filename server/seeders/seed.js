@@ -1,3 +1,4 @@
+// Updated
 /**
  * Database Seed Script
  * Run: node seeders/seed.js

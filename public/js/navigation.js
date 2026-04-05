@@ -1,3 +1,4 @@
+// Updated
 (function () {
   function isLoggedIn() {
     return localStorage.getItem("spopeer_loggedIn") === "true" && !!localStorage.getItem("spopeer_user");

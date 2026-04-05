@@ -1,3 +1,4 @@
+// Updated
 /**
  * Service Worker - Offline Support & Cache Management
  * Handles caching strategies and offline functionality

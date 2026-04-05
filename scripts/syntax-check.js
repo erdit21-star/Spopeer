@@ -1,3 +1,4 @@
+// Updated
 /**
  * Syntax check all JavaScript files in the project.
  * Run as: node scripts/syntax-check.js
