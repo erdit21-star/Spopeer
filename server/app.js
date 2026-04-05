@@ -214,7 +214,14 @@ app.get('/api/health', (req, res) => {
 
 // ─── READINESS CHECK ───
 app.get('/api/ready', async (req, res) => {
-  const checks = { database: 'unknown', secrets: 'unknown', email: 'unknown', storage: 'unknown', appUrl: 'unknown' };
+  const checks = {
+    database: 'unknown',
+    authSchema: 'unknown',
+    secrets: 'unknown',
+    email: 'unknown',
+    storage: 'unknown',
+    appUrl: 'unknown'
+  };
   let ready = true;
 
   // DB check
@@ -224,6 +231,31 @@ app.get('/api/ready', async (req, res) => {
   } catch (_) {
     checks.database = 'fail';
     ready = false;
+  }
+
+  // Auth schema check (required for login to work in production)
+  if (checks.database === 'ok') {
+    try {
+      const queryInterface = sequelize.getQueryInterface();
+      const usersTable = await queryInterface.describeTable('users');
+      const requiredUserColumns = ['id', 'email', 'password', 'role', 'isActive'];
+      const missingUserColumns = requiredUserColumns.filter((col) => !usersTable[col]);
+
+      await queryInterface.describeTable('refresh_sessions');
+      await queryInterface.describeTable('password_reset_tokens');
+
+      if (missingUserColumns.length > 0) {
+        checks.authSchema = process.env.NODE_ENV === 'production' ? 'fail' : 'warn';
+        if (process.env.NODE_ENV === 'production') ready = false;
+      } else {
+        checks.authSchema = 'ok';
+      }
+    } catch (_) {
+      checks.authSchema = process.env.NODE_ENV === 'production' ? 'fail' : 'warn';
+      if (process.env.NODE_ENV === 'production') ready = false;
+    }
+  } else {
+    checks.authSchema = 'skip';
   }
 
   // Required secrets check

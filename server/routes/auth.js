@@ -188,62 +188,75 @@ router.post('/signup', signupLimiter, async (req, res) => {
 
 // ─── LOGIN ───
 router.post('/login', loginLimiter, async (req, res, next) => {
+  const requestId = req.requestId || 'n/a';
+  let stage = 'start';
   try {
+    stage = 'validate_input';
     const { email, password } = req.body;
 
     if (!email || !password) {
       return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Email and password are required.');
     }
 
+    stage = 'user_lookup';
     const user = await User.findOne({
       where: { email: email.toLowerCase() },
-      attributes: ['id', 'email', 'password', 'role', 'isActive', 'firstName', 'lastName']
+      attributes: ['id', 'email', 'password', 'role', 'isActive']
     });
 
-    // Fetch optional columns separately — they may not exist in legacy DBs.
-    // This prevents a single missing column from blocking login entirely.
-    let emailVerified = true; // assume verified for legacy accounts
-    let avatarUrl = null;
-    let sport = null;
-    let lastLogin = null;
-    if (user) {
-      try {
-        const extras = await User.findOne({
-          where: { id: user.id },
-          attributes: ['emailVerified', 'avatarUrl', 'sport', 'lastLogin']
-        });
-        if (extras) {
-          emailVerified = extras.emailVerified ?? true;
-          avatarUrl = extras.avatarUrl ?? null;
-          sport = extras.sport ?? null;
-          lastLogin = extras.lastLogin ?? null;
-        }
-      } catch (extrasErr) {
-        console.warn('[LOGIN] Optional columns fetch failed (proceeding without):', extrasErr.message);
-      }
-    }
     if (!user) {
       return fail(res, 401, 'AUTH_INVALID_CREDENTIALS', 'Invalid email or password.');
     }
 
+    stage = 'status_check';
     if (user.isActive === false) {
       return fail(res, 403, 'ACCOUNT_DEACTIVATED', 'Account has been deactivated.');
     }
 
     // Support legacy passwordHash column during migration transition
+    stage = 'password_prepare';
     const storedHash = user.password || user.getDataValue('passwordHash');
     if (!storedHash) {
       console.error('[LOGIN] No password hash found for user:', user.email);
       return fail(res, 500, 'ACCOUNT_MISCONFIGURED', 'Account password is misconfigured. Please reset your password.');
     }
 
+    stage = 'password_check';
     const validPassword = await user.validatePassword(password);
     if (!validPassword) {
       return fail(res, 401, 'AUTH_INVALID_CREDENTIALS', 'Invalid email or password.');
     }
 
+    // Fetch optional profile columns separately so legacy schema gaps do not block auth.
+    let firstName = null;
+    let lastName = null;
+    let emailVerified = true; // assume verified for legacy accounts
+    let avatarUrl = null;
+    let sport = null;
+    let lastLogin = null;
+    try {
+      stage = 'profile_fetch';
+      const profile = await User.findOne({
+        where: { id: user.id },
+        attributes: ['firstName', 'lastName', 'emailVerified', 'avatarUrl', 'sport', 'lastLogin']
+      });
+
+      if (profile) {
+        firstName = profile.firstName ?? null;
+        lastName = profile.lastName ?? null;
+        emailVerified = profile.emailVerified ?? true;
+        avatarUrl = profile.avatarUrl ?? null;
+        sport = profile.sport ?? null;
+        lastLogin = profile.lastLogin ?? null;
+      }
+    } catch (profileErr) {
+      console.warn(`[LOGIN] requestId=${requestId} stage=profile_fetch optional columns fetch failed:`, profileErr.message);
+      stage = 'post_profile_fetch';
+    }
+
     // Update last login (guarded — column may not yet exist in legacy DBs)
     try {
+      stage = 'last_login_update';
       await user.update({ lastLogin: new Date() });
     } catch (lastLoginErr) {
       console.warn('[LOGIN] lastLogin update failed (column may not exist):', lastLoginErr.message);
@@ -251,6 +264,7 @@ router.post('/login', loginLimiter, async (req, res, next) => {
 
     let token;
     try {
+      stage = 'token_generation';
       token = generateAccessToken(user);
     } catch (tokenErr) {
       console.error('[LOGIN] Token generation failed:', tokenErr.message);
@@ -258,6 +272,7 @@ router.post('/login', loginLimiter, async (req, res, next) => {
     }
 
     // Issue DB-backed refresh session (safe: do not crash on failure)
+    stage = 'session_write';
     const refreshToken = generateRefreshToken(user);
     try {
       await RefreshSession.create({
@@ -274,12 +289,18 @@ router.post('/login', loginLimiter, async (req, res, next) => {
     res.cookie('access_token', token, getCookieOptions(15 * 60 * 1000));
     res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
+    stage = 'response';
     res.json({
       success: true,
       data: {
         message: 'Login successful.',
         user: {
-          ...user.toJSON(),
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          isActive: user.isActive,
+          firstName,
+          lastName,
           emailVerified,
           avatarUrl,
           sport,
@@ -290,6 +311,8 @@ router.post('/login', loginLimiter, async (req, res, next) => {
   } catch (error) {
     // Log detailed context then forward to central error handler
     console.error('[LOGIN] Error:', {
+      requestId,
+      stage,
       message: error.message,
       name: error.name,
       stack: error.stack,
