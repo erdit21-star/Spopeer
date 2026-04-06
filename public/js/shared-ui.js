@@ -195,11 +195,32 @@
           'invite-friends': function () { window.location.href = basePath + 'pages/contact/index.html'; },
           'download-data': function () { downloadUserData(); showInlineStatus(statusNode, 'Your account data export has started.'); },
           'switch-account': function () { window.location.href = '/pages/auth/login.html'; },
-          'logout': function () {
-            ['spopeer_token','spopeer_user','spopeer_loggedIn','authToken','token','user','userToken','userData'].forEach(function (key) {
+          'logout': async function () {
+            try {
+              if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === 'function') {
+                await window.SpopeerAPI.logout();
+                return;
+              }
+            } catch (err) {
+              console.error('Shared UI logout failed:', err);
+            }
+
+            [
+              'spopeer_token',
+              'spopeer_user',
+              'spopeer_loggedIn',
+              'authToken',
+              'token',
+              'user',
+              'userToken',
+              'userData',
+              '_profileLastUpdated_'
+            ].forEach(function (key) {
               localStorage.removeItem(key);
             });
-            window.location.href = '/index.html';
+
+            try { sessionStorage.clear(); } catch (err) { console.debug('sessionStorage.clear failed during shared-ui logout', err); }
+            window.location.replace('/index.html');
           }
         };
 
@@ -404,12 +425,24 @@
     }, { passive: true });
 
     /* ── 9. Logout from drawer ── */
-    drawer.querySelector('[data-mobile-logout]').addEventListener('click', function(e) {
+    drawer.querySelector('[data-mobile-logout]').addEventListener('click', async function(e) {
       e.preventDefault();
-      ['spopeer_token','spopeer_user','spopeer_loggedIn','authToken','token','user','userToken','userData'].forEach(function(key) {
+
+      try {
+        if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === 'function') {
+          await window.SpopeerAPI.logout();
+          return;
+        }
+      } catch (err) {
+        console.error('Mobile logout failed:', err);
+      }
+
+      ['spopeer_token','spopeer_user','spopeer_loggedIn','authToken','token','user','userToken','userData','_profileLastUpdated_'].forEach(function(key) {
         localStorage.removeItem(key);
       });
-      window.location.href = '/index.html';
+
+      try { sessionStorage.clear(); } catch (err) { console.debug('sessionStorage.clear failed during mobile logout', err); }
+      window.location.replace('/index.html');
     });
   }
 
