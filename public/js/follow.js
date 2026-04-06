@@ -50,15 +50,11 @@ class FollowManager {
     if (localStorage.getItem('spopeer_loggedIn') === 'true') {
       try {
         const data = await window.SpopeerAPI.getFollowStatus(userId);
-        // Backend may return different shapes over time. Normalize here:
-        // - legacy: { relation: 'accepted'|'pending'|'none' }
-        // - modern: { isFollowing: true/false, connectionStatus: 'accepted'|'pending'|'none' }
-        if (!data) return 'none';
-        if (typeof data.relation === 'string') return data.relation;
+
         if (data.isFollowing === true) return 'accepted';
-        const status = (data.connectionStatus || '').toString().toLowerCase();
-        if (status === 'accepted' || status === 'active') return 'accepted';
-        if (status === 'pending' || status === 'requested') return 'pending';
+        if (data.connectionStatus === 'active') return 'accepted';
+        if (data.connectionStatus === 'pending') return 'pending';
+
         return 'none';
       } catch (err) {
         console.error('Follow status request failed:', err);

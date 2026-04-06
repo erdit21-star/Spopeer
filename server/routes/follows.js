@@ -19,7 +19,10 @@ const { authenticate, optionalAuth } = require('../middleware/auth');
 const { ok, created, fail } = require('../utils/response');
 router.post('/:userId', authenticate, async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = parseInt(req.params.userId, 10);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return fail(res, 400, 'VALIDATION', 'Invalid user id.');
+    }
 
     if (userId === req.userId) {
       return fail(res, 400, 'VALIDATION', 'You cannot follow yourself.');
@@ -70,7 +73,10 @@ router.post('/:userId', authenticate, async (req, res) => {
 // ─── UNFOLLOW ───
 router.delete('/:userId', authenticate, async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = parseInt(req.params.userId, 10);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return fail(res, 400, 'VALIDATION', 'Invalid user id.');
+    }
 
     const connection = await Connection.findOne({
       where: { followerId: req.userId, followingId: userId }

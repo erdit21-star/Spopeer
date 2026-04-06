@@ -320,7 +320,7 @@
           <div class="pstat"><div class="pstat-num" id="mediaCount">0</div><div class="pstat-label">Media</div></div>
         </div>
         <div class="profile-actions">
-          <button class="btn-connect" id="connectBtn"><i class="fa-solid fa-user-plus" style="font-size:12px"></i> Connect</button>
+          <button class="btn-connect" id="connectBtn"><i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow</button>
           <div class="conn-status-label" id="connStatus">Not connected</div>
           <button class="btn-message" id="messageBtn" style="display:none"><i class="fa-regular fa-paper-plane" style="font-size:12px"></i> Message</button>
           <button class="btn-share" id="shareProfileBtn"><i class="fa-solid fa-share-nodes" style="font-size:12px"></i> Share Profile</button>
@@ -434,47 +434,39 @@ function bumpNumericStat(id, delta) {
   el.textContent = Math.max(0, current + delta);
 }
 
-document.querySelectorAll('.follow-btn').forEach(btn=>{
-  btn.addEventListener('click', async function(){
-    const userEmail = (JSON.parse(localStorage.getItem('spopeer_user') || '{}')).email || 'user@example.com';
-    const targetEmail = btn.closest('.follow-item')?.querySelector('.follow-name')?.textContent || '';
-    
+document.querySelectorAll('.follow-btn').forEach(btn => {
+  btn.addEventListener('click', async function () {
+    const targetId = btn.closest('.follow-item')?.dataset?.id || '';
     const isFollowing = this.textContent === 'Following';
     this.disabled = true;
     this.textContent = 'Loading...';
-    
+
     try {
-      if (typeof followManager !== 'undefined') {
+      if (typeof followManager !== 'undefined' && targetId) {
         if (!isFollowing) {
-          // Follow
-          const success = await followManager.follow(targetEmail);
+          const success = await followManager.follow(targetId);
           if (success) {
             this.textContent = 'Following';
-            this.style.background='var(--accent)';
-            this.style.color='var(--accent-light)';
+            this.style.background = 'var(--accent)';
+            this.style.color = 'var(--accent-light)';
           } else {
             this.textContent = 'Follow';
-            this.style.background='';
-            this.style.color='';
           }
         } else {
-          // Unfollow
-          const success = await followManager.unfollow(targetEmail);
+          const success = await followManager.unfollow(targetId);
           if (success) {
             this.textContent = 'Follow';
-            this.style.background='';
-            this.style.color='';
+            this.style.background = '';
+            this.style.color = '';
           } else {
             this.textContent = 'Following';
-            this.style.background='var(--accent)';
-            this.style.color='var(--accent-light)';
+            this.style.background = 'var(--accent)';
+            this.style.color = 'var(--accent-light)';
           }
         }
       } else {
-        // Fallback simple toggle if FollowManager not available
+        // Fallback toggle
         this.textContent = isFollowing ? 'Follow' : 'Following';
-        if(!isFollowing) { this.style.background='var(--accent)'; this.style.color='var(--accent-light)'; }
-        else { this.style.background=''; this.style.color=''; }
       }
     } catch (e) {
       console.error('Follow toggle error:', e);
@@ -489,7 +481,7 @@ document.querySelectorAll('.follow-btn').forEach(btn=>{
 document.getElementById('connectBtn')?.addEventListener('click',async function(){
   const userEmail = (JSON.parse(localStorage.getItem('spopeer_user') || '{}')).email || 'user@example.com';
   const urlParams = new URLSearchParams(window.location.search);
-  const targetEmail = urlParams.get('userId')||urlParams.get('email')||urlParams.get('userEmail')||'';
+  const targetUserId = urlParams.get('userId') || '';
   
   const isConnected=this.classList.contains('connected');
   this.disabled=true;
@@ -497,19 +489,19 @@ document.getElementById('connectBtn')?.addEventListener('click',async function()
   try{
     if(typeof followManager !== 'undefined'){
       if(!isConnected){
-        const success = await followManager.follow(targetEmail);
+        const success = await followManager.follow(targetUserId);
         if(success){
           this.classList.add('connected');
-          this.innerHTML='<i class="fa-solid fa-check" style="font-size:12px"></i> Connected';
-          document.getElementById('connStatus').textContent='Connected · 1st';
+          this.innerHTML='<i class="fa-solid fa-check" style="font-size:12px"></i> Following';
+          document.getElementById('connStatus').textContent='Following';
           document.getElementById('messageBtn').style.display='flex';
           bumpNumericStat('followers', 1);
         }
       } else {
-        const success = await followManager.unfollow(targetEmail);
+        const success = await followManager.unfollow(targetUserId);
         if(success){
           this.classList.remove('connected');
-          this.innerHTML='<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Connect';
+          this.innerHTML='<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow';
           document.getElementById('connStatus').textContent='Not connected';
           document.getElementById('messageBtn').style.display='none';
           bumpNumericStat('followers', -1);
@@ -518,8 +510,8 @@ document.getElementById('connectBtn')?.addEventListener('click',async function()
     } else {
       // Fallback
       const connected=this.classList.toggle('connected');
-      this.innerHTML=connected?'<i class="fa-solid fa-check" style="font-size:12px"></i> Connected':'<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Connect';
-      document.getElementById('connStatus').textContent=connected?'Connected · 1st':'Not connected';
+      this.innerHTML=connected?'<i class="fa-solid fa-check" style="font-size:12px"></i> Following':'<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow';
+      document.getElementById('connStatus').textContent=connected?'Following':'Not connected';
       document.getElementById('messageBtn').style.display=connected?'flex':'none';
     }
   } catch(e){
@@ -1016,7 +1008,7 @@ document.getElementById('connectBtn')?.addEventListener('click',async function()
         try {
           if (!window.followManager) {
             const connected = this.classList.toggle('connected');
-            this.innerHTML = connected?'<i class="fa-solid fa-check" style="font-size:12px"></i> Connected':'<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Connect';
+            this.innerHTML = connected?'<i class="fa-solid fa-check" style="font-size:12px"></i> Following':'<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow';
             return;
           }
 
@@ -1025,7 +1017,7 @@ document.getElementById('connectBtn')?.addEventListener('click',async function()
             const ok = await followManager.unfollow(targetId);
             if (ok) {
               this.classList.remove('connected');
-              this.innerHTML = '<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Connect';
+              this.innerHTML = '<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow';
               document.getElementById('connStatus').textContent = 'Not connected';
               document.getElementById('messageBtn').style.display = 'none';
               bumpNumericStat('followers', -1);
@@ -1037,8 +1029,8 @@ document.getElementById('connectBtn')?.addEventListener('click',async function()
             const ok = await followManager.follow(targetId);
             if (ok) {
               this.classList.add('connected');
-              this.innerHTML = '<i class="fa-solid fa-check" style="font-size:12px"></i> Connected';
-              document.getElementById('connStatus').textContent = 'Connected · 1st';
+              this.innerHTML = '<i class="fa-solid fa-check" style="font-size:12px"></i> Following';
+              document.getElementById('connStatus').textContent = 'Following';
               document.getElementById('messageBtn').style.display = 'flex';
               bumpNumericStat('followers', 1);
             }

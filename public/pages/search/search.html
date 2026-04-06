@@ -943,6 +943,9 @@
 
 <!-- original external scripts preserved -->
 <script src="../../js/search-widget.js" onerror=""></script>
+
+<!-- Ensure API helpers and FollowManager are available for result buttons -->
+<script src="../../js/api.js"></script>
 <script src="../../js/follow.js"></script>
 <!-- main.js removed: no functions called -->
 
@@ -1138,9 +1141,9 @@
   // Helper function to handle search results (API + Marketplace)
   function handleSearchResults(peopleJson, marketplaceJson, currentPage, PAGE_SIZE){
     const peopleResults = peopleJson?.results || [];
-    const peopleTotal = peopleJson?.total || 0;
-    const peoplePages = peopleJson?.totalPages || 1;
-    const peoplePg = peopleJson?.page || currentPage;
+    const peopleTotal = peopleJson?.pagination?.total || 0;
+    const peoplePages = peopleJson?.pagination?.pages || 1;
+    const peoplePg = peopleJson?.pagination?.page || currentPage;
 
     const mpResults = marketplaceJson?.data || [];
     const mpTotal = marketplaceJson?.total || 0;
@@ -1184,58 +1187,67 @@
             <div class="rc-tags">${roleTagHTML(r.userType)}${sportTag}${locTag}</div>
           </div>
           <div class="rc-right">
-            <button class="btn-view" onclick="window.location.href='../profiles/public-profile.html?userId=${encodeURIComponent(r.id)}'">
+            <button class="btn-view" onclick="window.location.href='../profiles/public-profile.html?userId=${encodeURIComponent(String(r.id))}'">
               View Profile
             </button>
-            <button class="btn-connect" data-id="${r.id}">Connect</button>
+            <button class="btn-connect" data-id="${r.id}">Follow</button>
           </div>`;
         list.appendChild(card);
       });
 
-      /* connect toggle — wire to FollowManager (uses numeric ids) */
-      list.querySelectorAll('.btn-connect').forEach(btn=>{
-        const targetId = btn.dataset.id;
-        // initialize button state from API if available
-        if (window.updateFollowButtonStatus) {
-          updateFollowButtonStatus(btn, targetId);
-        }
+      /* connect toggle — wire to FollowManager (uses numeric ids)
+         Replaced fake toggle with real API calls. */
+      list.querySelectorAll('.btn-connect').forEach(btn => {
+        btn.addEventListener('click', async function () {
+          const userId = this.dataset.id;
+          const isFollowing = this.classList.contains('connected');
 
-        btn.addEventListener('click', async function(e){
-          e.preventDefault(); e.stopPropagation();
-          btn.disabled = true;
+          this.disabled = true;
+
           try {
-            if (!window.followManager) {
-              // fallback: simple toggle
-              const connected = this.classList.toggle('connected');
-              this.textContent = connected ? 'Connected' : 'Connect';
-              return;
-            }
-
-            const status = await followManager.getFollowStatus(targetId);
-            if (status === 'accepted') {
-              const ok = await followManager.unfollow(targetId);
-              if (ok) {
-                this.classList.remove('connected','pending');
-                this.textContent = 'Connect';
-              }
-            } else if (status === 'pending') {
-              // pending request — do nothing or show requested
-              this.textContent = 'Requested';
-              this.disabled = true;
-            } else {
-              const ok = await followManager.follow(targetId);
-              if (ok) {
+            if (!isFollowing) {
+              const success = await followManager.follow(userId);
+              if (success) {
                 this.classList.add('connected');
-                this.classList.remove('pending');
-                this.textContent = 'Connected';
+                this.textContent = 'Following';
+              }
+            } else {
+              const success = await followManager.unfollow(userId);
+              if (success) {
+                this.classList.remove('connected');
+                this.textContent = 'Follow';
               }
             }
           } catch (err) {
-            console.error('Connect action failed:', err);
+            console.error('Search follow toggle failed:', err);
           } finally {
-            btn.disabled = false;
+            this.disabled = false;
           }
         });
+      });
+
+      /* Initialize follow button state from server so buttons show correct label */
+      list.querySelectorAll('.btn-connect').forEach(async btn => {
+        const userId = btn.dataset.id;
+
+        try {
+          const status = await followManager.getFollowStatus(userId);
+
+          if (status === 'accepted') {
+            btn.classList.add('connected');
+            btn.textContent = 'Following';
+            btn.disabled = false;
+          } else if (status === 'pending') {
+            btn.textContent = 'Requested';
+            btn.disabled = true;
+          } else {
+            btn.classList.remove('connected');
+            btn.textContent = 'Follow';
+            btn.disabled = false;
+          }
+        } catch (err) {
+          console.error('Failed to initialize follow button:', err);
+        }
       });
     }
 
