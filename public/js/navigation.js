@@ -22,9 +22,7 @@
     });
   }
 
-  function protectGuestOnlyPages() {
-    if (!isLoggedIn()) return;
-
+  async function protectGuestOnlyPages() {
     var guestOnlyPaths = [
       "/index.html",
       "/pages/auth/login.html",
@@ -34,8 +32,20 @@
     ];
 
     var current = window.location.pathname;
-    if (guestOnlyPaths.includes(current)) {
+    if (!guestOnlyPaths.includes(current)) return;
+
+    if (!window.SpopeerAPI) {
+      if (isLoggedIn()) {
+        window.location.href = "/feed.html";
+      }
+      return;
+    }
+
+    try {
+      await window.SpopeerAPI.me();
       window.location.href = "/feed.html";
+    } catch (_) {
+      // Not authenticated: stay on guest page.
     }
   }
 

@@ -671,9 +671,19 @@ function setUrlParameter(name, value) { // eslint-disable-line no-unused-vars
 }
 
 // ===== Logout Function =====
-function logout() { // eslint-disable-line no-unused-vars
-  ['spopeer_token','spopeer_user','spopeer_loggedIn','authToken','token','user','userToken','userData'].forEach(k => localStorage.removeItem(k));
-  window.location.href = 'index.html';
+async function logout() { // eslint-disable-line no-unused-vars
+  if (window.Auth && typeof window.Auth.logout === 'function') {
+    await window.Auth.logout();
+    return;
+  }
+
+  if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === 'function') {
+    await window.SpopeerAPI.logout();
+    return;
+  }
+
+  ['spopeer_token', 'spopeer_user', 'spopeer_loggedIn', 'authToken', 'token', 'user', 'userToken', 'userData'].forEach(k => localStorage.removeItem(k));
+  window.location.replace('/index.html');
 }
 
 // ===== Format Functions =====

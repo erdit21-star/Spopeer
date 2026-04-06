@@ -77,7 +77,12 @@ const Auth = {
     }));
   },
 
-  logout() {
+  async logout() {
+    if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === "function") {
+      await window.SpopeerAPI.logout();
+      return;
+    }
+
     [
       "spopeer_token",
       "spopeer_user",
@@ -89,7 +94,7 @@ const Auth = {
       "userData"
     ].forEach((key) => localStorage.removeItem(key));
 
-    window.location.href = "/index.html";
+    window.location.replace("/index.html");
   },
 
   async requireAuth() {

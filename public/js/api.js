@@ -54,11 +54,18 @@
     ].forEach((key) => localStorage.removeItem(key));
   }
 
-  function logout() {
-    // Call server to clear HttpOnly cookies (fire-and-forget)
-    fetch(buildUrl("/api/auth/logout"), { method: "POST", credentials: "include" }).catch(function () {});
+  async function logout() {
+    try {
+      await fetch(buildUrl("/api/auth/logout"), {
+        method: "POST",
+        credentials: "include"
+      });
+    } catch (_) {
+      // Ignore network failure and still clear local state.
+    }
+
     clearAuthStorage();
-    window.location.href = "/index.html";
+    window.location.replace("/index.html");
   }
 
   function showNotification(message, type, duration) {
