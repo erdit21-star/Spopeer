@@ -114,6 +114,8 @@ app.use(helmet({
 }));
 
 // CORS
+const normalizeOrigin = (value) => String(value || '').trim().replace(/\/+$/, '');
+
 const allowedOrigins = [
   ...(isProd ? [] : [
     'http://localhost:5000',
@@ -121,13 +123,16 @@ const allowedOrigins = [
     'http://127.0.0.1:5000'
   ]),
   process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL_ALT
-].filter(Boolean);
+  process.env.FRONTEND_URL_ALT,
+  process.env.APP_URL
+].filter(Boolean).map(normalizeOrigin);
 
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (allowedOrigins.includes(normalizedOrigin)) return callback(null, true);
+    console.warn('Blocked CORS origin:', origin);
     callback(new Error('Origin not allowed by CORS'));
   },
   credentials: true,
