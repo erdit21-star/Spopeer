@@ -12,7 +12,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { Connection, User } = require('../models');
+const { Connection, User, Notification } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 
 // ─── FOLLOW ───
@@ -46,6 +46,19 @@ router.post('/:userId', authenticate, async (req, res) => {
 
     await req.user.increment('followingCount');
     await targetUser.increment('followersCount');
+
+    // Create a follow notification for the target user (best-effort)
+    try {
+      await Notification.create({
+        recipientId: userId,
+        senderId: req.userId,
+        type: 'follow',
+        text: `${req.user.displayName || req.user.name || req.user.email || 'Someone'} started following you.`,
+        href: `/pages/profiles/public-profile.html?userId=${encodeURIComponent(req.userId)}`
+      });
+    } catch (ntfErr) {
+      console.warn('Failed to create follow notification:', ntfErr && ntfErr.message);
+    }
 
     created(res, { message: 'Followed successfully.' });
   } catch (error) {
@@ -86,10 +99,18 @@ router.get('/status/:userId', authenticate, async (req, res) => {
       where: { followerId: req.userId, followingId: req.params.userId }
     });
 
+    const conn = connection;
+    const connectionStatus = conn ? conn.status : null;
+    // Normalize legacy relation field for older clients
+    let relation = 'none';
+    if (connectionStatus === 'active') relation = 'accepted';
+    else if (connectionStatus === 'pending') relation = 'pending';
+
     res.json({
       status: 'ok',
-      isFollowing: !!connection,
-      connectionStatus: connection ? connection.status : null
+      isFollowing: !!conn,
+      connectionStatus: connectionStatus,
+      relation
     });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to check follow status.');
