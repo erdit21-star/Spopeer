@@ -730,12 +730,12 @@ document.head.appendChild(style);
 // ===== API INTEGRATION FUNCTIONS =====
 
 // Get auth token from localStorage (deprecated — auth is cookie-based)
-function getAuthToken() { // eslint-disable-line no-unused-vars
+function _getAuthToken() {
   return null;
 }
 
 // Set auth token in localStorage (deprecated — auth is cookie-based)
-function setAuthToken(_token) { // eslint-disable-line no-unused-vars
+function setAuthToken(_token) {
   // no-op
 }
 

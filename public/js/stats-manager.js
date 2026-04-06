@@ -1,5 +1,5 @@
 // Updated
-﻿(function () {
+(function () {
   async function syncSidebarStats() {
     const user = await window.Auth.syncUserFromBackend();
     if (!user || (!user._id && !user.id)) return;

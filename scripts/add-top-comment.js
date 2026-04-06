@@ -25,8 +25,7 @@ const EXTS = {
   sh: { open: '# ', close: '' },
   conf: { open: '# ', close: '' },
   ini: { open: '# ', close: '' },
-  htaccess: { open: '# ', close: '' },
-  css: { open: '/* ', close: ' */' }
+  htaccess: { open: '# ', close: '' }
 };
 
 const IGNORES = ['node_modules', '.git', '.github', 'dist', 'build'];
