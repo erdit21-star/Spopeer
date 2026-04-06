@@ -943,6 +943,7 @@
 
 <!-- original external scripts preserved -->
 <script src="../../js/search-widget.js" onerror=""></script>
+<script src="../../js/follow.js"></script>
 <!-- main.js removed: no functions called -->
 
 <script>
@@ -1191,11 +1192,49 @@
         list.appendChild(card);
       });
 
-      /* connect toggle */
+      /* connect toggle — wire to FollowManager (uses numeric ids) */
       list.querySelectorAll('.btn-connect').forEach(btn=>{
-        btn.addEventListener('click', function(){
-          const connected = this.classList.toggle('connected');
-          this.textContent = connected ? 'Connected' : 'Connect';
+        const targetId = btn.dataset.id;
+        // initialize button state from API if available
+        if (window.updateFollowButtonStatus) {
+          updateFollowButtonStatus(btn, targetId);
+        }
+
+        btn.addEventListener('click', async function(e){
+          e.preventDefault(); e.stopPropagation();
+          btn.disabled = true;
+          try {
+            if (!window.followManager) {
+              // fallback: simple toggle
+              const connected = this.classList.toggle('connected');
+              this.textContent = connected ? 'Connected' : 'Connect';
+              return;
+            }
+
+            const status = await followManager.getFollowStatus(targetId);
+            if (status === 'accepted') {
+              const ok = await followManager.unfollow(targetId);
+              if (ok) {
+                this.classList.remove('connected','pending');
+                this.textContent = 'Connect';
+              }
+            } else if (status === 'pending') {
+              // pending request — do nothing or show requested
+              this.textContent = 'Requested';
+              this.disabled = true;
+            } else {
+              const ok = await followManager.follow(targetId);
+              if (ok) {
+                this.classList.add('connected');
+                this.classList.remove('pending');
+                this.textContent = 'Connected';
+              }
+            }
+          } catch (err) {
+            console.error('Connect action failed:', err);
+          } finally {
+            btn.disabled = false;
+          }
         });
       });
     }
