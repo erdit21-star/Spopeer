@@ -816,6 +816,14 @@
     resetFilters();
     loadSavedSearchesUI();
   </script>
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/user-ui.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (window.CurrentUserStore) await CurrentUserStore.refreshCurrentUser();
+      if (window.UserUI) UserUI.bindAllChips();
+    });
+  </script>
 <script src="/js/navigation.js"></script>
 </body>
 </html>
