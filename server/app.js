@@ -114,9 +114,14 @@ app.use(helmet({
 }));
 
 // CORS
-const normalizeOrigin = (value) => String(value || '').trim().replace(/\/+$/, '');
+function normalizeOrigin(value) {
+  return String(value || '')
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .replace(/\/+$/, '');
+}
 
-const allowedOrigins = [
+const allowedOrigins = Array.from(new Set([
   ...(isProd ? [] : [
     'http://localhost:5000',
     'http://localhost:3000',
@@ -124,19 +129,26 @@ const allowedOrigins = [
   ]),
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL_ALT,
-  process.env.APP_URL
-].filter(Boolean).map(normalizeOrigin);
+  process.env.APP_URL,
+  process.env.RENDER_EXTERNAL_URL
+].map(normalizeOrigin).filter(Boolean)));
+
+console.log('CORS allowed origins:', allowedOrigins);
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
+  origin(origin, callback) {
     const normalizedOrigin = normalizeOrigin(origin);
+
+    // Allow requests without Origin header (curl, health checks, same-server tools).
+    if (!normalizedOrigin) return callback(null, true);
+
     if (allowedOrigins.includes(normalizedOrigin)) return callback(null, true);
-    console.warn('Blocked CORS origin:', origin);
-    callback(new Error('Origin not allowed by CORS'));
+
+    console.warn('Blocked CORS origin:', normalizedOrigin);
+    return callback(new Error('Origin not allowed by CORS'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
