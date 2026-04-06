@@ -93,6 +93,14 @@ const Auth = {
   },
 
   async requireAuth() {
+    // Guard: api.js may not yet be loaded when requireAuth is called early in a page head.
+    // Fall back to localStorage optimistic check to avoid a false redirect loop.
+    if (!window.SpopeerAPI) {
+      if (!this.isLoggedIn()) {
+        window.location.href = '/pages/auth/login.html';
+      }
+      return;
+    }
     try {
       await window.SpopeerAPI.me();
     } catch (_) {
