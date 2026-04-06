@@ -477,49 +477,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   });
 });
 
-/* Connect */
-document.getElementById('connectBtn')?.addEventListener('click',async function(){
-  const userEmail = (JSON.parse(localStorage.getItem('spopeer_user') || '{}')).email || 'user@example.com';
-  const urlParams = new URLSearchParams(window.location.search);
-  const targetUserId = urlParams.get('userId') || '';
-  
-  const isConnected=this.classList.contains('connected');
-  this.disabled=true;
-  
-  try{
-    if(typeof followManager !== 'undefined'){
-      if(!isConnected){
-        const success = await followManager.follow(targetUserId);
-        if(success){
-          this.classList.add('connected');
-          this.innerHTML='<i class="fa-solid fa-check" style="font-size:12px"></i> Following';
-          document.getElementById('connStatus').textContent='Following';
-          document.getElementById('messageBtn').style.display='flex';
-          bumpNumericStat('followers', 1);
-        }
-      } else {
-        const success = await followManager.unfollow(targetUserId);
-        if(success){
-          this.classList.remove('connected');
-          this.innerHTML='<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow';
-          document.getElementById('connStatus').textContent='Not connected';
-          document.getElementById('messageBtn').style.display='none';
-          bumpNumericStat('followers', -1);
-        }
-      }
-    } else {
-      // Fallback
-      const connected=this.classList.toggle('connected');
-      this.innerHTML=connected?'<i class="fa-solid fa-check" style="font-size:12px"></i> Following':'<i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow';
-      document.getElementById('connStatus').textContent=connected?'Following':'Not connected';
-      document.getElementById('messageBtn').style.display=connected?'flex':'none';
-    }
-  } catch(e){
-    console.error('Connect toggle error:', e);
-  } finally {
-    this.disabled=false;
-  }
-});
+// Removed duplicate connect handler — use initProfileFollowButton() instead
 
 /* Load profile */
 (async function(){
@@ -994,7 +952,7 @@ document.getElementById('connectBtn')?.addEventListener('click',async function()
       if (!connectBtn) return;
       // use the URL param `userId` which may be numeric
       const urlParams = new URLSearchParams(window.location.search);
-      const targetId = urlParams.get('userId') || urlParams.get('id') || urlParams.get('email') || '';
+      const targetId = urlParams.get('userId') || urlParams.get('id') || '';
       if (!targetId) return;
 
       if (window.updateFollowButtonStatus) {

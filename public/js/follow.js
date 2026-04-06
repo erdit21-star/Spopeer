@@ -86,7 +86,7 @@ class FollowManager {
       console.error('Follow error:', err);
     }
     
-    alert('Error following user');
+    alert(err?.message || 'Error following user');
     return false;
   }
 
