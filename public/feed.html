@@ -3440,11 +3440,19 @@
 
   /* ====== logout ====== */
   // Handle all logout triggers: #logoutBtn, [data-action="logout"], .profile-menu-item.logout
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', async function(e) {
     const el = e.target.closest && e.target.closest('#logoutBtn, [data-action="logout"], .profile-menu-item.logout');
     if (!el) return;
     e.preventDefault();
-    window.Auth.logout();
+
+    if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === 'function') {
+      await window.SpopeerAPI.logout();
+      return;
+    }
+
+    if (window.Auth && typeof window.Auth.logout === 'function') {
+      await window.Auth.logout();
+    }
   });
 
   /* ====== like toggle + notification hook ====== */
