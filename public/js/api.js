@@ -65,6 +65,7 @@
     }
 
     clearAuthStorage();
+    try { sessionStorage.clear(); } catch (err) { console.debug('sessionStorage.clear failed during logout', err); }
     window.location.replace("/index.html");
   }
 

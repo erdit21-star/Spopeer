@@ -78,9 +78,13 @@ const Auth = {
   },
 
   async logout() {
-    if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === "function") {
-      await window.SpopeerAPI.logout();
-      return;
+    try {
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === "function") {
+        await window.SpopeerAPI.logout();
+        return;
+      }
+    } catch (err) {
+      console.error('Logout failed:', err);
     }
 
     [
@@ -91,8 +95,15 @@ const Auth = {
       "token",
       "user",
       "userToken",
-      "userData"
+      "userData",
+      "_profileLastUpdated_"
     ].forEach((key) => localStorage.removeItem(key));
+
+    try {
+      sessionStorage.clear();
+    } catch (err) {
+      console.debug('sessionStorage.clear failed during logout', err);
+    }
 
     window.location.replace("/index.html");
   },

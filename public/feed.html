@@ -3444,11 +3444,7 @@
     const el = e.target.closest && e.target.closest('#logoutBtn, [data-action="logout"], .profile-menu-item.logout');
     if (!el) return;
     e.preventDefault();
-
-    if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === 'function') {
-      await window.SpopeerAPI.logout();
-      return;
-    }
+    e.stopPropagation();
 
     if (window.Auth && typeof window.Auth.logout === 'function') {
       await window.Auth.logout();
