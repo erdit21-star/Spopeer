@@ -15,8 +15,20 @@ class ProfileService {
     this.lastFetch = 0;
 
     // Listen for profile updates
-    window.addEventListener('profileUpdated', (e) => this.onProfileUpdated(e));
-    window.addEventListener('storage', (e) => this.onStorageChanged(e));
+    // Prefer the centralized CurrentUserStore for updates (subscribe if available)
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.subscribe === 'function') {
+      this._unsubscribe = window.CurrentUserStore.subscribe((user) => {
+        if (user) {
+          this.currentProfile = user;
+          this.clearCache();
+          this.notifySubscribers(user);
+        }
+      });
+    } else {
+      // Fallbacks for older pages/tabs
+      window.addEventListener('profileUpdated', (e) => this.onProfileUpdated(e));
+      window.addEventListener('storage', (e) => this.onStorageChanged(e));
+    }
   }
 
   /**
@@ -59,13 +71,13 @@ class ProfileService {
    */
   async loadProfile() {
     try {
-      const user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-      if (!user.email) {
+      const storedUser = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') ? (window.CurrentUserStore.getCurrentUser() || {}) : JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      if (!storedUser || !storedUser.email) {
         throw new Error('User not authenticated');
       }
 
       // Check cache first
-      const cached = this.getFromCache(user.email);
+      const cached = this.getFromCache(storedUser.email);
       if (cached) {
         this.currentProfile = cached;
         this.notifySubscribers(cached);
@@ -80,7 +92,7 @@ class ProfileService {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
         const headers = {};
-        const response = await fetch(`/api/users/${encodeURIComponent(user.id)}`, { signal: controller.signal, headers, credentials: 'include' });
+        const response = await fetch(`/api/users/${encodeURIComponent(storedUser.id)}`, { signal: controller.signal, headers, credentials: 'include' });
         clearTimeout(timeoutId);
         if (response.ok) {
           const data = await response.json();
@@ -89,16 +101,16 @@ class ProfileService {
           throw new Error('Failed to load persisted profile');
         }
       } catch (_fetchErr) {
-        profileData = { ...user };
+        profileData = { ...storedUser };
       }
 
       // Cache the result
-      this.saveToCache(user.email, profileData);
+      this.saveToCache(storedUser.email, profileData);
       this.currentProfile = profileData;
       this.isLoading = false;
 
       // Update localStorage with profile data
-      localStorage.setItem('spopeer_user', JSON.stringify({ ...user, ...profileData }));
+      try { if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') { window.CurrentUserStore.setCurrentUser(Object.assign({}, storedUser, profileData)); } else { localStorage.setItem('spopeer_user', JSON.stringify({ ...storedUser, ...profileData })); } } catch(e) {}
 
       // Notify all subscribers
       this.notifySubscribers(profileData);
@@ -129,8 +141,7 @@ class ProfileService {
       this.currentProfile = updatedProfile;
 
       // Update localStorage
-      const user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-      localStorage.setItem('spopeer_user', JSON.stringify({ ...user, ...updatedProfile }));
+      try { if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') { window.CurrentUserStore.setCurrentUser(Object.assign({}, window.CurrentUserStore.getCurrentUser() || {}, updatedProfile)); } else { const user = JSON.parse(localStorage.getItem('spopeer_user') || '{}'); localStorage.setItem('spopeer_user', JSON.stringify({ ...user, ...updatedProfile })); } } catch(e) {}
 
       // Clear cache to force refresh
       this.clearCache();
