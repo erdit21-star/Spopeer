@@ -163,6 +163,11 @@
       <a href="/feed.html" class="nav-icon" title="Home"><i class="fa-solid fa-house"></i></a>
       <a href="inbox.html" class="nav-icon" title="Full Inbox"><i class="fa-regular fa-inbox"></i></a>
       <a href="/feed.html" class="btn-back"><i class="fa-solid fa-arrow-left" style="font-size:11px"></i> Back</a>
+      <div class="user-chip" id="userChip" data-user-chip>
+        <span class="chip-avatar" data-user-chip-avatar>?</span>
+        <span class="chip-name" data-user-chip-name>Loading…</span>
+        <i class="fa-solid fa-chevron-down chip-caret"></i>
+      </div>
     </div>
   </div>
 </nav>
@@ -365,6 +370,15 @@
     }catch(e){}
   }
 })();
+</script>
+<script src="/js/api.js"></script>
+<script src="/js/current-user-store.js"></script>
+<script src="/js/user-ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+  if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
+  if (window.UserUI) window.UserUI.bindAllChips();
+});
 </script>
 <script src="/js/navigation.js"></script>
 </body>
