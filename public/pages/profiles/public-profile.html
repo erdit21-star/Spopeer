@@ -1050,23 +1050,8 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   <a href="../company/report-abuse.html">Report Abuse</a>
 </footer>
 <script>
-/* ── NAV: chip hydration, profile menu, button wiring ── */
+/* ── NAV: button wiring (chip hydration handled by CurrentUserStore + UserUI) ── */
 (function() {
-  // Hydrate chip from localStorage
-  const ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-  const fullName = ud.displayName || ud.name || ((ud.firstName||'') + ' ' + (ud.lastName||'')).trim() || 'User';
-  const initials = fullName.split(' ').map(n => n[0]||'').join('').toUpperCase().slice(0,2) || 'U';
-  const chipAvatar = document.getElementById('chipAvatar');
-  const chipName   = document.getElementById('chipName');
-  if (chipName) chipName.textContent = fullName.split(' ')[0] || 'User';
-  if (chipAvatar) {
-    if (ud.avatarUrl) {
-      chipAvatar.innerHTML = `<img src="${ud.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    } else {
-      chipAvatar.textContent = initials;
-    }
-  }
-
   // Notif popover interaction (profile menu toggle + actions handled by shared-ui.js)
   const notifBtn    = document.getElementById('notifBtn');
   const notifPopover = document.getElementById('notifPopover');
@@ -1105,18 +1090,6 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   });
 
   // Edit profile button logic moved to updateActionButtons() above
-
-  // Listen for profile updates and refresh chip
-  window.addEventListener('profileUpdated', e => {
-    const p = e.detail;
-    if (!p) return;
-    const n = p.displayName || p.name || ((p.firstName||'') + ' ' + (p.lastName||'')).trim() || 'User';
-    if (chipName) chipName.textContent = n.split(' ')[0];
-    if (chipAvatar) {
-      if (p.avatarUrl) chipAvatar.innerHTML = `<img src="${p.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-      else chipAvatar.textContent = n.split(' ').map(x=>x[0]||'').join('').toUpperCase().slice(0,2)||'U';
-    }
-  });
 })();
 </script>
 <script src="../../js/shared-ui.js"></script>

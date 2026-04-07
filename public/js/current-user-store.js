@@ -1,4 +1,7 @@
-(function () {
+﻿(function () {
+  let currentUser = null;
+  const listeners = new Set();
+
   function normalizeUser(user) {
     if (!user) return null;
 
@@ -16,32 +19,43 @@
       .toUpperCase()
       .slice(0, 2);
 
-    return Object.assign({}, user, {
+    return {
+      ...user,
       displayName,
       initials,
       avatarUrl: user.avatarUrl || user.avatar || '',
       role: user.role || user.userType || 'user'
-    });
+    };
   }
-
-  let currentUser = null;
-  const listeners = new Set();
 
   function emit() {
     listeners.forEach(fn => {
-      try { fn(currentUser); } catch (err) { console.error('CurrentUserStore listener error:', err); }
+      try {
+        fn(currentUser);
+      } catch (err) {
+        console.error('CurrentUserStore listener error:', err);
+      }
     });
 
     try {
-      window.dispatchEvent(new CustomEvent('currentUserChanged', { detail: { user: currentUser } }));
+      window.dispatchEvent(
+        new CustomEvent('currentUserChanged', {
+          detail: { user: currentUser }
+        })
+      );
     } catch (_) {}
   }
 
   function getStoredUser() {
     try {
-      const raw = localStorage.getItem('spopeer_user') || localStorage.getItem('user') || 'null';
+      const raw =
+        localStorage.getItem('spopeer_user') ||
+        localStorage.getItem('user') ||
+        'null';
       return normalizeUser(JSON.parse(raw));
-    } catch (_) { return null; }
+    } catch (_) {
+      return null;
+    }
   }
 
   function persistUser(user) {
@@ -60,14 +74,20 @@
 
   function setCurrentUser(user) {
     currentUser = normalizeUser(user);
-    try { persistUser(currentUser); } catch (err) { console.warn('Failed to persist current user:', err); }
+    try {
+      persistUser(currentUser);
+    } catch (err) {
+      console.warn('Failed to persist current user:', err);
+    }
     emit();
     return currentUser;
   }
 
   function clearCurrentUser() {
     currentUser = null;
-    try { persistUser(null); } catch (_) {}
+    try {
+      persistUser(null);
+    } catch (_) {}
     emit();
   }
 
@@ -80,7 +100,12 @@
 
     try {
       const res = await window.SpopeerAPI.me();
-      const user = res?.user || res?.data?.user || res?.payload || res?.payload?.user || null;
+      const user =
+        res?.user ||
+        res?.data?.user ||
+        res?.payload ||
+        res?.payload?.user ||
+        null;
 
       return setCurrentUser(user);
     } catch (err) {
@@ -90,13 +115,25 @@
     }
   }
 
-  function getCurrentUser() { if (!currentUser) currentUser = getStoredUser(); return currentUser; }
-  function isLoggedIn() { return !!getCurrentUser(); }
+  function getCurrentUser() {
+    if (!currentUser) {
+      currentUser = getStoredUser();
+    }
+    return currentUser;
+  }
+
+  function isLoggedIn() {
+    return !!getCurrentUser();
+  }
 
   function subscribe(fn) {
-    if (typeof fn !== 'function') return function noop() {};
+    if (typeof fn !== 'function') {
+      return function noop() {};
+    }
     listeners.add(fn);
-    return function unsubscribe(){ listeners.delete(fn); };
+    return function unsubscribe() {
+      listeners.delete(fn);
+    };
   }
 
   window.CurrentUserStore = {

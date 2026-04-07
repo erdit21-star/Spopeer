@@ -2043,14 +2043,11 @@ if (window.profileRuntime) {
   }
 
   var sa = document.getElementById('sidebarAv');
-  var ca = document.getElementById('chipAvatar');
   if (ud.avatarUrl) {
     var imgHtml = '<img src="'+ud.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
     if (sa) sa.innerHTML = imgHtml;
-    if (ca) ca.innerHTML = imgHtml;
   } else {
     if (sa) sa.textContent = initials;
-    if (ca) ca.textContent = initials;
   }
 
   // ── Back link stays as /feed.html (home); View My Profile uses stable id ──
@@ -2313,8 +2310,6 @@ if (window.profileRuntime) {
         if (av) av.innerHTML = '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
         var sa2 = document.getElementById('sidebarAv');
         if (sa2) sa2.innerHTML = '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-        var ca2 = document.getElementById('chipAvatar');
-        if (ca2) ca2.innerHTML = '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
         showToast('Photo updated!', 'success');
         recalcCompletion();
       };
@@ -2590,20 +2585,16 @@ if (window.profileRuntime) {
 
         var dispName = ud.displayName || ud.name || ((ud.firstName||'') + ' ' + (ud.lastName||'')).trim() || 'User';
         var ini = dispName.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
-        el('chipName', dispName);
         el('sidebarName', dispName);
         el('sidebarHandle', '@' + (ud.username || (ud.email ? ud.email.split('@')[0] : 'user')));
 
         // Sync avatar
         var sa = document.getElementById('sidebarAv');
-        var ca = document.getElementById('chipAvatar');
         if (ud.avatarUrl) {
           var imgH = '<img src="'+ud.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
           if (sa) sa.innerHTML = imgH;
-          if (ca) ca.innerHTML = imgH;
         } else {
           if (sa && !sa.querySelector('img')) sa.textContent = ini;
-          if (ca && !ca.querySelector('img')) ca.textContent = ini;
         }
 
         // Sync role badge
@@ -2685,6 +2676,9 @@ if (window.profileRuntime) {
     }
     window.dispatchEvent(new CustomEvent('profileUpdated', { detail: data }));
     localStorage.setItem('_profileLastUpdated_', Date.now().toString());
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+      try { window.CurrentUserStore.setCurrentUser(data); } catch(e) {}
+    }
   }
 
   function readStoredUserSafe() {
@@ -2887,12 +2881,9 @@ if (window.profileRuntime) {
       nameInput.addEventListener('input', function() {
         var name = nameInput.value.trim() || 'Your Name';
         el('sidebarName', name);
-        el('chipName', name);
         var ini = name.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
         var sa = document.getElementById('sidebarAv');
-        var ca = document.getElementById('chipAvatar');
         if (sa && !sa.querySelector('img')) sa.textContent = ini;
-        if (ca && !ca.querySelector('img')) ca.textContent = ini;
       });
     }
 
@@ -2903,12 +2894,9 @@ if (window.profileRuntime) {
         var dn = displayInput.value.trim();
         if (dn) {
           el('sidebarName', dn);
-          el('chipName', dn);
           var ini = dn.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
           var sa = document.getElementById('sidebarAv');
-          var ca = document.getElementById('chipAvatar');
           if (sa && !sa.querySelector('img')) sa.textContent = ini;
-          if (ca && !ca.querySelector('img')) ca.textContent = ini;
         }
       });
     }
@@ -2930,23 +2918,19 @@ if (window.profileRuntime) {
   liveSync();
 
   // ── Update sidebar after any save ──
-  window.addEventListener('profileUpdated', function(e) {
-    var p = e.detail?.profile || e.detail;
+  window.addEventListener('currentUserChanged', function(e) {
+    var p = e.detail;
     if (!p) return;
     var name = p.displayName || p.name || ((p.firstName||'') + ' ' + (p.lastName||'')).trim() || 'User';
     var ini = name.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
     el('sidebarName', name);
-    el('chipName', name);
     el('sidebarHandle', '@' + (p.username || (p.email ? p.email.split('@')[0] : 'user')));
     var sa = document.getElementById('sidebarAv');
-    var ca = document.getElementById('chipAvatar');
     if (p.avatarUrl) {
       var imgH = '<img src="'+p.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
       if (sa) sa.innerHTML = imgH;
-      if (ca) ca.innerHTML = imgH;
     } else {
       if (sa && !sa.querySelector('img')) sa.textContent = ini;
-      if (ca && !ca.querySelector('img')) ca.textContent = ini;
     }
     // Role badge
     var ri = roleInfo[p.userType] || roleInfo.athlete;

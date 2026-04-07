@@ -963,13 +963,7 @@
   let isLoading = false;
   let lastSearchPage = 1;
 
-  /* ── hydrate user ── */
-  const ud = JSON.parse(localStorage.getItem('spopeer_user')||'null');
-  if(ud && ud.name){
-    const init = ud.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const el = document.getElementById('chipAvatar'); if(el) el.textContent = init;
-    const cn = document.getElementById('chipName');   if(cn) cn.textContent = ud.name.split(' ')[0];
-  }
+  /* ── hydrate user: handled by CurrentUserStore + UserUI ── */
 
 
   /* – user chip & profile menu: handled by shared-ui.js – */

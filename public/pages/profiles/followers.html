@@ -1164,8 +1164,6 @@
   document.getElementById('sidebarAv').textContent = ini;
   document.getElementById('sidebarName').textContent = nameStr.trim();
   document.getElementById('sidebarType').textContent = typeLabel(normalizeUserType(user.role || user.userType));
-  document.getElementById('chipAvatar').textContent = ini.slice(0, 1);
-  document.getElementById('chipName').textContent = nameStr.split(' ')[0] || nameStr;
   renderSuggestions();
 
   /* ── Render user list ── */

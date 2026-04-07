@@ -645,22 +645,14 @@
         source: sourceLabel
       }
     }));
+    if (window.CurrentUserStore) {
+      try { window.CurrentUserStore.setCurrentUser(savedUser); } catch(e) {}
+    }
     return savedUser;
   }
 
-  /* ── Hydrate user chip ── */
-  const fullName = ud.fullName || ud.name || 'User';
-  const nameParts = fullName.split(/\s+/).filter(Boolean);
-  const firstInitial = (nameParts[0] || '')[0] || '';
-  const lastInitial = (nameParts[1] || '')[0] || '';
-  const initials = (firstInitial + lastInitial).toUpperCase() || 'U';
-
-  const chipAv = document.getElementById('chipAvatar');
-  const chipNm = document.getElementById('chipName');
-  if (chipAv) chipAv.textContent = initials;
-  if (chipNm) chipNm.textContent = fullName.split(' ')[0] || 'User';
-
   /* ── Hydrate account info ── */
+  const fullName = ud.fullName || ud.name || 'User';
   const nameInput = document.getElementById('accountName');
   const emailInput = document.getElementById('accountEmail');
   const usernameInput = document.getElementById('accountUsername');

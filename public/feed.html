@@ -2329,9 +2329,9 @@
             <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
             <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
             <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
-          </
-      <input type="file" id="spCoverInput" accept="image/*" style="display:none;">div>
+          </div>
         </div>
+        <input type="file" id="spCoverInput" accept="image/*" style="display:none;">
         <div class="profile-menu-section collapsed" data-section="help">
           <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
             <div class="profile-menu-title">Help & Misc</div>
@@ -2701,8 +2701,8 @@
 
     <!-- create post -->
     <div class="create-card">
-      <div class="create-top">
-        <div class="create-av" id="createAvatar">JD</div>
+      <div class="create-top" data-user-chip>
+        <div class="create-av" data-user-chip-avatar>U</div>
         <input class="create-input" placeholder="Share your training, achievements, or thoughts...">
       </div>
       <div class="create-actions">
@@ -2726,11 +2726,11 @@
         </div>
         
         <div class="post-composer-body">
-          <div class="composer-author">
-            <div class="composer-av" id="composerAvatar">JD</div>
+          <div class="composer-author" data-user-chip>
+            <div class="composer-av" data-user-chip-avatar>U</div>
             <div>
-              <div class="composer-name" id="composerName">User</div>
-              <div class="composer-handle" id="composerHandle">@johnsmith</div>
+              <div class="composer-name" data-user-full-name>User</div>
+              <div class="composer-handle" data-user-handle>@user</div>
             </div>
           </div>
 
@@ -2975,48 +2975,30 @@
     const lastInitial = (profile.lastName || profile.name?.split(' ')[1] || '')[0] || '';
     const initials = (firstInitial + lastInitial).toUpperCase() || 'U';
     
-    // Update avatars - check for avatarUrl first, otherwise use initials
-    const updateAvatar = (id) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      
+    // Update sidebar avatar only (chips are handled by UserUI)
+    const sidebarAv = document.getElementById('sidebarAvatar');
+    if (sidebarAv) {
       if (profile.avatarUrl) {
-        // Create image element
-        el.innerHTML = '';
+        sidebarAv.innerHTML = '';
         const img = document.createElement('img');
         img.src = profile.avatarUrl;
         img.style.width = '100%';
         img.style.height = '100%';
         img.style.objectFit = 'cover';
         img.style.borderRadius = '50%';
-        el.appendChild(img);
+        sidebarAv.appendChild(img);
       } else {
-        // Use initials
-        el.textContent = initials;
+        sidebarAv.textContent = initials;
       }
-    };
+    }
     
-    ['sidebarAvatar', 'createAvatar', 'composerAvatar', 'chipAvatar'].forEach(id => {
-      updateAvatar(id);
-    });
-    
-    // Update name
+    // Update sidebar name only (chips are handled by UserUI)
     const sn = document.getElementById('sidebarName');
     if (sn) sn.textContent = fullName;
-    
-    const composerN = document.getElementById('composerName');
-    if (composerN) composerN.textContent = fullName;
-    
-    // Update chip name (first name) across data-attribute and legacy selectors
-    const chipNameEls = document.querySelectorAll('[data-user-chip-name], #chipName, .chip-name, #profileName, .sp-name');
-    chipNameEls.forEach(function(el) { el.textContent = fullName; });
     
     // Update handle - use username if available, fall back to email
     const handleEl = document.querySelector('.sp-handle');
     if (handleEl) handleEl.textContent = '@' + (profile.username || (profile.email ? profile.email.split('@')[0] : 'user'));
-    
-    const composerH = document.getElementById('composerHandle');
-    if (composerH) composerH.textContent = '@' + (profile.username || (profile.email ? profile.email.split('@')[0] : 'user'));
     
     // Update role badge
     const roleBadge = document.querySelector('.sp-role-badge');
@@ -5731,7 +5713,7 @@ function escapeHtml(text) {
 </script>
 
 <script>
-  window.addEventListener("profileUpdated", function() {
+  window.addEventListener("currentUserChanged", function() {
     if (window.SpopeerStatsManager) {
       window.SpopeerStatsManager.syncSidebarStats();
     }

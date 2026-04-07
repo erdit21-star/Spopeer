@@ -343,9 +343,7 @@
   const user = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
   if (user && user.name) {
     const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    document.getElementById('chipAvatar').textContent = initials;
     document.getElementById('sidebarAvatar').textContent = initials;
-    document.getElementById('chipName').textContent = user.name.split(' ')[0];
     document.getElementById('sidebarName').textContent = user.name;
   }
 

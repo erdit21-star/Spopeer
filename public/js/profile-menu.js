@@ -29,23 +29,12 @@
     if (typeof API !== 'undefined' && typeof API.updateAllAvatars === 'function') {
       API.updateAllAvatars(profile);
     }
-    var name = profile.displayName
-      || [profile.firstName, profile.lastName].filter(Boolean).join(' ').trim()
-      || profile.name || 'User';
-    var initials = name.split(' ').map(function (x) { return (x[0] || ''); }).join('').toUpperCase().slice(0, 2) || 'U';
-    var a = document.getElementById('chipAvatar');
-    var n = document.getElementById('chipName');
-    if (a) {
-      if (profile.avatarUrl) {
-        a.innerHTML = '<img src="' + profile.avatarUrl + '" alt="' + name + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-      } else {
-        a.textContent = initials;
-      }
+    if (window.UserUI && typeof window.UserUI.bindAllChips === 'function') {
+      window.UserUI.bindAllChips();
     }
-    if (n) n.textContent = name;
   }
 
-  window.addEventListener('profileUpdated', function (e) { refreshChip(e.detail?.profile || e.detail); });
+  window.addEventListener('currentUserChanged', function (e) { refreshChip(e.detail); });
   window.addEventListener('storage', function (e) {
     if (e.key === 'spopeer_user' || e.key === '_profileLastUpdated_') {
       refreshChip(JSON.parse(localStorage.getItem('spopeer_user') || 'null'));

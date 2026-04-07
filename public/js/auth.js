@@ -75,6 +75,10 @@ const Auth = {
         source: "auth-login"
       }
     }));
+
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+      try { window.CurrentUserStore.setCurrentUser(normalizedUser); } catch(e) {}
+    }
   },
 
   async logout() {
@@ -98,6 +102,10 @@ const Auth = {
       "userData",
       "_profileLastUpdated_"
     ].forEach((key) => localStorage.removeItem(key));
+
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
+      try { window.CurrentUserStore.clearCurrentUser(); } catch(e) {}
+    }
 
     try {
       sessionStorage.clear();

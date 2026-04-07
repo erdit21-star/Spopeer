@@ -1,13 +1,4 @@
-(function () {
-  function escapeHtml(text) {
-    return String(text || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
-
+﻿(function () {
   function renderAvatar(el, user) {
     if (!el) return;
 
@@ -18,7 +9,9 @@
     }
 
     if (user.avatarUrl) {
-      el.innerHTML = `<img src="${user.avatarUrl}" alt="${escapeHtml(user.displayName || 'User')}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      el.innerHTML = `<img src="${user.avatarUrl}" alt="${escapeHtml(
+        user.displayName || 'User'
+      )}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
       return;
     }
 
@@ -28,7 +21,9 @@
 
   function renderShortName(el, user) {
     if (!el) return;
-    el.textContent = user ? (user.displayName.split(' ')[0] || user.displayName) : 'User';
+    el.textContent = user
+      ? user.displayName.split(' ')[0] || user.displayName
+      : 'User';
   }
 
   function renderFullName(el, user) {
@@ -44,7 +39,11 @@
       return;
     }
 
-    const handle = user.username || (user.email ? user.email.split('@')[0] : '') || 'user';
+    const handle =
+      user.username ||
+      (user.email ? user.email.split('@')[0] : '') ||
+      'user';
+
     el.textContent = '@' + handle;
   }
 
@@ -66,13 +65,26 @@
   function bindChip(root) {
     if (!root || !window.CurrentUserStore) return function noop() {};
 
-    const update = function(user) { renderChip(root, user); };
+    const update = function (user) {
+      renderChip(root, user);
+    };
 
     update(window.CurrentUserStore.getCurrentUser());
     return window.CurrentUserStore.subscribe(update);
   }
 
-  function bindAllChips() { document.querySelectorAll('[data-user-chip]').forEach(bindChip); }
+  function bindAllChips() {
+    document.querySelectorAll('[data-user-chip]').forEach(bindChip);
+  }
+
+  function escapeHtml(text) {
+    return String(text || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
 
   window.UserUI = {
     renderAvatar,

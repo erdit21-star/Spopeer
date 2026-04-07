@@ -236,6 +236,10 @@
               localStorage.removeItem(key);
             });
 
+            if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
+              try { window.CurrentUserStore.clearCurrentUser(); } catch(e) {}
+            }
+
             try { sessionStorage.clear(); } catch (err) { console.debug('sessionStorage.clear failed during shared-ui logout', err); }
             window.location.replace('/index.html');
           }
@@ -246,24 +250,6 @@
         }
         closeMenu();
       });
-    }
-
-    /* Hydrate user chip from localStorage */
-    var user = getUserProfile();
-    var chipAvEl = document.getElementById('chipAvatar');
-    var chipNmEl = document.getElementById('chipName');
-    if (chipAvEl) {
-      if (user.avatarUrl) {
-        var safeUrl = user.avatarUrl.replace(/["'<>&]/g, function(c) { return '&#' + c.charCodeAt(0) + ';'; });
-        chipAvEl.innerHTML = '<img src="' + safeUrl + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-      } else {
-        var fi = (user.firstName || (user.name || '').split(' ')[0] || '')[0] || '';
-        var li = (user.lastName || (user.name || '').split(' ')[1] || '')[0] || '';
-        chipAvEl.textContent = (fi + li).toUpperCase() || 'U';
-      }
-    }
-    if (chipNmEl) {
-      chipNmEl.textContent = user.firstName || (user.name || '').split(' ')[0] || 'User';
     }
 
     window.sharedUi = window.sharedUi || {};

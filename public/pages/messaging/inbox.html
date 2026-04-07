@@ -365,9 +365,7 @@
   if (!ud) { try { ud = JSON.parse(localStorage.getItem('spopeer_user')||'null'); } catch(e) { ud = null; } }
   if(ud&&ud.name){
     const init=ud.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const first=ud.name.split(' ')[0];
-    const av=document.getElementById('chipAvatar');const nm=document.getElementById('chipName');
-    if(av)av.textContent=init;if(nm)nm.textContent=first;
+    myInitials=init;
   }
 
   var _loggedIn = (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true');

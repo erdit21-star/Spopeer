@@ -889,12 +889,6 @@
     document.getElementById('headerName').textContent = fullName;
     document.getElementById('headerHandle').textContent = handle;
 
-    // Update user chip in nav
-    const chipAv = document.getElementById('chipAvatar');
-    const chipNm = document.getElementById('chipName');
-    if (chipAv) chipAv.textContent = initials;
-    if (chipNm) chipNm.textContent = fullName.split(' ')[0] || 'User';
-
     /* role badge */
     r = roleMap[profile.userType] || roleMap.athlete;
     const rb = document.getElementById('roleBadge');
@@ -918,50 +912,11 @@
   if(sfg) sfg.textContent = _ud.followingCount || _ud.following || '0';
   if(sv) sv.textContent = _ud.totalViews || '0';
 
-  /* ── PROFILE SYNC: Listen for profile updates ── */
-  window.addEventListener('profileUpdated', (event) => {
-    const updatedProfile = event.detail;
-    if (updatedProfile) {
-      // Update localStorage
-      const mergedProfile = { ..._ud, ...updatedProfile };
-      localStorage.setItem('spopeer_user', JSON.stringify(mergedProfile));
-      
-      // Update header in real-time
-      updateHeaderFromProfile(mergedProfile);
-    }
+  /* ── PROFILE SYNC: Listen for currentUserChanged ── */
+  window.addEventListener('currentUserChanged', (event) => {
+    const u = event.detail;
+    if (u) updateHeaderFromProfile(u);
   });
-
-  /* ─── PROFILE SYNC: Listen for localStorage changes (cross-tab/window) ─── */
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'spopeer_user' && event.newValue) {
-      try {
-        const updatedProfile = JSON.parse(event.newValue);
-        updateHeaderFromProfile(updatedProfile);
-      } catch (e) {
-        console.error('Error parsing updated profile:', e);
-      }
-    }
-    // Also detect the update flag from edit-profile.html
-    if (event.key === '_profileLastUpdated_') {
-      const currentUser = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-      updateHeaderFromProfile(currentUser);
-    }
-  });
-
-  /* ─── PROFILE SYNC: Poll for profile changes (handles same-tab updates) ─── */
-  let lastProfileCheck = localStorage.getItem('spopeer_user');
-  setInterval(() => {
-    const currentProfile = localStorage.getItem('spopeer_user');
-    if (currentProfile !== lastProfileCheck) {
-      lastProfileCheck = currentProfile;
-      try {
-        const profile = JSON.parse(currentProfile || '{}');
-        updateHeaderFromProfile(profile);
-      } catch (e) {
-        console.error('Error parsing profile from poll:', e);
-      }
-    }
-  }, 500);  // Check every 500ms for changes
 
   /* edit profile links */
   const editUrl = 'edit-profile.html';
