@@ -15,7 +15,7 @@
     if (window.SpopeerProfileIdentity) {
       return 'public-profile.html?userId=' + encodeURIComponent(window.SpopeerProfileIdentity.getStableId());
     }
-    var u = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') ? (window.CurrentUserStore.getCurrentUser() || null) : JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var u = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
     var identifier = (u && (u.id || u.userId || u.email || u.userEmail)) || '';
     return 'public-profile.html?userId=' + encodeURIComponent(identifier);
   }
@@ -48,8 +48,7 @@
   window.addEventListener('profileUpdated', function (e) { refreshChip(e.detail?.profile || e.detail); });
   window.addEventListener('storage', function (e) {
     if (e.key === 'spopeer_user' || e.key === '_profileLastUpdated_') {
-      var u = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') ? (window.CurrentUserStore.getCurrentUser() || null) : JSON.parse(localStorage.getItem('spopeer_user') || 'null');
-      refreshChip(u);
+      refreshChip(JSON.parse(localStorage.getItem('spopeer_user') || 'null'));
     }
   });
 
@@ -79,7 +78,7 @@
 
   /* ── Download data ── */
   function downloadUserData() {
-    var u = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') ? (window.CurrentUserStore.getCurrentUser() || null) : JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    var u = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
     var p = JSON.parse(localStorage.getItem('spopeer_user_posts') || '[]');
     var c = JSON.parse(localStorage.getItem('spopeer_followed_users') || '[]');
     var act = JSON.parse(localStorage.getItem('spopeer_viewed_24h') || '[]');

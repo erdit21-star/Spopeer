@@ -3,12 +3,8 @@
   'use strict';
 
   function getStoredUser() {
-    try {
-      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
-        return window.CurrentUserStore.getCurrentUser() || {};
-      }
-      return JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-    } catch (e) { return {}; }
+    try { return JSON.parse(localStorage.getItem('spopeer_user') || '{}'); }
+    catch (e) { return {}; }
   }
 
   /** Always returns the most stable identifier: numeric id first, email fallback */

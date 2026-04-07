@@ -4,9 +4,6 @@
 
   function getUserProfile() {
     try {
-      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
-        return window.CurrentUserStore.getCurrentUser() || {};
-      }
       return JSON.parse(localStorage.getItem('spopeer_user') || '{}');
     } catch (error) {
       return {};

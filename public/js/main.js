@@ -50,15 +50,9 @@ function tryInjectUserMetaAndInbox() {
 
 function getUserIdFromToken() {
   try {
-    var user = null;
-    if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
-      user = window.CurrentUserStore.getCurrentUser();
-    }
-    if (!user) {
-      const userStr = localStorage.getItem('spopeer_user') || localStorage.getItem('user');
-      if (!userStr) return null;
-      try { user = JSON.parse(userStr); } catch (e) { return null; }
-    }
+    const userStr = localStorage.getItem('spopeer_user') || localStorage.getItem('user');
+    if (!userStr) return null;
+    const user = JSON.parse(userStr);
     return user && (user.id || user.userId) ? String(user.id || user.userId) : null;
   } catch (e) {
     return null;
