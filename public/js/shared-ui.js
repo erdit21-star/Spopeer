@@ -672,7 +672,7 @@
    * All menu items use data-action attributes handled by setupSocialFeedRuntime.
    */
   function buildProfileMenuHTML() {
-    return '<div class="profile-menu" id="profileMenu" aria-hidden="true">' +
+    return '<div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">' +
       '<div class="profile-menu-section" data-section="identity">' +
         '<div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">' +
           '<div class="profile-menu-title">Your Identity</div>' +
