@@ -308,9 +308,18 @@
 </head>
 <body>
   <script>
-    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
-    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
-    if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
+    (function () {
+      var stored = null;
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+        stored = window.CurrentUserStore.getCurrentUser();
+      }
+      if (!stored) {
+        try { stored = JSON.parse(localStorage.getItem('spopeer_user') || 'null'); } catch(e) { stored = null; }
+      }
+      var _ud = stored;
+      var _li = !!_ud;
+      if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
+    })();
   </script>
 
   <!-- TOPNAV -->
