@@ -77,6 +77,7 @@ class FollowManager {
       return false;
     }
 
+    let lastErr = null;
     try {
       await window.SpopeerAPI.followUser(userId);
       this.applyCurrentUserFollowingDelta(1);
@@ -84,9 +85,10 @@ class FollowManager {
       return true;
     } catch (err) {
       console.error('Follow error:', err);
+      lastErr = err;
     }
     
-    alert(err?.message || 'Error following user');
+    alert(lastErr?.message || 'Error following user');
     return false;
   }
 

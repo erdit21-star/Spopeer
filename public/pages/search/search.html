@@ -947,6 +947,8 @@
 <!-- Ensure API helpers and FollowManager are available for result buttons -->
 <script src="../../js/api.js"></script>
 <script src="../../js/follow.js"></script>
+<script src="/js/current-user-store.js"></script>
+<script src="/js/user-ui.js"></script>
 <!-- main.js removed: no functions called -->
 
 <script>
@@ -1379,6 +1381,12 @@
   if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
     window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
   }
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
+    if (window.UserUI) window.UserUI.bindAllChips();
+  });
 </script>
 <script src="/js/navigation.js"></script>
 </body>

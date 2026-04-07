@@ -195,6 +195,8 @@
   <script src="../../js/api.js"></script>
   <script src="../../js/profile-identity.js"></script>
   <script src="../../js/profile-sync-service.js"></script>
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/user-ui.js"></script>
   <style>
     .notif-badge { display: none; }
   </style>
@@ -1122,6 +1124,12 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
     window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
   }
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
+    if (window.UserUI) window.UserUI.bindAllChips();
+  });
 </script>
 <script src="/js/navigation.js"></script>
 </body>
