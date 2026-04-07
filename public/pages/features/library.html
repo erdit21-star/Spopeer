@@ -130,9 +130,9 @@
         <i class="fa-regular fa-bell"></i>
         <span class="notif-badge" id="notifBadge"></span>
       </button>
-      <div class="user-chip" id="userChip">
-        <span class="chip-avatar" id="chipAvatar">U</span>
-        <span class="chip-name" id="chipName">User</span>
+      <div class="user-chip" id="userChip" data-user-chip>
+        <span class="chip-avatar" id="chipAvatar" data-user-chip-avatar>U</span>
+        <span class="chip-name" id="chipName" data-user-chip-name>User</span>
         <i class="fa-solid fa-chevron-down chip-caret"></i>
       </div>
       <div class="profile-menu" id="profileMenu" aria-hidden="true">
@@ -188,11 +188,11 @@
       <div class="sp-cover"></div>
       <div class="sp-body">
         <div class="sp-avatar-wrap">
-          <div class="sp-avatar" id="sidebarAvatar">U</div>
+          <div class="sp-avatar" id="sidebarAvatar" data-user-chip-avatar>U</div>
           <div class="sp-online-dot"></div>
         </div>
-        <div class="sp-name" id="sidebarName">Your Name</div>
-        <div class="sp-handle" id="sidebarHandle">@user</div>
+        <div class="sp-name" id="sidebarName" data-user-full-name>Your Name</div>
+        <div class="sp-handle" id="sidebarHandle" data-user-handle>@user</div>
         <div class="sp-badges-row">
           <span class="sp-role-badge athlete" id="spRoleBadge"><i class="fa-solid fa-person-running" style="font-size:8px"></i> Athlete</span>
         </div>
