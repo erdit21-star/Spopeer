@@ -8,31 +8,12 @@
   <title>Edit Profile — Spopeer</title>
   <script src="../../js/profile-runtime.js"></script>
   <script src="../../js/profile-identity.js"></script>
-  <script>
-    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
-    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
-    if (!_ud || !_li) window.location.href = '../auth/login.html';
-
-    // Onboarding: if ?role= param is present, stamp userType into localStorage
-    (function() {
-      var params = new URLSearchParams(window.location.search);
-      var roleParam = params.get('role');
-      if (roleParam && _ud) {
-        var validRoles = ['athlete','coach','club','supportive_professional'];
-        if (validRoles.indexOf(roleParam) !== -1 && _ud.userType !== roleParam) {
-          _ud.userType = roleParam;
-          localStorage.setItem('spopeer_user', JSON.stringify(_ud));
-        }
-      }
-    })();
-  </script>
   <script src="../../js/profile-sync-service.js"></script>
-  <script src="../../js/shared-ui.js"></script>
+  <script src="../../js/api.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  <script src="../../js/api.js"></script>
   <style>
     :root {
       --accent:#001f3f; --accent-mid:#003366; --accent-hover:#001428; --accent-light:#cce7ff; --accent-lt2:#e8f4ff;
@@ -439,13 +420,13 @@
 
   <!-- SIDEBAR -->
   <aside class="edit-sidebar">
-    <div class="sidebar-profile-mini">
-      <div class="sidebar-av" id="sidebarAv">U</div>
+    <div class="sidebar-profile-mini" data-user-chip>
+      <div class="sidebar-av" id="sidebarAv" data-user-chip-avatar>U</div>
       <div class="sidebar-profile-info">
-        <div class="sidebar-name" id="sidebarName">Your Name</div>
-        <div class="sidebar-handle" id="sidebarHandle" style="font-size:11px;color:var(--muted);font-weight:500">@username</div>
+        <div class="sidebar-name" id="sidebarName" data-user-full-name>Your Name</div>
+        <div class="sidebar-handle" id="sidebarHandle" data-user-handle style="font-size:11px;color:var(--muted);font-weight:500">@username</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
-          <span class="sidebar-role-badge" id="sidebarRoleBadge" style="font-size:10px;padding:2px 8px;border-radius:999px;background:var(--accent-lt2);color:var(--accent);font-weight:700;display:inline-flex;align-items:center;gap:4px"><i class="fa-solid fa-person-running" style="font-size:8px"></i> Athlete</span>
+          <span class="sidebar-role-badge" id="sidebarRoleBadge" data-user-role style="font-size:10px;padding:2px 8px;border-radius:999px;background:var(--accent-lt2);color:var(--accent);font-weight:700;display:inline-flex;align-items:center;gap:4px"><i class="fa-solid fa-person-running" style="font-size:8px"></i> Athlete</span>
           <span class="sidebar-sport-badge" id="sidebarSportBadge" style="font-size:10px;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);font-weight:600;display:inline-flex;align-items:center;gap:4px"><i class="fa-solid fa-futbol" style="font-size:8px"></i> Sport</span>
         </div>
       </div>
@@ -605,7 +586,7 @@
 
     <!-- ── PHOTO SECTION ── -->
     <div class="edit-card" id="section-photo">
-      <div class="edit-card-header" onclick="toggleCard(this)">
+      <div class="edit-card-header">
         <div class="card-icon-wrap"><i class="fa-regular fa-image"></i></div>
         <div class="card-header-text">
           <div class="card-title">Profile Photo & Display Name</div>
@@ -670,7 +651,7 @@
 
     <!-- ── BASIC INFO ── -->
     <div class="edit-card" id="section-basic">
-      <div class="edit-card-header" onclick="toggleCard(this)">
+      <div class="edit-card-header">
         <div class="card-icon-wrap"><i class="fa-regular fa-circle-user"></i></div>
         <div class="card-header-text">
           <div class="card-title">Basic Information</div>
@@ -788,7 +769,7 @@
     <div id="athlete-sections" style="display:none">
 
       <div class="edit-card" id="section-sports">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-futbol"></i></div>
           <div class="card-header-text">
             <div class="card-title">Sports Details</div>
@@ -847,7 +828,7 @@
       </div>
 
       <div class="edit-card" id="section-achievements">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-trophy"></i></div>
           <div class="card-header-text">
             <div class="card-title">Achievements & Stats</div>
@@ -901,7 +882,7 @@
       </div>
 
       <div class="edit-card" id="section-training">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-dumbbell"></i></div>
           <div class="card-header-text">
             <div class="card-title">Training & Goals</div>
@@ -981,7 +962,7 @@
 
       <!-- ── PHYSICAL INFORMATION ── -->
       <div class="edit-card" id="section-physical">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-ruler-combined"></i></div>
           <div class="card-header-text">
             <div class="card-title">Physical Information</div>
@@ -1048,7 +1029,7 @@
 
       <!-- ── COMPETITION INFORMATION ── -->
       <div class="edit-card" id="section-competition">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-medal"></i></div>
           <div class="card-header-text">
             <div class="card-title">Competition Information</div>
@@ -1082,7 +1063,7 @@
 
       <!-- ── HEALTH & WELLNESS ── -->
       <div class="edit-card" id="section-health">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-heart-pulse"></i></div>
           <div class="card-header-text">
             <div class="card-title">Health & Wellness</div>
@@ -1124,7 +1105,7 @@
     <!-- ── COACH SECTIONS ── -->
     <div id="coach-sections" style="display:none">
       <div class="edit-card" id="section-coaching">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-chalkboard-user"></i></div>
           <div class="card-header-text">
             <div class="card-title">Coaching Details</div>
@@ -1198,7 +1179,7 @@
 
       <!-- ── TRAINING & DEVELOPMENT ── -->
       <div class="edit-card" id="section-coach-training">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-clipboard-list"></i></div>
           <div class="card-header-text">
             <div class="card-title">Training & Development</div>
@@ -1232,7 +1213,7 @@
 
       <!-- ── MANAGEMENT INFORMATION ── -->
       <div class="edit-card" id="section-management">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-people-group"></i></div>
           <div class="card-header-text">
             <div class="card-title">Management Information</div>
@@ -1268,7 +1249,7 @@
     <!-- ── CLUB SECTIONS ── -->
     <div id="club-sections" style="display:none">
       <div class="edit-card" id="section-club">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-building"></i></div>
           <div class="card-header-text">
             <div class="card-title">Club Information</div>
@@ -1342,7 +1323,7 @@
 
       <!-- ── COACHING & MANAGEMENT STAFF ── -->
       <div class="edit-card" id="section-club-staff">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-users-gear"></i></div>
           <div class="card-header-text">
             <div class="card-title">Coaching & Management Staff</div>
@@ -1376,7 +1357,7 @@
 
       <!-- ── FINANCIAL INFORMATION ── -->
       <div class="edit-card" id="section-financial">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-coins"></i></div>
           <div class="card-header-text">
             <div class="card-title">Financial Information</div>
@@ -1410,7 +1391,7 @@
 
       <!-- ── YOUTH & DEVELOPMENT ── -->
       <div class="edit-card" id="section-youth">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-seedling"></i></div>
           <div class="card-header-text">
             <div class="card-title">Youth & Development</div>
@@ -1444,7 +1425,7 @@
 
       <!-- ── COMMUNITY & SOCIAL RESPONSIBILITY ── -->
       <div class="edit-card" id="section-community">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-hands-holding-child"></i></div>
           <div class="card-header-text">
             <div class="card-title">Community & Social Responsibility</div>
@@ -1478,7 +1459,7 @@
 
       <!-- ── DETAILED FACILITIES ── -->
       <div class="edit-card" id="section-facilities">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-warehouse"></i></div>
           <div class="card-header-text">
             <div class="card-title">Detailed Facilities</div>
@@ -1516,7 +1497,7 @@
 
       <!-- ── EQUIPMENT INVENTORY ── -->
       <div class="edit-card" id="section-equipment">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-toolbox"></i></div>
           <div class="card-header-text">
             <div class="card-title">Equipment Inventory</div>
@@ -1546,7 +1527,7 @@
 
       <!-- ── LEGAL & COMPLIANCE (Club) ── -->
       <div class="edit-card" id="section-club-legal">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-scale-balanced"></i></div>
           <div class="card-header-text">
             <div class="card-title">Legal & Compliance</div>
@@ -1578,7 +1559,7 @@
     <!-- ── SUPPORTIVE PROFESSION ── -->
     <div id="supportive_professional-sections" style="display:none">
       <div class="edit-card" id="section-services">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-briefcase-medical"></i></div>
           <div class="card-header-text">
             <div class="card-title">Professional Details & Services</div>
@@ -1655,7 +1636,7 @@
 
       <!-- ── CONTACT & COMMUNICATION ── -->
       <div class="edit-card" id="section-communication">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-comments"></i></div>
           <div class="card-header-text">
             <div class="card-title">Contact & Communication</div>
@@ -1696,7 +1677,7 @@
 
       <!-- ── TESTIMONIALS & REFERENCES ── -->
       <div class="edit-card" id="section-testimonials">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-star-half-stroke"></i></div>
           <div class="card-header-text">
             <div class="card-title">Testimonials & References</div>
@@ -1726,7 +1707,7 @@
 
       <!-- ── PAYMENT & RATES ── -->
       <div class="edit-card" id="section-payment">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-credit-card"></i></div>
           <div class="card-header-text">
             <div class="card-title">Payment & Rates</div>
@@ -1760,7 +1741,7 @@
 
       <!-- ── LEGAL & COMPLIANCE (Supportive) ── -->
       <div class="edit-card" id="section-prof-legal">
-        <div class="edit-card-header" onclick="toggleCard(this)">
+        <div class="edit-card-header">
           <div class="card-icon-wrap"><i class="fa-solid fa-scale-balanced"></i></div>
           <div class="card-header-text">
             <div class="card-title">Legal & Compliance</div>
@@ -1791,7 +1772,7 @@
 
     <!-- ── MEDIA & SOCIAL ── -->
     <div class="edit-card" id="section-media">
-      <div class="edit-card-header" onclick="toggleCard(this)">
+      <div class="edit-card-header">
         <div class="card-icon-wrap"><i class="fa-solid fa-photo-film"></i></div>
         <div class="card-header-text">
           <div class="card-title">Media & Social Links</div>
@@ -1865,7 +1846,7 @@
 
     <!-- ── PRIVACY & SHARING ── -->
     <div class="edit-card" id="section-privacy">
-      <div class="edit-card-header" onclick="toggleCard(this)">
+      <div class="edit-card-header">
         <div class="card-icon-wrap"><i class="fa-solid fa-shield-halved"></i></div>
         <div class="card-header-text">
           <div class="card-title">Privacy & Sharing</div>
@@ -1905,7 +1886,7 @@
 
     <!-- ── DANGER ZONE ── -->
     <div class="edit-card danger-zone" style="margin-top:32px">
-      <div class="edit-card-header" onclick="toggleCard(this)">
+      <div class="edit-card-header">
         <div class="card-icon-wrap"><i class="fa-solid fa-triangle-exclamation"></i></div>
         <div class="card-header-text">
           <div class="card-title">Danger Zone</div>
@@ -1950,7 +1931,6 @@
   </div>
 </footer>
 
-<script src="../../js/profile-menu.js"></script>
 <script>
 if (window.profileRuntime) {
   window.profileRuntime.wireDeactivateAccount('#deactivateAccountBtn');
@@ -2007,48 +1987,14 @@ if (window.profileRuntime) {
     if (hlg) hlg.style.display = 'none';
   }
 
-  // ── Sidebar hydration ──
+  // ── Sidebar hydration (kept for page-specific fields) ──
   var typeLabels = { athlete:'Athlete', coach:'Coach', club:'Club', 'supportive_professional':'Professional' };
-  var displayName = ud.displayName || ud.name || ((ud.firstName||'') + ' ' + (ud.lastName||'')).trim() || 'Your Name';
-  var initials = displayName.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
-
-  el('sidebarName', displayName);
-  el('chipName', displayName);
-
-  // Handle
-  var handle = ud.username || (ud.email ? ud.email.split('@')[0] : 'username');
-  el('sidebarHandle', '@' + handle);
-
-  // Role badge
   var roleInfo = {
     athlete:  { icon: 'fa-person-running', label: 'Athlete' },
     coach:    { icon: 'fa-bullseye',       label: 'Coach' },
     club:     { icon: 'fa-shield-halved',  label: 'Club' },
     'supportive_professional': { icon: 'fa-star', label: 'Pro' }
   };
-  var rInfo = roleInfo[userType] || roleInfo.athlete;
-  var rbEl = document.getElementById('sidebarRoleBadge');
-  if (rbEl) rbEl.innerHTML = '<i class="fa-solid ' + rInfo.icon + '" style="font-size:8px"></i> ' + rInfo.label;
-
-  // Sport badge
-  var sportName = ud.primarySport || ud.sport || '';
-  var sbEl = document.getElementById('sidebarSportBadge');
-  if (sbEl) {
-    if (sportName) {
-      sbEl.innerHTML = '<i class="fa-solid fa-futbol" style="font-size:8px"></i> ' + sportName.split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');
-      sbEl.style.display = 'inline-flex';
-    } else {
-      sbEl.style.display = 'none';
-    }
-  }
-
-  var sa = document.getElementById('sidebarAv');
-  if (ud.avatarUrl) {
-    var imgHtml = '<img src="'+ud.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-    if (sa) sa.innerHTML = imgHtml;
-  } else {
-    if (sa) sa.textContent = initials;
-  }
 
   // ── Back link stays as /feed.html (home); View My Profile uses stable id ──
   var viewMyLink = document.getElementById('viewMyProfileLink');
@@ -2745,45 +2691,6 @@ if (window.profileRuntime) {
     if (hdr) hdr.setAttribute('aria-expanded', String(expanded));
   }
 
-  window.toggleCard = function(hdr) {
-    var card = hdr.closest('.edit-card');
-    var isCollapsed = card.classList.contains('collapsed');
-    setCardExpanded(card, isCollapsed);
-    // update active nav
-    var id = card.id;
-    document.querySelectorAll('.sidebar-nav-item').forEach(function(n){
-      n.classList.toggle('active', n.getAttribute('href') === '#' + id);
-    });
-  };
-
-  // Keyboard accessibility for card headers
-  document.querySelectorAll('.edit-card-header').forEach(function(hdr) {
-    hdr.setAttribute('tabindex', '0');
-    hdr.setAttribute('role', 'button');
-    hdr.setAttribute('aria-expanded', String(!hdr.closest('.edit-card').classList.contains('collapsed')));
-    hdr.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleCard(hdr);
-      }
-    });
-  });
-
-  // ── Sidebar nav: auto-expand target card on click ──
-  document.querySelectorAll('.sidebar-nav-item[href^="#section-"]').forEach(function(link) {
-    link.addEventListener('click', function(e) {
-      var targetId = link.getAttribute('href').slice(1);
-      var card = document.getElementById(targetId);
-      if (card) {
-        setCardExpanded(card, true);
-      }
-      // update active sidebar state + sync aria
-      document.querySelectorAll('.sidebar-nav-item').forEach(function(n) {
-        n.classList.toggle('active', n === link);
-      });
-    });
-  });
-
   // ── Visibility toggle logic ──
   function loadVisibilitySettings() {
     var user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
@@ -2873,130 +2780,209 @@ if (window.profileRuntime) {
     });
   }
 
-  // ── Real-time sync: Update sidebar and chip as user types ──
-  function liveSync() {
-    // Name
-    var nameInput = document.getElementById('fullNameInput');
-    if (nameInput) {
-      nameInput.addEventListener('input', function() {
-        var name = nameInput.value.trim() || 'Your Name';
-        el('sidebarName', name);
-        var ini = name.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
-        var sa = document.getElementById('sidebarAv');
-        if (sa && !sa.querySelector('img')) sa.textContent = ini;
-      });
-    }
-
-    // Display Name
-    var displayInput = document.getElementById('displayNameInput');
-    if (displayInput) {
-      displayInput.addEventListener('input', function() {
-        var dn = displayInput.value.trim();
-        if (dn) {
-          el('sidebarName', dn);
-          var ini = dn.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
-          var sa = document.getElementById('sidebarAv');
-          if (sa && !sa.querySelector('img')) sa.textContent = ini;
-        }
-      });
-    }
-
-    // Sport selects
-    document.querySelectorAll('.sport-select').forEach(function(sel) {
-      sel.addEventListener('change', function() {
-        var sport = sel.options[sel.selectedIndex];
-        var sbEl = document.getElementById('sidebarSportBadge');
-        if (sbEl && sport && sport.value) {
-          sbEl.innerHTML = '<i class="fa-solid fa-futbol" style="font-size:8px"></i> ' + sport.textContent;
-          sbEl.style.display = 'inline-flex';
-        } else if (sbEl) {
-          sbEl.style.display = 'none';
-        }
-      });
-    });
-  }
-  liveSync();
-
-  // ── Update sidebar after any save ──
-  window.addEventListener('currentUserChanged', function(e) {
-    var p = e.detail;
-    if (!p) return;
-    var name = p.displayName || p.name || ((p.firstName||'') + ' ' + (p.lastName||'')).trim() || 'User';
-    var ini = name.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
-    el('sidebarName', name);
-    el('sidebarHandle', '@' + (p.username || (p.email ? p.email.split('@')[0] : 'user')));
-    var sa = document.getElementById('sidebarAv');
-    if (p.avatarUrl) {
-      var imgH = '<img src="'+p.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-      if (sa) sa.innerHTML = imgH;
-    } else {
-      if (sa && !sa.querySelector('img')) sa.textContent = ini;
-    }
-    // Role badge
-    var ri = roleInfo[p.userType] || roleInfo.athlete;
-    var rb = document.getElementById('sidebarRoleBadge');
-    if (rb) rb.innerHTML = '<i class="fa-solid ' + ri.icon + '" style="font-size:8px"></i> ' + ri.label;
-    // Sport badge
-    var sn = p.primarySport || p.sport || '';
-    var sb = document.getElementById('sidebarSportBadge');
-    if (sb) {
-      if (sn) {
-        sb.innerHTML = '<i class="fa-solid fa-futbol" style="font-size:8px"></i> ' + sn.split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');
-        sb.style.display = 'inline-flex';
-      } else {
-        sb.style.display = 'none';
-      }
-    }
-    // Register username
-    if (p.username && p.email) registerUsername(p.username, p.email);
-  });
-
-  // Profile menu, chip hydration, section toggles, and action routing
-  // are all handled by profile-menu.js (loaded separately).
-  // Do NOT call setupSocialFeedRuntime here — it would double-register
-  // chip-click handlers and cause a double-toggle (net zero) bug.
-
 })();
-</script>
-<script src="/js/navigation.js"></script>
-<script>
-// Collapse all edit-cards by default on load
-(function(){
-  document.querySelectorAll('.edit-card').forEach(function(card){
-    card.classList.add('collapsed');
-  });
-})();
-
-// Dirty-state tracking: warn on unsaved changes
-(function(){
-  var dirty = false;
-  function markDirty(){ dirty = true; }
-  window.clearProfileDirty = function(){ dirty = false; };
-  document.addEventListener('input', function(e){
-    if(e.target.closest('.edit-card')) markDirty();
-  }, true);
-  document.addEventListener('change', function(e){
-    if(e.target.closest('.edit-card')) markDirty();
-  }, true);
-  window.addEventListener('beforeunload', function(e){
-    if(dirty){ e.preventDefault(); e.returnValue = ''; }
-  });
-})();
-</script>
-<script>
-  // Inject mobile navigation shell
-  if (window.sharedUi && window.sharedUi.ensureMobileChrome) {
-    window.sharedUi.ensureMobileChrome('../../');
-  }
 </script>
 <script src="/js/current-user-store.js"></script>
 <script src="/js/user-ui.js"></script>
+<script src="/js/navigation.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', async function () {
-    if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
-    if (window.UserUI) window.UserUI.bindAllChips();
-  });
+(function () {
+  async function initEditProfilePage() {
+    // 1. Auth check using backend session
+    try {
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.me === 'function') {
+        await window.SpopeerAPI.me();
+      }
+    } catch (err) {
+      window.location.href = '../auth/login.html';
+      return;
+    }
+
+    // 2. Refresh current signed-in user and bind chips
+    try {
+      if (window.CurrentUserStore) {
+        await window.CurrentUserStore.refreshCurrentUser();
+      }
+      if (window.UserUI) {
+        window.UserUI.bindAllChips();
+      }
+    } catch (err) {
+      console.debug('Current-user initialization failed on edit-profile page', err);
+    }
+
+    // 3. Profile menu toggle
+    var chip = document.getElementById('userChip');
+    var menu = document.getElementById('profileMenu');
+
+    function closeMenu() {
+      if (!menu) return;
+      menu.classList.remove('visible');
+      menu.setAttribute('aria-hidden', 'true');
+    }
+
+    function openMenu() {
+      if (!menu) return;
+      menu.classList.add('visible');
+      menu.setAttribute('aria-hidden', 'false');
+    }
+
+    function toggleMenu() {
+      if (!menu) return;
+      if (menu.classList.contains('visible')) closeMenu();
+      else openMenu();
+    }
+
+    if (chip && menu) {
+      chip.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleMenu();
+      });
+
+      chip.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleMenu();
+        }
+      });
+
+      menu.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+
+      document.addEventListener('click', closeMenu);
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeMenu();
+      });
+
+      menu.querySelectorAll('.profile-menu-section-header').forEach(function (header) {
+        header.addEventListener('click', function () {
+          var section = header.closest('.profile-menu-section');
+          if (!section) return;
+
+          var collapsed = section.classList.contains('collapsed');
+          if (collapsed) section.classList.remove('collapsed');
+          else section.classList.add('collapsed');
+        });
+      });
+
+      menu.addEventListener('click', async function (e) {
+        var button = e.target.closest('button[data-action]');
+        if (!button) return;
+
+        var action = button.dataset.action;
+
+        if (action === 'view-profile') {
+          window.location.href = 'public-profile.html';
+        } else if (action === 'edit-profile') {
+          window.location.href = 'edit-profile.html';
+        } else if (action === 'notifications') {
+          window.location.href = '../dashboard/notifications.html';
+        } else if (action === 'account-settings') {
+          window.location.href = '../dashboard/settings.html';
+        } else if (action === 'connections') {
+          window.location.href = '../messaging/inbox.html';
+        } else if (action === 'logout') {
+          try {
+            if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === 'function') {
+              await window.SpopeerAPI.logout();
+              return;
+            }
+          } catch (err) {
+            console.error('Logout failed from edit-profile menu', err);
+          }
+
+          if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
+            try {
+              window.CurrentUserStore.clearCurrentUser();
+            } catch (err) {
+              console.debug('CurrentUserStore.clearCurrentUser failed', err);
+            }
+          }
+
+          localStorage.removeItem('spopeer_user');
+          localStorage.removeItem('spopeer_loggedIn');
+          localStorage.removeItem('user');
+          window.location.replace('/index.html');
+          return;
+        }
+
+        closeMenu();
+      });
+    }
+
+    // 4. Section expand/collapse — collapse all by default
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.edit-card'));
+    var headers = Array.prototype.slice.call(document.querySelectorAll('.edit-card-header'));
+
+    cards.forEach(function (card) {
+      card.classList.add('collapsed');
+    });
+
+    function setCardExpanded(card, expanded) {
+      if (!card) return;
+      if (expanded) card.classList.remove('collapsed');
+      else card.classList.add('collapsed');
+
+      var header = card.querySelector('.edit-card-header');
+      if (header) {
+        header.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      }
+    }
+
+    headers.forEach(function (header) {
+      header.setAttribute('tabindex', '0');
+      header.setAttribute('role', 'button');
+      var card = header.closest('.edit-card');
+      header.setAttribute('aria-expanded', card && !card.classList.contains('collapsed') ? 'true' : 'false');
+
+      header.addEventListener('click', function () {
+        var currentCard = header.closest('.edit-card');
+        if (!currentCard) return;
+        var shouldExpand = currentCard.classList.contains('collapsed');
+        setCardExpanded(currentCard, shouldExpand);
+      });
+
+      header.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          header.click();
+        }
+      });
+    });
+
+    // 5. Sidebar navigation opens target section
+    document.querySelectorAll('.sidebar-nav-item[href^="#section-"]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        var targetId = link.getAttribute('href').slice(1);
+        var targetCard = document.getElementById(targetId);
+        if (targetCard) {
+          setCardExpanded(targetCard, true);
+        }
+
+        document.querySelectorAll('.sidebar-nav-item').forEach(function (item) {
+          item.classList.toggle('active', item === link);
+        });
+      });
+    });
+
+    // 6. Dirty-state tracking: warn on unsaved changes
+    var dirty = false;
+    function markDirty() { dirty = true; }
+    window.clearProfileDirty = function () { dirty = false; };
+    document.addEventListener('input', function (e) {
+      if (e.target.closest('.edit-card')) markDirty();
+    }, true);
+    document.addEventListener('change', function (e) {
+      if (e.target.closest('.edit-card')) markDirty();
+    }, true);
+    window.addEventListener('beforeunload', function (e) {
+      if (dirty) { e.preventDefault(); e.returnValue = ''; }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initEditProfilePage);
+})();
 </script>
 </body>
 </html>
-
