@@ -2,6 +2,9 @@
 (function () {
   function getUser() {
     try {
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+        return window.CurrentUserStore.getCurrentUser() || {};
+      }
       return JSON.parse(localStorage.getItem("spopeer_user") || "{}");
     } catch {
       return {};
@@ -9,6 +12,9 @@
   }
 
   function isLoggedIn() {
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') {
+      return window.CurrentUserStore.isLoggedIn();
+    }
     return localStorage.getItem('spopeer_loggedIn') === 'true';
   }
 

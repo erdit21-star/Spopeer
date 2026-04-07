@@ -2,6 +2,9 @@
 (function () {
   function getUser() {
     try {
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+        return window.CurrentUserStore.getCurrentUser() || {};
+      }
       return JSON.parse(localStorage.getItem("spopeer_user") || "{}");
     } catch {
       return {};
@@ -13,7 +16,7 @@
   }
 
   function requireAdmin() {
-    const loggedIn = localStorage.getItem("spopeer_loggedIn") === "true";
+    const loggedIn = (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem("spopeer_loggedIn") === "true");
     const user = getUser();
 
     if (!loggedIn) {
