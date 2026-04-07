@@ -2281,9 +2281,9 @@
         </div>
         <button class="notif-popover-viewall" id="viewAllNotif">View all</button>
       </div>
-      <div class="user-chip" id="userChip">
-        <span class="chip-avatar" id="chipAvatar">JD</span>
-        <span class="chip-name" id="chipName">Jamie</span>
+      <div class="user-chip" id="userChip" data-user-chip>
+        <span class="chip-avatar" data-user-chip-avatar>U</span>
+        <span class="chip-name" data-user-chip-name>User</span>
         <i class="fa-solid fa-chevron-down chip-caret"></i>
       </div>
 
@@ -2936,79 +2936,26 @@
 
 <script>
 (function () {
-  /* safe localStorage reader */
-  function readUser(fallback) {
-    try { return JSON.parse(localStorage.getItem('spopeer_user') || 'null') || fallback; }
-    catch(e) { console.warn('Corrupt spopeer_user in storage.', e); return fallback; }
-  }
   /* ====== initialize profile sync ====== */
   if (typeof ProfileSyncService !== 'undefined') ProfileSyncService.init();
-  
-  /* ====== hydrate user ====== */
-  const ud = readUser(null);
-  
-  // Listen for profile sync updates from ProfileSyncService
-  window.addEventListener('profileSyncUpdated', (event) => {
-    const profile = event.detail?.profile || event.detail;
-    if (profile) updateSidebarFromProfile(profile);
-  });
-  
-  if (ud && ud.name) {
-    // Set defaults for new accounts that don't have profile details yet
-    if (ud.followers === undefined) ud.followers = 0;
-    if (ud.following === undefined) ud.following = 0;
-    if (ud.postsCount === undefined) ud.postsCount = 0;
-    
-    const init = ud.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    
-    // Update avatars - check for avatarUrl first
-    const updateAvatarElement = (id) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      
-      if (ud.avatarUrl) {
-        el.innerHTML = '';
-        const img = document.createElement('img');
-        img.src = ud.avatarUrl;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '50%';
-        el.appendChild(img);
-      } else {
-        el.textContent = init;
-      }
-    };
-    
-    ['chipAvatar','createAvatar','sidebarAvatar'].forEach(id => {
-      updateAvatarElement(id);
-    });
-    
-    const cn = document.getElementById('chipName');
-    if (cn) cn.textContent = ud.name;
-    const sn = document.getElementById('sidebarName');
-    if (sn) sn.textContent = ud.name;
-    // Populate composer user info
-    const composerAv = document.getElementById('composerAvatar');
-    if (composerAv) {
-      if (ud.avatarUrl) {
-        composerAv.innerHTML = '';
-        const img = document.createElement('img');
-        img.src = ud.avatarUrl;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '50%';
-        composerAv.appendChild(img);
-      } else {
-        composerAv.textContent = init;
-      }
-    }
-    const composerN = document.getElementById('composerName');
-    if (composerN) composerN.textContent = ud.name;
-    const composerH = document.getElementById('composerHandle');
-    if (composerH) composerH.textContent = '@' + (ud.username || 'user');
+
+  function getCurrentUserData() {
+    if (window.CurrentUserStore) return window.CurrentUserStore.getCurrentUser() || {};
+    try { return JSON.parse(localStorage.getItem('spopeer_user') || '{}') || {}; } catch { return {}; }
   }
+
+  // Wire store updates to hydrate sidebar and bind chips
+  if (window.CurrentUserStore) {
+    window.CurrentUserStore.subscribe(user => {
+      hydrateSidebarProfile(user);
+      if (window.UserUI) window.UserUI.bindAllChips();
+    });
+    // initial run
+    hydrateSidebarProfile(window.CurrentUserStore.getCurrentUser());
+    if (window.UserUI) window.UserUI.bindAllChips();
+  }
+  
+  // Hydration of avatars/names is handled centrally by CurrentUserStore and UserUI
 
   // Sidebar profile card population
   function updateSidebarFromProfile(profile) {
@@ -3392,59 +3339,7 @@
     }
   }
   
-  /* ─── PROFILE SYNC: Listen for profile updates ─── */
-  window.addEventListener('profileUpdated', (event) => {
-    const updatedProfile = event.detail?.profile || event.detail;
-    if (updatedProfile && typeof updatedProfile === 'object' && !updatedProfile.source) {
-      // Update localStorage
-      try {
-        const currentUser = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-        const mergedProfile = { ...currentUser, ...updatedProfile };
-        localStorage.setItem('spopeer_user', JSON.stringify(mergedProfile));
-        updateSidebarFromProfile(mergedProfile);
-      } catch(e) {
-        console.warn('Error merging profile update:', e);
-      }
-    } else if (updatedProfile) {
-      updateSidebarFromProfile(updatedProfile);
-    }
-  });
-
-  /* ─── PROFILE SYNC: Listen for localStorage changes (cross-tab/window) ─── */
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'spopeer_user' && event.newValue) {
-      try {
-        const updatedProfile = JSON.parse(event.newValue);
-        updateSidebarFromProfile(updatedProfile);
-      } catch (e) {
-        console.error('Error parsing updated profile:', e);
-      }
-    }
-    // Also detect the update flag from edit-profile.html
-    if (event.key === '_profileLastUpdated_') {
-      try {
-        const currentUser = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-        updateSidebarFromProfile(currentUser);
-      } catch(e) {
-        console.warn('Error parsing profile from storage event:', e);
-      }
-    }
-  });
-
-  /* ─── PROFILE SYNC: Poll for profile changes (handles same-tab updates) ─── */
-  let lastProfileCheck = localStorage.getItem('spopeer_user');
-  setInterval(() => {
-    const currentProfile = localStorage.getItem('spopeer_user');
-    if (currentProfile !== lastProfileCheck) {
-      lastProfileCheck = currentProfile;
-      try {
-        const profile = JSON.parse(currentProfile || '{}');
-        updateSidebarFromProfile(profile);
-      } catch (e) {
-        console.error('Error parsing profile from poll:', e);
-      }
-    }
-  }, 500);  // Check every 500ms for changes
+  /* Profile change propagation: handled centrally via CurrentUserStore and the global `currentUserChanged` event. */
 
   /* ====== logout ====== */
   // Handle all logout triggers: #logoutBtn, [data-action="logout"], .profile-menu-item.logout
@@ -3492,12 +3387,17 @@
 
   function updateCurrentUserFollowCounts(deltaFollowing) {
     try {
-      const current = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      const current = getCurrentUserData() || {};
       const nextFollowing = Math.max(0, Number(current.following || 0) + deltaFollowing);
       const updated = { ...current, following: nextFollowing };
-      localStorage.setItem('spopeer_user', JSON.stringify(updated));
-      updateSidebarFromProfile(updated);
-      window.dispatchEvent(new CustomEvent('profileUpdated', { detail: { profile: updated, source: 'FollowAction' } }));
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+        window.CurrentUserStore.setCurrentUser(updated);
+      } else {
+        try { localStorage.setItem('spopeer_user', JSON.stringify(updated)); } catch (e) { /* ignore */ }
+      }
+      if (typeof window.CustomEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('currentUserChanged', { detail: { user: updated } }));
+      }
     } catch (e) {
       console.warn('Failed to update current follow counts:', e);
     }
@@ -3546,7 +3446,7 @@
   }
 
   function getProfileUrl() {
-    const userData = readUser(null);
+    const userData = getCurrentUserData();
     const identifier = userData?.id || userData?.userId || userData?.email || userData?.userEmail || '';
     return `pages/profiles/public-profile.html?userId=${encodeURIComponent(identifier)}`;
   }
@@ -4219,7 +4119,7 @@
     const text = storyReplyInput.value.trim();
     if (!text) return;
 
-    const currentUser = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+    const currentUser = getCurrentUserData();
     const replies = JSON.parse(localStorage.getItem('spopeer_story_replies') || '[]');
     replies.unshift({
       id: Date.now(),
@@ -4310,7 +4210,7 @@
     if (publishBtn) publishBtn.addEventListener('click', function() {
       var text = textInput.value.trim();
       if (!text && !storyImageData) { alert('Add text or a photo to your story.'); return; }
-      var ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      var ud = getCurrentUserData();
       var name = ud.displayName || ud.name || [ud.firstName, ud.lastName].filter(Boolean).join(' ') || 'You';
       var initials = name.split(' ').map(function(x){ return x[0] || ''; }).join('').toUpperCase().slice(0,2) || 'U';
 
@@ -4617,7 +4517,7 @@
   submitComposer?.addEventListener('click', async () => {
     const content = postContent.value.trim();
     const visibility = document.getElementById('postVisibility').value;
-    const userData = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+    const userData = getCurrentUserData();
 
     // Validate content
     if (!content && composerState.media.length === 0 && !composerState.poll && !composerState.event) {
@@ -4871,7 +4771,7 @@
   const sportIndicator = document.getElementById("sportIndicator");
   const feedMount = document.getElementById("feedPostsMount") || document.querySelector(".feed-col");
 
-  const _feedUser = JSON.parse(localStorage.getItem("spopeer_user") || "{}");
+  const _feedUser = getCurrentUserData();
   const primarySport = _feedUser.primarySport || _feedUser.sport || "Running";
   const secondarySports = Array.isArray(_feedUser.secondarySports) ? _feedUser.secondarySports : [];
 
@@ -5076,7 +4976,7 @@
 /* ── SHARE PROFILE MODAL ── */
 function openShareModal() {
   try {
-    const ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+    const ud = getCurrentUserData();
     if (ud) {
       const init = ud.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || 'JS';
       const handle = ud.email?.split('@')[0] || 'user';
@@ -5104,7 +5004,7 @@ function closeShareModal() {
 }
 
 function copyShareLink() {
-  const ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+  const ud = getCurrentUserData();
   const handle = ud?.email?.split('@')[0] || 'user';
   const url = `${window.location.origin}/pages/profiles/public-profile.html?userId=${encodeURIComponent(ud?.email || handle)}`;
   navigator.clipboard?.writeText(url).catch(() => {});
@@ -5118,7 +5018,7 @@ function copyShareLink() {
 }
 
 function shareVia(platform) {
-  const ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+  const ud = getCurrentUserData();
   const handle = ud?.email?.split('@')[0] || 'user';
   const url  = encodeURIComponent(`${window.location.origin}/pages/profiles/public-profile.html?userId=${encodeURIComponent(ud?.email || handle)}`);
   const text = encodeURIComponent(`Check out ${ud?.name || 'my'} profile on Spopeer!`);
@@ -5534,7 +5434,7 @@ function attachCommentListeners() {
       if (!text) return;
       var postId = card.getAttribute('data-post-id');
       if (!postId) return;
-      var currentUser = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      var currentUser = getCurrentUserData();
 
       // Try real API first
       (async function() {
@@ -5645,7 +5545,7 @@ function generatePostHTML(post) {
   // Only show media section when there is actual media content
   // (no empty 200px gray placeholder for text-only posts)
 
-  const currentUser = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+  const currentUser = getCurrentUserData();
   const currentEmail = currentUser.email || currentUser.userEmail || '';
   const hasPoll = !!(post.poll && Array.isArray(post.poll.options) && post.poll.options.length > 0);
   let pollHTML = '';

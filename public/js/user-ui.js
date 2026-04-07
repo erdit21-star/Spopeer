@@ -65,7 +65,7 @@
     bindAllChips
   };
 })();
-// user-ui.js
+// consolidated single UserUI implementation (keeps legacy id support)
 (function () {
   function renderAvatar(el, user) {
     if (!el) return;
@@ -76,7 +76,7 @@
     }
 
     if (user.avatarUrl) {
-      el.innerHTML = `<img src="${user.avatarUrl}" alt="${(user.displayName||'User')}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      el.innerHTML = `<img src="${user.avatarUrl}" alt="${user.displayName || 'User'}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
     } else {
       el.textContent = user.initials || 'U';
     }
@@ -112,10 +112,10 @@
       const n = document.getElementById('chipName');
       if (a) {
         if (user && user.avatarUrl) a.innerHTML = `<img src="${user.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-        else if (a) a.textContent = user ? (user.initials || 'U') : 'U';
+        else a.textContent = user ? (user.initials || 'U') : 'U';
       }
       if (n) {
-        if (user) n.textContent = (user.displayName||'User').split(' ')[0] || user.displayName;
+        if (user) n.textContent = (user.displayName || 'User').split(' ')[0] || user.displayName;
         else n.textContent = 'User';
       }
     } catch (e) { /* ignore */ }
@@ -131,10 +131,8 @@
   }
 
   function bindAllChips() {
-    // data-attribute chips
     document.querySelectorAll('[data-user-chip]').forEach(root => bindChip(root));
-    // also update legacy ids once
-    applyLegacyIds(window.CurrentUserStore.getCurrentUser());
+    if (window.CurrentUserStore) applyLegacyIds(window.CurrentUserStore.getCurrentUser());
   }
 
   window.UserUI = {
