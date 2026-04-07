@@ -23,6 +23,11 @@
   }
 
   function getUser() {
+    try {
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+        return window.CurrentUserStore.getCurrentUser() || parseStoredJson("spopeer_user") || parseStoredJson("user") || null;
+      }
+    } catch (_) {}
     return parseStoredJson("spopeer_user") || parseStoredJson("user") || null;
   }
 
@@ -248,7 +253,7 @@
     logout,
     showNotification,
     request,
-    isAuthenticated: function () { return localStorage.getItem("spopeer_loggedIn") === "true" && !!getUser(); },
+    isAuthenticated: function () { return (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem("spopeer_loggedIn") === "true")) && !!getUser(); },
     requireAuth: function () {
       if (!getUser()) {
         window.location.href = "/pages/auth/login.html";

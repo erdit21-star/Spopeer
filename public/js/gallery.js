@@ -15,8 +15,13 @@ class GalleryManager {
   }
 
   parseUser() {
-    const userStr = localStorage.getItem('spopeer_user');
-    return userStr ? JSON.parse(userStr) : null;
+    try {
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+        return window.CurrentUserStore.getCurrentUser() || null;
+      }
+      const userStr = localStorage.getItem('spopeer_user');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (e) { return null; }
   }
 
   isImage(file) {

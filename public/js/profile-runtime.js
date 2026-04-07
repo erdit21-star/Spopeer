@@ -3,6 +3,11 @@
   'use strict';
 
   function isAuthenticated() {
+    try {
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') {
+        return window.CurrentUserStore.isLoggedIn();
+      }
+    } catch (_) {}
     var loggedIn = localStorage.getItem('spopeer_loggedIn') === 'true';
     var user = localStorage.getItem('spopeer_user');
     return loggedIn && Boolean(user);
