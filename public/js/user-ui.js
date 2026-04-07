@@ -48,43 +48,37 @@
     update(window.CurrentUserStore.getCurrentUser());
     return window.CurrentUserStore.subscribe(update);
   }
-
-  function bindAllChips() {
-    document.querySelectorAll('[data-user-chip]').forEach(root => {
-      bindChip(root);
-    });
+(function () {
+  function escapeHtml(text) {
+    return String(text || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
   }
 
-  window.UserUI = {
-    renderAvatar,
-    renderName,
-    renderFullName,
-    renderRole,
-    renderChip,
-    bindChip,
-    bindAllChips
-  };
-})();
-// consolidated single UserUI implementation (keeps legacy id support)
-(function () {
   function renderAvatar(el, user) {
     if (!el) return;
 
     if (!user) {
-      el.textContent = '?';
+      el.innerHTML = '';
+      el.textContent = 'U';
       return;
     }
 
     if (user.avatarUrl) {
-      el.innerHTML = `<img src="${user.avatarUrl}" alt="${user.displayName || 'User'}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    } else {
-      el.textContent = user.initials || 'U';
+      el.innerHTML = `<img src="${user.avatarUrl}" alt="${escapeHtml(user.displayName || 'User')}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      return;
     }
+
+    el.innerHTML = '';
+    el.textContent = user.initials || 'U';
   }
 
-  function renderName(el, user) {
+  function renderShortName(el, user) {
     if (!el) return;
-    el.textContent = user ? (String(user.displayName).split(' ')[0] || user.displayName) : 'User';
+    el.textContent = user ? (user.displayName.split(' ')[0] || user.displayName) : 'User';
   }
 
   function renderFullName(el, user) {
@@ -92,54 +86,55 @@
     el.textContent = user ? user.displayName : 'User';
   }
 
+  function renderHandle(el, user) {
+    if (!el) return;
+
+    if (!user) {
+      el.textContent = '@user';
+      return;
+    }
+
+    const handle = user.username || (user.email ? user.email.split('@')[0] : '') || 'user';
+    el.textContent = '@' + handle;
+  }
+
   function renderRole(el, user) {
     if (!el) return;
-    el.textContent = user ? (user.role || 'user') : 'user';
+    el.textContent = user ? user.role || 'user' : 'user';
   }
 
   function renderChip(root, user) {
     if (!root) return;
 
     renderAvatar(root.querySelector('[data-user-chip-avatar]'), user);
-    renderName(root.querySelector('[data-user-chip-name]'), user);
+    renderShortName(root.querySelector('[data-user-chip-name]'), user);
     renderFullName(root.querySelector('[data-user-full-name]'), user);
+    renderHandle(root.querySelector('[data-user-handle]'), user);
     renderRole(root.querySelector('[data-user-role]'), user);
   }
 
-  function applyLegacyIds(user) {
-    try {
-      const a = document.getElementById('chipAvatar');
-      const n = document.getElementById('chipName');
-      if (a) {
-        if (user && user.avatarUrl) a.innerHTML = `<img src="${user.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-        else a.textContent = user ? (user.initials || 'U') : 'U';
-      }
-      if (n) {
-        if (user) n.textContent = (user.displayName || 'User').split(' ')[0] || user.displayName;
-        else n.textContent = 'User';
-      }
-    } catch (e) { /* ignore */ }
-  }
-
   function bindChip(root) {
-    if (!root || !window.CurrentUserStore) return;
+    if (!root || !window.CurrentUserStore) return function noop() {};
 
-    function update(user) { renderChip(root, user); applyLegacyIds(user); }
+    const update = function(user) { renderChip(root, user); };
 
     update(window.CurrentUserStore.getCurrentUser());
     return window.CurrentUserStore.subscribe(update);
   }
 
-  function bindAllChips() {
-    document.querySelectorAll('[data-user-chip]').forEach(root => bindChip(root));
-    if (window.CurrentUserStore) applyLegacyIds(window.CurrentUserStore.getCurrentUser());
-  }
+  function bindAllChips() { document.querySelectorAll('[data-user-chip]').forEach(bindChip); }
 
   window.UserUI = {
     renderAvatar,
-    renderName,
+    renderShortName,
     renderFullName,
+    renderHandle,
     renderRole,
+    renderChip,
+    bindChip,
+    bindAllChips
+  };
+})();
     renderChip,
     bindChip,
     bindAllChips

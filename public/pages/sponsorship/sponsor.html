@@ -518,9 +518,9 @@
           <i class="fa-regular fa-paper-plane"></i>
         </button>
 
-        <div class="user-chip" id="userChip" role="button" aria-haspopup="menu" aria-expanded="false">
-          <div class="chip-avatar" id="chipAvatar">SP</div>
-          <span class="chip-name" id="chipName">Profile</span>
+        <div class="user-chip" id="userChip" data-user-chip role="button" aria-haspopup="menu" aria-expanded="false">
+          <div class="chip-avatar" data-user-chip-avatar>SP</div>
+          <span class="chip-name" data-user-chip-name>Profile</span>
           <span class="chip-caret"><i class="fa-solid fa-chevron-down"></i></span>
         </div>
 
@@ -823,6 +823,9 @@
       var activeMode = 'request';
 
       function getUser() {
+        if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+          return window.CurrentUserStore.getCurrentUser() || {};
+        }
         try {
           return JSON.parse(localStorage.getItem('spopeer_user') || '{}') || {};
         } catch (e) {
