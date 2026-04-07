@@ -363,13 +363,13 @@
         <button class="nav-icon" id="homeBtn" title="Home"><i class="fa-regular fa-house"></i></button>
         <button class="nav-icon" id="messagesBtn" title="Messages"><i class="fa-regular fa-paper-plane"></i></button>
         <button class="nav-icon" id="notifBtn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
-        <div class="user-chip" id="userChip" role="button" tabindex="0">
-          <span class="chip-avatar" id="chipAvatar">U</span>
-          <span class="chip-name" id="chipName">User</span>
+        <div class="user-chip" id="userChip" role="button" tabindex="0" data-user-chip>
+          <span class="chip-avatar" id="chipAvatar" data-user-chip-avatar>U</span>
+          <span class="chip-name" id="chipName" data-user-chip-name>User</span>
           <i class="fa-solid fa-chevron-down chip-caret"></i>
         </div>
 
-        <div class="profile-menu" id="profileMenu" aria-hidden="true">
+        <div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">
           <div class="profile-menu-section" data-section="identity">
             <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
               <div class="profile-menu-title">Your Identity</div>
