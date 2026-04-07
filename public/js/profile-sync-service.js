@@ -171,7 +171,13 @@ const ProfileSyncService = {
       .slice(0, 2) || 'U';
     
     // Let UserUI update any data-attribute driven chips first
-    try { if (window.UserUI && typeof window.UserUI.bindAllChips === 'function') window.UserUI.bindAllChips(); } catch (_) {}
+    try {
+      if (window.UserUI && typeof window.UserUI.bindAllChips === 'function') {
+        window.UserUI.bindAllChips();
+      }
+    } catch (err) {
+      console.debug("UserUI.bindAllChips failed in ProfileSyncService", err);
+    }
 
     // Update all avatar elements
     const avatarElements = [
@@ -225,15 +231,6 @@ const ProfileSyncService = {
     }
     
     // Update name elements
-    const nameElements = {
-      'chipName': fullName,
-      'sidebarName': fullName,
-      'composerName': fullName,
-      'userName': fullName,
-      'profileName': fullName,
-      'name': fullName
-    };
-    
     // Update names using data attributes first, then fall back to legacy ids/classes
     const nameSelectors = ['[data-user-chip-name]', '[data-user-full-name]', '#chipName', '#profileName', '.chip-name', '.sp-name', '#sidebarName', '#composerName'];
     document.querySelectorAll(nameSelectors.join(', ')).forEach(function(el){ el.textContent = fullName; });

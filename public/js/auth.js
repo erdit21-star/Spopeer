@@ -77,7 +77,11 @@ const Auth = {
     }));
 
     if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
-      try { window.CurrentUserStore.setCurrentUser(normalizedUser); } catch(e) {}
+      try {
+        window.CurrentUserStore.setCurrentUser(normalizedUser);
+      } catch (err) {
+        console.debug("CurrentUserStore.setCurrentUser failed in auth login", err);
+      }
     }
   },
 
@@ -104,7 +108,11 @@ const Auth = {
     ].forEach((key) => localStorage.removeItem(key));
 
     if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
-      try { window.CurrentUserStore.clearCurrentUser(); } catch(e) {}
+      try {
+        window.CurrentUserStore.clearCurrentUser();
+      } catch (err) {
+        console.debug("CurrentUserStore.clearCurrentUser failed in auth logout", err);
+      }
     }
 
     try {
@@ -180,6 +188,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.Auth && window.Auth.isLoggedIn() && window.SpopeerAPI) {
     try {
       await window.Auth.syncUserFromBackend();
-    } catch (_) { /* best-effort */ }
+    } catch (err) {
+      console.debug("Best-effort syncUserFromBackend failed", err);
+    }
   }
 });

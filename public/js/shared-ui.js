@@ -237,7 +237,11 @@
             });
 
             if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
-              try { window.CurrentUserStore.clearCurrentUser(); } catch(e) {}
+              try {
+                window.CurrentUserStore.clearCurrentUser();
+              } catch (err) {
+                console.debug("CurrentUserStore.clearCurrentUser failed in shared-ui logout", err);
+              }
             }
 
             try { sessionStorage.clear(); } catch (err) { console.debug('sessionStorage.clear failed during shared-ui logout', err); }

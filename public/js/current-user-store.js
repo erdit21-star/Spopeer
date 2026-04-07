@@ -43,7 +43,9 @@
           detail: { user: currentUser }
         })
       );
-    } catch (_) {}
+    } catch (err) {
+      console.debug("dispatch currentUserChanged failed", err);
+    }
   }
 
   function getStoredUser() {
@@ -87,7 +89,9 @@
     currentUser = null;
     try {
       persistUser(null);
-    } catch (_) {}
+    } catch (err) {
+      console.debug("persistUser(null) failed", err);
+    }
     emit();
   }
 

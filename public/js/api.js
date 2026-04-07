@@ -27,7 +27,9 @@
       if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
         return window.CurrentUserStore.getCurrentUser() || parseStoredJson("spopeer_user") || parseStoredJson("user") || null;
       }
-    } catch (_) {}
+    } catch (err) {
+      console.debug("CurrentUserStore.getCurrentUser failed in api.js", err);
+    }
     return parseStoredJson("spopeer_user") || parseStoredJson("user") || null;
   }
 

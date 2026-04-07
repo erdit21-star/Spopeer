@@ -7,7 +7,9 @@
       if (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') {
         return window.CurrentUserStore.isLoggedIn();
       }
-    } catch (_) {}
+    } catch (err) {
+      console.debug("CurrentUserStore.isLoggedIn failed in profile-runtime", err);
+    }
     var loggedIn = localStorage.getItem('spopeer_loggedIn') === 'true';
     var user = localStorage.getItem('spopeer_user');
     return loggedIn && Boolean(user);
