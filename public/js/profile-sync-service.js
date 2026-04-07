@@ -170,18 +170,19 @@ const ProfileSyncService = {
       .toUpperCase()
       .slice(0, 2) || 'U';
     
+    // Let UserUI update any data-attribute driven chips first
+    try { if (window.UserUI && typeof window.UserUI.bindAllChips === 'function') window.UserUI.bindAllChips(); } catch (_) {}
+
     // Update all avatar elements
     const avatarElements = [
       'chipAvatar', 'createAvatar', 'sidebarAvatar', 'composerAvatar',
       'userAvatar', 'profileAvatar', 'navAvatar', 'avatar'
     ];
-    
     avatarElements.forEach(id => {
-      const el = document.getElementById(id);
+      const selector = `[data-user-chip-avatar], #${id}, .sp-av, .avatar, .user-avatar`;
+      const el = document.querySelector(selector);
       if (!el) return;
-      
       if (profile.avatarUrl) {
-        // Use image avatar
         const existingImg = el.querySelector('img');
         const normalizedAvatarUrl = new URL(profile.avatarUrl, window.location.href).href;
         if (!existingImg || existingImg.src !== normalizedAvatarUrl) {
@@ -195,7 +196,6 @@ const ProfileSyncService = {
           el.appendChild(img);
         }
       } else {
-        // Use initials
         el.textContent = initials;
       }
     });
@@ -234,22 +234,14 @@ const ProfileSyncService = {
       'name': fullName
     };
     
-    Object.entries(nameElements).forEach(([id, text]) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = text;
-    });
+    // Update names using data attributes first, then fall back to legacy ids/classes
+    const nameSelectors = ['[data-user-chip-name]', '[data-user-full-name]', '#chipName', '#profileName', '.chip-name', '.sp-name', '#sidebarName', '#composerName'];
+    document.querySelectorAll(nameSelectors.join(', ')).forEach(function(el){ el.textContent = fullName; });
     
     // Update handle/username
     const username = profile.username || (profile.email?.split('@')[0]) || 'user';
-    const handleElements = ['chipHandle', 'userHandle', 'profileHandle', 'composerHandle', 'sidebarHandle'];
-    handleElements.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = '@' + username;
-    });
-    
-    // Also update by class
-    const handleByClass = document.querySelector('.sp-handle');
-    if (handleByClass) handleByClass.textContent = '@' + username;
+    const handleSelectors = ['[data-user-handle]', '.sp-handle', '#chipHandle', '#userHandle', '#profileHandle', '#composerHandle', '#sidebarHandle'];
+    document.querySelectorAll(handleSelectors.join(', ')).forEach(function(el){ el.textContent = '@' + username; });
     
     // Update role badge
     const roleMap = {

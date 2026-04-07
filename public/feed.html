@@ -30,10 +30,14 @@
   <script>
     // Global function for profile menu toggle
     window.toggleProfileMenuGlobal = function() {
-      const menu = document.getElementById('profileMenu');
-      if (menu) {
-        menu.classList.toggle('visible');
-      }
+        const menu = (window.getProfileMenuElement && typeof window.getProfileMenuElement === 'function') ? window.getProfileMenuElement() : (document.querySelector('[data-user-menu]') || document.getElementById('profileMenu'));
+        if (menu) menu.classList.toggle('visible');
+    };
+  </script>
+  <script>
+    // Helper to prefer data-attribute menu elements but keep id fallback
+    window.getProfileMenuElement = function() {
+      return document.querySelector('[data-user-menu]') || document.getElementById('profileMenu');
     };
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3003,9 +3007,9 @@
     const composerN = document.getElementById('composerName');
     if (composerN) composerN.textContent = fullName;
     
-    // Update chip name (first name)
-    const chipName = document.getElementById('chipName');
-    if (chipName) chipName.textContent = fullName;
+    // Update chip name (first name) across data-attribute and legacy selectors
+    const chipNameEls = document.querySelectorAll('[data-user-chip-name], #chipName, .chip-name, #profileName, .sp-name');
+    chipNameEls.forEach(function(el) { el.textContent = fullName; });
     
     // Update handle - use username if available, fall back to email
     const handleEl = document.querySelector('.sp-handle');
@@ -3464,14 +3468,14 @@
   window.getProfileUrl = getProfileUrl;
 
   const closeProfileMenu = () => {
-    const menu = document.getElementById('profileMenu');
+    const menu = (window.getProfileMenuElement && typeof window.getProfileMenuElement === 'function') ? window.getProfileMenuElement() : document.getElementById('profileMenu');
     if (!menu) return;
     menu.classList.remove('visible');
     menu.setAttribute('aria-hidden', 'true');
   };
 
   const openProfileMenu = () => {
-    const menu = document.getElementById('profileMenu');
+    const menu = (window.getProfileMenuElement && typeof window.getProfileMenuElement === 'function') ? window.getProfileMenuElement() : document.getElementById('profileMenu');
     if (!menu) return;
     menu.classList.add('visible');
     menu.setAttribute('aria-hidden', 'false');
@@ -3521,7 +3525,7 @@
   /* shared story/composer runtime is attached from js/shared-ui.js */
 
   /* ====== profile menu ====== */
-  const profileMenu = document.getElementById('profileMenu');
+  const profileMenu = (window.getProfileMenuElement && typeof window.getProfileMenuElement === 'function') ? window.getProfileMenuElement() : document.getElementById('profileMenu');
 
 
   document.getElementById('exploreBtn')?.addEventListener('click', (e) => {
