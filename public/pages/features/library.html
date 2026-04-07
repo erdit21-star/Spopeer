@@ -7,7 +7,7 @@
   <title>Library — Spopeer</title>
   <script src="../../js/profile-sync-service.js"></script>
   <script>
-    const _l = localStorage.getItem('spopeer_loggedIn') === 'true';
+    const _l = (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true');
     if (!_l) window.location.href = '../../pages/auth/login.html';
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>

@@ -6,9 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Settings — Spopeer</title>
   <script>
-    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
-    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
-    if (!_ud || !_li) window.location.href = '../../pages/auth/login.html';
+    (function(){
+      var _ud = null;
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') _ud = window.CurrentUserStore.getCurrentUser();
+      if (!_ud) { try { _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null'); } catch(e) { _ud = null; } }
+      var _li = (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true');
+      if (!_ud || !_li) window.location.href = '../../pages/auth/login.html';
+    })();
   </script>
   <script src="../../js/api.js"></script>
   <script src="../../js/auth.js"></script>

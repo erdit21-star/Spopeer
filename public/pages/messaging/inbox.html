@@ -358,7 +358,11 @@
   <script>
 (function(){
   /* ── User hydration ── */
-  const ud=JSON.parse(localStorage.getItem('spopeer_user')||'null');
+  var ud = null;
+  if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+    ud = window.CurrentUserStore.getCurrentUser();
+  }
+  if (!ud) { try { ud = JSON.parse(localStorage.getItem('spopeer_user')||'null'); } catch(e) { ud = null; } }
   if(ud&&ud.name){
     const init=ud.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
     const first=ud.name.split(' ')[0];
@@ -366,7 +370,7 @@
     if(av)av.textContent=init;if(nm)nm.textContent=first;
   }
 
-  const _loggedIn=localStorage.getItem('spopeer_loggedIn')==='true';
+  var _loggedIn = (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true');
   let currentConversation=null;
   let myInitials='??';
   let allConvs=[];
