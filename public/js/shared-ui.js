@@ -10,6 +10,23 @@
     }
   }
 
+  /* Helpers: prefer data-attributes but fallback to legacy ids */
+  window.getUserChipElement = function() {
+    return document.querySelector('[data-user-chip]') || document.getElementById('userChip');
+  };
+
+  window.getUserChipAvatarElement = function() {
+    return document.querySelector('[data-user-chip-avatar]') || document.getElementById('chipAvatar');
+  };
+
+  window.getUserChipNameElement = function() {
+    return document.querySelector('[data-user-chip-name]') || document.getElementById('chipName');
+  };
+
+  window.getProfileMenuElement = function() {
+    return document.querySelector('[data-user-menu]') || document.getElementById('profileMenu');
+  };
+
   function getProfileUrl(basePath) {
     if (window.SpopeerProfileIdentity) {
       return window.SpopeerProfileIdentity.buildProfileUrl(basePath);
