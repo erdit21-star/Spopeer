@@ -63,6 +63,16 @@ const forgotLimiter = rateLimit({
   message: { success: false, error: { code: 'RATE_LIMIT_FORGOT', message: 'Too many reset requests. Please try again later.' } }
 });
 
+// Reset-password limiter — 10 attempts per 15 min per IP
+const resetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isTest,
+  message: { success: false, error: { code: 'RATE_LIMIT_RESET', message: 'Too many reset attempts. Please try again later.' } }
+});
+
 // Temporary request logger for auth routes — masks sensitive fields.
 router.use((req, res, next) => {
   try {
@@ -134,7 +144,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
     // Generate verification token and send email (optional — does not block signup)
     try {
       const verifyToken = crypto.randomBytes(32).toString('hex');
-      await user.update({ emailVerifyToken: verifyToken, emailVerified: false });
+      await user.update({ emailVerifyToken: sha256(verifyToken), emailVerified: false });
       sendVerificationEmail(user.email, verifyToken).catch(err => {
         console.error('Failed to send verification email:', err.message);
       });
@@ -342,8 +352,8 @@ router.post('/change-password', authenticate, async (req, res) => {
     if (!currentPassword || !newPassword) {
       return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Current password and new password are required.');
     }
-    if (newPassword.length < 8 || newPassword.length > 128) {
-      return fail(res, 400, 'VALIDATION_PASSWORD', 'New password must be 8–128 characters.');
+    if (newPassword.length < 10 || newPassword.length > 128) {
+      return fail(res, 400, 'VALIDATION_PASSWORD', 'New password must be 10–128 characters.');
     }
 
     // Re-fetch with password hash
@@ -423,15 +433,17 @@ router.post('/forgot-password', forgotLimiter, async (req, res) => {
     }
 
     const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = sha256(token);
 
-    // Remove any existing tokens for this user, then store the new one
+    // Remove any existing tokens for this user, then store the hashed token
     await PasswordResetToken.destroy({ where: { userId: user.id } });
     await PasswordResetToken.create({
       userId: user.id,
-      token,
+      token: tokenHash,
       expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
     });
 
+    // Send the raw token in the email (user clicks it, server hashes to compare)
     await sendPasswordResetEmail(user.email, token);
 
     return ok(res, { message: 'If that email exists, a reset link has been sent.' });
@@ -442,7 +454,7 @@ router.post('/forgot-password', forgotLimiter, async (req, res) => {
 });
 
 // ─── RESET PASSWORD ───
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', resetLimiter, async (req, res) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) {
@@ -452,9 +464,10 @@ router.post('/reset-password', async (req, res) => {
       return fail(res, 400, 'VALIDATION_PASSWORD', 'Password must be 10–128 characters.');
     }
 
+    const tokenHash = sha256(token);
     const record = await PasswordResetToken.findOne({
       where: {
-        token,
+        token: tokenHash,
         expiresAt: { [Op.gt]: new Date() }
       }
     });
@@ -504,7 +517,7 @@ router.post('/resend-verification', forgotLimiter, async (req, res) => {
     }
 
     const verifyToken = crypto.randomBytes(32).toString('hex');
-    await user.update({ emailVerifyToken: verifyToken });
+    await user.update({ emailVerifyToken: sha256(verifyToken) });
 
     sendVerificationEmail(user.email, verifyToken).catch(err => {
       console.error('Failed to resend verification email:', err.message);
@@ -523,7 +536,8 @@ router.get('/verify', async (req, res) => {
     const { token } = req.query;
     if (!token) return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Token required.');
 
-    const user = await User.findOne({ where: { emailVerifyToken: token } });
+    const tokenHash = sha256(token);
+    const user = await User.findOne({ where: { emailVerifyToken: tokenHash } });
     if (!user) {
       return fail(res, 400, 'TOKEN_INVALID', 'Invalid or expired verification link.');
     }
