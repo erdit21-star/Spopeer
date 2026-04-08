@@ -15,6 +15,7 @@ const { parsePagination } = require('../utils/validation');
 
 // ─── FOLLOW ───
 const { ok, created, fail } = require('../utils/response');
+const { sanitizeUserList } = require('../utils/privacy');
 router.post('/follow', authenticate, async (req, res) => {
   try {
     const { userId } = req.body;
@@ -107,7 +108,7 @@ router.get('/followers/:userId', optionalAuth, async (req, res) => {
     });
 
     const followers = rows.map(c => c.follower);
-    ok(res, followers, { pagination: { total: count, page, pages: Math.ceil(count / limit) } });
+    ok(res, sanitizeUserList(req.user || null, followers), { pagination: { total: count, page, pages: Math.ceil(count / limit) } });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch followers.');
   }
@@ -132,7 +133,7 @@ router.get('/following/:userId', optionalAuth, async (req, res) => {
     });
 
     const following = rows.map(c => c.followedUser);
-    ok(res, following, { pagination: { total: count, page, pages: Math.ceil(count / limit) } });
+    ok(res, sanitizeUserList(req.user || null, following), { pagination: { total: count, page, pages: Math.ceil(count / limit) } });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch following.');
   }

@@ -11,6 +11,7 @@ const { Op } = require('sequelize');
 
 // ─── SEARCH ───
 const { fail } = require('../utils/response');
+const { sanitizeUserList } = require('../utils/privacy');
 router.get('/', optionalAuth, async (req, res) => {
   try {
     const { term, sport, userType, location, page = 1, pageSize = 20 } = req.query;
@@ -42,7 +43,7 @@ router.get('/', optionalAuth, async (req, res) => {
 
     res.json({
       status: 'ok',
-      results: users,
+      results: sanitizeUserList(req.user || null, users),
       pagination: {
         total: count,
         page: parseInt(page) || 1,

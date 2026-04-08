@@ -39,6 +39,7 @@ const SYSTEM_FIELDS = new Set([
 ]);
 
 const { ok, fail } = require('../utils/response');
+const { sanitizePublicProfile, sanitizeUserList } = require('../utils/privacy');
 function pickProfileUpdates(body) {
   const updates = {};
   const knownFields = new Set();
@@ -144,7 +145,7 @@ router.get('/', optionalAuth, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    ok(res, users, { pagination: {
+    ok(res, sanitizeUserList(req.user || null, users), { pagination: {
         total: count,
         page,
         pages: Math.ceil(count / limit)
@@ -176,22 +177,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
       return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
 
-    // Privacy enforcement: if profile is private, only the owner can see full details
-    if (user.privacyPublic === false && (!req.user || req.user.id !== user.id)) {
-      return res.json({
-        status: 'ok',
-        payload: {
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          avatarUrl: user.avatarUrl,
-          role: user.role,
-          private: true
-        }
-      });
-    }
-
-    ok(res, flattenUserPayload(user));
+    ok(res, sanitizePublicProfile(req.user || null, user, { level: 'full' }));
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
   }
@@ -284,7 +270,7 @@ router.get('/profile/:email', optionalAuth, async (req, res) => {
       return fail(res, 404, 'NOT_FOUND', 'Profile not found.');
     }
 
-    ok(res, flattenUserPayload(user));
+    ok(res, sanitizePublicProfile(req.user || null, user, { level: 'full' }));
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');
   }

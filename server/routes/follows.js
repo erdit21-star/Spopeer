@@ -17,6 +17,7 @@ const { authenticate, optionalAuth } = require('../middleware/auth');
 
 // ─── FOLLOW ───
 const { ok, created, fail } = require('../utils/response');
+const { sanitizeUserList } = require('../utils/privacy');
 router.post('/:userId', authenticate, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId, 10);
@@ -136,7 +137,7 @@ router.get('/followers/:userId', optionalAuth, async (req, res) => {
     });
 
     const followers = connections.map(c => c.follower);
-    ok(res, followers);
+    ok(res, sanitizeUserList(req.user || null, followers));
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch followers.');
   }
@@ -155,7 +156,7 @@ router.get('/following/:userId', optionalAuth, async (req, res) => {
     });
 
     const following = connections.map(c => c.followedUser);
-    ok(res, following);
+    ok(res, sanitizeUserList(req.user || null, following));
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch following.');
   }

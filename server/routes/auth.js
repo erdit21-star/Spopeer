@@ -19,6 +19,7 @@ const rateLimit = require('express-rate-limit');
 const { User, PasswordResetToken, RefreshSession } = require('../models');
 const { authenticate, clearAuthCookies, generateAccessToken, generateRefreshToken, getCookieOptions } = require('../middleware/auth');
 const { ok, fail } = require('../utils/response');
+const { sanitizePublicProfile } = require('../utils/privacy');
 const { sha256 } = require('../utils/crypto');
 const {
   sanitizeString,
@@ -401,7 +402,7 @@ router.get('/user-by-email', authenticate, async (req, res) => {
       return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
 
-    return ok(res, { user: user.toJSON() });
+    return ok(res, { user: sanitizePublicProfile(req.user, user.toJSON()) });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
   }
