@@ -6,7 +6,7 @@
   "scripts": {
     "install:all": "npm install && cd server && npm install",
     "dev": "cd server && npm run dev",
-    "start": "node server/server.js",
+    "start": "cd server && npx sequelize-cli db:migrate && node server.js",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
     "syntax:check": "node scripts/syntax-check.js",

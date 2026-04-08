@@ -78,6 +78,20 @@ function isValidUrl(value) {
 }
 
 /**
+ * Validate password strength.
+ * Requires 10–128 chars, at least one uppercase, one lowercase, one digit.
+ * Returns { valid: boolean, message?: string }.
+ */
+function validatePassword(pw) {
+  if (typeof pw !== 'string') return { valid: false, message: 'Password is required.' };
+  if (pw.length < 10 || pw.length > 128) return { valid: false, message: 'Password must be 10–128 characters.' };
+  if (!/[A-Z]/.test(pw)) return { valid: false, message: 'Password must include at least one uppercase letter.' };
+  if (!/[a-z]/.test(pw)) return { valid: false, message: 'Password must include at least one lowercase letter.' };
+  if (!/[0-9]/.test(pw)) return { valid: false, message: 'Password must include at least one digit.' };
+  return { valid: true };
+}
+
+/**
  * Allowed user roles.
  */
 const ALLOWED_ROLES = PUBLIC_USER_ROLES;
@@ -90,5 +104,6 @@ module.exports = {
   isValidId,
   isValidUrl,
   normalizeUserRole,
+  validatePassword,
   ALLOWED_ROLES
 };

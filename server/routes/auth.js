@@ -26,6 +26,7 @@ const {
   isValidEmail,
   isAllowedValue,
   normalizeUserRole,
+  validatePassword,
   ALLOWED_ROLES
 } = require('../utils/validation');
 const { sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail, sendSecurityAlertEmail } = require('../services/email');
@@ -106,8 +107,9 @@ router.post('/signup', signupLimiter, async (req, res) => {
       return fail(res, 400, 'VALIDATION_EMAIL', 'Invalid email address.');
     }
 
-    if (password.length < 10 || password.length > 128) {
-      return fail(res, 400, 'VALIDATION_PASSWORD', 'Password must be between 10 and 128 characters.');
+    const pwCheck = validatePassword(password);
+    if (!pwCheck.valid) {
+      return fail(res, 400, 'VALIDATION_PASSWORD', pwCheck.message);
     }
 
     // Normalize legacy role and prevent admin signup via API.
@@ -354,8 +356,9 @@ router.post('/change-password', authenticate, async (req, res) => {
     if (!currentPassword || !newPassword) {
       return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Current password and new password are required.');
     }
-    if (newPassword.length < 10 || newPassword.length > 128) {
-      return fail(res, 400, 'VALIDATION_PASSWORD', 'New password must be 10–128 characters.');
+    const pwCheck = validatePassword(newPassword);
+    if (!pwCheck.valid) {
+      return fail(res, 400, 'VALIDATION_PASSWORD', pwCheck.message);
     }
 
     // Re-fetch with password hash
@@ -462,8 +465,9 @@ router.post('/reset-password', resetLimiter, async (req, res) => {
     if (!token || !password) {
       return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Token and new password are required.');
     }
-    if (password.length < 10 || password.length > 128) {
-      return fail(res, 400, 'VALIDATION_PASSWORD', 'Password must be 10–128 characters.');
+    const pwCheck = validatePassword(password);
+    if (!pwCheck.valid) {
+      return fail(res, 400, 'VALIDATION_PASSWORD', pwCheck.message);
     }
 
     const tokenHash = sha256(token);
