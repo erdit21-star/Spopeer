@@ -68,7 +68,7 @@ router.get('/search', async (req, res) => {
     const offset = (page - 1) * limit;
     const { rows: listings, count } = await Listing.findAndCountAll({
       where,
-      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'avatarUrl', 'role'] }],
+      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'role'] }],
       limit,
       offset,
       order: [['createdAt', 'DESC']]
@@ -106,7 +106,7 @@ router.get('/saved', authenticate, async (req, res) => {
 
     const listings = await Listing.findAll({
       where: { id: { [Op.in]: listingIds } },
-      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }]
+      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl'] }]
     });
 
     ok(res, listings);
@@ -120,7 +120,7 @@ router.get('/seller/:userId', async (req, res) => {
   try {
     const listings = await Listing.findAll({
       where: { sellerId: req.params.userId, status: 'active' },
-      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }],
+      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl'] }],
       order: [['createdAt', 'DESC']]
     });
     ok(res, listings);
@@ -277,7 +277,7 @@ router.get('/listings', async (req, res) => {
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const { rows: listings, count } = await Listing.findAndCountAll({
       where,
-      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'avatarUrl', 'role'] }],
+      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'role'] }],
       limit: parseInt(limit),
       offset,
       order: [['createdAt', 'DESC']]
@@ -319,7 +319,7 @@ router.post('/listings', authenticate, async (req, res) => {
 router.get('/listings/:id', async (req, res) => {
   try {
     const listing = await Listing.findByPk(req.params.id, {
-      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'avatarUrl', 'role', 'location'] }]
+      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'role', 'location'] }]
     });
     if (!listing) return fail(res, 404, 'NOT_FOUND', 'Listing not found.');
 

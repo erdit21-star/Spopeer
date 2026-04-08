@@ -105,12 +105,11 @@ const ProfileSyncService = {
 
   /**
    * Resolve the user's full display name from a profile object.
-   * Priority: fullName → name → firstName+lastName → 'User'
+   * Priority: displayName → firstName+lastName → 'User'
    */
   getProfileFullName(profile) {
     const p = profile || this.getStoredProfile() || {};
-    if (p.fullName) return p.fullName;
-    if (p.name) return p.name;
+    if (p.displayName) return p.displayName;
     const composed = ((p.firstName || '') + ' ' + (p.lastName || '')).trim();
     return composed || 'User';
   },
@@ -264,7 +263,7 @@ const ProfileSyncService = {
       'supportive_professional': { cls: 'pro', icon: 'fa-star', label: 'Pro' }
     };
     
-    const roleInfo = roleMap[profile.userType] || roleMap.athlete;
+    const roleInfo = roleMap[profile.role || profile.userType] || roleMap.athlete;
     const roleBadgeElements = ['profileRole', 'userRole', 'sidebarRole', 'userType'];
     roleBadgeElements.forEach(id => {
       const el = document.getElementById(id);
@@ -323,7 +322,7 @@ const ProfileSyncService = {
     document.querySelectorAll('[data-profile-avatar]').forEach(el => { el.textContent = initials; });
     document.querySelectorAll('[data-profile-name]').forEach(el => { el.textContent = fullName; });
     document.querySelectorAll('[data-profile-type]').forEach(el => {
-      el.textContent = profile.userType?.replace('-', ' ') || 'User';
+      el.textContent = (profile.role || profile.userType || 'user').replace('-', ' ');
     });
     document.querySelectorAll('[data-profile-sport]').forEach(el => {
       el.textContent = profile.sport || profile.primarySport || '-';

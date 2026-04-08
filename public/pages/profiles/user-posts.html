@@ -864,25 +864,26 @@
     'supportive_professional': { cls: 'pro', icon: 'fa-star', label: 'Pro'     },
   };
   let initials = (() => {
-    const fi = (_ud.firstName || _ud.name?.split(' ')[0] || '')[0] || '';
-    const li = (_ud.lastName  || _ud.name?.split(' ')[1] || '')[0] || '';
-    return (fi + li).toUpperCase() || 'JS';
+    const dn = _ud.displayName || [_ud.firstName, _ud.lastName].filter(Boolean).join(' ') || '';
+    const fi = (dn.split(' ')[0] || '')[0] || '';
+    const li = (dn.split(' ')[1] || '')[0] || '';
+    return (fi + li).toUpperCase() || 'U';
   })();
-  let r = roleMap[_ud.userType] || roleMap.athlete;
+  let r = roleMap[_ud.role || _ud.userType] || roleMap.athlete;
 
   /* ── Function to update header from profile data ── */
   function updateHeaderFromProfile(profile) {
     if (!profile) return;
     
-    // Get name from either firstName+lastName or name field
-    const fullName = profile.firstName || profile.lastName 
-      ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim()
-      : (profile.name || 'User');
+    // Get name from displayName or firstName+lastName
+    const fullName = profile.displayName
+      || [profile.firstName, profile.lastName].filter(Boolean).join(' ')
+      || 'User';
     
-    // Get initials - handle both firstName/lastName and name fields
-    const firstInitial = (profile.firstName || profile.name?.split(' ')[0] || '')[0] || '';
-    const lastInitial = (profile.lastName || profile.name?.split(' ')[1] || '')[0] || '';
-    initials = (firstInitial + lastInitial).toUpperCase() || 'JS';
+    // Get initials
+    const firstInitial = (fullName.split(' ')[0] || '')[0] || '';
+    const lastInitial = (fullName.split(' ')[1] || '')[0] || '';
+    initials = (firstInitial + lastInitial).toUpperCase() || 'U';
     const handle = '@' + (profile.email ? profile.email.split('@')[0] : profile.username || 'user');
 
     document.getElementById('headerAvatar').textContent = initials;
@@ -890,7 +891,7 @@
     document.getElementById('headerHandle').textContent = handle;
 
     /* role badge */
-    r = roleMap[profile.userType] || roleMap.athlete;
+    r = roleMap[profile.role || profile.userType] || roleMap.athlete;
     const rb = document.getElementById('roleBadge');
     rb.className = 'role-badge ' + r.cls;
     rb.innerHTML = `<i class="fa-solid ${r.icon}" style="font-size:9px"></i> ${r.label}`;

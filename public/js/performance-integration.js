@@ -66,10 +66,10 @@ function optimizeMarketplaceImages() {
             </div>
           \` : ''}
           <div class="listing-seller" onclick="event.stopPropagation(); openSellerModal(\${listing.seller_id})" style="cursor: pointer;">
-            <div class="listing-seller-avatar">\${listing.seller.name.split(' ').map(n => n[0]).join('').toUpperCase()}</div>
+            <div class="listing-seller-avatar">\${(listing.seller.displayName || [listing.seller.firstName, listing.seller.lastName].filter(Boolean).join(' ') || 'U').split(' ').map(n => n[0]).join('').toUpperCase()}</div>
             <div class="listing-seller-info">
-              <div class="listing-seller-name">\${listing.seller.name}</div>
-              <div class="listing-seller-type">\${listing.seller.userType}</div>
+              <div class="listing-seller-name">\${listing.seller.displayName || [listing.seller.firstName, listing.seller.lastName].filter(Boolean).join(' ') || 'Unknown'}</div>
+              <div class="listing-seller-type">\${listing.seller.role || listing.seller.userType || 'user'}</div>
             </div>
           </div>
         </div>

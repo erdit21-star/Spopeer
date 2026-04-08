@@ -809,10 +809,10 @@
             </div>
           ` : ''}
           <div class="listing-seller" onclick="event.stopPropagation(); openSellerModal(${listing.seller_id})" style="cursor: pointer;">
-            <div class="listing-seller-avatar">${listing.seller.name.split(' ').map(n => n[0]).join('').toUpperCase()}</div>
+            <div class="listing-seller-avatar">${(listing.seller.displayName || [listing.seller.firstName, listing.seller.lastName].filter(Boolean).join(' ') || 'U').split(' ').map(n => n[0]).join('').toUpperCase()}</div>
             <div class="listing-seller-info">
-              <div class="listing-seller-name">${listing.seller.name}</div>
-              <div class="listing-seller-type">${listing.seller.userType}</div>
+              <div class="listing-seller-name">${listing.seller.displayName || [listing.seller.firstName, listing.seller.lastName].filter(Boolean).join(' ') || 'Unknown'}</div>
+              <div class="listing-seller-type">${listing.seller.role || listing.seller.userType || 'user'}</div>
             </div>
           </div>
         </div>
@@ -921,10 +921,11 @@
         const response = await fetch(`/api/marketplace/seller/${sellerId}`);
         const sellerData = await response.json();
 
-        const initials = sellerData.seller.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        const _sn = sellerData.seller.displayName || [sellerData.seller.firstName, sellerData.seller.lastName].filter(Boolean).join(' ') || 'Unknown';
+        const initials = _sn.split(' ').map(n => n[0]).join('').toUpperCase();
         document.getElementById('sellerAvatar').textContent = initials;
-        document.getElementById('sellerName').textContent = sellerData.seller.name;
-        document.getElementById('sellerType').textContent = sellerData.seller.userType;
+        document.getElementById('sellerName').textContent = _sn;
+        document.getElementById('sellerType').textContent = sellerData.seller.role || sellerData.seller.userType || 'user';
         document.getElementById('sellerListings').textContent = sellerData.listings.length;
         document.getElementById('sellerAbout').textContent = sellerData.seller.bio || 'No bio provided';
         document.getElementById('sellerLocation').textContent = sellerData.seller.location || 'Not specified';

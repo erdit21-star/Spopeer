@@ -1066,8 +1066,8 @@
         }
 
         list.innerHTML = items.map(function (item) {
-          var ownerName = item.ownerName || (item.author ? (item.author.name || item.author.firstName || 'User') : 'User');
-          var ownerRole = item.ownerRole || (item.author ? item.author.userType : 'athlete');
+          var ownerName = item.ownerName || (item.author ? (item.author.displayName || item.author.firstName || 'User') : 'User');
+          var ownerRole = item.ownerRole || (item.author ? (item.author.role || item.author.userType) : 'athlete');
 
           if (view === 'secure') {
             return '<article class="board-card">'

@@ -3120,14 +3120,14 @@
   function updateSidebarFromProfile(profile) {
     if (!profile) return;
     
-    // Get name from either firstName+lastName or name field
-    const fullName = (profile.firstName && profile.lastName)
-      ? `${profile.firstName} ${profile.lastName}`.trim()
-      : (profile.name || 'User');
+    // Get name from displayName or firstName+lastName
+    const fullName = profile.displayName
+      || [profile.firstName, profile.lastName].filter(Boolean).join(' ')
+      || 'User';
     
     // Get initials
-    const firstInitial = (profile.firstName || profile.name?.split(' ')[0] || '')[0] || '';
-    const lastInitial = (profile.lastName || profile.name?.split(' ')[1] || '')[0] || '';
+    const firstInitial = (profile.firstName || fullName.split(' ')[0] || '')[0] || '';
+    const lastInitial = (profile.lastName || fullName.split(' ')[1] || '')[0] || '';
     const initials = (firstInitial + lastInitial).toUpperCase() || 'U';
     
     // Update sidebar avatar only (chips are handled by UserUI)
@@ -3157,14 +3157,14 @@
     
     // Update role badge
     const roleBadge = document.querySelector('.sp-role-badge');
-    if (roleBadge && profile.userType) {
+    if (roleBadge && (profile.role || profile.userType)) {
       const roleMap = {
         athlete:  { cls: 'athlete', icon: 'fa-person-running',  label: 'Athlete'  },
         coach:    { cls: 'coach',   icon: 'fa-bullseye',         label: 'Coach'    },
         club:     { cls: 'club',    icon: 'fa-shield-halved',    label: 'Club'     },
         supportive_professional: { cls: 'pro', icon: 'fa-star', label: 'Pro'      },
       };
-      const r = roleMap[profile.userType] || roleMap['athlete'];
+      const r = roleMap[profile.role || profile.userType] || roleMap['athlete'];
       roleBadge.className = 'sp-role-badge ' + r.cls;
       roleBadge.innerHTML = `<i class="fa-solid ${r.icon}" style="font-size:9px"></i> ${r.label}`;
     }
@@ -3320,7 +3320,7 @@
   function hydrateSidebarProfile(profile) {
     if (!profile) return;
 
-    const type = profile.userType || 'athlete';
+    const type = profile.role || profile.userType || 'athlete';
 
     // Update handle with username
     const handleEl = document.getElementById('sidebarHandle');
@@ -4267,7 +4267,7 @@
       storyId: story.id,
       storyOwner: story.name || 'User',
       fromEmail: currentUser.email || currentUser.userEmail || '',
-      fromName: currentUser.displayName || currentUser.name || 'User',
+      fromName: currentUser.displayName || [currentUser.firstName, currentUser.lastName].filter(Boolean).join(' ') || 'User',
       text,
       timestamp: new Date().toISOString()
     });
@@ -4936,7 +4936,7 @@
               <div>
                 <div class="author-name">${post.authorName || "Unknown user"}</div>
                 <div class="author-meta">
-                  <span class="role-tag">${post.userType || "athlete"}</span>
+                  <span class="role-tag">${post.role || post.userType || "athlete"}</span>
                   <span>${post.sport || ""}</span>
                 </div>
               </div>
@@ -5119,12 +5119,13 @@ function openShareModal() {
   try {
     const ud = getCurrentUserData();
     if (ud) {
-      const init = ud.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || 'JS';
+      const _dn = ud.displayName || [ud.firstName, ud.lastName].filter(Boolean).join(' ') || 'User';
+      const init = _dn.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || 'U';
       const handle = ud.email?.split('@')[0] || 'user';
       const roleMap = { athlete:'Athlete', coach:'Coach', club:'Club', supportive_professional:'Pro' };
       document.getElementById('shareModalAv').textContent   = init;
-      document.getElementById('shareModalName').textContent = ud.name || 'Your Profile';
-      document.getElementById('shareModalRole').textContent = roleMap[ud.userType] || 'Athlete';
+      document.getElementById('shareModalName').textContent = _dn;
+      document.getElementById('shareModalRole').textContent = roleMap[ud.role || ud.userType] || 'Athlete';
       document.getElementById('shareModalSport').textContent = ud.sport || '';
       document.getElementById('shareModalUrl').textContent  = `spopeer.com/u/${handle}`;
     }
@@ -5591,7 +5592,7 @@ function attachCommentListeners() {
           id: Date.now().toString(),
           postId: postId,
           authorEmail: currentUser.email || currentUser.userEmail || '',
-          authorName: currentUser.displayName || currentUser.name || ((currentUser.firstName || '') + ' ' + (currentUser.lastName || '')).trim() || currentUser.email || 'User',
+          authorName: currentUser.displayName || ((currentUser.firstName || '') + ' ' + (currentUser.lastName || '')).trim() || currentUser.email || 'User',
           text: text,
           timestamp: new Date().toISOString()
         };
@@ -5798,7 +5799,7 @@ function escapeHtml(text) {
   document.addEventListener('DOMContentLoaded', function() {
     const user = window.Auth && window.Auth.getUser ? window.Auth.getUser() : null;
     if (!user) return;
-    const fullName = user.fullName || user.name
+    const fullName = user.displayName
       || (((user.firstName || '') + ' ' + (user.lastName || '')).trim())
       || 'User';
     document.querySelectorAll('#chipName, .chip-name, #profileName, .sp-name').forEach(function(el) {

@@ -363,8 +363,9 @@
     ud = window.CurrentUserStore.getCurrentUser();
   }
   if (!ud) { try { ud = JSON.parse(localStorage.getItem('spopeer_user')||'null'); } catch(e) { ud = null; } }
-  if(ud&&ud.name){
-    const init=ud.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  if(ud){
+    const _dn = ud.displayName || [ud.firstName, ud.lastName].filter(Boolean).join(' ') || ud.name || '';
+    const init=_dn.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
     myInitials=init;
   }
 
@@ -383,7 +384,10 @@
   }
   const me=getMe();
   if(me){myInitials=(me.slice(0,2).toUpperCase());}
-  if(ud&&ud.name){myInitials=ud.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);}
+  if(ud){
+    const _dn2 = ud.displayName || [ud.firstName, ud.lastName].filter(Boolean).join(' ') || ud.name || '';
+    myInitials=_dn2.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  }
 
   /* ── Avatar initials helper ── */
   function initFor(id){return String(id||'?').slice(0,2).toUpperCase();}

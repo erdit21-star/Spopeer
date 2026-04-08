@@ -376,10 +376,11 @@
       const sellerData = await response.json();
 
       // Render seller info
-      const initials = sellerData.seller.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      const _sn = sellerData.seller.displayName || [sellerData.seller.firstName, sellerData.seller.lastName].filter(Boolean).join(' ') || 'Unknown';
+      const initials = _sn.split(' ').map(n => n[0]).join('').toUpperCase();
       document.getElementById('sellerAvatar').textContent = initials;
-      document.getElementById('sellerName').textContent = sellerData.seller.name;
-      document.getElementById('sellerType').textContent = sellerData.seller.userType;
+      document.getElementById('sellerName').textContent = _sn;
+      document.getElementById('sellerType').textContent = sellerData.seller.role || sellerData.seller.userType || 'user';
       document.getElementById('sellerListings').textContent = sellerData.listings.length;
       document.getElementById('sellerAbout').textContent = sellerData.seller.bio || 'No bio provided';
       document.getElementById('sellerLocation').textContent = sellerData.seller.location || 'Not specified';

@@ -198,7 +198,7 @@ class ProfileService {
    * @returns {String} Formatted user type
    */
   getUserTypeDisplay() {
-    const type = this.currentProfile?.userType || 'user';
+    const type = this.currentProfile?.role || this.currentProfile?.userType || 'user';
     return type.replace('-', ' ').split(' ').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');

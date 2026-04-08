@@ -537,8 +537,8 @@ function renderPaginatedResults(container, results, page, pageSize) { // eslint-
     const esc = window.SpopeerSanitize ? window.SpopeerSanitize.escapeHtml : (s => s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])));
     d.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="font-weight:700">${esc(r.name || r.email || '')}</div>
-        <div style="color:#6b7280;font-size:13px">${esc(r.userType || '')} • ${esc(r.sport || '')} • ${esc(r.location || '')}</div>
+        <div style="font-weight:700">${esc(r.displayName || [r.firstName, r.lastName].filter(Boolean).join(' ') || '')}</div>
+        <div style="color:#6b7280;font-size:13px">${esc(r.role || r.userType || '')} • ${esc(r.sport || '')} • ${esc(r.location || '')}</div>
       </div>
       <div><a href="/pages/profiles/public-profile.html?userId=${encodeURIComponent(r.id)}" style="text-decoration:none"><button style="padding:8px 10px;border-radius:8px;border:none;background:#0066cc;color:white;cursor:pointer">View</button></a></div>
     </div>`;
@@ -779,7 +779,7 @@ const AuthAPI = {
   signup: async (firstName, lastName, email, password, userType, sport) => {
     const result = await apiFetch('/auth/signup', {
       method: 'POST',
-      body: JSON.stringify({ firstName, lastName, email, password, userType, sport })
+      body: JSON.stringify({ firstName, lastName, email, password, role: userType, sport })
     });
     if (result.token) {
       setAuthToken(result.token);

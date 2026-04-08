@@ -13,7 +13,7 @@
 // (needed for search results, follow lists, profile previews).
 const PUBLIC_CARD_FIELDS = [
   'id', 'firstName', 'lastName', 'displayName', 'username',
-  'avatarUrl', 'role', 'sport', 'primarySport', 'location',
+  'avatarUrl', 'role', 'userType', 'sport', 'primarySport', 'location',
   'followersCount', 'followingCount', 'postsCount',
   'verified', 'createdAt'
 ];
@@ -147,6 +147,11 @@ function sanitizePublicProfile(viewer, user, options = {}) {
       if (!isFieldVisible(visMap, key)) continue;
       result[key] = flat[key];
     }
+  }
+
+  // Ensure userType alias exists (frontend compatibility)
+  if (result.role && !result.userType) {
+    result.userType = result.role;
   }
 
   return result;

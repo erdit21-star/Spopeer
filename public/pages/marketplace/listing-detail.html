@@ -978,12 +978,14 @@
       });
 
       // Seller Info
-      document.getElementById('sellerName').textContent = listing.seller.name;
-      document.getElementById('sellerType').textContent = listing.seller.userType;
-      document.getElementById('sellerAvatar').textContent = listing.seller.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      const _sn = listing.seller.displayName || [listing.seller.firstName, listing.seller.lastName].filter(Boolean).join(' ') || 'Unknown';
+      document.getElementById('sellerName').textContent = _sn;
+      document.getElementById('sellerType').textContent = listing.seller.role || listing.seller.userType || 'user';
+      document.getElementById('sellerAvatar').textContent = _sn.split(' ').map(n => n[0]).join('').toUpperCase();
 
       // Pre-fill buyer info
-      document.getElementById('buyerName').value = JSON.parse(localStorage.getItem('spopeer_user') || '{}').name || 'You';
+      const _bu = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      document.getElementById('buyerName').value = _bu.displayName || [_bu.firstName, _bu.lastName].filter(Boolean).join(' ') || 'You';
 
       // Price recommendation
       if (listing.price_type === 'contact') {
@@ -1116,10 +1118,11 @@
         const sellerData = await response.json();
 
         // Render seller info
-        const initials = sellerData.seller.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        const _sn2 = sellerData.seller.displayName || [sellerData.seller.firstName, sellerData.seller.lastName].filter(Boolean).join(' ') || 'Unknown';
+        const initials = _sn2.split(' ').map(n => n[0]).join('').toUpperCase();
         document.getElementById('sellerAvatar').textContent = initials;
-        document.getElementById('sellerName').textContent = sellerData.seller.name;
-        document.getElementById('sellerType').textContent = sellerData.seller.userType;
+        document.getElementById('sellerName').textContent = _sn2;
+        document.getElementById('sellerType').textContent = sellerData.seller.role || sellerData.seller.userType || 'user';
         document.getElementById('sellerListings').textContent = sellerData.listings.length;
         document.getElementById('sellerAbout').textContent = sellerData.seller.bio || 'No bio provided';
         document.getElementById('sellerLocation').textContent = sellerData.seller.location || 'Not specified';

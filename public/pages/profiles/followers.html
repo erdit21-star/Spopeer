@@ -1087,7 +1087,7 @@
   function normalizeConnection(entry) {
     return {
       id: entry.id || entry._id || entry.email || '',
-      name: entry.fullName || entry.name || entry.email || 'User',
+      name: entry.displayName || [entry.firstName, entry.lastName].filter(Boolean).join(' ') || entry.email || 'User',
       email: entry.email || '',
       userType: normalizeUserType(entry.role || entry.userType),
       sport: entry.primarySport || entry.sport || '',
@@ -1159,7 +1159,7 @@
   }
 
   /* ── Hydrate sidebar ── */
-  var nameStr = (user.fullName || user.displayName || user.name || 'You');
+  var nameStr = (user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || 'You');
   var ini = initials(nameStr);
   document.getElementById('sidebarAv').textContent = ini;
   document.getElementById('sidebarName').textContent = nameStr.trim();

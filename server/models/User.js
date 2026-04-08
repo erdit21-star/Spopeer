@@ -230,6 +230,9 @@ module.exports = (sequelize) => {
   User.prototype.toJSON = function () {
     const values = { ...this.get() };
     delete values.password;
+    delete values.resetToken;
+    delete values.resetExpires;
+    delete values.emailVerifyToken;
     return values;
   };
 

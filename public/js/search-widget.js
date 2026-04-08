@@ -182,8 +182,8 @@ function displaySuggestions(results, suggestionsBox, query) {
 
   let html = '';
   results.forEach(r => {
-    const name = r.name || r.email || 'User';
-    const type = r.userType || 'User';
+    const name = r.displayName || [r.firstName, r.lastName].filter(Boolean).join(' ') || 'User';
+    const type = r.role || r.userType || 'User';
     const sport = r.sport || 'N/A';
     
     html += `
@@ -217,8 +217,8 @@ function displayMentions(results, suggestionsBox, _query) {
 
   let html = '';
   results.forEach(r => {
-    const name = r.name || r.email || 'User';
-    const type = r.userType || 'User';
+    const name = r.displayName || [r.firstName, r.lastName].filter(Boolean).join(' ') || 'User';
+    const type = r.role || r.userType || 'User';
     const sport = r.sport || 'N/A';
     
     html += `

@@ -652,7 +652,7 @@
   }
 
   /* ── Hydrate account info ── */
-  const fullName = ud.fullName || ud.name || 'User';
+  const fullName = ud.displayName || [ud.firstName, ud.lastName].filter(Boolean).join(' ') || ud.fullName || ud.name || 'User';
   const nameInput = document.getElementById('accountName');
   const emailInput = document.getElementById('accountEmail');
   const usernameInput = document.getElementById('accountUsername');
@@ -696,11 +696,14 @@
     }
 
     try {
-      const savedUser = await persistProfile({ fullName: name }, 'settings-save');
+      const parts = name.split(/\s+/).filter(Boolean);
+      const firstName = parts[0] || name;
+      const lastName = parts.slice(1).join(' ') || '';
+      const savedUser = await persistProfile({ firstName, lastName, displayName: name }, 'settings-save');
       showToast('Account info saved!');
-      if (chipNm) chipNm.textContent = (savedUser.fullName || 'User').split(' ')[0] || 'User';
+      if (chipNm) chipNm.textContent = (savedUser.displayName || savedUser.firstName || 'User') || 'User';
       if (chipAv) {
-        const initialsValue = (savedUser.fullName || 'User')
+        const initialsValue = (savedUser.displayName || name)
           .split(/\s+/)
           .filter(Boolean)
           .map(part => part[0])

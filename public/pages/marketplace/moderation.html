@@ -735,7 +735,7 @@
               </div>
             </div>
           </td>
-          <td>${flag.seller.name}</td>
+          <td>${flag.seller.displayName || [flag.seller.firstName, flag.seller.lastName].filter(Boolean).join(' ') || 'Unknown'}</td>
           <td><span class="flag-reason">${flag.reason}</span></td>
           <td><span class="status-badge status-${flag.status === 'pending' ? 'pending' : flag.status === 'reviewed' ? 'reviewed' : 'flagged'}">${flag.status}</span></td>
           <td>
@@ -777,7 +777,7 @@
           </div>
           <div class="detail-row">
             <div class="detail-label">Seller</div>
-            <div class="detail-value">${flag.seller.name} (${flag.seller.userType})</div>
+            <div class="detail-value">${flag.seller.displayName || [flag.seller.firstName, flag.seller.lastName].filter(Boolean).join(' ') || 'Unknown'} (${flag.seller.role || flag.seller.userType || 'user'})</div>
           </div>
         </div>
 

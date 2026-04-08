@@ -345,8 +345,9 @@
 
     /* ── 5. Create drawer ── */
     var user = getUserProfile();
-    var firstName = user.firstName || (user.name || '').split(' ')[0] || 'User';
-    var lastName = user.lastName || (user.name || '').split(' ').slice(1).join(' ') || '';
+    var dn = user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || 'User';
+    var firstName = user.firstName || dn.split(' ')[0] || 'User';
+    var lastName = user.lastName || dn.split(' ').slice(1).join(' ') || '';
     var initials = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase() || 'U';
     var handle = user.username ? ('@' + user.username) : (user.email || '');
 
@@ -652,8 +653,9 @@
   }
 
   function getInitials(user) {
-    var fi = (user.firstName || (user.name || '').split(' ')[0] || '')[0] || '';
-    var li = (user.lastName || (user.name || '').split(' ')[1] || '')[0] || '';
+    var dn = user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || '';
+    var fi = (dn.split(' ')[0] || '')[0] || '';
+    var li = (dn.split(' ')[1] || '')[0] || '';
     return (fi + li).toUpperCase() || 'U';
   }
 
