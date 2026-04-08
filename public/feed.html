@@ -2411,32 +2411,32 @@
       </div>
       <div class="sp-body">
         <div class="sp-avatar-wrap">
-          <div class="sp-avatar" id="sidebarAvatar">JS</div>
+          <div class="sp-avatar" id="sidebarAvatar" data-user-chip-avatar>U</div>
           <div class="sp-online-dot"></div>
         </div>
 
         <div class="sp-verified" id="spVerified" style="display:none;"><i class="fa-solid fa-circle-check" style="font-size:9px"></i> Verified</div>
 
-        <div class="sp-name" id="sidebarName">User</div>
-        <div class="sp-handle" id="sidebarHandle">@johnsmith</div>
+        <div class="sp-name" id="sidebarName" data-user-chip-name>User</div>
+        <div class="sp-handle" id="sidebarHandle" data-user-handle>@user</div>
 
         <div class="sp-badges-row">
-          <span class="sp-role-badge athlete" id="spRoleBadge">
+          <span class="sp-role-badge athlete" id="spRoleBadge" data-user-role-badge>
             <i class="fa-solid fa-person-running" style="font-size:8px"></i> Athlete
           </span>
-          <span class="sp-sport-badge" id="spSportBadge">
-            <i class="fa-solid fa-shoe-prints" style="font-size:8px"></i> Runner
+          <span class="sp-sport-badge" id="spSportBadge" data-user-sport-badge>
+            <i class="fa-solid fa-shoe-prints" style="font-size:8px"></i> Sport
           </span>
         </div>
 
         <div class="sp-meta-row" id="spMetaRow">
-          <span class="sp-meta-item" id="spLocation"><i class="fa-solid fa-location-dot"></i> New York, US</span>
+          <span class="sp-meta-item" id="spLocation" data-user-location><i class="fa-solid fa-location-dot"></i> Location</span>
           <span class="sp-meta-sep"></span>
-          <span class="sp-plan-pill free" id="spPlanPill">Free</span>
+          <span class="sp-plan-pill free" id="spPlanPill" data-user-plan-pill>Free</span>
         </div>
 
-        <div class="sp-bio" id="spBio" style="display:none;">
-          Passionate athlete dedicated to excellence in sports.
+        <div class="sp-bio" id="spBio" data-user-bio style="display:none;">
+          Bio
         </div>
 
         <div class="sp-stats-row">
@@ -3127,89 +3127,7 @@
     
     // Get initials
     const firstInitial = (profile.firstName || fullName.split(' ')[0] || '')[0] || '';
-    const lastInitial = (profile.lastName || fullName.split(' ')[1] || '')[0] || '';
-    const initials = (firstInitial + lastInitial).toUpperCase() || 'U';
-    
-    // Update sidebar avatar only (chips are handled by UserUI)
-    const sidebarAv = document.getElementById('sidebarAvatar');
-    if (sidebarAv) {
-      if (profile.avatarUrl) {
-        sidebarAv.innerHTML = '';
-        const img = document.createElement('img');
-        img.src = profile.avatarUrl;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '50%';
-        sidebarAv.appendChild(img);
-      } else {
-        sidebarAv.textContent = initials;
-      }
-    }
-    
-    // Update sidebar name only (chips are handled by UserUI)
-    const sn = document.getElementById('sidebarName');
-    if (sn) sn.textContent = fullName;
-    
-    // Update handle - use username if available, fall back to email
-    const handleEl = document.querySelector('.sp-handle');
-    if (handleEl) handleEl.textContent = '@' + (profile.username || (profile.email ? profile.email.split('@')[0] : 'user'));
-    
-    // Update role badge
-    const roleBadge = document.querySelector('.sp-role-badge');
-    if (roleBadge && (profile.role || profile.userType)) {
-      const roleMap = {
-        athlete:  { cls: 'athlete', icon: 'fa-person-running',  label: 'Athlete'  },
-        coach:    { cls: 'coach',   icon: 'fa-bullseye',         label: 'Coach'    },
-        club:     { cls: 'club',    icon: 'fa-shield-halved',    label: 'Club'     },
-        supportive_professional: { cls: 'pro', icon: 'fa-star', label: 'Pro'      },
-      };
-      const r = roleMap[profile.role || profile.userType] || roleMap['athlete'];
-      roleBadge.className = 'sp-role-badge ' + r.cls;
-      roleBadge.innerHTML = `<i class="fa-solid ${r.icon}" style="font-size:9px"></i> ${r.label}`;
-    }
-
-    // Update sport badge - use primarySport or sport field
-    const sportBadge = document.querySelector('.sp-sport-badge');
-    if (sportBadge && (profile.primarySport || profile.sport)) {
-      const sportName = profile.primarySport || profile.sport;
-      sportBadge.innerHTML = `<i class="fa-solid fa-shoe-prints" style="font-size:9px"></i> ${sportName}`;
-    }
-
-    // Update location from profile (city, country)
-    const locationEl = document.getElementById('spLocation');
-    if (locationEl) {
-      const loc = profile.location || ((profile.city || profile.country) ? `${profile.city || ''}${profile.city && profile.country ? ', ' : ''}${profile.country || ''}` : '');
-      if (loc) {
-        locationEl.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${loc}`;
-        locationEl.style.display = '';
-      }
-    }
-
-    // Update bio
-    const bioEl = document.getElementById('spBio');
-    if (bioEl) {
-      if (profile.bio) {
-        bioEl.textContent = profile.bio;
-        bioEl.style.display = 'block';
-      } else {
-        bioEl.style.display = 'none';
-      }
-    }
-
-    // Update plan pill
-    const planPill = document.getElementById('spPlanPill');
-    if (planPill) {
-      const plan = profile.subscriptionPlan || 'free';
-      const planMap = {
-        free: { cls: 'free', label: 'Free' },
-        pro: { cls: 'pro', label: 'Pro' },
-        elite: { cls: 'elite', label: 'Elite' }
-      };
-      const p = planMap[plan] || planMap.free;
-      planPill.className = 'sp-plan-pill ' + p.cls;
-      planPill.textContent = p.label;
-    }
+    // All sidebar/profile UI is now hydrated by UserUI/CurrentUserStore via data-user-* attributes.
 
     // Update followers/following counts from profile data
     const followersCountEl = document.getElementById('followersCount');

@@ -663,104 +663,6 @@
    * Returns the canonical profile-menu HTML matching feed.html exactly.
    * All menu items use data-action attributes handled by setupSocialFeedRuntime.
    */
-  function buildProfileMenuHTML() {
-    return '<div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">' +
-      '<div class="profile-menu-section" data-section="identity">' +
-        '<div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">' +
-          '<div class="profile-menu-title">Your Identity</div>' +
-          '<i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>' +
-        '</div>' +
-        '<div class="profile-menu-section-items">' +
-          '<button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>' +
-          '<button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>' +
-          '<button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="profile-menu-section collapsed" data-section="account">' +
-        '<div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">' +
-          '<div class="profile-menu-title">Account &amp; Settings</div>' +
-          '<i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>' +
-        '</div>' +
-        '<div class="profile-menu-section-items">' +
-          '<button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>' +
-          '<button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>' +
-          '<button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy &amp; Safety</button>' +
-          '<button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>' +
-          '<button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>' +
-          '<button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="profile-menu-section collapsed" data-section="features">' +
-        '<div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">' +
-          '<div class="profile-menu-title">Platform Features</div>' +
-          '<i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>' +
-        '</div>' +
-        '<div class="profile-menu-section-items">' +
-          '<button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>' +
-          '<button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements &amp; Badges</button>' +
-          '<button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>' +
-          '<button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>' +
-          '<button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>' +
-          '<button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="profile-menu-section collapsed" data-section="help">' +
-        '<div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">' +
-          '<div class="profile-menu-title">Help &amp; Misc</div>' +
-          '<i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>' +
-        '</div>' +
-        '<div class="profile-menu-section-items">' +
-          '<button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>' +
-          '<button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>' +
-          '<button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What\'s New / Changelog</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="profile-menu-section">' +
-        '<div class="profile-menu-section-items" style="padding:10px 16px 10px;">' +
-          '<button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  }
-
-  /**
-   * Ensures the page has the standard user chip (#userChip) and profile menu
-   * (#profileMenu) inside .nav-right. If the menu exists but is divergent
-   * (missing canonical data-section="identity"), replaces it with the feed.html
-   * version. Skips pages whose menu already matches.
-   */
-  function ensureUserChipAndMenu() {
-    var navRight = document.querySelector('.nav-right');
-    if (!navRight) return;
-
-    var user = getUserProfile();
-    var chipEl = document.getElementById('userChip');
-    var menuEl = document.getElementById('profileMenu');
-
-    // Inject chip if missing
-    if (!chipEl) {
-      var chipHTML = '<div class="user-chip" id="userChip">' +
-        '<span class="chip-avatar" id="chipAvatar">' + getInitials(user) + '</span>' +
-        '<span class="chip-name" id="chipName">' + (user.firstName || 'User') + '</span>' +
-        '<i class="fa-solid fa-chevron-down chip-caret"></i>' +
-      '</div>';
-      navRight.insertAdjacentHTML('beforeend', chipHTML);
-    }
-
-    // Only replace menu if missing or divergent (lacks canonical data-section)
-    var needsMenuInject = !menuEl;
-    var needsMenuReplace = menuEl && !menuEl.querySelector('[data-section="identity"]');
-
-    if (needsMenuInject) {
-      navRight.insertAdjacentHTML('beforeend', buildProfileMenuHTML());
-    } else if (needsMenuReplace) {
-      var temp = document.createElement('div');
-      temp.innerHTML = buildProfileMenuHTML();
-      var newMenu = temp.firstChild;
-      menuEl.parentNode.replaceChild(newMenu, menuEl);
-    }
-    // Listener binding is handled by setupSocialFeedRuntime which runs after this.
-  }
 
   /**
    * Normalize all Sponsor/Sponsorship links to use the canonical absolute path.
@@ -847,7 +749,7 @@
       if (depth === 0) basePath = '../../';
     }
 
-    ensureUserChipAndMenu();
+    // User chip/menu rendering is now handled by UserUI/CurrentUserStore only.
     normalizeSponsorLinks();
     ensureSponsorNavItem();
 
@@ -860,7 +762,7 @@
 
   // Export new functions
   window.sharedUi = window.sharedUi || {};
-  window.sharedUi.ensureUserChipAndMenu = ensureUserChipAndMenu;
+  // window.sharedUi.ensureUserChipAndMenu = ensureUserChipAndMenu;
   window.sharedUi.normalizeSponsorLinks = normalizeSponsorLinks;
   window.sharedUi.ensureSponsorNavItem = ensureSponsorNavItem;
   window.sharedUi.SPONSOR_ROUTE = SPONSOR_ROUTE;

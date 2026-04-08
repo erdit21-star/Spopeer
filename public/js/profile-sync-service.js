@@ -192,33 +192,8 @@ const ProfileSyncService = {
       console.debug("UserUI.bindAllChips failed in ProfileSyncService", err);
     }
 
-    // Update all avatar elements (skip [data-user-chip-avatar] — handled by UserUI)
-    const avatarElements = [
-      'chipAvatar', 'createAvatar', 'sidebarAvatar', 'composerAvatar',
-      'userAvatar', 'profileAvatar', 'navAvatar', 'avatar'
-    ];
-    avatarElements.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el || el.hasAttribute('data-user-chip-avatar')) return;
-      if (profile.avatarUrl) {
-        const existingImg = el.querySelector('img');
-        const normalizedAvatarUrl = new URL(profile.avatarUrl, window.location.href).href;
-        if (!existingImg || existingImg.src !== normalizedAvatarUrl) {
-          el.innerHTML = '';
-          const img = document.createElement('img');
-          img.src = profile.avatarUrl;
-          img.style.width = '100%';
-          img.style.height = '100%';
-          img.style.objectFit = 'cover';
-          img.style.borderRadius = '50%';
-          el.appendChild(img);
-        }
-      } else {
-        el.textContent = initials;
-      }
-    });
-
-    // Apply cover photo on sidebar card
+    // Only update non-chip/profile elements (cover, location, sport, bio, etc.)
+    // Cover photo on sidebar card
     const coverEl = document.querySelector('.sp-cover');
     if (coverEl) {
       if (profile.coverPhoto) {
@@ -232,48 +207,7 @@ const ProfileSyncService = {
       }
     }
 
-    // Apply avatar styling preferences
-    const sidebarAvatar = document.getElementById('sidebarAvatar');
-    if (sidebarAvatar) {
-      sidebarAvatar.style.setProperty('--avatar-color', profile.avatarColor || '#001f3f');
-      sidebarAvatar.style.setProperty('--avatar-accent', profile.avatarAccent || '#1a6bff');
-
-      sidebarAvatar.classList.remove('avatar-style-gradient', 'avatar-style-neon', 'avatar-style-soft');
-      sidebarAvatar.classList.add(`avatar-style-${profile.avatarStyle || 'gradient'}`);
-    }
-    
-    // Update name elements (skip data-user-chip-name / data-user-full-name — handled by UserUI)
-    const nameSelectors = ['#chipName', '#profileName', '.chip-name', '.sp-name', '#sidebarName', '#composerName'];
-    document.querySelectorAll(nameSelectors.join(', ')).forEach(function(el){
-      if (!el.hasAttribute('data-user-chip-name') && !el.hasAttribute('data-user-full-name')) el.textContent = fullName;
-    });
-    
-    // Update handle/username (skip data-user-handle — handled by UserUI)
-    const username = profile.username || (profile.email?.split('@')[0]) || 'user';
-    const handleSelectors = ['.sp-handle', '#chipHandle', '#userHandle', '#profileHandle', '#composerHandle', '#sidebarHandle'];
-    document.querySelectorAll(handleSelectors.join(', ')).forEach(function(el){
-      if (!el.hasAttribute('data-user-handle')) el.textContent = '@' + username;
-    });
-    
-    // Update role badge
-    const roleMap = {
-      'athlete': { cls: 'athlete', icon: 'fa-person-running', label: 'Athlete' },
-      'coach': { cls: 'coach', icon: 'fa-bullseye', label: 'Coach' },
-      'club': { cls: 'club', icon: 'fa-shield-halved', label: 'Club' },
-      'supportive_professional': { cls: 'pro', icon: 'fa-star', label: 'Pro' }
-    };
-    
-    const roleInfo = roleMap[profile.role || profile.userType] || roleMap.athlete;
-    const roleBadgeElements = ['profileRole', 'userRole', 'sidebarRole', 'userType'];
-    roleBadgeElements.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.className = `role-badge ${roleInfo.cls}`;
-        el.innerHTML = `<i class="fa-solid ${roleInfo.icon}" style="font-size:9px"></i> ${roleInfo.label}`;
-      }
-    });
-    
-    // Update location
+    // Location
     const locationFallback = `${profile.city || ''}, ${profile.country || ''}`
       .replace(/^,\s*/, '')
       .replace(/,\s*$/, '')
@@ -284,16 +218,16 @@ const ProfileSyncService = {
       const el = document.getElementById(id);
       if (el) el.textContent = location || '-';
     });
-    
-    // Update sport
+
+    // Sport
     const sport = profile.primarySport || profile.sport || '-';
     const sportElements = ['profileSport', 'userSport', 'sport'];
     sportElements.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.textContent = sport;
     });
-    
-    // Update bio
+
+    // Bio
     const bioElements = ['profileBio', 'userBio', 'bio'];
     bioElements.forEach(id => {
       const el = document.getElementById(id);
