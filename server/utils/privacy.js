@@ -13,7 +13,7 @@
 // (needed for search results, follow lists, profile previews).
 const PUBLIC_CARD_FIELDS = [
   'id', 'firstName', 'lastName', 'displayName', 'username',
-  'avatarUrl', 'role', 'sport', 'primarySport',
+  'avatarUrl', 'role', 'sport', 'primarySport', 'location',
   'followersCount', 'followingCount', 'postsCount',
   'verified', 'createdAt'
 ];

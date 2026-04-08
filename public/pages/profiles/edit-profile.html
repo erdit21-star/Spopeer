@@ -667,7 +667,7 @@
           <!-- Cover Photo -->
           <div style="margin-bottom:20px">
             <div class="form-label" style="margin-bottom:8px"><label>Cover Photo</label><span class="form-label-badge optional">Optional</span></div>
-            <div class="cover-strip" id="coverStrip" onclick="document.getElementById('coverInput').click()">
+            <div class="cover-strip" id="coverStrip">
               <div class="cover-overlay"><i class="fa-solid fa-camera"></i> Change Cover Photo</div>
             </div>
             <input type="file" id="coverInput" accept="image/*" style="display:none">
@@ -675,7 +675,7 @@
 
           <!-- Avatar -->
           <div class="avatar-block">
-            <div class="avatar-ring" onclick="document.getElementById('photoFileInput').click()">
+            <div class="avatar-ring" id="avatarRing">
               <div class="avatar-img" id="avatarPreviewEl">
                 <i class="fa-solid fa-user" style="font-size:34px;opacity:.6"></i>
               </div>
@@ -2449,9 +2449,15 @@ if (window.profileRuntime) {
 
   // ── Photo upload ──
   var uploadBtn = document.getElementById('uploadPhotoBtn');
+  var avatarRing = document.getElementById('avatarRing');
   var photoInput = document.getElementById('photoFileInput');
   if (uploadBtn && photoInput) {
     uploadBtn.addEventListener('click', function(){ photoInput.click(); });
+  }
+  if (avatarRing && photoInput) {
+    avatarRing.addEventListener('click', function(){ photoInput.click(); });
+  }
+  if (photoInput) {
     photoInput.addEventListener('change', function(e) {
       var file = e.target.files && e.target.files[0];
       if (!file) return;
@@ -2489,8 +2495,10 @@ if (window.profileRuntime) {
   }
 
   // ── Cover upload ──
+  var coverStrip = document.getElementById('coverStrip');
   var coverInput = document.getElementById('coverInput');
-  if (coverInput) {
+  if (coverStrip && coverInput) {
+    coverStrip.addEventListener('click', function() { coverInput.click(); });
     coverInput.addEventListener('change', function(e) {
       var file = e.target.files && e.target.files[0];
       if (!file) return;

@@ -656,7 +656,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       const r=await fetch(`/api/users/${encodeURIComponent(userId)}`, { headers: _headers, credentials: 'include' });
       if(r.ok){
         const d=await r.json();
-        payload=d.user||d.payload||{};
+        payload=d.data||d.user||d.payload||{};
         profileFound=true;
       } else {
         console.warn('Profile fetch returned', r.status, await r.text().catch(()=>''));
@@ -667,12 +667,12 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   }
 
   // Fallback: for own profile, try /api/auth/me
-  if(!profileFound && isOwnProfile && _token){
+  if(!profileFound && isOwnProfile){
     try{
-      const r=await fetch('/api/auth/me', { headers: _headers });
+      const r=await fetch('/api/auth/me', { headers: _headers, credentials: 'include' });
       if(r.ok){
         const d=await r.json();
-        payload=d.user||d.payload||{};
+        payload=(d.data && d.data.user) || d.data || d.user || d.payload || {};
         profileFound=true;
         console.log('Loaded own profile via /api/auth/me');
       }
