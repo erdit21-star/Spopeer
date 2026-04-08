@@ -95,7 +95,17 @@
     emit();
   }
 
+  let _inflightRefresh = null;
+
   async function refreshCurrentUser() {
+    // Deduplicate concurrent calls — return the in-flight promise 
+    if (_inflightRefresh) return _inflightRefresh;
+
+    _inflightRefresh = _doRefresh();
+    try { return await _inflightRefresh; } finally { _inflightRefresh = null; }
+  }
+
+  async function _doRefresh() {
     if (!window.SpopeerAPI || typeof window.SpopeerAPI.me !== 'function') {
       currentUser = getStoredUser();
       emit();

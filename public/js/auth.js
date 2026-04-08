@@ -134,7 +134,13 @@ const Auth = {
       return;
     }
     try {
-      await window.SpopeerAPI.me();
+      // Prefer CurrentUserStore to avoid duplicate /api/auth/me calls
+      if (window.CurrentUserStore) {
+        const user = await window.CurrentUserStore.refreshCurrentUser();
+        if (!user) throw new Error('not authenticated');
+      } else {
+        await window.SpopeerAPI.me();
+      }
     } catch (_) {
       localStorage.removeItem('spopeer_user');
       localStorage.removeItem('spopeer_loggedIn');
@@ -154,6 +160,12 @@ const Auth = {
   },
 
   async syncUserFromBackend() {
+    // Delegate to CurrentUserStore to avoid duplicate /api/auth/me calls
+    if (window.CurrentUserStore) {
+      const user = await window.CurrentUserStore.refreshCurrentUser();
+      return user || null;
+    }
+
     if (!this.isLoggedIn()) return null;
     if (!window.SpopeerAPI || typeof window.SpopeerAPI.me !== "function") {
       return null;

@@ -17,6 +17,16 @@
 
   async function requireAuth(loginPath) {
     if (!loginPath) loginPath = '/pages/auth/login.html';
+    // Prefer CurrentUserStore to deduplicate /api/auth/me calls
+    if (window.CurrentUserStore) {
+      try {
+        const user = await window.CurrentUserStore.refreshCurrentUser();
+        if (user) return true;
+      } catch (_) { /* fall through */ }
+      clearLocalAuth();
+      window.location.href = loginPath;
+      return false;
+    }
     // Guard: api.js may not yet be loaded when requireAuth is called early in a page head.
     if (!window.SpopeerAPI) {
       if (!isLoggedIn()) {

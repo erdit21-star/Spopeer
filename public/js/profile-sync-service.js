@@ -29,6 +29,9 @@ const ProfileSyncService = {
     // Listen for profile updates from same page
     window.addEventListener('profileUpdated', this.onProfileUpdated.bind(this));
 
+    // Listen for CurrentUserStore canonical event
+    window.addEventListener('currentUserChanged', this.onCurrentUserChanged.bind(this));
+
     // Wire sidebar cover upload if elements exist
     this.wireCoverUpload();
     this.syncShareButton();
@@ -62,6 +65,17 @@ const ProfileSyncService = {
     }
     console.log('ProfileSyncService: Detected profile updated event', event.detail);
     this.broadcastProfileUpdate();
+  },
+
+  /**
+   * Handle CurrentUserStore canonical event
+   */
+  onCurrentUserChanged(event) {
+    const user = event?.detail?.user;
+    if (user) {
+      this.updatePageElements(user);
+      this.updateDataAttributes(user);
+    }
   },
   
   /**
@@ -179,15 +193,14 @@ const ProfileSyncService = {
       console.debug("UserUI.bindAllChips failed in ProfileSyncService", err);
     }
 
-    // Update all avatar elements
+    // Update all avatar elements (skip [data-user-chip-avatar] — handled by UserUI)
     const avatarElements = [
       'chipAvatar', 'createAvatar', 'sidebarAvatar', 'composerAvatar',
       'userAvatar', 'profileAvatar', 'navAvatar', 'avatar'
     ];
     avatarElements.forEach(id => {
-      const selector = `[data-user-chip-avatar], #${id}, .sp-av, .avatar, .user-avatar`;
-      const el = document.querySelector(selector);
-      if (!el) return;
+      const el = document.getElementById(id);
+      if (!el || el.hasAttribute('data-user-chip-avatar')) return;
       if (profile.avatarUrl) {
         const existingImg = el.querySelector('img');
         const normalizedAvatarUrl = new URL(profile.avatarUrl, window.location.href).href;
@@ -230,15 +243,18 @@ const ProfileSyncService = {
       sidebarAvatar.classList.add(`avatar-style-${profile.avatarStyle || 'gradient'}`);
     }
     
-    // Update name elements
-    // Update names using data attributes first, then fall back to legacy ids/classes
-    const nameSelectors = ['[data-user-chip-name]', '[data-user-full-name]', '#chipName', '#profileName', '.chip-name', '.sp-name', '#sidebarName', '#composerName'];
-    document.querySelectorAll(nameSelectors.join(', ')).forEach(function(el){ el.textContent = fullName; });
+    // Update name elements (skip data-user-chip-name / data-user-full-name — handled by UserUI)
+    const nameSelectors = ['#chipName', '#profileName', '.chip-name', '.sp-name', '#sidebarName', '#composerName'];
+    document.querySelectorAll(nameSelectors.join(', ')).forEach(function(el){
+      if (!el.hasAttribute('data-user-chip-name') && !el.hasAttribute('data-user-full-name')) el.textContent = fullName;
+    });
     
-    // Update handle/username
+    // Update handle/username (skip data-user-handle — handled by UserUI)
     const username = profile.username || (profile.email?.split('@')[0]) || 'user';
-    const handleSelectors = ['[data-user-handle]', '.sp-handle', '#chipHandle', '#userHandle', '#profileHandle', '#composerHandle', '#sidebarHandle'];
-    document.querySelectorAll(handleSelectors.join(', ')).forEach(function(el){ el.textContent = '@' + username; });
+    const handleSelectors = ['.sp-handle', '#chipHandle', '#userHandle', '#profileHandle', '#composerHandle', '#sidebarHandle'];
+    document.querySelectorAll(handleSelectors.join(', ')).forEach(function(el){
+      if (!el.hasAttribute('data-user-handle')) el.textContent = '@' + username;
+    });
     
     // Update role badge
     const roleMap = {
