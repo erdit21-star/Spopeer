@@ -67,8 +67,8 @@
         method: "POST",
         credentials: "include"
       });
-    } catch (_) {
-      // Ignore network failure and still clear local state.
+    } catch (err) {
+      console.debug("Logout request failed in api.js; clearing local state anyway", err);
     }
 
     clearAuthStorage();
@@ -158,7 +158,9 @@
             config._retried = true;
             return request(path, config);
           }
-        } catch (_) { /* refresh failed */ }
+        } catch (err) {
+          console.debug("Auth refresh retry failed in api.js", err);
+        }
       }
       // Don't clear storage here — let the caller decide (e.g. show
       // "session expired" UI vs. silently retrying on next navigation).

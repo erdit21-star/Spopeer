@@ -55,7 +55,8 @@
         localStorage.getItem('user') ||
         'null';
       return normalizeUser(JSON.parse(raw));
-    } catch (_) {
+    } catch (err) {
+      console.debug('CurrentUserStore: getStoredUser parse failed', err);
       return null;
     }
   }
@@ -102,7 +103,11 @@
     if (_inflightRefresh) return _inflightRefresh;
 
     _inflightRefresh = _doRefresh();
-    try { return await _inflightRefresh; } finally { _inflightRefresh = null; }
+    try {
+      return await _inflightRefresh;
+    } finally {
+      _inflightRefresh = null;
+    }
   }
 
   async function _doRefresh() {

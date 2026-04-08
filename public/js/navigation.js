@@ -44,7 +44,8 @@
     try {
       await window.SpopeerAPI.me();
       window.location.href = "/feed.html";
-    } catch (_) {
+    } catch (err) {
+      console.debug('navigation: guest page auth check failed', err);
       // Not authenticated: stay on guest page.
     }
   }

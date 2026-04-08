@@ -629,7 +629,7 @@ router.post('/refresh', async (req, res) => {
     }
 
     // Revoke old session
-    try { await session.update({ revokedAt: new Date() }); } catch (_) { /* revoke best-effort */ }
+    try { await session.update({ revokedAt: new Date() }); } catch (err) { console.debug('refresh: old session revoke failed', err.message); }
 
     // Issue rotated tokens
     const newAccessToken = generateAccessToken(user);

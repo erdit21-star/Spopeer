@@ -245,7 +245,8 @@ app.get('/api/ready', async (req, res) => {
   try {
     await sequelize.authenticate();
     checks.database = 'ok';
-  } catch (_) {
+  } catch (err) {
+    console.debug('Health: DB check failed', err.message);
     checks.database = 'fail';
     ready = false;
   }
@@ -267,7 +268,8 @@ app.get('/api/ready', async (req, res) => {
       } else {
         checks.authSchema = 'ok';
       }
-    } catch (_) {
+    } catch (err) {
+      console.debug('Health: auth schema check failed', err.message);
       checks.authSchema = process.env.NODE_ENV === 'production' ? 'fail' : 'warn';
       if (process.env.NODE_ENV === 'production') ready = false;
     }

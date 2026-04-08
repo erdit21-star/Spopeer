@@ -22,7 +22,7 @@
       try {
         const user = await window.CurrentUserStore.refreshCurrentUser();
         if (user) return true;
-      } catch (_) { /* fall through */ }
+      } catch (err) { console.debug('auth-guard: CurrentUserStore check failed', err); }
       clearLocalAuth();
       window.location.href = loginPath;
       return false;
@@ -39,7 +39,8 @@
     try {
       await window.SpopeerAPI.me();
       return true;
-    } catch (_) {
+    } catch (err) {
+      console.debug('auth-guard: SpopeerAPI.me check failed', err);
       clearLocalAuth();
       window.location.href = loginPath;
       return false;

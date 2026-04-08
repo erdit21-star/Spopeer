@@ -73,7 +73,7 @@ module.exports = {
 
   async down(queryInterface) {
     await queryInterface.sequelize.query('DROP TABLE IF EXISTS password_reset_tokens;');
-    try { await queryInterface.removeColumn('users', 'emailVerifyToken'); } catch (_) { /* ignore */ }
-    try { await queryInterface.removeColumn('users', 'emailVerified'); } catch (_) { /* ignore */ }
+    try { await queryInterface.removeColumn('users', 'emailVerifyToken'); } catch (err) { console.debug('005 down: emailVerifyToken removal skipped', err.message); }
+    try { await queryInterface.removeColumn('users', 'emailVerified'); } catch (err) { console.debug('005 down: emailVerified removal skipped', err.message); }
   }
 };

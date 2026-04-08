@@ -13,7 +13,8 @@
   function getUser() {
     try {
       return JSON.parse(localStorage.getItem(STORAGE_USER_KEY) || 'null');
-    } catch (_) {
+    } catch (err) {
+      console.debug('SpopeerSession.getUser: parse failed', err);
       return null;
     }
   }
@@ -42,7 +43,8 @@
       var user = (result && result.data && result.data.user) || (result && result.user) || null;
       if (user) setUser(user);
       return user;
-    } catch (_) {
+    } catch (err) {
+      console.debug('SpopeerSession.bootstrap: me() failed', err);
       return null;
     }
   }

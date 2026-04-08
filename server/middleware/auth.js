@@ -79,8 +79,9 @@ async function optionalAuth(req, res, next) {
         req.userId = user.id;
       }
     }
-  } catch (_) {
+  } catch (err) {
     // Token invalid - continue without user
+    console.debug('optionalAuth: token verification failed', err.message);
   }
   next();
 }

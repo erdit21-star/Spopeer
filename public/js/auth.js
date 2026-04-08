@@ -141,7 +141,8 @@ const Auth = {
       } else {
         await window.SpopeerAPI.me();
       }
-    } catch (_) {
+    } catch (err) {
+      console.debug("Auth.requireAuth failed", err);
       localStorage.removeItem('spopeer_user');
       localStorage.removeItem('spopeer_loggedIn');
       localStorage.removeItem('user');
@@ -154,7 +155,8 @@ const Auth = {
     try {
       await window.SpopeerAPI.me();
       window.location.href = "/feed.html";
-    } catch (_) {
+    } catch (err) {
+      console.debug("redirectIfLoggedInToUserApp check failed", err);
       // Not authenticated — stay on page
     }
   },
