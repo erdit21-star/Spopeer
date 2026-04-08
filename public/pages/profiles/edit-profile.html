@@ -323,6 +323,74 @@
   color: var(--ink);
   letter-spacing: -.03em;
 }
+
+/* ── CARD STYLE PICKER ── */
+.card-style-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:640px){.card-style-picker{grid-template-columns:1fr}}
+.card-style-option{border:1.5px solid var(--border);border-radius:var(--rL);overflow:hidden;cursor:pointer;position:relative;transition:.2s;display:flex;flex-direction:column}
+.card-style-option:hover{border-color:var(--accent-light);box-shadow:0 4px 16px rgba(0,31,63,.07)}
+.card-style-option.selected{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,31,63,.08)}
+.cso-check{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:none;align-items:center;justify-content:center;font-size:10px;z-index:2}
+.card-style-option.selected .cso-check{display:flex}
+.cso-label{padding:10px 12px;background:var(--white);border-top:1px solid var(--border)}
+.cso-label strong{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.cso-label span{font-size:11px;color:var(--muted)}
+.cso-line{height:6px;border-radius:3px;background:var(--border);margin-bottom:5px}
+.cso-line--name{width:65%;height:8px;background:var(--ink-2);opacity:.35}
+.cso-line--sub{width:45%;background:var(--muted-2);opacity:.4}
+.cso-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cso-dot--pub{background:#3a9a3a}
+.cso-dot--priv{background:#b02020}
+.cso-preview--1{background:var(--bg);min-height:190px;position:relative}
+.cso-cover{height:40px;background:linear-gradient(135deg,#0f2744,#1a4a8a)}
+.cso-av-wrap{display:flex;justify-content:center;margin-top:-16px;position:relative;z-index:1}
+.cso-av{width:32px;height:32px;border-radius:50%;background:#dce8f5;border:2px solid var(--white);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#1a4a8a}
+.cso-body{padding:6px 10px 10px;text-align:center}
+.cso-chips{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin:5px 0}
+.cso-chip{font-size:8px;padding:1px 5px;border-radius:99px;font-weight:700}
+.cso-chip--pub{background:#e9f5e9;color:#2a7a2a}
+.cso-chip--priv{background:#fef3f3;color:#b02020;opacity:.6}
+.cso-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin:5px 0}
+.cso-stat-box{height:18px;background:var(--surface);border-radius:4px}
+.cso-rows{text-align:left;margin-top:4px}
+.cso-row{display:flex;align-items:center;gap:4px;margin-bottom:3px}
+.cso-row-lbl{width:30%;height:5px;background:var(--border);border-radius:2px}
+.cso-row-val{flex:1;height:5px;border-radius:2px}
+.cso-row-val--pub{background:var(--muted-2);opacity:.5}
+.cso-row-val--priv{background:var(--border);opacity:.3}
+.cso-preview--2{background:var(--bg);min-height:190px;padding:10px}
+.cso-d2-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cso-d2-av{width:26px;height:26px;border-radius:6px;background:#0f2744;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#7ab2e0;flex-shrink:0}
+.cso-d2-info{flex:1}
+.cso-d2-bar-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:8px}
+.cso-d2-bar-fill{width:68%;height:100%;background:#1a5a9a;border-radius:2px}
+.cso-d2-list{display:flex;flex-direction:column;gap:3px}
+.cso-d2-row{display:flex;align-items:center;gap:4px}
+.cso-d2-fl{flex:1;height:5px;background:var(--border);border-radius:2px;opacity:.5}
+.cso-d2-fv{width:30%;height:5px;border-radius:2px}
+.cso-d2-fv--pub{background:var(--muted-2);opacity:.6}
+.cso-d2-fv--priv{background:var(--border);opacity:.3}
+.cso-preview--3{background:var(--bg);min-height:190px;overflow:hidden}
+.cso-d3-header{background:#0a1e35;padding:12px 10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cso-d3-av{width:28px;height:28px;border-radius:50%;background:#152d4a;border:1.5px solid #2a5a9a;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#7ab2e0}
+.cso-d3-pills{display:flex;gap:3px;margin-top:2px}
+.cso-d3-pill{height:8px;border-radius:99px}
+.cso-d3-pill--pos{width:28px;background:rgba(58,130,218,.3)}
+.cso-d3-pill--lvl{width:22px;background:rgba(58,218,122,.2)}
+.cso-d3-strip{display:grid;grid-template-columns:1fr 1fr 1fr;background:#0d2240}
+.cso-d3-stat{padding:4px 2px;text-align:center}
+.cso-d3-sn{height:7px;background:rgba(232,240,248,.3);border-radius:2px;margin:0 auto 2px;width:55%}
+.cso-d3-sl{height:4px;background:rgba(106,143,176,.3);border-radius:2px;margin:0 auto;width:40%}
+.cso-d3-body{padding:6px 8px}
+.cso-d3-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.cso-d3-tile{background:var(--surface);border-radius:5px;padding:4px 6px;position:relative}
+.cso-d3-dot{position:absolute;top:4px;right:4px;width:4px;height:4px;border-radius:50%}
+.cso-d3-dot--pub{background:#3ada7a}
+.cso-d3-dot--priv{background:#e05050}
+.cso-d3-tl{height:4px;background:var(--border);border-radius:2px;opacity:.5;margin-bottom:3px;width:60%}
+.cso-d3-tv{height:6px;background:var(--muted-2);border-radius:2px;opacity:.5;width:80%}
+.cso-d3-tv--priv{background:var(--border);opacity:.3;width:40%}
+
 </style>
   <link rel="stylesheet" href="/css/fonts.css">
 
@@ -1874,6 +1942,120 @@
               <label class="check-item"><input type="checkbox" id="share_messaging"/><span class="check-box"></span><span class="check-label">Allow messaging from anyone</span></label>
             </div>
           </div>
+
+          <!-- ── PROFILE CARD STYLE ── -->
+          <div class="form-group" style="margin-top:24px" id="profileCardStyleGroup">
+            <div class="form-label" style="margin-bottom:12px">
+              <label>Profile Card Style</label>
+              <span class="form-label-badge optional">Optional</span>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+              Choose how your profile card appears on your public profile and in the feed.
+              Only publicly-visible fields will be shown regardless of which style you pick.
+            </p>
+            <div class="card-style-picker" id="cardStylePicker">
+
+              <!-- Design 1 — Card Stack -->
+              <label class="card-style-option" data-value="card-stack">
+                <input type="radio" name="profileCardStyle" value="card-stack" style="display:none">
+                <div class="cso-preview cso-preview--1">
+                  <div class="cso-cover"></div>
+                  <div class="cso-av-wrap">
+                    <div class="cso-av">JK</div>
+                  </div>
+                  <div class="cso-body">
+                    <div class="cso-line cso-line--name"></div>
+                    <div class="cso-line cso-line--sub"></div>
+                    <div class="cso-chips">
+                      <span class="cso-chip cso-chip--pub">Public</span>
+                      <span class="cso-chip cso-chip--pub">Public</span>
+                      <span class="cso-chip cso-chip--priv">&#128274;</span>
+                    </div>
+                    <div class="cso-stats">
+                      <div class="cso-stat-box"></div>
+                      <div class="cso-stat-box"></div>
+                      <div class="cso-stat-box"></div>
+                    </div>
+                    <div class="cso-rows">
+                      <div class="cso-row"><div class="cso-row-lbl"></div><div class="cso-row-val cso-row-val--pub"></div><span class="cso-dot cso-dot--pub"></span></div>
+                      <div class="cso-row"><div class="cso-row-lbl"></div><div class="cso-row-val cso-row-val--priv"></div><span class="cso-dot cso-dot--priv"></span></div>
+                      <div class="cso-row"><div class="cso-row-lbl"></div><div class="cso-row-val cso-row-val--pub"></div><span class="cso-dot cso-dot--pub"></span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="cso-label">
+                  <strong>Card Stack</strong>
+                  <span>Sections with pub/priv indicators</span>
+                </div>
+                <span class="cso-check"><i class="fa-solid fa-check"></i></span>
+              </label>
+
+              <!-- Design 2 — Minimal List -->
+              <label class="card-style-option" data-value="minimal-list">
+                <input type="radio" name="profileCardStyle" value="minimal-list" style="display:none">
+                <div class="cso-preview cso-preview--2">
+                  <div class="cso-d2-top">
+                    <div class="cso-d2-av">JK</div>
+                    <div class="cso-d2-info">
+                      <div class="cso-line cso-line--name" style="width:70%"></div>
+                      <div class="cso-line cso-line--sub" style="width:50%"></div>
+                    </div>
+                  </div>
+                  <div class="cso-d2-bar-bg"><div class="cso-d2-bar-fill"></div></div>
+                  <div class="cso-d2-list">
+                    <div class="cso-d2-row"><span class="cso-dot cso-dot--pub"></span><div class="cso-d2-fl"></div><div class="cso-d2-fv cso-d2-fv--pub"></div></div>
+                    <div class="cso-d2-row"><span class="cso-dot cso-dot--pub"></span><div class="cso-d2-fl"></div><div class="cso-d2-fv cso-d2-fv--pub"></div></div>
+                    <div class="cso-d2-row"><span class="cso-dot cso-dot--priv"></span><div class="cso-d2-fl"></div><div class="cso-d2-fv cso-d2-fv--priv"></div></div>
+                    <div class="cso-d2-row"><span class="cso-dot cso-dot--pub"></span><div class="cso-d2-fl"></div><div class="cso-d2-fv cso-d2-fv--pub"></div></div>
+                    <div class="cso-d2-row"><span class="cso-dot cso-dot--priv"></span><div class="cso-d2-fl"></div><div class="cso-d2-fv cso-d2-fv--priv"></div></div>
+                    <div class="cso-d2-row"><span class="cso-dot cso-dot--pub"></span><div class="cso-d2-fl"></div><div class="cso-d2-fv cso-d2-fv--pub"></div></div>
+                    <div class="cso-d2-row"><span class="cso-dot cso-dot--priv"></span><div class="cso-d2-fl"></div><div class="cso-d2-fv cso-d2-fv--priv"></div></div>
+                  </div>
+                </div>
+                <div class="cso-label">
+                  <strong>Minimal List</strong>
+                  <span>Full field list grouped by section</span>
+                </div>
+                <span class="cso-check"><i class="fa-solid fa-check"></i></span>
+              </label>
+
+              <!-- Design 3 — Sports Card -->
+              <label class="card-style-option" data-value="sports-card">
+                <input type="radio" name="profileCardStyle" value="sports-card" style="display:none">
+                <div class="cso-preview cso-preview--3">
+                  <div class="cso-d3-header">
+                    <div class="cso-d3-av">JK</div>
+                    <div class="cso-line cso-line--name" style="background:rgba(255,255,255,.25);width:60%"></div>
+                    <div class="cso-line cso-line--sub" style="background:rgba(255,255,255,.15);width:45%"></div>
+                    <div class="cso-d3-pills">
+                      <span class="cso-d3-pill cso-d3-pill--pos"></span>
+                      <span class="cso-d3-pill cso-d3-pill--lvl"></span>
+                    </div>
+                  </div>
+                  <div class="cso-d3-strip">
+                    <div class="cso-d3-stat"><div class="cso-d3-sn"></div><div class="cso-d3-sl"></div></div>
+                    <div class="cso-d3-stat"><div class="cso-d3-sn"></div><div class="cso-d3-sl"></div></div>
+                    <div class="cso-d3-stat"><div class="cso-d3-sn"></div><div class="cso-d3-sl"></div></div>
+                  </div>
+                  <div class="cso-d3-body">
+                    <div class="cso-d3-grid">
+                      <div class="cso-d3-tile"><div class="cso-d3-dot cso-d3-dot--pub"></div><div class="cso-d3-tl"></div><div class="cso-d3-tv"></div></div>
+                      <div class="cso-d3-tile"><div class="cso-d3-dot cso-d3-dot--priv"></div><div class="cso-d3-tl"></div><div class="cso-d3-tv cso-d3-tv--priv"></div></div>
+                      <div class="cso-d3-tile"><div class="cso-d3-dot cso-d3-dot--pub"></div><div class="cso-d3-tl"></div><div class="cso-d3-tv"></div></div>
+                      <div class="cso-d3-tile"><div class="cso-d3-dot cso-d3-dot--priv"></div><div class="cso-d3-tl"></div><div class="cso-d3-tv cso-d3-tv--priv"></div></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="cso-label">
+                  <strong>Sports Card</strong>
+                  <span>Dark header with tile-grid layout</span>
+                </div>
+                <span class="cso-check"><i class="fa-solid fa-check"></i></span>
+              </label>
+
+            </div>
+          </div>
+
         </div>
         <div class="card-footer">
           <div class="save-status" id="status-msg-privacy"></div>
@@ -2159,6 +2341,35 @@ if (window.profileRuntime) {
   if (sp.searchable === false) { var sx = document.getElementById('share_searchable'); if(sx) sx.checked = false; }
   if (sp.messaging === true) { var sg = document.getElementById('share_messaging'); if(sg) sg.checked = true; }
 
+  // Load saved card style
+  (function() {
+    var saved = ud.profileCardStyle || 'card-stack';
+    var opts = document.querySelectorAll('.card-style-option');
+    opts.forEach(function(opt) {
+      var radio = opt.querySelector('input[type="radio"]');
+      if (opt.dataset.value === saved) {
+        opt.classList.add('selected');
+        if (radio) radio.checked = true;
+      } else {
+        opt.classList.remove('selected');
+      }
+    });
+  })();
+
+  // Card style picker — visual selection
+  document.addEventListener('click', function(e) {
+    var opt = e.target.closest('.card-style-option');
+    if (!opt) return;
+    document.querySelectorAll('.card-style-option').forEach(function(o) {
+      o.classList.remove('selected');
+      var r = o.querySelector('input[type="radio"]');
+      if (r) r.checked = false;
+    });
+    opt.classList.add('selected');
+    var radio = opt.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
+  });
+
   // ── Avatar preview ──
   if (ud.avatarUrl) {
     var av = document.getElementById('avatarPreviewEl');
@@ -2224,7 +2435,7 @@ if (window.profileRuntime) {
       'status-payment': ['feeStructure'],
       'status-prof-legal': ['profLicensing'],
       'status-media': ['mediaLinks'],
-      'status-privacy': ['profileVisibility']
+      'status-privacy': ['profileVisibility', 'profileCardStyle']
     };
     Object.keys(dotMap).forEach(function(statusId) {
       var dot = document.getElementById(statusId);
@@ -2505,6 +2716,10 @@ if (window.profileRuntime) {
           searchable: !!document.getElementById('share_searchable').checked,
           messaging: !!document.getElementById('share_messaging').checked
         };
+        ud.profileCardStyle = (function() {
+          var sel = document.querySelector('.card-style-option.selected');
+          return sel ? sel.dataset.value : 'card-stack';
+        })();
       }
 
       // Canonical key aliases for cross-page sync

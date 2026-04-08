@@ -2249,6 +2249,51 @@
   color: var(--ink);
   letter-spacing: -.03em;
 }
+
+/* Profile card style variants */
+.profile-card-variant { display: none; }
+.profile-card-variant.active { display: block; }
+
+/* Feed — Minimal List variant */
+.feed-pc-minimal { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--rL); overflow: hidden; margin-bottom: 12px; }
+.feed-pc-minimal-top { display: flex; align-items: center; gap: 10px; padding: 14px; }
+.feed-pc-minimal-av { width: 40px; height: 40px; border-radius: 8px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
+.feed-pc-minimal-av img { width: 100%; height: 100%; object-fit: cover; }
+.feed-pc-minimal-info { flex: 1; min-width: 0; }
+.feed-pc-minimal-name { font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feed-pc-minimal-sub { font-size: 11px; color: var(--muted); }
+.feed-pc-minimal-bar { height: 3px; background: var(--border); margin: 0 14px 10px; border-radius: 2px; overflow: hidden; }
+.feed-pc-minimal-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+.feed-pc-minimal-list { padding: 0 14px 14px; }
+.feed-pc-minimal-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 12px; border-bottom: 1px solid var(--border-light, var(--border)); }
+.feed-pc-minimal-row:last-child { border-bottom: none; }
+.feed-pc-minimal-fl { color: var(--muted); flex-shrink: 0; width: 80px; }
+.feed-pc-minimal-fv { flex: 1; color: var(--ink); font-weight: 500; }
+.feed-pc-minimal-stats { display: flex; justify-content: space-around; padding: 10px 14px; border-top: 1px solid var(--border); }
+.feed-pc-minimal-stat-num { font-size: 14px; font-weight: 700; color: var(--ink); text-align: center; }
+.feed-pc-minimal-stat-label { font-size: 10px; color: var(--muted); text-align: center; }
+
+/* Feed — Sports Card variant */
+.feed-pc-sports { border-radius: var(--rL); overflow: hidden; border: 1.5px solid var(--border); margin-bottom: 12px; }
+.feed-pc-sports-header { background: linear-gradient(135deg, #0a1e35, #163a6a); padding: 16px 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.feed-pc-sports-av { width: 44px; height: 44px; border-radius: 50%; background: #152d4a; border: 2px solid #2a5a9a; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #7ab2e0; overflow: hidden; }
+.feed-pc-sports-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.feed-pc-sports-name { font-size: 14px; font-weight: 700; color: #fff; text-align: center; }
+.feed-pc-sports-sub { font-size: 11px; color: rgba(255,255,255,.6); }
+.feed-pc-sports-pills { display: flex; gap: 4px; margin-top: 2px; }
+.feed-pc-sports-pill { font-size: 9px; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+.feed-pc-sports-pill--pos { background: rgba(58,130,218,.25); color: #7ab2e0; }
+.feed-pc-sports-pill--lvl { background: rgba(58,218,122,.2); color: #5ade8a; }
+.feed-pc-sports-strip { display: grid; grid-template-columns: 1fr 1fr 1fr; background: #0d2240; }
+.feed-pc-sports-stat { padding: 8px 4px; text-align: center; }
+.feed-pc-sports-stat-num { font-size: 14px; font-weight: 700; color: #e8f0f8; }
+.feed-pc-sports-stat-label { font-size: 9px; color: #6a8fb0; }
+.feed-pc-sports-body { background: var(--white); padding: 10px; }
+.feed-pc-sports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.feed-pc-sports-tile { background: var(--surface, #f5f7fa); border-radius: 6px; padding: 8px; }
+.feed-pc-sports-tile-label { font-size: 10px; color: var(--muted); }
+.feed-pc-sports-tile-val { font-size: 12px; font-weight: 600; color: var(--ink); }
+.feed-pc-sports-actions { padding: 10px; border-top: 1px solid var(--border); background: var(--white); display: flex; gap: 6px; }
 </style>
   <link rel="stylesheet" href="/css/fonts.css">
 
@@ -2359,6 +2404,7 @@
   <!-- LEFT SIDEBAR -->
   <aside class="sidebar-left">
     <!-- SIDEBAR PROFILE CARD -->
+    <div class="profile-card-variant active" data-variant="card-stack" id="feedCardVariantStack">
     <div class="sidebar-profile">
       <div class="sp-cover">
         <span class="sp-cover-edit"><i class="fa-solid fa-camera" style="font-size:9px"></i> Edit Cover</span>
@@ -2491,6 +2537,47 @@
           </a>
         </div>
       </div>
+    </div>
+    </div><!-- /.profile-card-variant card-stack -->
+
+    <!-- MINIMAL LIST (Design 2) -->
+    <div class="profile-card-variant" data-variant="minimal-list" id="feedCardVariantMinimal">
+    <div class="feed-pc-minimal">
+      <div class="feed-pc-minimal-top">
+        <div class="feed-pc-minimal-av" id="feed-ml-avatar">?</div>
+        <div class="feed-pc-minimal-info">
+          <div class="feed-pc-minimal-name" id="feed-ml-name">User</div>
+          <div class="feed-pc-minimal-sub" id="feed-ml-sub">User</div>
+        </div>
+      </div>
+      <div class="feed-pc-minimal-bar"><div class="feed-pc-minimal-bar-fill" id="feed-ml-bar" style="width:0%"></div></div>
+      <div class="feed-pc-minimal-list" id="feed-ml-fields"></div>
+      <div class="feed-pc-minimal-stats">
+        <div><div class="feed-pc-minimal-stat-num" id="feed-ml-followers">0</div><div class="feed-pc-minimal-stat-label">Followers</div></div>
+        <div><div class="feed-pc-minimal-stat-num" id="feed-ml-following">0</div><div class="feed-pc-minimal-stat-label">Following</div></div>
+        <div><div class="feed-pc-minimal-stat-num" id="feed-ml-posts">0</div><div class="feed-pc-minimal-stat-label">Posts</div></div>
+      </div>
+    </div>
+    </div>
+
+    <!-- SPORTS CARD (Design 3) -->
+    <div class="profile-card-variant" data-variant="sports-card" id="feedCardVariantSports">
+    <div class="feed-pc-sports">
+      <div class="feed-pc-sports-header">
+        <div class="feed-pc-sports-av" id="feed-sc-avatar">?</div>
+        <div class="feed-pc-sports-name" id="feed-sc-name">User</div>
+        <div class="feed-pc-sports-sub" id="feed-sc-sub">User</div>
+        <div class="feed-pc-sports-pills" id="feed-sc-pills"></div>
+      </div>
+      <div class="feed-pc-sports-strip">
+        <div class="feed-pc-sports-stat"><div class="feed-pc-sports-stat-num" id="feed-sc-followers">0</div><div class="feed-pc-sports-stat-label">Followers</div></div>
+        <div class="feed-pc-sports-stat"><div class="feed-pc-sports-stat-num" id="feed-sc-following">0</div><div class="feed-pc-sports-stat-label">Following</div></div>
+        <div class="feed-pc-sports-stat"><div class="feed-pc-sports-stat-num" id="feed-sc-posts">0</div><div class="feed-pc-sports-stat-label">Posts</div></div>
+      </div>
+      <div class="feed-pc-sports-body">
+        <div class="feed-pc-sports-grid" id="feed-sc-fields"></div>
+      </div>
+    </div>
     </div>
 
     <button class="nav-item active" onclick="window.location.href='feed.html'"><i class="fa-solid fa-house"></i> Home</button>
@@ -2958,6 +3045,74 @@
     hydrateSidebarProfile(window.CurrentUserStore.getCurrentUser());
     if (window.UserUI) window.UserUI.bindAllChips();
   }
+
+  // Apply chosen card style on feed sidebar
+  (function applyFeedCardStyle() {
+    var user = getCurrentUserData();
+    var style = (user && user.profileCardStyle) || 'card-stack';
+    var valid = ['card-stack', 'minimal-list', 'sports-card'];
+    if (valid.indexOf(style) === -1) style = 'card-stack';
+
+    document.querySelectorAll('.sidebar-left .profile-card-variant').forEach(function(el) {
+      el.classList.toggle('active', el.dataset.variant === style);
+    });
+
+    var name = user.displayName || ((user.firstName || '') + ' ' + (user.lastName || '')).trim() || 'User';
+    var initials = name.split(' ').map(function(n){ return n[0] || ''; }).join('').toUpperCase().slice(0,2) || '?';
+
+    // Populate minimal-list variant
+    if (style === 'minimal-list') {
+      var mlAv = document.getElementById('feed-ml-avatar');
+      if (mlAv) {
+        if (user.avatarUrl || user.avatar) {
+          mlAv.innerHTML = '<img src="' + (user.avatarUrl || user.avatar) + '" alt="' + name + '">';
+        } else { mlAv.textContent = initials; }
+      }
+      var mlName = document.getElementById('feed-ml-name'); if (mlName) mlName.textContent = name;
+      var mlSub = document.getElementById('feed-ml-sub'); if (mlSub) mlSub.textContent = user.sport || user.primarySport || user.profession || 'User';
+      var mlF = document.getElementById('feed-ml-followers'); if (mlF) mlF.textContent = String(user.followersCount || user.followers || 0);
+      var mlFg = document.getElementById('feed-ml-following'); if (mlFg) mlFg.textContent = String(user.followingCount || user.following || 0);
+      var mlP = document.getElementById('feed-ml-posts'); if (mlP) mlP.textContent = String(user.postsCount || 0);
+      var mlFields = document.getElementById('feed-ml-fields');
+      if (mlFields) {
+        var rows = '';
+        [{k:'sport',l:'Sport'},{k:'location',l:'Location'},{k:'playingLevel',l:'Level'},{k:'position',l:'Position'},{k:'currentTeam',l:'Team'}].forEach(function(f) {
+          if (user[f.k]) rows += '<div class="feed-pc-minimal-row"><span class="feed-pc-minimal-fl">' + f.l + '</span><span class="feed-pc-minimal-fv">' + user[f.k] + '</span></div>';
+        });
+        mlFields.innerHTML = rows;
+      }
+    }
+
+    // Populate sports-card variant
+    if (style === 'sports-card') {
+      var scAv = document.getElementById('feed-sc-avatar');
+      if (scAv) {
+        if (user.avatarUrl || user.avatar) {
+          scAv.innerHTML = '<img src="' + (user.avatarUrl || user.avatar) + '" alt="' + name + '">';
+        } else { scAv.textContent = initials; }
+      }
+      var scName = document.getElementById('feed-sc-name'); if (scName) scName.textContent = name;
+      var scSub = document.getElementById('feed-sc-sub'); if (scSub) scSub.textContent = user.sport || user.primarySport || user.profession || 'User';
+      var scF = document.getElementById('feed-sc-followers'); if (scF) scF.textContent = String(user.followersCount || user.followers || 0);
+      var scFg = document.getElementById('feed-sc-following'); if (scFg) scFg.textContent = String(user.followingCount || user.following || 0);
+      var scP = document.getElementById('feed-sc-posts'); if (scP) scP.textContent = String(user.postsCount || 0);
+      var scPills = document.getElementById('feed-sc-pills');
+      if (scPills) {
+        var pills = '';
+        if (user.position) pills += '<span class="feed-pc-sports-pill feed-pc-sports-pill--pos">' + user.position + '</span>';
+        if (user.playingLevel) pills += '<span class="feed-pc-sports-pill feed-pc-sports-pill--lvl">' + user.playingLevel + '</span>';
+        scPills.innerHTML = pills;
+      }
+      var scFields = document.getElementById('feed-sc-fields');
+      if (scFields) {
+        var tiles = '';
+        [{k:'sport',l:'Sport'},{k:'location',l:'Location'},{k:'currentTeam',l:'Team'},{k:'nationality',l:'Nationality'}].forEach(function(f) {
+          if (user[f.k]) tiles += '<div class="feed-pc-sports-tile"><div class="feed-pc-sports-tile-label">' + f.l + '</div><div class="feed-pc-sports-tile-val">' + user[f.k] + '</div></div>';
+        });
+        scFields.innerHTML = tiles;
+      }
+    }
+  })();
   
   // Hydration of avatars/names is handled centrally by CurrentUserStore and UserUI
 
