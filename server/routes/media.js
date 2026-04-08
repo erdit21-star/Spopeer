@@ -9,7 +9,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
-const { uploadPost } = require('../middleware/upload');
+const { uploadPost, persistFile } = require('../middleware/upload');
 const { Media } = require('../models');
 const path = require('path');
 const fs = require('fs');
@@ -22,10 +22,12 @@ router.post('/upload', authenticate, uploadPost.single('file'), async (req, res)
       return fail(res, 400, 'VALIDATION', 'No file uploaded.');
     }
 
+    const { url, provider } = await persistFile(req.file, 'posts', req.userId);
+
     const mediaEntry = await Media.create({
       userId: req.userId,
-      url: `/uploads/posts/${req.file.filename}`,
-      storageProvider: 'local',
+      url,
+      storageProvider: provider,
       originalName: req.file.originalname,
       mimeType: req.file.mimetype,
       size: req.file.size,

@@ -25,7 +25,7 @@
     }
 
     if (!isAdmin(user)) {
-      alert("You do not have admin access.");
+      if (window.SpopeerToast) window.SpopeerToast.error("You do not have admin access.");
       window.location.href = "/feed.html";
     }
   }
@@ -34,7 +34,7 @@
     const user = getUser();
 
     if (!isAdmin(user)) {
-      alert("Admin access only.");
+      if (window.SpopeerToast) window.SpopeerToast.error("Admin access only.");
       return;
     }
 

@@ -298,7 +298,7 @@
   document.getElementById('loadConversation').addEventListener('click',function(){
     const a=document.getElementById('fromId').value.trim();
     const b=document.getElementById('toId').value.trim();
-    if(!a||!b){alert('Enter both From and To user IDs');return;}
+    if(!a||!b){if (window.SpopeerToast) window.SpopeerToast.warning('Enter both From and To user IDs');return;}
     loadConversation(a,b);
   });
 
@@ -313,7 +313,7 @@
     const fromId=document.getElementById('fromId').value.trim();
     const toId=document.getElementById('toId').value.trim();
     const text=document.getElementById('messageText').value.trim();
-    if(!fromId||!toId||!text){alert('Fill From ID, To ID, and message');return;}
+    if(!fromId||!toId||!text){if (window.SpopeerToast) window.SpopeerToast.warning('Fill From ID, To ID, and message');return;}
     
     try{
       const r=await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({toId,text})});
@@ -327,7 +327,7 @@
       console.error('Failed to send message:', e);
     }
     
-    alert('Error sending message');
+    if (window.SpopeerToast) window.SpopeerToast.error('Error sending message');
   }
 
   document.getElementById('sendBtn').addEventListener('click',sendMessage);

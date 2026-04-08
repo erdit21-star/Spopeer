@@ -309,7 +309,7 @@
         // Load gallery
         loadMediaGallery();
       } catch (error) {
-        alert('Upload failed: ' + error.message);
+        if (window.SpopeerToast) window.SpopeerToast.error('Upload failed: ' + error.message);
         uploadConfirmBtn.disabled = false;
         uploadConfirmBtn.textContent = 'Upload';
       }
@@ -381,7 +381,7 @@
         if (!response.ok) throw new Error('Delete failed');
         loadMediaGallery();
       } catch (error) {
-        alert('Delete failed: ' + error.message);
+        if (window.SpopeerToast) window.SpopeerToast.error('Delete failed: ' + error.message);
       }
     };
 

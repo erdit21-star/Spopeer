@@ -1060,11 +1060,11 @@
             </div>
           `;
         } else {
-          alert('Error sending inquiry. Please try again.');
+          if (window.SpopeerToast) window.SpopeerToast.error('Error sending inquiry. Please try again.');
         }
       } catch (error) {
         console.error('Error sending inquiry:', error);
-        alert('Error sending inquiry');
+        if (window.SpopeerToast) window.SpopeerToast.error('Error sending inquiry');
       }
     };
 
@@ -1094,7 +1094,7 @@
           },
           credentials: 'include',
           body: JSON.stringify({ reason })
-        }).then(() => alert('Thank you for reporting. We\'ll review this listing.')).catch(() => alert('Error reporting listing'));
+        }).then(() => { if (window.SpopeerToast) window.SpopeerToast.success('Thank you for reporting. We\'ll review this listing.'); }).catch(() => { if (window.SpopeerToast) window.SpopeerToast.error('Error reporting listing'); });
       }
     };
 
@@ -1165,7 +1165,7 @@
         modal.classList.add('show');
       } catch (error) {
         console.error('Error loading seller profile:', error);
-        alert('Could not load seller profile');
+        if (window.SpopeerToast) window.SpopeerToast.error('Could not load seller profile');
       }
     }
 

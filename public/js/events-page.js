@@ -97,7 +97,7 @@
           await window.SpopeerAPI.respondToEventInvite(btn.getAttribute("data-accept-event"), "accepted");
           await loadEvents();
         } catch (err) {
-          alert(err.message || "Failed to accept invitation");
+          if (window.SpopeerToast) window.SpopeerToast.error(err.message || "Failed to accept invitation");
         }
       });
     });
@@ -108,7 +108,7 @@
           await window.SpopeerAPI.respondToEventInvite(btn.getAttribute("data-decline-event"), "declined");
           await loadEvents();
         } catch (err) {
-          alert(err.message || "Failed to decline invitation");
+          if (window.SpopeerToast) window.SpopeerToast.error(err.message || "Failed to decline invitation");
         }
       });
     });
@@ -151,7 +151,7 @@
         populateSportSelect();
         await loadEvents();
       } catch (err) {
-        alert(err.message || "Failed to create event");
+        if (window.SpopeerToast) window.SpopeerToast.error(err.message || "Failed to create event");
       }
     });
   });

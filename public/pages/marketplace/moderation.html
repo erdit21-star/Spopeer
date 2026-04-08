@@ -825,7 +825,7 @@
         flag.status = 'approved';
         renderTable();
         closeModal();
-        alert('Listing approved. Flag resolved.');
+        if (window.SpopeerToast) window.SpopeerToast.success('Listing approved. Flag resolved.');
       }
     }
 
@@ -836,7 +836,7 @@
         flag.status = 'removed';
         renderTable();
         closeModal();
-        alert('Listing removed from marketplace. Seller notified.');
+        if (window.SpopeerToast) window.SpopeerToast.success('Listing removed from marketplace. Seller notified.');
       }
     }
 
@@ -846,7 +846,7 @@
         if (flag) {
           flag.status = 'removed';
           renderTable();
-          alert('Listing removed from marketplace.');
+          if (window.SpopeerToast) window.SpopeerToast.success('Listing removed from marketplace.');
         }
       }
     }

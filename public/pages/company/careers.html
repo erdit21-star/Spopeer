@@ -1004,7 +1004,7 @@
   <script>
     function handleSubmit(event) {
       event.preventDefault();
-      alert('Thank you for your application! We will review your CV and get back to you soon.');
+      if (window.SpopeerToast) window.SpopeerToast.success('Thank you for your application! We will review your CV and get back to you soon.');
       event.target.reset();
     }
   </script>

@@ -648,7 +648,7 @@
           container.scrollTop = container.scrollHeight;
         } catch (error) {
           console.error('Error sending message:', error);
-          alert('Failed to send message');
+          if (window.SpopeerToast) window.SpopeerToast.error('Failed to send message');
         }
       };
 

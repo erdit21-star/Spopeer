@@ -4350,7 +4350,7 @@
     });
     if (publishBtn) publishBtn.addEventListener('click', function() {
       var text = textInput.value.trim();
-      if (!text && !storyImageData) { alert('Add text or a photo to your story.'); return; }
+      if (!text && !storyImageData) { if (window.SpopeerToast) window.SpopeerToast.warning('Add text or a photo to your story.'); return; }
       var ud = getCurrentUserData();
       var name = ud.displayName || ud.name || [ud.firstName, ud.lastName].filter(Boolean).join(' ') || 'You';
       var initials = name.split(' ').map(function(x){ return x[0] || ''; }).join('').toUpperCase().slice(0,2) || 'U';
@@ -4662,7 +4662,7 @@
 
     // Validate content
     if (!content && composerState.media.length === 0 && !composerState.poll && !composerState.event) {
-      alert('Please add some content to your post');
+      if (window.SpopeerToast) window.SpopeerToast.warning('Please add some content to your post');
       return;
     }
 
@@ -4674,7 +4674,7 @@
         .filter(opt => opt.length > 0);
 
       if (!pollQuestion || pollOptions.length < 2) {
-        alert('Poll needs a question and at least 2 options');
+        if (window.SpopeerToast) window.SpopeerToast.warning('Poll needs a question and at least 2 options');
         return;
       }
 
@@ -4692,7 +4692,7 @@
       const eventDescription = document.getElementById('eventDescription').value.trim();
 
       if (!eventTitle || !eventDateTime || !eventLocation) {
-        alert('Event needs a title, date/time, and location');
+        if (window.SpopeerToast) window.SpopeerToast.warning('Event needs a title, date/time, and location');
         return;
       }
 
@@ -4754,7 +4754,7 @@
 
     } catch (error) {
       console.error('Error creating post:', error);
-      alert('Error creating post. Please try again.');
+      if (window.SpopeerToast) window.SpopeerToast.error('Error creating post. Please try again.');
       submitComposer.textContent = 'Post';
       submitComposer.disabled = false;
     }
@@ -5171,7 +5171,7 @@ function shareVia(platform) {
     instagram: null,
   };
   if (targets[platform]) window.open(targets[platform], '_blank');
-  else { copyShareLink(); alert('Link copied! Paste it into your Instagram story or bio.'); }
+  else { copyShareLink(); if (window.SpopeerToast) window.SpopeerToast.success('Link copied! Paste it into your Instagram story or bio.'); }
 }
 
 // Wire share modal once DOM is ready (overlay element is after this script block)
@@ -5418,7 +5418,7 @@ function attachPostMenuListeners() {
       }
     } catch (error) {
       console.error('Post menu action failed:', error);
-      alert(error.message || 'Post action failed.');
+      if (window.SpopeerToast) window.SpopeerToast.error(error.message || 'Post action failed.');
     }
   });
 }

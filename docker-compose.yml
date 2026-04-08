@@ -29,6 +29,11 @@ services:
       - db
     ports:
       - "5000:5000"
+    volumes:
+      - app_uploads:/app/server/uploads
+      - app_logs:/app/server/logs
 
 volumes:
   postgres_data:
+  app_uploads:
+  app_logs:

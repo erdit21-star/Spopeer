@@ -161,8 +161,8 @@
     fileInput.addEventListener('change', () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
 
     function handleFile(file) {
-      if (!file.type.startsWith('video/')) return alert('Please select a video file.');
-      if (file.size > 50 * 1024 * 1024) return alert('File too large. Max 50MB.');
+      if (!file.type.startsWith('video/')) return (window.SpopeerToast && window.SpopeerToast.warning('Please select a video file.'), undefined);
+      if (file.size > 50 * 1024 * 1024) return (window.SpopeerToast && window.SpopeerToast.warning('File too large. Max 50MB.'), undefined);
       selectedFile = file;
       fileNameEl.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)';
       fileNameEl.style.display = 'block';
@@ -176,8 +176,8 @@
     // ── Upload reel ──
     async function uploadReel() {
       const title = document.getElementById('reelTitle').value.trim();
-      if (!title) return alert('Title is required.');
-      if (!selectedFile) return alert('Please select a video.');
+      if (!title) return (window.SpopeerToast && window.SpopeerToast.warning('Title is required.'), undefined);
+      if (!selectedFile) return (window.SpopeerToast && window.SpopeerToast.warning('Please select a video.'), undefined);
 
       const btn = document.getElementById('uploadBtn');
       btn.disabled = true;
@@ -197,7 +197,7 @@
           body: fd
         });
         const data = await res.json();
-        if (!res.ok) return alert(data.error || 'Upload failed.');
+        if (!res.ok) return (window.SpopeerToast && window.SpopeerToast.error(data.error || 'Upload failed.'), undefined);
 
         toggleUpload();
         selectedFile = null;
@@ -209,7 +209,7 @@
         loadReels();
       } catch (e) {
         console.error('Upload error:', e);
-        alert('Upload failed. Please try again.');
+        if (window.SpopeerToast) window.SpopeerToast.error('Upload failed. Please try again.');
       } finally {
         btn.disabled = false;
         btn.textContent = 'Upload Reel';

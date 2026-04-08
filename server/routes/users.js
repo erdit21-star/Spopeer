@@ -13,7 +13,7 @@ const express = require('express');
 const router = express.Router();
 const { User, Post, Connection, Comment, Like, Message, SavedPost, Notification, Report, Block } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { uploadAvatar, uploadCover } = require('../middleware/upload');
+const { uploadAvatar, uploadCover, persistFile } = require('../middleware/upload');
 const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
 
@@ -225,7 +225,7 @@ router.post('/avatar', authenticate, uploadAvatar.single('avatar'), async (req, 
       return fail(res, 400, 'VALIDATION', 'No file uploaded.');
     }
 
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    const { url: avatarUrl } = await persistFile(req.file, 'avatars', req.userId);
     await req.user.update({ avatarUrl });
 
     res.json({
@@ -245,7 +245,7 @@ router.post('/cover', authenticate, uploadCover.single('cover'), async (req, res
       return fail(res, 400, 'VALIDATION', 'No file uploaded.');
     }
 
-    const coverPhotoUrl = `/uploads/covers/${req.file.filename}`;
+    const { url: coverPhotoUrl } = await persistFile(req.file, 'covers', req.userId);
     await req.user.update({ coverPhotoUrl });
 
     res.json({

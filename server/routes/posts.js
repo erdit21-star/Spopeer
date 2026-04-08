@@ -20,7 +20,7 @@ const express = require('express');
 const router = express.Router();
 const { Post, User, Like, Comment, Connection, SavedPost } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { uploadPost } = require('../middleware/upload');
+const { uploadPost, persistFile } = require('../middleware/upload');
 const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
 
@@ -177,7 +177,8 @@ router.post('/', authenticate, uploadPost.single('image'), async (req, res) => {
     };
 
     if (req.file) {
-      postData.image = `/uploads/posts/${req.file.filename}`;
+      const { url } = await persistFile(req.file, 'posts', req.userId);
+      postData.image = url;
     }
 
     const post = await Post.create(postData);

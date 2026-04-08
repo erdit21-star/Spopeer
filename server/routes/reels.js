@@ -11,7 +11,7 @@ const express = require('express');
 const router = express.Router();
 const { Reel, User } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { uploadPost } = require('../middleware/upload');
+const { uploadPost, persistFile } = require('../middleware/upload');
 
 // ─── LIST REELS ───
 const { ok, created, fail } = require('../utils/response');
@@ -51,11 +51,13 @@ router.post('/', authenticate, uploadPost.single('video'), async (req, res) => {
       return fail(res, 400, 'VALIDATION', 'Video file is required.');
     }
 
+    const { url: videoUrl } = await persistFile(req.file, 'posts', req.userId);
+
     const reel = await Reel.create({
       userId: req.userId,
       title: title.trim(),
       description: description ? description.trim() : null,
-      videoUrl: `/uploads/posts/${req.file.filename}`,
+      videoUrl,
       sport: sport || req.user.sport || 'General',
       duration: duration ? parseInt(duration) : null
     });

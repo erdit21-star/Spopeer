@@ -1080,7 +1080,7 @@
           }
         } else {
           const d = await resp.json().catch(() => ({}));
-          alert(d.error || 'Failed to delete post.');
+          if (window.SpopeerToast) window.SpopeerToast.error(d.error || 'Failed to delete post.');
         }
       } catch (e) {
         console.log('Delete failed:', e.message);
@@ -1202,7 +1202,7 @@
 
   document.querySelectorAll('.story-item').forEach((item, index) => {
     if (index === 0) {
-      item.addEventListener('click', () => alert('Add a new story (upload feature)'));
+      item.addEventListener('click', () => { if (window.SpopeerToast) window.SpopeerToast.info('Add a new story (upload feature)'); });
     } else {
       item.addEventListener('click', () => viewStory(index));
     }

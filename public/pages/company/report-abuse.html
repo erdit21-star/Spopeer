@@ -769,7 +769,7 @@
   <script>
     function handleSubmit(event) {
       event.preventDefault();
-      alert('Thank you for reporting this abuse. Our moderation team will investigate your report. We appreciate your help in keeping Spopeer a safe community.');
+      if (window.SpopeerToast) window.SpopeerToast.success('Thank you for reporting this abuse. Our moderation team will investigate your report.');
       event.target.reset();
     }
   </script>

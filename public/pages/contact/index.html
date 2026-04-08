@@ -421,12 +421,10 @@ document.getElementById('contactForm').addEventListener('submit',function(e){
   const message=f.message.value.trim();
   if(!firstName||!lastName||!email||!subject||!message){
     if(window.SpopeerToast) SpopeerToast.warning('Please fill in all fields.');
-    else alert('Please fill in all fields.');
     return;
   }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
     if(window.SpopeerToast) SpopeerToast.warning('Please enter a valid email address.');
-    else alert('Please enter a valid email address.');
     return;
   }
   f.style.display='none';

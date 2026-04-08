@@ -811,11 +811,11 @@
           seller_type: Array.from(document.querySelectorAll('input[name="sellerType"]:checked')).map(el => el.value).join(',')
         };
         MarketplaceService.saveSearch(searchName, filters);
-        alert(`✓ Saved search: "${searchName}"`);
+        if (window.SpopeerToast) window.SpopeerToast.success(`Saved search: "${searchName}"`);
         // Reload saved searches list
         location.reload();
       } else {
-        alert('Please enter a search term');
+        if (window.SpopeerToast) window.SpopeerToast.warning('Please enter a search term');
       }
     }
 

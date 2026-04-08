@@ -423,7 +423,7 @@
       modal.classList.add('show');
     } catch (error) {
       console.error('Error loading seller profile:', error);
-      alert('Could not load seller profile');
+        if (window.SpopeerToast) window.SpopeerToast.error('Could not load seller profile');
     }
   }
 

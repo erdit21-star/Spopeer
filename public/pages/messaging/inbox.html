@@ -465,7 +465,7 @@
 
   /* ── Open conversation ── */
   async function openConversation(otherId){
-    if(!me){alert('Please log in to use messaging');return;}
+    if(!me){if (window.SpopeerToast) window.SpopeerToast.warning('Please log in to use messaging');return;}
     currentConversation=String(otherId);
 
     /* update list active state */
@@ -555,7 +555,7 @@
       console.error('Failed to send message:', e);
     }
     
-    alert('Error sending message');
+    if (window.SpopeerToast) window.SpopeerToast.error('Error sending message');
   }
 
   document.getElementById('sendBtn').addEventListener('click',sendMessage);
@@ -573,7 +573,7 @@
   document.getElementById('startConvBtn').addEventListener('click',async function(){
     const otherId=document.getElementById('newMsgTo').value.trim();
     const firstMsg=document.getElementById('newMsgFirstMsg').value.trim();
-    if(!otherId){alert('Enter a user ID or email');return;}
+    if(!otherId){if (window.SpopeerToast) window.SpopeerToast.warning('Enter a user ID or email');return;}
     document.getElementById('newMsgModal').classList.remove('open');
     document.getElementById('newMsgTo').value='';
     document.getElementById('newMsgFirstMsg').value='';

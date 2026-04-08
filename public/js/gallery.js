@@ -44,7 +44,7 @@ class GalleryManager {
 
   async uploadMedia(file, caption = '') {
     if (!this.currentUser) {
-      alert('Please log in to upload media');
+      if (window.SpopeerToast) window.SpopeerToast.warning('Please log in to upload media');
       return null;
     }
 
@@ -228,7 +228,7 @@ function setupGalleryUploadEvents(modalId) {
         galleryManager.validateFile(file);
         return true;
       } catch (err) {
-        alert(`${file.name}: ${err.message}`);
+        if (window.SpopeerToast) window.SpopeerToast.error(`${file.name}: ${err.message}`);
         return false;
       }
     });
@@ -292,12 +292,12 @@ function setupGalleryUploadEvents(modalId) {
       try {
         await galleryManager.uploadMedia(file, caption);
       } catch (err) {
-        alert(`Upload failed for ${file.name}: ${err.message}`);
+        if (window.SpopeerToast) window.SpopeerToast.error(`Upload failed for ${file.name}: ${err.message}`);
       }
     }
 
     uploadBtn.textContent = 'Upload';
-    alert('Upload complete!');
+    if (window.SpopeerToast) window.SpopeerToast.success('Upload complete!');
     document.getElementById(modalId).remove();
     
     // Trigger refresh if callback exists
@@ -344,12 +344,12 @@ window.deleteMediaItem = async function(mediaId) {
   
   const success = await galleryManager.deleteMedia(mediaId);
   if (success) {
-    alert('Media deleted');
+    if (window.SpopeerToast) window.SpopeerToast.success('Media deleted');
     if (window.onGalleryUploadComplete) {
       window.onGalleryUploadComplete();
     }
   } else {
-    alert('Failed to delete media');
+    if (window.SpopeerToast) window.SpopeerToast.error('Failed to delete media');
   }
 };
 

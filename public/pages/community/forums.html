@@ -282,8 +282,8 @@
       const category = document.getElementById('threadCategory').value;
       const sport = document.getElementById('threadSport').value;
 
-      if (!title || !body) return alert('Title and body are required.');
-      if (!token) return alert('Please log in first.');
+      if (!title || !body) return (window.SpopeerToast && window.SpopeerToast.warning('Title and body are required.'), undefined);
+      if (!token) return (window.SpopeerToast && window.SpopeerToast.warning('Please log in first.'), undefined);
 
       try {
         const res = await fetch(`${API_BASE}/forums`, {
@@ -292,7 +292,7 @@
           body: JSON.stringify({ title, body, category, sport: sport || undefined })
         });
         const data = await res.json();
-        if (!res.ok) return alert(data.error || 'Failed to create thread.');
+        if (!res.ok) return (window.SpopeerToast && window.SpopeerToast.error(data.error || 'Failed to create thread.'), undefined);
 
         hideCompose();
         loadThreads();
@@ -304,8 +304,8 @@
     // ── Post reply ──
     async function postReply() {
       const body = document.getElementById('replyBody').value.trim();
-      if (!body) return alert('Reply cannot be empty.');
-      if (!token) return alert('Please log in first.');
+      if (!body) return (window.SpopeerToast && window.SpopeerToast.warning('Reply cannot be empty.'), undefined);
+      if (!token) return (window.SpopeerToast && window.SpopeerToast.warning('Please log in first.'), undefined);
 
       try {
         const res = await fetch(`${API_BASE}/forums/${currentThreadId}/replies`, {
@@ -314,7 +314,7 @@
           body: JSON.stringify({ body })
         });
         const data = await res.json();
-        if (!res.ok) return alert(data.error || 'Failed to post reply.');
+        if (!res.ok) return (window.SpopeerToast && window.SpopeerToast.error(data.error || 'Failed to post reply.'), undefined);
 
         document.getElementById('replyBody').value = '';
         openThread(currentThreadId);

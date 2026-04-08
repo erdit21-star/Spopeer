@@ -77,7 +77,7 @@ class FollowManager {
 
     // Require login for following
     if (!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
-      alert('Please log in to follow users');
+      if (window.SpopeerToast) window.SpopeerToast.warning('Please log in to follow users');
       window.location.href = '/pages/auth/login.html';
       return false;
     }
@@ -93,7 +93,7 @@ class FollowManager {
       lastErr = err;
     }
     
-    alert(lastErr?.message || 'Error following user');
+    if (window.SpopeerToast) window.SpopeerToast.error(lastErr?.message || 'Error following user');
     return false;
   }
 
@@ -104,7 +104,7 @@ class FollowManager {
         }
 
     if (!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
-      alert('Please log in to unfollow users');
+      if (window.SpopeerToast) window.SpopeerToast.warning('Please log in to unfollow users');
       return false;
     }
 

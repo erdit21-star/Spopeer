@@ -57,7 +57,7 @@ router.post('/:userId', authenticate, async (req, res) => {
         recipientId: userId,
         senderId: req.userId,
         type: 'follow',
-        text: `${req.user.displayName || req.user.name || req.user.email || 'Someone'} started following you.`,
+        text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} started following you.`,
         href: `/pages/profiles/public-profile.html?userId=${encodeURIComponent(req.userId)}`
       });
     } catch (ntfErr) {
@@ -132,7 +132,7 @@ router.get('/followers/:userId', optionalAuth, async (req, res) => {
       include: [{
         model: User,
         as: 'follower',
-        attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'avatarUrl', 'sport']
+        attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport']
       }]
     });
 
@@ -151,7 +151,7 @@ router.get('/following/:userId', optionalAuth, async (req, res) => {
       include: [{
         model: User,
         as: 'followedUser',
-        attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'avatarUrl', 'sport']
+        attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport']
       }]
     });
 

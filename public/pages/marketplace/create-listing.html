@@ -731,7 +731,7 @@
         showConditionCard();
       } catch (error) {
         console.error('Error loading listing:', error);
-        alert('Could not load listing for editing');
+        if (window.SpopeerToast) window.SpopeerToast.error('Could not load listing for editing');
       }
     }
 
@@ -770,7 +770,7 @@
 
     function handleFiles(files) {
       if (uploadedImages.length + files.length > 8) {
-        alert('Maximum 8 images allowed');
+        if (window.SpopeerToast) window.SpopeerToast.warning('Maximum 8 images allowed');
         return;
       }
 
@@ -844,7 +844,7 @@
         }, 1500);
       } catch (error) {
         console.error('Error:', error);
-        alert('Error: ' + error.message);
+        if (window.SpopeerToast) window.SpopeerToast.error('Error: ' + error.message);
         document.getElementById('submitBtn').disabled = false;
       }
     });

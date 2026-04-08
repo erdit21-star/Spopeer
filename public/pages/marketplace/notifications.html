@@ -581,7 +581,7 @@
     document.getElementById('markAllReadBtn').onclick = () => {
       allNotifications = allNotifications.map(n => ({ ...n, unread: false }));
       renderNotifications();
-      alert('All notifications marked as read');
+      if (window.SpopeerToast) window.SpopeerToast.success('All notifications marked as read');
     };
 
     document.getElementById('clearAllBtn').onclick = () => {
