@@ -36,6 +36,13 @@ jest.mock('../../services/email', () => ({
   assertEmailReady: jest.fn()
 }));
 
+// In tests we bypass CSRF protection to simplify requests (CSRF validated separately)
+jest.mock('../../middleware/csrf', () => ({
+  csrfProtection: () => (req, res, next) => next(),
+  issueCsrfToken: () => 'test-csrf-token',
+  CSRF_COOKIE_NAME: 'csrf_token'
+}));
+
 const request = require('supertest');
 const app = require('../../app');
 const { sequelize, User, RefreshSession, PasswordResetToken } = require('../../models');
