@@ -18,7 +18,8 @@ const signupSchema = z.object({
   password: z.string().min(10, 'Password must be at least 10 characters.').max(128),
   firstName: z.string().min(1, 'First name is required.').max(100),
   lastName: z.string().min(1, 'Last name is required.').max(100),
-  role: z.enum(PUBLIC_USER_ROLES).optional(),
+  // Accept role as free-form string so route can normalize and enforce admin-blocking.
+  role: z.string().max(50).optional(),
   sport: z.string().max(100).optional(),
   profession: z.string().max(200).optional()
 });
@@ -168,7 +169,11 @@ function validate(schema) {
         const msg = firstIssue.message || '';
         const field = firstIssue.path.join('.');
 
-        if (/required|is required|is required\.|Required/i.test(msg) || firstIssue.code === 'too_small') {
+        if (/required|is required|is required\.|Required/i.test(msg)) {
+          code = 'VALIDATION_REQUIRED_FIELDS';
+        } else if (firstIssue.code === 'too_small' && (/password/i.test(field) || /password/i.test(msg))) {
+          code = 'VALIDATION_PASSWORD';
+        } else if (firstIssue.code === 'too_small') {
           code = 'VALIDATION_REQUIRED_FIELDS';
         } else if (/password/i.test(field) || /password/i.test(msg)) {
           code = 'VALIDATION_PASSWORD';
