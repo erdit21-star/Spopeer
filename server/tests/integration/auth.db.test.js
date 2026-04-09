@@ -396,11 +396,13 @@ describe('Real-DB Auth: Change password', () => {
 //  FORGOT / RESET PASSWORD
 // ═════════════════════════════════════════════════════════════════════
 describe('Real-DB Auth: Forgot + Reset password', () => {
+
   let testEmail;
 
   beforeEach(async () => {
     testEmail = uniqueEmail();
     await signupUser({ email: testEmail });
+    jest.clearAllMocks();
   });
 
   test('forgot-password returns 200 and does not leak email existence', async () => {
@@ -428,10 +430,16 @@ describe('Real-DB Auth: Forgot + Reset password', () => {
     const tokenRecord = await PasswordResetToken.findOne({ where: { userId: user.id } });
     expect(tokenRecord).not.toBeNull();
 
-    // Use the token to reset
+    // Get the raw token from the mocked email call
+    const emailService = require('../../services/email');
+    const rawToken = emailService.sendPasswordResetEmail.mock.calls.at(-1)?.[1];
+    expect(rawToken).toBeTruthy();
+    expect(tokenRecord.token).not.toBe(rawToken); // DB stores hashed token, not raw
+
+    // Use the raw token to reset
     const resetRes = await request(app)
       .post('/api/auth/reset-password')
-      .send({ token: tokenRecord.token, password: NEW_PASSWORD });
+      .send({ token: rawToken, password: NEW_PASSWORD });
 
     expect(resetRes.statusCode).toBe(200);
 
