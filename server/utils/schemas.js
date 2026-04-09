@@ -163,14 +163,27 @@ function validate(schema) {
     const result = schema.safeParse(req.body);
     if (!result.success) {
       const firstIssue = result.error.issues[0];
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: firstIssue.message,
-          field: firstIssue.path.join('.')
+        // Map Zod messages to legacy API validation error codes expected by tests
+        let code = 'VALIDATION_ERROR';
+        const msg = firstIssue.message || '';
+        const field = firstIssue.path.join('.');
+
+        if (/required|is required|is required\.|Required/i.test(msg) || firstIssue.code === 'too_small') {
+          code = 'VALIDATION_REQUIRED_FIELDS';
+        } else if (/password/i.test(field) || /password/i.test(msg)) {
+          code = 'VALIDATION_PASSWORD';
+        } else if (/email/i.test(field) || /email/i.test(msg)) {
+          code = 'VALIDATION_EMAIL';
         }
-      });
+
+        return res.status(400).json({
+          success: false,
+          error: {
+            code,
+            message: msg,
+            field
+          }
+        });
     }
     req.validated = result.data;
     next();
