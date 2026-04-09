@@ -1,4 +1,5 @@
 // Updated
+// test: ensure reset-password uses raw emailed token (noop change)
 /**
  * Real-DB auth integration tests.
  *
