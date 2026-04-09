@@ -5,6 +5,26 @@ document.addEventListener('DOMContentLoaded', function() {
   injectSearchWidget();
 });
 
+const searchRequestState = {
+  controller: null,
+  mentionsController: null,
+  cache: new Map()
+};
+
+function getCachedSearchResult(url) {
+  const cached = searchRequestState.cache.get(url);
+  if (!cached) return null;
+  if (Date.now() - cached.timestamp > 30 * 1000) {
+    searchRequestState.cache.delete(url);
+    return null;
+  }
+  return cached.data;
+}
+
+function setCachedSearchResult(url, data) {
+  searchRequestState.cache.set(url, { data, timestamp: Date.now() });
+}
+
 function injectSearchWidget() {
   const headerContent = document.querySelector('.header-content');
   if (!headerContent) return;
@@ -65,7 +85,6 @@ function injectSearchWidget() {
 
   // Handle input
   let searchTimeout;
-  let _lastQuery = '';
 
   searchInput.addEventListener('input', async function(e) {
     const query = this.value.trim();
@@ -115,8 +134,18 @@ async function fetchSuggestions(query, suggestionsBox) {
 
   try {
     const url = `/api/search?term=${encodeURIComponent(query)}&pageSize=8`;
+    const cached = getCachedSearchResult(url);
+    if (cached) {
+      displaySuggestions(cached.results || [], suggestionsBox, query);
+      return;
+    }
+
+    if (searchRequestState.controller) {
+      searchRequestState.controller.abort();
+    }
+    searchRequestState.controller = new AbortController();
     console.log('Fetching suggestions from:', url);
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: searchRequestState.controller.signal });
     
     if (!res.ok) {
       console.error('Search API error:', res.status, res.statusText);
@@ -126,9 +155,11 @@ async function fetchSuggestions(query, suggestionsBox) {
     }
     
     const data = await res.json();
+    setCachedSearchResult(url, data);
     console.log('Search results:', data);
     displaySuggestions(data.results || [], suggestionsBox, query);
   } catch (err) {
+    if (err.name === 'AbortError') return;
     console.error('Fetch error:', err);
     suggestionsBox.innerHTML = '<div style="padding: 12px 16px; color: #ef4444; font-size: 13px;">Connection error</div>';
     suggestionsBox.style.display = 'block';
@@ -138,7 +169,17 @@ async function fetchSuggestions(query, suggestionsBox) {
 async function fetchMentions(query, suggestionsBox) {
   try {
     const url = `/api/search?term=${encodeURIComponent(query)}&pageSize=8`;
-    const res = await fetch(url);
+    const cached = getCachedSearchResult(url);
+    if (cached) {
+      displayMentions(cached.results || [], suggestionsBox, query);
+      return;
+    }
+
+    if (searchRequestState.mentionsController) {
+      searchRequestState.mentionsController.abort();
+    }
+    searchRequestState.mentionsController = new AbortController();
+    const res = await fetch(url, { signal: searchRequestState.mentionsController.signal });
     
     if (!res.ok) {
       console.error('Mentions API error:', res.status);
@@ -147,8 +188,10 @@ async function fetchMentions(query, suggestionsBox) {
     }
     
     const data = await res.json();
+    setCachedSearchResult(url, data);
     displayMentions(data.results || [], suggestionsBox, query);
   } catch (err) {
+    if (err.name === 'AbortError') return;
     console.error('Mentions error:', err);
     suggestionsBox.style.display = 'none';
   }

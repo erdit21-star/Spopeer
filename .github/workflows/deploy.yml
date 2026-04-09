@@ -55,13 +55,9 @@ jobs:
       - name: Lint
         run: npx eslint .
 
-      - name: Run migrations
-        working-directory: ./server
-        run: npx sequelize-cli db:migrate
-
       - name: Run unit/mock tests
         working-directory: ./server
-        run: npx jest --config tests/jest.config.cjs --runInBand --ci
+        run: npx jest --config tests/jest.config.cjs --ci
 
       - name: Run real-DB integration tests
         working-directory: ./server

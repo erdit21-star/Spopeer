@@ -12,7 +12,7 @@ const { authenticate } = require('../middleware/auth');
 const { uploadPost, persistFile } = require('../middleware/upload');
 const { Media } = require('../models');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs/promises');
 
 // ─── UPLOAD ───
 const { ok, created, fail } = require('../utils/response');
@@ -74,8 +74,12 @@ router.delete('/:mediaId', authenticate, async (req, res) => {
 
     // Remove physical file
     const filePath = path.join(__dirname, '..', entry.url);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    try {
+      await fs.unlink(filePath);
+    } catch (unlinkErr) {
+      if (unlinkErr.code !== 'ENOENT') {
+        throw unlinkErr;
+      }
     }
 
     await entry.destroy();

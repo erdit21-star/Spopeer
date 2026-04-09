@@ -701,11 +701,10 @@
   <script src="../../js/shared-ui.js"></script>
   <script src="../../js/marketplace-service.js"></script>
   <script>
-    ProfileSyncService.init();
-
     let currentPage = 1;
     const pageSize = 20;
     let totalListings = 0;
+    const sellerModalCache = new Map();
 
     // Update notification badges
     async function updateNotificationBadges() {
@@ -745,14 +744,11 @@
       const filters = getActiveFilters();
       
       try {
-        const response = await fetch(`/api/marketplace/listings?${new URLSearchParams({
+        const data = await MarketplaceService.getListings({
           ...filters,
           page: currentPage,
           limit: pageSize
-        })}`);
-
-        if (!response.ok) throw new Error('Failed to fetch listings');
-        const data = await response.json();
+        });
         totalListings = data.total;
 
         loading.style.display = 'none';
@@ -918,8 +914,11 @@
       if (!modal) return;
 
       try {
-        const response = await fetch(`/api/marketplace/seller/${sellerId}`);
-        const sellerData = await response.json();
+        let sellerData = sellerModalCache.get(sellerId);
+        if (!sellerData) {
+          sellerData = await MarketplaceService.getSellerListings(sellerId);
+          sellerModalCache.set(sellerId, sellerData);
+        }
 
         const _sn = sellerData.seller.displayName || [sellerData.seller.firstName, sellerData.seller.lastName].filter(Boolean).join(' ') || 'Unknown';
         const initials = _sn.split(' ').map(n => n[0]).join('').toUpperCase();

@@ -230,7 +230,7 @@ router.post('/login', loginLimiter, validate(loginSchema), async (req, res, next
     stage = 'user_lookup';
     const user = await User.findOne({
       where: { email: email.toLowerCase() },
-      attributes: ['id', 'email', 'password', 'role', 'isActive']
+      attributes: ['id', 'email', 'password', 'role', 'isActive', 'firstName', 'lastName', 'emailVerified', 'avatarUrl', 'sport', 'lastLogin']
     });
 
     if (!user) {
@@ -256,32 +256,12 @@ router.post('/login', loginLimiter, validate(loginSchema), async (req, res, next
       return fail(res, 401, 'AUTH_INVALID_CREDENTIALS', 'Invalid email or password.');
     }
 
-    // Fetch optional profile columns separately so legacy schema gaps do not block auth.
-    let firstName = null;
-    let lastName = null;
-    let emailVerified = true; // assume verified for legacy accounts
-    let avatarUrl = null;
-    let sport = null;
-    let lastLogin = null;
-    try {
-      stage = 'profile_fetch';
-      const profile = await User.findOne({
-        where: { id: user.id },
-        attributes: ['firstName', 'lastName', 'emailVerified', 'avatarUrl', 'sport', 'lastLogin']
-      });
-
-      if (profile) {
-        firstName = profile.firstName ?? null;
-        lastName = profile.lastName ?? null;
-        emailVerified = profile.emailVerified ?? true;
-        avatarUrl = profile.avatarUrl ?? null;
-        sport = profile.sport ?? null;
-        lastLogin = profile.lastLogin ?? null;
-      }
-    } catch (profileErr) {
-      console.warn(`[LOGIN] requestId=${requestId} stage=profile_fetch optional columns fetch failed:`, profileErr.message);
-      stage = 'post_profile_fetch';
-    }
+    const firstName = user.firstName ?? null;
+    const lastName = user.lastName ?? null;
+    const emailVerified = user.emailVerified ?? true;
+    const avatarUrl = user.avatarUrl ?? null;
+    const sport = user.sport ?? null;
+    const lastLogin = user.lastLogin ?? null;
 
     // Update last login (guarded — column may not yet exist in legacy DBs)
     try {
@@ -384,7 +364,7 @@ router.post('/change-password', authenticate, requireCsrf, validate(changePasswo
       return fail(res, 400, 'VALIDATION_PASSWORD', pwCheck.message);
     }
 
-    // Re-fetch with password hash
+    // Re-fetch with only the fields required for password update flow.
     const user = await User.findByPk(req.userId, {
       attributes: ['id', 'password'],
     });
@@ -409,9 +389,11 @@ router.post('/change-password', authenticate, requireCsrf, validate(changePasswo
     clearAuthCookies(res);
 
     // Notify user of password change (fire-and-forget)
-    const fullUser = await User.findByPk(req.userId, { attributes: ['email'] });
-    if (fullUser) {
-      sendSecurityAlertEmail(fullUser.email, 'Password Changed', 'Your password was successfully changed. If you did not make this change, please reset your password immediately.').catch(err => {
+    const userEmail = req.user?.email
+      || (await User.findByPk(req.userId, { attributes: ['email'] }))?.email
+      || null;
+    if (userEmail) {
+      sendSecurityAlertEmail(userEmail, 'Password Changed', 'Your password was successfully changed. If you did not make this change, please reset your password immediately.').catch(err => {
         console.error('Security alert email error:', err);
       });
     }

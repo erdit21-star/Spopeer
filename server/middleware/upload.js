@@ -61,7 +61,7 @@ async function persistFile(file, folder, userId) {
 
   // Fallback: write to local disk
   const filename = safeFilename(prefix, userId, ext);
-  const url = saveLocal(file.buffer, folder, filename);
+  const url = await saveLocal(file.buffer, folder, filename);
   return { url, provider: 'local' };
 }
 

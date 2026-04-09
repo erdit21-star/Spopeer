@@ -11,7 +11,7 @@
     "lint:fix": "npx eslint . --fix",
     "syntax:check": "node scripts/syntax-check.js",
     "test": "cd server && npm test",
-    "test:integration": "cd server && npx jest --config tests/jest.config.cjs --testPathPattern=integration --runInBand",
+    "test:integration": "cd server && npx jest --config tests/jest.config.cjs --testPathPatterns=integration",
     "test:db": "cd server && npx jest --config tests/jest.db.config.cjs --runInBand",
     "test:e2e": "npx playwright test",
     "verify": "npm run syntax:check && npm run lint && npm run test && npm run test:db"

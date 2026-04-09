@@ -6,7 +6,7 @@
  * Falls back to local disk storage transparently when not configured.
  */
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs/promises');
 const crypto = require('crypto');
 
 let _cloudinary = null;
@@ -88,10 +88,10 @@ async function deleteFromCloud(publicId, resourceType = 'image') {
  * Save a buffer to local disk (fallback).
  * @returns {string} relative URL path
  */
-function saveLocal(buffer, subdir, filename) {
+async function saveLocal(buffer, subdir, filename) {
   const dir = path.join(__dirname, '..', process.env.UPLOAD_DIR || 'uploads', subdir);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, filename), buffer);
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(path.join(dir, filename), buffer);
   return `/uploads/${subdir}/${filename}`;
 }
 

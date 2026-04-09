@@ -12,7 +12,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { Message, User } = require('../models');
+const { Message, User, sequelize } = require('../models');
 const { authenticate } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { sanitizeString } = require('../utils/validation');
@@ -183,13 +183,19 @@ router.post('/', authenticate, async (req, res) => {
 // ─── GET CONVERSATIONS ───
 router.get('/conversations', authenticate, async (req, res) => {
   try {
-    // Get the latest message per conversation partner
-    const messages = await Message.findAll({
+    const latestMessages = await Message.findAll({
       where: {
-        [Op.or]: [
-          { senderId: req.userId },
-          { receiverId: req.userId }
-        ]
+        id: {
+          [Op.in]: sequelize.literal(`(
+            SELECT MAX(id)
+            FROM "Messages"
+            WHERE "senderId" = ${req.userId} OR "receiverId" = ${req.userId}
+            GROUP BY CASE
+              WHEN "senderId" = ${req.userId} THEN "receiverId"
+              ELSE "senderId"
+            END
+          )`)
+        }
       },
       include: [
         { model: User, as: 'sender', attributes: ['id', 'firstName', 'lastName', 'avatarUrl', 'role'] },
@@ -198,27 +204,34 @@ router.get('/conversations', authenticate, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    // Group by conversation partner
-    const conversationsMap = new Map();
-    messages.forEach(msg => {
+    const unreadRows = await Message.findAll({
+      where: {
+        receiverId: req.userId,
+        read: false
+      },
+      attributes: [
+        'senderId',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'unreadCount']
+      ],
+      group: ['senderId'],
+      raw: true
+    });
+    const unreadBySender = new Map(
+      unreadRows.map(row => [Number(row.senderId), Number(row.unreadCount) || 0])
+    );
+
+    const conversations = latestMessages.map(msg => {
       const partnerId = msg.senderId === req.userId ? msg.receiverId : msg.senderId;
-      if (!conversationsMap.has(partnerId)) {
-        const partner = msg.senderId === req.userId ? msg.receiver : msg.sender;
-        conversationsMap.set(partnerId, {
-          partnerId,
-          partner: partner.toJSON(),
-          lastMessage: msg.toJSON(),
-          unreadCount: 0
-        });
-      }
-      // Count unread messages from this partner
-      if (msg.receiverId === req.userId && !msg.read) {
-        const conv = conversationsMap.get(partnerId);
-        conv.unreadCount++;
-      }
+      const partner = msg.senderId === req.userId ? msg.receiver : msg.sender;
+      return {
+        partnerId,
+        partner: partner.toJSON(),
+        lastMessage: msg.toJSON(),
+        unreadCount: unreadBySender.get(partnerId) || 0
+      };
     });
 
-    ok(res, Array.from(conversationsMap.values()));
+    ok(res, conversations);
   } catch (error) {
     console.error('Get conversations error:', error);
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch conversations.');

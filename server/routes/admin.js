@@ -18,14 +18,38 @@ const { authenticate } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
 const { Op } = require('sequelize');
 const { sequelize } = require('../models');
+const ADMIN_METRICS_TTL_MS = 15 * 1000;
+const adminMetricsCache = new Map();
 
 // All admin routes require auth + admin role
 const { ok, fail } = require('../utils/response');
 router.use(authenticate, requireAdmin);
 
+function getCachedAdminMetrics(key) {
+  const cached = adminMetricsCache.get(key);
+  if (!cached) return null;
+  if (Date.now() > cached.expiresAt) {
+    adminMetricsCache.delete(key);
+    return null;
+  }
+  return cached.value;
+}
+
+function setCachedAdminMetrics(key, value) {
+  adminMetricsCache.set(key, {
+    value,
+    expiresAt: Date.now() + ADMIN_METRICS_TTL_MS
+  });
+}
+
 // ─── DASHBOARD STATS ───
 router.get('/dashboard', async (req, res) => {
   try {
+    const cached = getCachedAdminMetrics('dashboard');
+    if (cached) {
+      return res.json(cached);
+    }
+
     const [
       totalUsers,
       totalPosts,
@@ -66,7 +90,7 @@ router.get('/dashboard', async (req, res) => {
       })
     ]);
 
-    res.json({
+    const payload = {
       status: 'ok',
       payload: {
         totalUsers,
@@ -78,7 +102,9 @@ router.get('/dashboard', async (req, res) => {
         usersByRole,
         usersBySubscription
       }
-    });
+    };
+    setCachedAdminMetrics('dashboard', payload);
+    res.json(payload);
   } catch (error) {
     console.error('Dashboard error:', error);
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch dashboard data.');
@@ -196,6 +222,11 @@ router.delete('/posts/:id', async (req, res) => {
 // ─── ANALYTICS ───
 router.get('/analytics', async (req, res) => {
   try {
+    const cached = getCachedAdminMetrics('analytics');
+    if (cached) {
+      return res.json(cached);
+    }
+
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
     const [
@@ -224,7 +255,7 @@ router.get('/analytics', async (req, res) => {
       })
     ]);
 
-    res.json({
+    const payload = {
       status: 'ok',
       payload: {
         newUsersLast30Days,
@@ -234,7 +265,9 @@ router.get('/analytics', async (req, res) => {
         topPosters,
         mostFollowed
       }
-    });
+    };
+    setCachedAdminMetrics('analytics', payload);
+    res.json(payload);
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch analytics.');
   }

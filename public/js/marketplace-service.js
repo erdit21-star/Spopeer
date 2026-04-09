@@ -255,9 +255,20 @@ const MarketplaceService = {
    * Get seller's shop/listings
    */
   getSellerListings: async function(userId) {
+    const cacheKey = this.CACHE_KEY + `seller_${userId}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < this.CACHE_DURATION) {
+        return data;
+      }
+    }
+
     const response = await fetch(`/api/marketplace/seller/${userId}`);
     if (!response.ok) throw new Error('Failed to fetch seller listings');
-    return await response.json();
+    const data = await response.json();
+    localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
+    return data;
   },
 
   /**

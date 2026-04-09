@@ -465,12 +465,20 @@ function initializeNavigation() {
 
   // Active link highlighting
   updateActiveNavLink();
-  window.addEventListener('scroll', updateActiveNavLink);
+  let navRafId = null;
+  window.addEventListener('scroll', () => {
+    if (navRafId !== null) return;
+    navRafId = window.requestAnimationFrame(() => {
+      updateActiveNavLink();
+      navRafId = null;
+    });
+  }, { passive: true });
 }
 
 function updateActiveNavLink() {
   const navLinks = document.querySelectorAll('.nav-links a');
-  
+  let activeLink = null;
+
   navLinks.forEach(link => {
     const href = link.getAttribute('href');
     if (href && href.startsWith('#')) {
@@ -480,12 +488,16 @@ function updateActiveNavLink() {
       if (section) {
         const rect = section.getBoundingClientRect();
         if (rect.top <= 150 && rect.bottom >= 150) {
-          navLinks.forEach(l => l.style.color = '');
-          link.style.color = '#0066cc';
+          activeLink = link;
         }
       }
     }
   });
+
+  navLinks.forEach(l => { l.style.color = ''; });
+  if (activeLink) {
+    activeLink.style.color = '#0066cc';
+  }
 }
 
 function toggleMobileMenu() {
