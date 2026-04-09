@@ -61,6 +61,34 @@
     ].forEach((key) => localStorage.removeItem(key));
   }
 
+  function getCookieValue(name) {
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const match = document.cookie.match(new RegExp("(^|;\\s*)" + escapedName + "=([^;]+)"));
+    return match ? decodeURIComponent(match[2]) : "";
+  }
+
+  function requiresCsrf(method) {
+    const normalized = String(method || "GET").toUpperCase();
+    return normalized === "POST" || normalized === "PUT" || normalized === "PATCH" || normalized === "DELETE";
+  }
+
+  async function ensureCsrfToken() {
+    let token = getCookieValue("csrf_token");
+    if (token) return token;
+
+    try {
+      await fetch(buildUrl("/api/auth/csrf"), {
+        method: "GET",
+        credentials: "include"
+      });
+    } catch (err) {
+      console.debug("Failed to fetch CSRF token", err);
+    }
+
+    token = getCookieValue("csrf_token");
+    return token;
+  }
+
   async function logout() {
     try {
       await fetch(buildUrl("/api/auth/logout"), {
@@ -126,10 +154,18 @@
   async function request(path, options) {
     const config = options || {};
     const headers = { ...(config.headers || {}) };
+    const method = String(config.method || "GET").toUpperCase();
     const isFormData = config.body instanceof FormData;
 
     if (!isFormData) {
       headers["Content-Type"] = headers["Content-Type"] || "application/json";
+    }
+
+    if (requiresCsrf(method)) {
+      const csrfToken = await ensureCsrfToken();
+      if (csrfToken) {
+        headers["X-CSRF-Token"] = headers["X-CSRF-Token"] || csrfToken;
+      }
     }
 
     let response;

@@ -23,6 +23,12 @@ User.hasMany(Message, { foreignKey: 'receiverId' });
 async function seed() {
   try {
     console.log('🌱 Starting database seed...\n');
+    const isProduction = process.env.NODE_ENV === 'production';
+    const allowDestructiveSeed = process.env.ALLOW_DESTRUCTIVE_SEED === 'true';
+
+    if (isProduction && !allowDestructiveSeed) {
+      throw new Error('Refusing to run destructive seed in production. Set ALLOW_DESTRUCTIVE_SEED=true only for intentional one-off resets.');
+    }
 
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPassword = process.env.ADMIN_PASSWORD;

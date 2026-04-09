@@ -15,7 +15,6 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const rateLimit = require('express-rate-limit');
 const { User, PasswordResetToken, RefreshSession } = require('../models');
 const { authenticate, clearAuthCookies, generateAccessToken, generateRefreshToken, getCookieOptions } = require('../middleware/auth');
 const { ok, fail } = require('../utils/response');
@@ -31,11 +30,22 @@ const {
 } = require('../utils/validation');
 const { sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail, sendSecurityAlertEmail } = require('../services/email');
 const { Op } = require('sequelize');
+const { issueCsrfToken, csrfProtection } = require('../middleware/csrf');
+const requireCsrf = csrfProtection();
+const {
+  signupSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+  validate
+} = require('../utils/schemas');
+const { createLimiter } = require('../services/rateLimiter');
 
 // Signup abuse limiter
 const isTest = process.env.NODE_ENV === 'test';
 
-const signupLimiter = rateLimit({
+const signupLimiter = createLimiter({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 50,
   standardHeaders: true,
@@ -45,7 +55,7 @@ const signupLimiter = rateLimit({
 });
 
 // Login abuse limiter — 10 attempts per 15 minutes per IP
-const loginLimiter = rateLimit({
+const loginLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
@@ -55,7 +65,7 @@ const loginLimiter = rateLimit({
 });
 
 // Forgot-password limiter — 5 requests per hour per IP
-const forgotLimiter = rateLimit({
+const forgotLimiter = createLimiter({
   windowMs: 60 * 60 * 1000,
   max: 5,
   standardHeaders: true,
@@ -65,7 +75,7 @@ const forgotLimiter = rateLimit({
 });
 
 // Reset-password limiter — 10 attempts per 15 min per IP
-const resetLimiter = rateLimit({
+const resetLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
@@ -87,8 +97,14 @@ router.use((req, res, next) => {
   next();
 });
 
+// ─── CSRF TOKEN ───
+router.get('/csrf', (req, res) => {
+  const token = issueCsrfToken(req, res);
+  return ok(res, { csrfToken: token });
+});
+
 // ─── SIGNUP ───
-router.post('/signup', signupLimiter, async (req, res) => {
+router.post('/signup', signupLimiter, validate(signupSchema), async (req, res) => {
   try {
     const email = sanitizeString(req.body.email, 254).toLowerCase();
     const password = req.body.password;
@@ -200,7 +216,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
 });
 
 // ─── LOGIN ───
-router.post('/login', loginLimiter, async (req, res, next) => {
+router.post('/login', loginLimiter, validate(loginSchema), async (req, res, next) => {
   const requestId = req.requestId || 'n/a';
   let stage = 'start';
   try {
@@ -297,6 +313,13 @@ router.post('/login', loginLimiter, async (req, res, next) => {
       });
     } catch (err) {
       console.error('[LOGIN] RefreshSession failed:', err.message);
+      clearAuthCookies(res);
+      return fail(
+        res,
+        503,
+        'SESSION_UNAVAILABLE',
+        'Session store unavailable. Please try again in a moment.'
+      );
     }
 
     res.cookie('access_token', token, getCookieOptions(15 * 60 * 1000));
@@ -349,7 +372,7 @@ router.get('/me', authenticate, async (req, res) => {
 });
 
 // ─── CHANGE PASSWORD (authenticated) ───
-router.post('/change-password', authenticate, async (req, res) => {
+router.post('/change-password', authenticate, requireCsrf, validate(changePasswordSchema), async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -424,7 +447,7 @@ router.get('/user-by-email', authenticate, async (req, res) => {
 });
 
 // ─── FORGOT PASSWORD ───
-router.post('/forgot-password', forgotLimiter, async (req, res) => {
+router.post('/forgot-password', forgotLimiter, validate(forgotPasswordSchema), async (req, res) => {
   try {
     const email = sanitizeString(req.body.email, 254).toLowerCase();
     if (!email || !isValidEmail(email)) {
@@ -459,7 +482,7 @@ router.post('/forgot-password', forgotLimiter, async (req, res) => {
 });
 
 // ─── RESET PASSWORD ───
-router.post('/reset-password', resetLimiter, async (req, res) => {
+router.post('/reset-password', resetLimiter, validate(resetPasswordSchema), async (req, res) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) {
@@ -564,7 +587,7 @@ router.get('/verify', async (req, res) => {
 });
 
 // ─── LOGOUT ───
-router.post('/logout', async (req, res) => {
+router.post('/logout', requireCsrf, async (req, res) => {
   try {
     const rawToken = req.cookies?.refresh_token;
     if (rawToken) {
@@ -584,7 +607,7 @@ router.post('/logout', async (req, res) => {
 });
 
 // ─── REFRESH TOKEN ───
-router.post('/refresh', async (req, res) => {
+router.post('/refresh', requireCsrf, async (req, res) => {
   try {
     const rawToken = req.cookies?.refresh_token;
     if (!rawToken) {
@@ -628,9 +651,6 @@ router.post('/refresh', async (req, res) => {
       return fail(res, 401, 'AUTH_INVALID', 'User not found or deactivated.');
     }
 
-    // Revoke old session
-    try { await session.update({ revokedAt: new Date() }); } catch (err) { console.debug('refresh: old session revoke failed', err.message); }
-
     // Issue rotated tokens
     const newAccessToken = generateAccessToken(user);
     const newRefreshToken = generateRefreshToken(user);
@@ -644,7 +664,21 @@ router.post('/refresh', async (req, res) => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       });
     } catch (sessionErr) {
-      console.error('[REFRESH] RefreshSession.create failed (table may not exist):', sessionErr.message);
+      console.error('[REFRESH] RefreshSession.create failed:', sessionErr.message);
+      clearAuthCookies(res);
+      return fail(
+        res,
+        503,
+        'SESSION_UNAVAILABLE',
+        'Session refresh unavailable. Please log in again shortly.'
+      );
+    }
+
+    // Revoke old session only after new session persisted
+    try {
+      await session.update({ revokedAt: new Date() });
+    } catch (err) {
+      console.debug('refresh: old session revoke failed', err.message);
     }
 
     res.cookie('access_token', newAccessToken, getCookieOptions(15 * 60 * 1000));

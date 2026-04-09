@@ -20,11 +20,12 @@ const express = require('express');
 const compression = require('compression');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const { sequelize } = require('./config/database');
 const { randomUUID } = require('crypto');
+const logger = require('./utils/logger');
+const { createLimiter } = require('./services/rateLimiter');
 
 // Import models (initializes associations)
 require('./models');
@@ -68,7 +69,7 @@ app.use((req, res, next) => {
   const startedAt = Date.now();
   res.on('finish', () => {
     const durationMs = Date.now() - startedAt;
-    console.log(JSON.stringify({
+    logger.info({
       level: 'info',
       event: 'request_complete',
       requestId: req.requestId,
@@ -78,7 +79,7 @@ app.use((req, res, next) => {
       durationMs,
       userId: req.userId || null,
       ts: new Date().toISOString()
-    }));
+    });
   });
   next();
 });
@@ -133,7 +134,7 @@ const allowedOrigins = Array.from(new Set([
   process.env.RENDER_EXTERNAL_URL
 ].map(normalizeOrigin).filter(Boolean)));
 
-console.log('CORS allowed origins:', allowedOrigins);
+logger.info({ event: 'cors_allowed_origins', allowedOrigins });
 
 app.use(cors({
   origin(origin, callback) {
@@ -144,36 +145,30 @@ app.use(cors({
 
     if (allowedOrigins.includes(normalizedOrigin)) return callback(null, true);
 
-    console.warn('Blocked CORS origin:', normalizedOrigin);
+    logger.warn({ event: 'cors_blocked_origin', origin: normalizedOrigin });
     return callback(new Error('Origin not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
 }));
 
 // Rate limiting
-const apiLimiter = rateLimit({
+const apiLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
   message: { success: false, error: { code: 'RATE_LIMIT', message: 'Too many requests, please try again later.' } }
 });
 
-const uploadLimiter = rateLimit({
+const uploadLimiter = createLimiter({
   windowMs: 60 * 60 * 1000,
   max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
   message: { success: false, error: { code: 'RATE_LIMIT_UPLOAD', message: 'Upload limit reached. Try again later.' } }
 });
 
-const searchLimiter = rateLimit({
+const searchLimiter = createLimiter({
   windowMs: 1 * 60 * 1000,
   max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
   message: { success: false, error: { code: 'RATE_LIMIT_SEARCH', message: 'Too many searches. Please slow down.' } }
 });
 
@@ -227,6 +222,45 @@ app.get('/api/health', (req, res) => {
       environment: process.env.NODE_ENV
     }
   });
+});
+
+// ─── METRICS (basic Prometheus text format) ───
+const metrics = {
+  startedAt: Date.now(),
+  totalRequests: 0,
+  totalErrors: 0,
+  authFailures: 0
+};
+
+app.use((req, res, next) => {
+  metrics.totalRequests += 1;
+  res.on('finish', () => {
+    if (res.statusCode >= 500) metrics.totalErrors += 1;
+    if (req.path.startsWith('/api/auth') && res.statusCode === 401) {
+      metrics.authFailures += 1;
+    }
+  });
+  next();
+});
+
+app.get('/api/metrics', (_req, res) => {
+  const uptimeSeconds = Math.floor((Date.now() - metrics.startedAt) / 1000);
+  res.type('text/plain').send(
+    [
+      '# HELP spopeer_uptime_seconds Process uptime in seconds',
+      '# TYPE spopeer_uptime_seconds gauge',
+      `spopeer_uptime_seconds ${uptimeSeconds}`,
+      '# HELP spopeer_requests_total Total HTTP requests',
+      '# TYPE spopeer_requests_total counter',
+      `spopeer_requests_total ${metrics.totalRequests}`,
+      '# HELP spopeer_errors_total Total 5xx responses',
+      '# TYPE spopeer_errors_total counter',
+      `spopeer_errors_total ${metrics.totalErrors}`,
+      '# HELP spopeer_auth_failures_total Total auth 401 responses',
+      '# TYPE spopeer_auth_failures_total counter',
+      `spopeer_auth_failures_total ${metrics.authFailures}`
+    ].join('\n')
+  );
 });
 
 // ─── READINESS CHECK ───

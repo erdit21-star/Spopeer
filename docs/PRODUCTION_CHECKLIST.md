@@ -49,6 +49,9 @@ Complete all items before allowing real user traffic.
 - [ ] Rollback plan documented (see ROLLBACK.md)
 - [ ] Limited rollout / canary planned
 - [ ] Team notified of release
+- [ ] Render service build/start commands validated
+- [ ] Render health check set to `/api/ready`
+- [ ] GitHub-to-Render deployment flow reviewed (`docs/RENDER_GITHUB_DEPLOY.md`)
 
 ## Environment Variables (Production)
 Required:

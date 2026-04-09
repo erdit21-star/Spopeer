@@ -16,6 +16,8 @@ const { authenticate, optionalAuth } = require('../middleware/auth');
 const { uploadAvatar, uploadCover, persistFile } = require('../middleware/upload');
 const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
+const { profileUpdateSchema, validate } = require('../utils/schemas');
+const logger = require('../utils/logger');
 
 // Full profile field allowlist — matches the fields the frontend collects.
 // Login / /me / logout are NOT rate-limited so normal usage is never blocked.
@@ -184,7 +186,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 });
 
 // ─── UPDATE PROFILE ───
-router.put('/:id', authenticate, async (req, res) => {
+router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res) => {
   try {
     // Users can only update their own profile (admins can update anyone)
     if (req.user.id !== parseInt(req.params.id) && req.user.role !== 'admin') {
@@ -213,7 +215,7 @@ router.put('/:id', authenticate, async (req, res) => {
       payload: flattenUserPayload(user)
     });
   } catch (error) {
-    console.error('Update profile error:', error);
+    logger.error({ event: 'update_profile_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
   }
 });
@@ -303,8 +305,8 @@ async function saveProfileHandler(req, res) {
   }
 }
 
-router.post('/', authenticate, saveProfileHandler);
-router.post('/profile', authenticate, saveProfileHandler);
+router.post('/', authenticate, validate(profileUpdateSchema), saveProfileHandler);
+router.post('/profile', authenticate, validate(profileUpdateSchema), saveProfileHandler);
 
 // ─── DATA EXPORT (GDPR / privacy) ───
 router.post('/me/export', authenticate, async (req, res) => {

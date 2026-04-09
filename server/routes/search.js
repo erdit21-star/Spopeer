@@ -8,6 +8,8 @@ const router = express.Router();
 const { User } = require('../models');
 const { optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
+const { cache } = require('../services/cache');
+const logger = require('../utils/logger');
 
 // ─── SEARCH ───
 const { fail } = require('../utils/response');
@@ -33,6 +35,12 @@ router.get('/', optionalAuth, async (req, res) => {
     const limit = Math.min(parseInt(pageSize) || 20, 100);
     const offset = (Math.max(parseInt(page) || 1, 1) - 1) * limit;
 
+    const cacheKey = `search:${JSON.stringify({ term, sport, userType, location, limit, offset })}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const { rows: users, count } = await User.findAndCountAll({
       where,
       attributes: { exclude: ['password'] },
@@ -41,7 +49,7 @@ router.get('/', optionalAuth, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({
+    const payload = {
       status: 'ok',
       results: sanitizeUserList(req.user || null, users),
       pagination: {
@@ -49,9 +57,11 @@ router.get('/', optionalAuth, async (req, res) => {
         page: parseInt(page) || 1,
         pages: Math.ceil(count / limit)
       }
-    });
+    };
+    await cache.set(cacheKey, payload, 30 * 1000);
+    res.json(payload);
   } catch (error) {
-    console.error('Search error:', error);
+    logger.error({ event: 'search_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Search failed.');
   }
 });

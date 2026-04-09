@@ -10,6 +10,8 @@ const router = express.Router();
 const { authenticate } = require('../middleware/auth');
 const { sequelize } = require('../models');
 const { DataTypes } = require('sequelize');
+const { createEventSchema, validate } = require('../utils/schemas');
+const logger = require('../utils/logger');
 
 // Define Event model inline (lightweight — can be moved to models/ later)
 const Event = sequelize.define('Event', {
@@ -46,7 +48,7 @@ router.get('/', async (_req, res) => {
 });
 
 // ─── CREATE EVENT ───
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authenticate, validate(createEventSchema), async (req, res) => {
   try {
     const { title, description, sport, location, startDate, endDate } = req.body;
 
@@ -66,7 +68,7 @@ router.post('/', authenticate, async (req, res) => {
 
     created(res, event);
   } catch (error) {
-    console.error('Create event error:', error);
+    logger.error({ event: 'create_event_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to create event.');
   }
 });
@@ -90,7 +92,7 @@ router.post('/:id/respond', authenticate, async (req, res) => {
 
     ok(res, response);
   } catch (error) {
-    console.error('Event respond error:', error);
+    logger.error({ event: 'event_respond_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to respond to event.');
   }
 });

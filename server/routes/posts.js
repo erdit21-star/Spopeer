@@ -23,6 +23,9 @@ const { authenticate, optionalAuth } = require('../middleware/auth');
 const { uploadPost, persistFile } = require('../middleware/upload');
 const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
+const { createPostSchema, validate } = require('../utils/schemas');
+const { cache } = require('../services/cache');
+const logger = require('../utils/logger');
 
 // ─── FEED HELPER ───
 const { ok, created, fail } = require('../utils/response');
@@ -31,6 +34,12 @@ async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
     const { page, limit } = parsePagination(req.query);
     const where = { isActive: true, ...whereExtra };
     const offset = (page - 1) * limit;
+
+    const cacheKey = `feed:${JSON.stringify({ where, orderBy: orderBy || [['createdAt', 'DESC']], page, limit, userId: req.userId || null })}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      return ok(res, cached.items, { pagination: cached.pagination });
+    }
 
     const { rows: posts, count } = await Post.findAndCountAll({
       where,
@@ -53,9 +62,11 @@ async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
       enrichedPosts = enrichedPosts.map(p => ({ ...p, liked: likedSet.has(p.id) }));
     }
 
-    ok(res, enrichedPosts, { pagination: { total: count, page, pages: Math.ceil(count / limit) } });
+    const pagination = { total: count, page, pages: Math.ceil(count / limit) };
+    await cache.set(cacheKey, { items: enrichedPosts, pagination }, 20 * 1000);
+    ok(res, enrichedPosts, { pagination });
   } catch (error) {
-    console.error('Feed error:', error);
+    logger.error({ event: 'feed_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch feed.');
   }
 }
@@ -161,7 +172,7 @@ router.get('/', optionalAuth, async (req, res) => {
 });
 
 // ─── CREATE POST ───
-router.post('/', authenticate, uploadPost.single('image'), async (req, res) => {
+router.post('/', authenticate, validate(createPostSchema), uploadPost.single('image'), async (req, res) => {
   try {
     const { content, sport } = req.body;
 
@@ -182,6 +193,7 @@ router.post('/', authenticate, uploadPost.single('image'), async (req, res) => {
     }
 
     const post = await Post.create(postData);
+    await cache.delByPrefix('feed:');
 
     // Update user's post count
     await req.user.increment('postsCount');
@@ -193,7 +205,7 @@ router.post('/', authenticate, uploadPost.single('image'), async (req, res) => {
 
     created(res, fullPost);
   } catch (error) {
-    console.error('Create post error:', error);
+    logger.error({ event: 'create_post_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to create post.');
   }
 });
@@ -240,6 +252,7 @@ router.put('/:id', authenticate, async (req, res) => {
     await post.save();
     ok(res, post);
   } catch (error) {
+    logger.error({ event: 'update_post_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to update post.');
   }
 });
@@ -258,9 +271,11 @@ router.delete('/:id', authenticate, async (req, res) => {
 
     await post.update({ isActive: false });
     await User.decrement('postsCount', { where: { id: post.userId } });
+    await cache.delByPrefix('feed:');
 
     ok(res, { message: 'Post deleted.' });
   } catch (error) {
+    logger.error({ event: 'delete_post_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to delete post.');
   }
 });

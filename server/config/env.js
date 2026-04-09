@@ -6,6 +6,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const REQUIRED = ['JWT_SECRET'];
+const REQUIRED_IN_PRODUCTION = ['APP_URL', 'FRONTEND_URL', 'RESEND_API_KEY'];
 
 // Used in validate() below
 const _RECOMMENDED = [
@@ -19,8 +20,8 @@ const _RECOMMENDED = [
 function validate() {
   const missing = REQUIRED.filter(v => !process.env[v]);
   if (missing.length) {
-    console.error('❌ Missing required environment variables:', missing.join(', '));
-    console.error('   Copy .env.example to .env and fill in the values.');
+    console.error('Missing required environment variables:', missing.join(', '));
+    console.error('Copy .env.example to .env and fill in the values.');
     process.exit(1);
   }
 
@@ -29,12 +30,20 @@ function validate() {
 
   // In production, database config is mandatory
   if (isProduction && !hasDB) {
-    console.error('❌ Production requires DATABASE_URL or DB_HOST to be set.');
+    console.error('Production requires DATABASE_URL or DB_HOST to be set.');
     process.exit(1);
   }
 
+  if (isProduction) {
+    const missingProduction = REQUIRED_IN_PRODUCTION.filter(v => !process.env[v]);
+    if (missingProduction.length) {
+      console.error('Production is missing required environment variables:', missingProduction.join(', '));
+      process.exit(1);
+    }
+  }
+
   if (!hasDB) {
-    console.warn('⚠️  No database config found (DATABASE_URL or DB_HOST). Using defaults.');
+    console.warn('No database config found (DATABASE_URL or DB_HOST). Using defaults.');
   }
 }
 
