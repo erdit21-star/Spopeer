@@ -47,13 +47,23 @@ jobs:
 
       - name: Install server dependencies
         working-directory: ./server
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Syntax check
         run: node scripts/syntax-check.js
 
+
       - name: Lint
         run: npx eslint .
+
+      - name: Run migrations
+        working-directory: ./server
+        run: npx sequelize-cli db:migrate
 
       - name: Run unit/mock tests
         working-directory: ./server
