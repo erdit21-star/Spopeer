@@ -360,6 +360,17 @@
       gap: 12px;
       margin-top: 14px;
     }
+    .page-main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
     .form-grid input,
     .form-grid textarea,
     .form-grid select {
@@ -383,6 +394,9 @@
 
     /* ── Side panel ── */
     .side-panel {
+      position: sticky;
+      top: calc(var(--nav-h) + 16px);
+      align-self: start;
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -474,6 +488,8 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 14px;
+        position: static;
+        top: auto;
       }
     }
 
@@ -525,7 +541,7 @@
     </aside>
 
     <!-- Main content -->
-    <section style="min-width:0; display:flex; flex-direction:column; gap:20px;">
+    <section class="page-main">
 
       <!-- Hero -->
       <div class="events-hero">
@@ -641,7 +657,7 @@
         <p class="text-muted">Organize a real event — invite teammates, other athletes, or coaches to join.</p>
         <form id="createEventForm" class="form-grid">
           <input id="eventTitle" type="text" placeholder="Event title" required>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-row-2">
             <select id="eventType" required>
               <option value="">Event type</option>
               <option value="game">Game</option>
@@ -653,7 +669,7 @@
             </select>
             <select id="eventSport" required></select>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-row-2">
             <input id="eventLocation" type="text" placeholder="Location" required>
             <input id="eventDate" type="datetime-local" required>
           </div>
