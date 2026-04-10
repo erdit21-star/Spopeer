@@ -371,6 +371,15 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
+    .panel-compact { padding: 16px 20px; }
+    .section-title { font-size: 18px; margin: 0; }
+    .section-subtitle-margin { margin-bottom: 14px; }
+    .event-sport-small { align-self: flex-start; font-size: 9px; }
+    .flex-between { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .select-compact { border:1.5px solid var(--border); border-radius:var(--pill); padding:7px 12px; font-size:12px; font-family:var(--fB); background:var(--white); outline:none; }
+    .icon-gap { margin-right:6px; }
+    .role-tags-space { margin-bottom:12px; }
+    .accent-gradient { background: linear-gradient(135deg, var(--accent-lt) 0%, var(--white) 100%); }
     .form-grid input,
     .form-grid textarea,
     .form-grid select {
@@ -520,7 +529,20 @@
         </span>
         <span class="logo-text">Spopeer</span>
       </a>
+      <div class="nav-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="eventsSearch" type="search" placeholder="Search events by sport, city or keyword" />
+      </div>
+
       <div class="nav-right">
+        <button class="nav-icon" type="button" aria-label="Notifications" onclick="window.location.href='/pages/dashboard/notifications.html'">
+          <i class="fa-regular fa-bell"></i>
+          <span class="notif-badge"></span>
+        </button>
+        <button class="nav-icon" type="button" aria-label="Messages" onclick="window.location.href='/pages/messaging/inbox.html'">
+          <i class="fa-regular fa-paper-plane"></i>
+        </button>
+
         <div class="user-chip" id="userChip" data-user-chip>
           <span class="chip-avatar" data-user-chip-avatar>?</span>
           <span class="chip-name" data-user-chip-name>Loading…</span>
@@ -561,7 +583,7 @@
       </div>
 
       <!-- Filter bar -->
-      <div class="panel" style="padding:16px 20px;">
+      <div class="panel panel-compact">
         <div class="filter-bar">
           <select id="filterSport" aria-label="Filter by sport">
             <option value="">All sports</option>
@@ -596,13 +618,13 @@
 
       <!-- Featured events -->
       <div class="panel">
-        <h2 style="font-size:18px;">Featured events</h2>
-        <p class="text-muted" style="margin-bottom:14px;">Top picks based on your sport, region, and level.</p>
+        <h2 class="section-title">Featured events</h2>
+        <p class="text-muted section-subtitle-margin">Top picks based on your sport, region, and level.</p>
         <div class="featured-strip" id="featuredStrip">
           <div class="featured-card">
             <div class="featured-img"><i class="fa-solid fa-trophy"></i></div>
             <div class="featured-body">
-              <span class="event-sport" style="align-self:flex-start; font-size:9px;">Football</span>
+              <span class="event-sport event-sport-small">Football</span>
               <h4>Regional Youth Championship</h4>
               <div class="featured-meta">
                 <span><i class="fa-regular fa-calendar"></i> Jun 15</span>
@@ -611,9 +633,9 @@
             </div>
           </div>
           <div class="featured-card">
-            <div class="featured-img" style="background:linear-gradient(135deg, var(--green-lt), var(--surface));"><i class="fa-solid fa-person-running" style="color:var(--green);"></i></div>
+            <div class="featured-img" style="background:linear-gradient(135deg, var(--green-lt), var(--surface));"><i class="fa-solid fa-person-running icon-green"></i></div>
             <div class="featured-body">
-              <span class="event-sport" style="align-self:flex-start; font-size:9px;">Athletics</span>
+              <span class="event-sport event-sport-small">Athletics</span>
               <h4>Sprint Training Camp</h4>
               <div class="featured-meta">
                 <span><i class="fa-regular fa-calendar"></i> Jun 22</span>
@@ -622,9 +644,9 @@
             </div>
           </div>
           <div class="featured-card">
-            <div class="featured-img" style="background:linear-gradient(135deg, var(--amber-lt), var(--surface));"><i class="fa-solid fa-basketball" style="color:var(--amber);"></i></div>
+            <div class="featured-img" style="background:linear-gradient(135deg, var(--amber-lt), var(--surface));"><i class="fa-solid fa-basketball icon-amber"></i></div>
             <div class="featured-body">
-              <span class="event-sport" style="align-self:flex-start; font-size:9px;">Basketball</span>
+              <span class="event-sport event-sport-small">Basketball</span>
               <h4>Open Tryouts — U21</h4>
               <div class="featured-meta">
                 <span><i class="fa-regular fa-calendar"></i> Jul 3</span>
@@ -637,12 +659,12 @@
 
       <!-- Main event listing -->
       <div class="panel">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="flex-between">
           <div>
-            <h2 style="font-size:18px; margin:0;">Events for you</h2>
+            <h2 class="section-title">Events for you</h2>
             <p class="text-muted">Events matched to your sports and interests.</p>
           </div>
-          <select id="sortEvents" style="border:1.5px solid var(--border);border-radius:var(--pill);padding:7px 12px;font-size:12px;font-family:var(--fB);background:var(--white);outline:none;">
+          <select id="sortEvents" class="select-compact">
             <option value="newest">Newest first</option>
             <option value="nearest">Nearest date</option>
             <option value="featured">Featured</option>
@@ -653,7 +675,7 @@
 
       <!-- Create event -->
       <div class="panel" id="createSection">
-        <h2 style="font-size:18px;">Create an event</h2>
+        <h2 class="section-title">Create an event</h2>
         <p class="text-muted">Organize a real event — invite teammates, other athletes, or coaches to join.</p>
         <form id="createEventForm" class="form-grid">
           <input id="eventTitle" type="text" placeholder="Event title" required>
@@ -686,22 +708,20 @@
     <!-- Right insight panel -->
     <aside class="side-panel">
       <div class="side-card">
-        <h3><i class="fa-regular fa-calendar-check" style="margin-right:6px;"></i>This week</h3>
+        <h3><i class="fa-regular fa-calendar-check icon-gap"></i>This week</h3>
         <ul class="side-list">
           <li><i class="fa-regular fa-circle-dot"></i> No events this week yet</li>
         </ul>
       </div>
-
       <div class="side-card">
-        <h3><i class="fa-regular fa-bookmark" style="margin-right:6px;"></i>Saved events</h3>
+        <h3><i class="fa-regular fa-bookmark icon-gap"></i>Saved events</h3>
         <ul class="side-list">
           <li><i class="fa-regular fa-circle"></i> You haven't saved any events yet</li>
         </ul>
       </div>
-
       <div class="side-card">
-        <h3><i class="fa-solid fa-user-tag" style="margin-right:6px;"></i>For your role</h3>
-        <div class="role-tags" style="margin-bottom:12px;">
+        <h3><i class="fa-solid fa-user-tag icon-gap"></i>For your role</h3>
+        <div class="role-tags role-tags-space">
           <span class="role-tag"><i class="fa-solid fa-person-running"></i> Athletes</span>
           <span class="role-tag"><i class="fa-solid fa-user-tie"></i> Coaches</span>
           <span class="role-tag"><i class="fa-solid fa-shield-halved"></i> Clubs</span>
@@ -715,9 +735,9 @@
         </ul>
       </div>
 
-      <div class="side-card" style="background:linear-gradient(135deg, var(--accent-lt) 0%, var(--white) 100%);">
-        <h3><i class="fa-solid fa-handshake-angle" style="margin-right:6px;"></i>Sponsorship events</h3>
-        <p style="font-size:12px; color:var(--muted); margin:0 0 12px;">Events open to sponsor support or seeking partnerships.</p>
+      <div class="side-card accent-gradient">
+        <h3><i class="fa-solid fa-handshake-angle icon-gap"></i>Sponsorship events</h3>
+        <p class="section-subtitle-margin" style="font-size:12px; color:var(--muted);">Events open to sponsor support or seeking partnerships.</p>
         <a href="../sponsorship/sponsor.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-arrow-right"></i> Sponsorship Hub</a>
       </div>
     </aside>
