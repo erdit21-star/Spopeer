@@ -31,6 +31,9 @@ const {
 const { sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail, sendSecurityAlertEmail } = require('../services/email');
 const { Op } = require('sequelize');
 const { issueCsrfToken, csrfProtection } = require('../middleware/csrf');
+// Test flag (used to relax middleware in tests)
+const isTest = process.env.NODE_ENV === 'test';
+
 // Do not enforce CSRF during unit tests to keep test requests simple
 const requireCsrf = isTest ? (req, res, next) => next() : csrfProtection();
 const {
@@ -44,8 +47,6 @@ const {
 const { createLimiter } = require('../services/rateLimiter');
 
 // Signup abuse limiter
-const isTest = process.env.NODE_ENV === 'test';
-
 const signupLimiter = createLimiter({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 50,
