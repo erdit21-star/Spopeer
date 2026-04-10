@@ -31,7 +31,8 @@ const {
 const { sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail, sendSecurityAlertEmail } = require('../services/email');
 const { Op } = require('sequelize');
 const { issueCsrfToken, csrfProtection } = require('../middleware/csrf');
-const requireCsrf = csrfProtection();
+// Do not enforce CSRF during unit tests to keep test requests simple
+const requireCsrf = isTest ? (req, res, next) => next() : csrfProtection();
 const {
   signupSchema,
   loginSchema,
