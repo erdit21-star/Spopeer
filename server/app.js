@@ -54,6 +54,7 @@ const errorHandler = require('./middleware/errorHandler');
 const { sentryErrorHandler } = require('./services/sentry');
 const { authenticate } = require('./middleware/auth');
 const { requireAdmin } = require('./middleware/admin');
+const { createPerUserLimiter } = require('./middleware/perUserRateLimiter');
 
 const app = express();
 app.disable('x-powered-by');
@@ -162,6 +163,9 @@ const apiLimiter = createLimiter({
   message: { success: false, error: { code: 'RATE_LIMIT', message: 'Too many requests, please try again later.' } }
 });
 
+// Per-user limiter for actions that should be rate-limited per account rather than per IP.
+const perUserWriteLimiter = createPerUserLimiter({ windowMs: 15 * 60 * 1000, max: parseInt(process.env.PER_USER_MAX || '60') });
+
 const uploadLimiter = createLimiter({
   windowMs: 60 * 60 * 1000,
   max: 30,
@@ -185,19 +189,19 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // ─── API ROUTES ───
 app.use('/api/auth', authRoutes);
 app.use('/api/users', apiLimiter, userRoutes);
-app.use('/api/posts', apiLimiter, postRoutes);
+app.use('/api/posts', apiLimiter, perUserWriteLimiter, postRoutes);
 app.use('/api/connections', apiLimiter, connectionRoutes);
-app.use('/api/messages', apiLimiter, messageRoutes);
+app.use('/api/messages', apiLimiter, perUserWriteLimiter, messageRoutes);
 app.use('/api/admin', apiLimiter, authenticate, requireAdmin, adminRoutes);
 app.use('/api/notifications', apiLimiter, notificationRoutes);
 app.use('/api/groups', apiLimiter, groupRoutes);
 app.use('/api/marketplace', apiLimiter, marketplaceRoutes);
 app.use('/api/forums', apiLimiter, forumRoutes);
 app.use('/api/reels', apiLimiter, reelRoutes);
-app.use('/api/follows', apiLimiter, followRoutes);
-app.use('/api/bookmarks', apiLimiter, bookmarkRoutes);
+app.use('/api/follows', apiLimiter, perUserWriteLimiter, followRoutes);
+app.use('/api/bookmarks', apiLimiter, perUserWriteLimiter, bookmarkRoutes);
 app.use('/api/search', searchLimiter, searchRoutes);
-app.use('/api/events', apiLimiter, eventRoutes);
+app.use('/api/events', apiLimiter, perUserWriteLimiter, eventRoutes);
 app.use('/api/media', uploadLimiter, mediaRoutes);
 app.use('/api/sponsorships', apiLimiter, sponsorshipRoutes);
 app.use('/api/moderation', apiLimiter, moderationRoutes);
