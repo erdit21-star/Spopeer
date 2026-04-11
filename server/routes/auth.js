@@ -31,6 +31,7 @@ const {
 const { sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail, sendSecurityAlertEmail } = require('../services/email');
 const { Op } = require('sequelize');
 const { issueCsrfToken, csrfProtection } = require('../middleware/csrf');
+const { verifyCaptchaMiddleware } = require('../middleware/captcha');
 // Test flag (used to relax middleware in tests)
 const isTest = process.env.NODE_ENV === 'test';
 const isProd = process.env.NODE_ENV === 'production';
@@ -107,7 +108,7 @@ router.get('/csrf', (req, res) => {
 });
 
 // ─── SIGNUP ───
-router.post('/signup', signupLimiter, requireCsrf, validate(signupSchema), async (req, res) => {
+router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, validate(signupSchema), async (req, res) => {
   try {
     const email = sanitizeString(req.body.email, 254).toLowerCase();
     const password = req.body.password;
@@ -459,7 +460,7 @@ router.get('/user-by-email', authenticate, async (req, res) => {
 });
 
 // ─── FORGOT PASSWORD ───
-router.post('/forgot-password', forgotLimiter, validate(forgotPasswordSchema), async (req, res) => {
+router.post('/forgot-password', forgotLimiter, verifyCaptchaMiddleware, validate(forgotPasswordSchema), async (req, res) => {
   try {
     const email = sanitizeString(req.body.email, 254).toLowerCase();
     if (!email || !isValidEmail(email)) {
