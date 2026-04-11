@@ -33,6 +33,7 @@ const { Op } = require('sequelize');
 const { issueCsrfToken, csrfProtection } = require('../middleware/csrf');
 // Test flag (used to relax middleware in tests)
 const isTest = process.env.NODE_ENV === 'test';
+const isProd = process.env.NODE_ENV === 'production';
 
 // Do not enforce CSRF during unit tests to keep test requests simple
 const requireCsrf = isTest ? (req, res, next) => next() : csrfProtection();
@@ -162,14 +163,20 @@ router.post('/signup', signupLimiter, requireCsrf, validate(signupSchema), async
     });
 
     // Generate verification token and send email (optional — does not block signup)
+    let emailSent = null;
     try {
       const verifyToken = crypto.randomBytes(32).toString('hex');
       await user.update({ emailVerifyToken: sha256(verifyToken), emailVerified: false });
-      sendVerificationEmail(user.email, verifyToken).catch(err => {
-        console.error('Failed to send verification email:', err.message);
-      });
+      try {
+        const emailRes = await sendVerificationEmail(user.email, verifyToken);
+        emailSent = !!(emailRes && emailRes.success);
+        if (!emailSent) console.error('[SIGNUP] verification email send returned failure:', emailRes && emailRes.error);
+      } catch (emailErr) {
+        emailSent = false;
+        console.error('[SIGNUP] Failed to send verification email:', emailErr && emailErr.message);
+      }
     } catch (verifyErr) {
-      console.error('[SIGNUP] emailVerifyToken update failed (column may not exist):', verifyErr.message);
+      console.error('[SIGNUP] emailVerifyToken update failed (column may not exist):', verifyErr && verifyErr.message);
     }
 
     // Issue DB-backed session so the user can use the app immediately (MODEL B — verification optional)
@@ -212,15 +219,21 @@ router.post('/signup', signupLimiter, requireCsrf, validate(signupSchema), async
       success: true,
       data: {
         message: 'Account created successfully. A verification email has been sent.',
-        user: user.toJSON()
+        user: user.toJSON(),
+        emailSent: emailSent === null ? null : !!emailSent
       }
     });
   } catch (error) {
-    console.error('Signup error:', error);
-    if (error.name === 'SequelizeValidationError') {
+    console.error('[SIGNUP] Error:', {
+      message: error && error.message,
+      name: error && error.name,
+      stack: error && error.stack,
+      requestId: req.requestId
+    });
+    if (error && error.name === 'SequelizeValidationError') {
       return fail(res, 400, 'VALIDATION', error.errors.map(e => e.message).join(', '));
     }
-    fail(res, 500, 'SERVER_ERROR', 'Server error during signup.');
+    return fail(res, 500, 'SERVER_ERROR', 'Server error during signup.');
   }
 });
 
@@ -347,9 +360,9 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
     console.error('[LOGIN] Error:', {
       requestId,
       stage,
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
+      message: error && error.message,
+      name: error && error.name,
+      stack: error && error.stack,
       email: req.body?.email,
       ip: req.ip,
       ua: req.get('user-agent')
@@ -363,7 +376,8 @@ router.get('/me', authenticate, async (req, res) => {
   try {
     return ok(res, { user: req.user.toJSON() });
   } catch (error) {
-    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
+    console.error('[GET-USER-BY-EMAIL] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
   }
 });
 
@@ -416,8 +430,8 @@ router.post('/change-password', authenticate, requireCsrf, validate(changePasswo
 
     return ok(res, { message: 'Password updated successfully. Please log in again.' });
   } catch (error) {
-    console.error('Change password error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Failed to change password.');
+    console.error('[CHANGE-PASSWORD] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to change password.');
   }
 });
 
@@ -474,8 +488,8 @@ router.post('/forgot-password', forgotLimiter, validate(forgotPasswordSchema), a
 
     return ok(res, { message: 'If that email exists, a reset link has been sent.' });
   } catch (error) {
-    console.error('Forgot password error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Server error.');
+    console.error('[FORGOT-PASSWORD] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Server error.');
   }
 });
 
@@ -523,8 +537,8 @@ router.post('/reset-password', resetLimiter, validate(resetPasswordSchema), asyn
 
     return ok(res, { message: 'Password updated. You can now log in.' });
   } catch (error) {
-    console.error('Reset password error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Server error.');
+    console.error('[RESET-PASSWORD] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Server error.');
   }
 });
 
@@ -552,8 +566,8 @@ router.post('/resend-verification', forgotLimiter, async (req, res) => {
 
     return ok(res, { message: 'If that account needs verification, a new link has been sent.' });
   } catch (error) {
-    console.error('Resend verification error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Server error.');
+    console.error('[RESEND-VERIFICATION] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Server error.');
   }
 });
 
@@ -571,16 +585,26 @@ router.get('/verify', async (req, res) => {
 
     await user.update({ isActive: true, emailVerifyToken: null, emailVerified: true });
 
-    // Send welcome email (fire-and-forget)
-    sendWelcomeEmail(user.email, user.firstName).catch(err => {
-      console.error('Welcome email error:', err);
-    });
+    // Send welcome email and surface failures in production by appending a flag.
+    let welcomeOk = null;
+    try {
+      const welcomeRes = await sendWelcomeEmail(user.email, user.firstName);
+      welcomeOk = !!(welcomeRes && welcomeRes.success);
+      if (!welcomeOk) console.error('[VERIFY] welcome email send returned failure:', welcomeRes && welcomeRes.error);
+    } catch (welErr) {
+      welcomeOk = false;
+      console.error('[VERIFY] Welcome email error:', welErr && welErr.message);
+    }
 
-    // Redirect to login with success indicator
-    res.redirect('/pages/auth/login.html?verified=1');
+    // Redirect to login with success indicator; if welcome email failed in production, add email=error
+    const redirectUrl = welcomeOk === false && isProd
+      ? '/pages/auth/login.html?verified=1&email=error'
+      : '/pages/auth/login.html?verified=1';
+
+    res.redirect(redirectUrl);
   } catch (error) {
-    console.error('Verify error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Verification failed.');
+    console.error('[VERIFY] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Verification failed.');
   }
 });
 
