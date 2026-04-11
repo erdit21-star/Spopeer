@@ -51,7 +51,7 @@ router.get('/user/:userId', async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json(userMedia);
+    ok(res, userMedia);
   } catch (error) {
     console.error('Get media error:', error);
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch media.');

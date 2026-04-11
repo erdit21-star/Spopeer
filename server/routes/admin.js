@@ -47,7 +47,7 @@ router.get('/dashboard', async (req, res) => {
   try {
     const cached = getCachedAdminMetrics('dashboard');
     if (cached) {
-      return res.json(cached);
+      return ok(res, cached);
     }
 
     const [
@@ -91,20 +91,17 @@ router.get('/dashboard', async (req, res) => {
     ]);
 
     const payload = {
-      status: 'ok',
-      payload: {
-        totalUsers,
-        totalPosts,
-        totalConnections,
-        totalMessages,
-        newUsersToday,
-        newPostsToday,
-        usersByRole,
-        usersBySubscription
-      }
+      totalUsers,
+      totalPosts,
+      totalConnections,
+      totalMessages,
+      newUsersToday,
+      newPostsToday,
+      usersByRole,
+      usersBySubscription
     };
     setCachedAdminMetrics('dashboard', payload);
-    res.json(payload);
+    ok(res, payload);
   } catch (error) {
     console.error('Dashboard error:', error);
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch dashboard data.');
@@ -256,18 +253,15 @@ router.get('/analytics', async (req, res) => {
     ]);
 
     const payload = {
-      status: 'ok',
-      payload: {
-        newUsersLast30Days,
-        newPostsLast30Days,
-        totalLikes,
-        totalComments,
-        topPosters,
-        mostFollowed
-      }
+      newUsersLast30Days,
+      newPostsLast30Days,
+      totalLikes,
+      totalComments,
+      topPosters,
+      mostFollowed
     };
     setCachedAdminMetrics('analytics', payload);
-    res.json(payload);
+    ok(res, payload);
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch analytics.');
   }

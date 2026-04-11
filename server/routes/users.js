@@ -209,11 +209,7 @@ router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res)
     await applyExtendedMerge(user, updates);
     await user.update(updates);
 
-    res.json({
-      status: 'ok',
-      message: 'Profile updated.',
-      payload: flattenUserPayload(user)
-    });
+    ok(res, { payload: flattenUserPayload(user) }, { message: 'Profile updated.' });
   } catch (error) {
     logger.error({ event: 'update_profile_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
@@ -230,11 +226,7 @@ router.post('/avatar', authenticate, uploadAvatar.single('avatar'), async (req, 
     const { url: avatarUrl } = await persistFile(req.file, 'avatars', req.userId);
     await req.user.update({ avatarUrl });
 
-    res.json({
-      status: 'ok',
-      message: 'Avatar uploaded.',
-      avatarUrl
-    });
+    ok(res, { avatarUrl }, { message: 'Avatar uploaded.' });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to upload avatar.');
   }
@@ -250,11 +242,7 @@ router.post('/cover', authenticate, uploadCover.single('cover'), async (req, res
     const { url: coverPhotoUrl } = await persistFile(req.file, 'covers', req.userId);
     await req.user.update({ coverPhotoUrl });
 
-    res.json({
-      status: 'ok',
-      message: 'Cover photo uploaded.',
-      coverPhotoUrl
-    });
+    ok(res, { coverPhotoUrl }, { message: 'Cover photo uploaded.' });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to upload cover photo.');
   }
@@ -295,11 +283,7 @@ async function saveProfileHandler(req, res) {
     await applyExtendedMerge(req.user, updates);
     await req.user.update(updates);
 
-    res.json({
-      status: 'ok',
-      message: 'Profile saved.',
-      payload: flattenUserPayload(req.user)
-    });
+    ok(res, { payload: flattenUserPayload(req.user) }, { message: 'Profile saved.' });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to save profile.');
   }
