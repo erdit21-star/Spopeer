@@ -91,10 +91,7 @@
 
   async function logout() {
     try {
-      await fetch(buildUrl("/api/auth/logout"), {
-        method: "POST",
-        credentials: "include"
-      });
+      await request("/api/auth/logout", { method: "POST" });
     } catch (err) {
       console.debug("Logout request failed in api.js; clearing local state anyway", err);
     }
@@ -186,11 +183,9 @@
       // Try to refresh token once before giving up
       if (!config._retried && path !== "/api/auth/refresh") {
         try {
-          const refreshResp = await fetch(buildUrl("/api/auth/refresh"), {
-            method: "POST",
-            credentials: "include"
-          });
-          if (refreshResp.ok) {
+          const refreshResp = await request("/api/auth/refresh", { method: "POST", _retried: true });
+          // if refresh succeeded, retry original request
+          if (refreshResp) {
             config._retried = true;
             return request(path, config);
           }

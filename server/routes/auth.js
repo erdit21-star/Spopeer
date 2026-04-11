@@ -106,7 +106,7 @@ router.get('/csrf', (req, res) => {
 });
 
 // ─── SIGNUP ───
-router.post('/signup', signupLimiter, validate(signupSchema), async (req, res) => {
+router.post('/signup', signupLimiter, requireCsrf, validate(signupSchema), async (req, res) => {
   try {
     const email = sanitizeString(req.body.email, 254).toLowerCase();
     const password = req.body.password;
@@ -201,6 +201,13 @@ router.post('/signup', signupLimiter, validate(signupSchema), async (req, res) =
     res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
     res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
+    // Ensure client receives a CSRF cookie immediately after auth.
+    try {
+      issueCsrfToken(req, res);
+    } catch (err) {
+      console.debug('issueCsrfToken failed on signup:', err && err.message);
+    }
+
     res.status(201).json({
       success: true,
       data: {
@@ -218,7 +225,7 @@ router.post('/signup', signupLimiter, validate(signupSchema), async (req, res) =
 });
 
 // ─── LOGIN ───
-router.post('/login', loginLimiter, validate(loginSchema), async (req, res, next) => {
+router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (req, res, next) => {
   const requestId = req.requestId || 'n/a';
   let stage = 'start';
   try {
@@ -306,6 +313,13 @@ router.post('/login', loginLimiter, validate(loginSchema), async (req, res, next
 
     res.cookie('access_token', token, getCookieOptions(15 * 60 * 1000));
     res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+
+    // Ensure client receives a CSRF cookie immediately after login.
+    try {
+      issueCsrfToken(req, res);
+    } catch (err) {
+      console.debug('issueCsrfToken failed on login:', err && err.message);
+    }
 
     stage = 'response';
     res.json({
