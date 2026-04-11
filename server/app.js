@@ -52,6 +52,8 @@ const moderationRoutes = require('./routes/moderation');
 
 const errorHandler = require('./middleware/errorHandler');
 const { sentryErrorHandler } = require('./services/sentry');
+const { authenticate } = require('./middleware/auth');
+const { requireAdmin } = require('./middleware/admin');
 
 const app = express();
 app.disable('x-powered-by');
@@ -186,7 +188,7 @@ app.use('/api/users', apiLimiter, userRoutes);
 app.use('/api/posts', apiLimiter, postRoutes);
 app.use('/api/connections', apiLimiter, connectionRoutes);
 app.use('/api/messages', apiLimiter, messageRoutes);
-app.use('/api/admin', apiLimiter, adminRoutes);
+app.use('/api/admin', apiLimiter, authenticate, requireAdmin, adminRoutes);
 app.use('/api/notifications', apiLimiter, notificationRoutes);
 app.use('/api/groups', apiLimiter, groupRoutes);
 app.use('/api/marketplace', apiLimiter, marketplaceRoutes);
@@ -338,10 +340,10 @@ app.get('/api/ready', async (req, res) => {
 });
 
 // ─── ADMIN DASHBOARD (serve HTML) ───
-app.get('/admin', (req, res) => {
+app.get('/admin', authenticate, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'pages', 'admin', 'dashboard.html'));
 });
-app.get('/admin/{*rest}', (req, res) => {
+app.get('/admin/{*rest}', authenticate, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'pages', 'admin', 'dashboard.html'));
 });
 
