@@ -11,6 +11,7 @@ const crypto = require('crypto');
 
 let _cloudinary = null;
 let _ready = false;
+const isProduction = process.env.NODE_ENV === 'production';
 
 function getClient() {
   if (_ready) return _cloudinary;
@@ -20,6 +21,10 @@ function getClient() {
     (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
 
   if (!hasConfig) {
+    if (isProduction) {
+      console.error('[CLOUDINARY] Not configured in production — aborting startup.');
+      throw new Error('Cloudinary not configured in production');
+    }
     console.warn('[CLOUDINARY] Not configured — uploads will use local disk. Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET.');
     return null;
   }

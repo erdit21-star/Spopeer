@@ -59,7 +59,12 @@ async function persistFile(file, folder, userId) {
     return { url: result.url, provider: 'cloudinary', publicId: result.publicId };
   }
 
-  // Fallback: write to local disk
+  // In production we require cloud storage — do not silently fall back to disk.
+  if (process.env.NODE_ENV === 'production' && !isCloudEnabled()) {
+    throw new Error('Uploads require cloud storage in production');
+  }
+
+  // Fallback: write to local disk (non-production)
   const filename = safeFilename(prefix, userId, ext);
   const url = await saveLocal(file.buffer, folder, filename);
   return { url, provider: 'local' };

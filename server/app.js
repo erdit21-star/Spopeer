@@ -245,7 +245,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/api/metrics', (_req, res) => {
+app.get('/api/metrics', authenticate, requireAdmin, (_req, res) => {
   const uptimeSeconds = Math.floor((Date.now() - metrics.startedAt) / 1000);
   res.type('text/plain').send(
     [

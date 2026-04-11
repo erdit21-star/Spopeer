@@ -9,6 +9,7 @@
     "test": "jest --config tests/jest.config.cjs",
     "test:db": "jest --config tests/jest.db.config.cjs --runInBand",
     "migrate": "npx sequelize-cli db:migrate",
+    "migrate:prod": "npx sequelize-cli db:migrate --env production",
     "seed": "node seeders/seed.js"
   },
   "dependencies": {
