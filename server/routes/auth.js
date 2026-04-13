@@ -146,7 +146,10 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
     const safeRole = incomingRole;
 
     // Check if user exists
-    const existing = await User.findOne({ where: { email: email.toLowerCase() } });
+    const existing = await User.findOne({
+      where: { email: email.toLowerCase() },
+      attributes: ['id']
+    });
     if (existing) {
       return fail(res, 409, 'EMAIL_EXISTS', 'Email already registered.');
     }

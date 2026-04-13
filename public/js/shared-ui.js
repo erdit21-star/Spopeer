@@ -652,13 +652,6 @@
     return user.email || 'User';
   }
 
-  function getInitials(user) {
-    var dn = user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || '';
-    var fi = (dn.split(' ')[0] || '')[0] || '';
-    var li = (dn.split(' ')[1] || '')[0] || '';
-    return (fi + li).toUpperCase() || 'U';
-  }
-
   /**
    * Returns the canonical profile-menu HTML matching feed.html exactly.
    * All menu items use data-action attributes handled by setupSocialFeedRuntime.

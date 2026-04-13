@@ -1,4 +1,4 @@
-const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator, rateLimit } = require('express-rate-limit');
 const { getRedisClient } = require('../utils/redisClient');
 
 function tryCreateRedisStore() {
@@ -25,7 +25,8 @@ function createPerUserLimiter(opts = {}) {
     store: store || undefined,
     keyGenerator: (req) => {
       if (req && req.userId) return String(req.userId);
-      return req.ip || req.headers['x-forwarded-for'] || 'anonymous';
+      const ip = (req && req.ip) || req?.headers?.['x-forwarded-for'];
+      return ip ? ipKeyGenerator(String(ip)) : 'anonymous';
     },
     handler: (req, res) => {
       res.status(429).json({ success: false, error: { code: 'RATE_LIMIT_USER', message: 'Too many requests for this user. Slow down.' } });

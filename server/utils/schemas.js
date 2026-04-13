@@ -9,7 +9,6 @@
  *   if (!result.success) return fail(res, 400, 'VALIDATION', result.error.issues[0].message);
  */
 const { z } = require('zod');
-const { PUBLIC_USER_ROLES } = require('./constants');
 
 // ─── AUTH ───
 

@@ -5,7 +5,6 @@ async function getRedisClient() {
   if (!process.env.REDIS_URL) return null;
   if (redisClient) return redisClient;
   try {
-    // eslint-disable-next-line global-require
     const { createClient } = require('redis');
     redisClient = createClient({ url: process.env.REDIS_URL });
     await redisClient.connect();

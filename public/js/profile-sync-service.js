@@ -173,16 +173,6 @@ const ProfileSyncService = {
     
     if (!profile) return;
     
-    // Helper: Get initials
-    const fullName = this.getProfileFullName(profile);
-    const initials = fullName
-      .split(' ')
-      .filter(Boolean)
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2) || 'U';
-    
     // Let UserUI update any data-attribute driven chips first
     try {
       if (window.UserUI && typeof window.UserUI.bindAllChips === 'function') {
