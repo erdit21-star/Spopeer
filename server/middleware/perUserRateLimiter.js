@@ -1,12 +1,11 @@
 const rateLimit = require('express-rate-limit');
+const { getRedisClient } = require('../utils/redisClient');
 
 function tryCreateRedisStore() {
-  if (!process.env.REDIS_URL) return null;
+  const client = getRedisClient();
+  if (!client) return null;
   try {
     const { RedisStore } = require('rate-limit-redis');
-    const { createClient } = require('redis');
-    const client = createClient({ url: process.env.REDIS_URL });
-    client.connect().catch(() => {});
     return new RedisStore({ sendCommand: (...args) => client.sendCommand(args) });
   } catch (err) {
     return null;

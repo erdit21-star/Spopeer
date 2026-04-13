@@ -32,7 +32,9 @@
     "socket.io": "^4.8.3",
     "uuid": "^13.0.0",
     "winston": "^3.17.0",
-    "zod": "^3.24.0"
+    "zod": "^3.24.0",
+    "redis": "^4.6.7",
+    "rate-limit-redis": "^1.7.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
