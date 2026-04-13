@@ -810,13 +810,31 @@ async function loadSportsStrip() {
   if (!track) return;
 
   try {
-    const res = await fetch("data/list-of-sports.txt");
+    const res = await fetch("data/list-of-sports.txt", {
+      headers: { "Accept": "text/plain" }
+    });
+
+    if (!res.ok) {
+      throw new Error(`Sports list request failed with ${res.status}`);
+    }
+
     const text = await res.text();
+
+    // Reject accidental HTML fallback
+    if (
+      /<!DOCTYPE html/i.test(text) ||
+      /<html/i.test(text) ||
+      /<body/i.test(text) ||
+      /<img/i.test(text)
+    ) {
+      throw new Error("Sports list returned HTML instead of plain text");
+    }
 
     const sports = text
       .split(/\r?\n/)
       .map(s => s.trim())
       .filter(Boolean)
+      .filter(s => !/[<>]/.test(s))
       .slice(0, 1000);
 
     const sportIconMap = [
@@ -847,14 +865,72 @@ async function loadSportsStrip() {
       return found ? found.icon : "fa-medal";
     }
 
-    const chips = sports.map((sport) => {
-      return `<div class="sport-chip"><i class="fa-solid ${iconForSport(sport)}"></i>${sport}</div>`;
+    function createChip(sport) {
+      const chip = document.createElement("div");
+      chip.className = "sport-chip";
+
+      const icon = document.createElement("i");
+      icon.className = `fa-solid ${iconForSport(sport)}`;
+
+      chip.appendChild(icon);
+      chip.appendChild(document.createTextNode(sport));
+
+      return chip;
+    }
+
+    track.innerHTML = "";
+
+    const fragment = document.createDocumentFragment();
+    const doubledSports = [...sports, ...sports];
+
+    doubledSports.forEach((sport) => {
+      fragment.appendChild(createChip(sport));
     });
 
-    // duplicate for seamless loop
-    track.innerHTML = chips.join("") + chips.join("");
+    track.appendChild(fragment);
   } catch (err) {
     console.error("Failed to load sports list:", err);
+
+    const fallbackSports = [
+      "Football",
+      "Basketball",
+      "Tennis",
+      "Running",
+      "Swimming",
+      "Cycling",
+      "Volleyball",
+      "Boxing"
+    ];
+
+    track.innerHTML = "";
+
+    const fragment = document.createDocumentFragment();
+
+    function fallbackIconForSport(name) {
+      if (/football|soccer|rugby/i.test(name)) return "fa-futbol";
+      if (/basketball/i.test(name)) return "fa-basketball";
+      if (/tennis/i.test(name)) return "fa-table-tennis-paddle-ball";
+      if (/running/i.test(name)) return "fa-person-running";
+      if (/swimming/i.test(name)) return "fa-person-swimming";
+      if (/cycling/i.test(name)) return "fa-person-biking";
+      if (/volleyball/i.test(name)) return "fa-volleyball";
+      if (/boxing/i.test(name)) return "fa-hand-fist";
+      return "fa-medal";
+    }
+
+    [...fallbackSports, ...fallbackSports].forEach((sport) => {
+      const chip = document.createElement("div");
+      chip.className = "sport-chip";
+
+      const icon = document.createElement("i");
+      icon.className = `fa-solid ${fallbackIconForSport(sport)}`;
+
+      chip.appendChild(icon);
+      chip.appendChild(document.createTextNode(sport));
+      fragment.appendChild(chip);
+    });
+
+    track.appendChild(fragment);
   }
 }
 
