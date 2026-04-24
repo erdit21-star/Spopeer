@@ -2313,9 +2313,9 @@
     </div>
 
     <div class="nav-right">
-      <button class="nav-icon" id="marketplaceBtn" title="Marketplace" onclick="window.location.href='pages/marketplace/marketplace.html'"><i class="fa-solid fa-store"></i></button>
-      <button class="nav-icon" id="exploreBtn" title="Explore" onclick="window.location.href='pages/search/search.html'"><i class="fa-regular fa-compass"></i></button>
-      <button class="nav-icon" id="messagesBtn" title="Messages" onclick="window.location.href='pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
+      <button class="nav-icon" id="marketplaceBtn" title="Marketplace" onclick="window.location.href='/pages/marketplace/marketplace.html'"><i class="fa-solid fa-store"></i></button>
+      <button class="nav-icon" id="exploreBtn" title="Explore" onclick="window.location.href='/pages/search/search.html'"><i class="fa-regular fa-compass"></i></button>
+      <button class="nav-icon" id="messagesBtn" title="Messages" onclick="window.location.href='/pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
       <button class="nav-icon" id="notifBtn" title="Notifications">
         <i class="fa-regular fa-bell"></i>
         <span class="notif-badge" id="notifBadge"></span>
@@ -2581,12 +2581,12 @@
     </div>
 
     <button class="nav-item active" onclick="window.location.href='feed.html'"><i class="fa-solid fa-house"></i> Home</button>
-    <a class="nav-item" href="pages/library/index.html"><i class="fa-regular fa-bookmark"></i> Library</a>
-    <a class="nav-item" href="pages/events/event.html"><i class="fa-regular fa-calendar"></i> Events <span class="nav-badge">3</span></a>
-    <button class="nav-item" onclick="window.location.href='pages/sponsorship/sponsor.html'"><i class="fa-regular fa-star"></i> Sponsor</button>
-    <button class="nav-item" onclick="window.location.href='pages/profiles/edit-profile.html#section-training'"><i class="fa-solid fa-dumbbell"></i> Training</button>
-    <button class="nav-item" onclick="window.location.href='pages/community/forums.html'"><i class="fa-regular fa-hand-peace"></i> Community</button>
-    <button class="nav-item" onclick="window.location.href='pages/marketplace/marketplace.html'"><i class="fa-solid fa-store"></i> Marketplace</button>
+    <a class="nav-item" href="/pages/library/index.html"><i class="fa-regular fa-bookmark"></i> Library</a>
+    <a class="nav-item" href="/pages/events/event.html"><i class="fa-regular fa-calendar"></i> Events <span class="nav-badge">3</span></a>
+    <button class="nav-item" onclick="window.location.href='/pages/sponsorship/sponsor.html'"><i class="fa-regular fa-star"></i> Sponsor</button>
+    <button class="nav-item" onclick="window.location.href='/pages/profiles/edit-profile.html#section-training'"><i class="fa-solid fa-dumbbell"></i> Training</button>
+    <button class="nav-item" onclick="window.location.href='/pages/community/forums.html'"><i class="fa-regular fa-hand-peace"></i> Community</button>
+    <button class="nav-item" onclick="window.location.href='/pages/marketplace/marketplace.html'"><i class="fa-solid fa-store"></i> Marketplace</button>
     <button class="nav-item" id="openAdminDashboardBtn" style="display:none;"><i class="fa-solid fa-shield-halved"></i> Admin Dashboard</button>
 
     <div class="sidebar-divider"></div>
@@ -2608,7 +2608,7 @@
 
     <!-- ── PHASE 5 – Monetization ── -->
     <div class="sidebar-section-label">Phase 5 – Monetization</div>
-    <button class="nav-item" onclick="window.location.href='pages/sponsorship/sponsor.html'"><i class="fa-solid fa-handshake"></i> Sponsorship Hub</button>
+    <button class="nav-item" onclick="window.location.href='/pages/sponsorship/sponsor.html'"><i class="fa-solid fa-handshake"></i> Sponsorship Hub</button>
     <button class="nav-item soon"><i class="fa-solid fa-crown"></i> Premium Content <span class="soon-badge">Soon</span></button>
     <button class="nav-item soon"><i class="fa-solid fa-coins"></i> Tipping <span class="soon-badge">Soon</span></button>
     <button class="nav-item soon"><i class="fa-solid fa-briefcase"></i> Jobs &amp; Opportunities <span class="soon-badge">Soon</span></button>
@@ -3554,25 +3554,25 @@
       } else if (buttonText.includes('feed')) {
         // Already on feed, do nothing
       } else if (buttonText.includes('explore')) {
-        window.location.href = 'pages/search/search.html';
+        window.location.href = '/pages/search/search.html';
       } else if (buttonText.includes('library')) {
-        window.location.href = 'pages/library/index.html';
+        window.location.href = '/pages/library/index.html';
       } else if (buttonText.includes('events')) {
-        window.location.href = 'pages/events/event.html';
+        window.location.href = '/pages/events/event.html';
       } else if (buttonText.includes('sponsor')) {
-        window.location.href = 'pages/sponsorship/sponsor.html';
+        window.location.href = '/pages/sponsorship/sponsor.html';
       } else if (buttonText.includes('training')) {
-        window.location.href = 'pages/profiles/edit-profile.html#section-training';
+        window.location.href = '/pages/profiles/edit-profile.html#section-training';
       } else if (buttonText.includes('marketplace')) {
-        window.location.href = 'pages/marketplace/marketplace.html';
+        window.location.href = '/pages/marketplace/marketplace.html';
       } else if (buttonText.includes('community')) {
-        window.location.href = 'pages/community/forums.html';
+        window.location.href = '/pages/community/forums.html';
       } else if (buttonText.includes('messages')) {
-        window.location.href = 'pages/messaging/inbox.html';
+        window.location.href = '/pages/messaging/inbox.html';
       } else if (buttonText.includes('notifications')) {
-        window.location.href = 'pages/dashboard/notifications.html';
+        window.location.href = '/pages/dashboard/notifications.html';
       } else if (buttonText.includes('settings')) {
-        window.location.href = 'pages/dashboard/settings.html';
+        window.location.href = '/pages/dashboard/settings.html';
       }
     });
   });
@@ -3586,13 +3586,13 @@
   document.getElementById('exploreBtn')?.addEventListener('click', (e) => {
     console.log('%c★ EXPLORE BTN CLICKED', 'color: orange; font-weight: bold');
     e.stopPropagation();
-    window.location.href = 'pages/search/search.html';
+    window.location.href = '/pages/search/search.html';
   });
 
   document.getElementById('messagesBtn')?.addEventListener('click', (e) => {
     console.log('%c★ MESSAGES BTN CLICKED', 'color: orange; font-weight: bold');
     e.stopPropagation();
-    window.location.href = 'pages/messaging/inbox.html';
+    window.location.href = '/pages/messaging/inbox.html';
   });
 
   /* ── SEARCH BAR ── */
@@ -3604,7 +3604,7 @@
         e.preventDefault();
         const query = navSearchInput.value.trim();
         if (query) {
-          window.location.href = 'pages/search/search.html?term=' + encodeURIComponent(query);
+          window.location.href = '/pages/search/search.html?term=' + encodeURIComponent(query);
         }
       }
     });
@@ -3615,7 +3615,7 @@
       searchIcon.addEventListener('click', () => {
         const query = navSearchInput.value.trim();
         if (query) {
-          window.location.href = 'pages/search/search.html?term=' + encodeURIComponent(query);
+          window.location.href = '/pages/search/search.html?term=' + encodeURIComponent(query);
         } else {
           navSearchInput.focus();
         }
@@ -3788,7 +3788,7 @@
   viewAllNotif?.addEventListener('click', () => {
     setLastSeen(Date.now());
     closeNotifPopover();
-    window.location.href = 'pages/dashboard/notifications.html';
+    window.location.href = '/pages/dashboard/notifications.html';
   });
 
   if (!localStorage.getItem(NOTIF_KEY)) {
@@ -4221,7 +4221,7 @@
       const story = storiesData[currentStoryIndex];
       if (!story) return;
       const id = encodeURIComponent(story.name || '');
-      window.location.href = 'pages/profiles/public-profile.html?userId=' + id;
+      window.location.href = '/pages/profiles/public-profile.html?userId=' + id;
     });
   }
 
@@ -4365,21 +4365,21 @@
   if (followersBtn) {
     followersBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      window.location.href = 'pages/profiles/followers.html?type=followers';
+      window.location.href = '/pages/profiles/followers.html?type=followers';
     });
   }
 
   if (followingBtn) {
     followingBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      window.location.href = 'pages/profiles/followers.html?type=following';
+      window.location.href = '/pages/profiles/followers.html?type=following';
     });
   }
 
   if (postsBtn) {
     postsBtn.addEventListener('click', () => {
       // redirect to user's posts - using a dedicated posts page
-      window.location.href = 'pages/profiles/user-posts.html';
+      window.location.href = '/pages/profiles/user-posts.html';
     });
   }
 

@@ -369,7 +369,7 @@
         '<a href="' + basePath + 'feed.html" class="sp-mobile-drawer-link"><i class="fa-solid fa-house"></i> Home</a>' +
         '<a href="' + getProfileUrl(basePath) + '" class="sp-mobile-drawer-link"><i class="fa-regular fa-user"></i> View Profile</a>' +
         '<a href="' + getEditProfileUrl(basePath) + '" class="sp-mobile-drawer-link"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</a>' +
-        '<a href="' + basePath + 'pages/search/index.html" class="sp-mobile-drawer-link"><i class="fa-solid fa-magnifying-glass"></i> Search</a>' +
+        '<a href="' + basePath + 'pages/search/search.html" class="sp-mobile-drawer-link"><i class="fa-solid fa-magnifying-glass"></i> Search</a>' +
         '<a href="' + basePath + 'pages/messaging/inbox.html" class="sp-mobile-drawer-link"><i class="fa-regular fa-paper-plane"></i> Messages</a>' +
         '<a href="' + basePath + 'pages/dashboard/notifications.html" class="sp-mobile-drawer-link"><i class="fa-regular fa-bell"></i> Notifications</a>' +
         '<a href="' + basePath + 'pages/dashboard/settings.html" class="sp-mobile-drawer-link"><i class="fa-regular fa-gear"></i> Settings</a>' +
@@ -382,7 +382,7 @@
     bottomNav.className = 'sp-mobile-bottom-nav';
     bottomNav.innerHTML = '<div class="sp-mobile-bottom-nav-inner">' +
       '<a href="' + basePath + 'feed.html" class="sp-mobile-tab" data-tab="home"><i class="fa-solid fa-house"></i><span>Home</span></a>' +
-      '<a href="' + basePath + 'pages/search/index.html" class="sp-mobile-tab" data-tab="search"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></a>' +
+      '<a href="' + basePath + 'pages/search/search.html" class="sp-mobile-tab" data-tab="search"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></a>' +
       '<a href="' + basePath + 'pages/messaging/inbox.html" class="sp-mobile-tab" data-tab="inbox"><i class="fa-regular fa-paper-plane"></i><span>Inbox</span></a>' +
       '<a href="' + getProfileUrl(basePath) + '" class="sp-mobile-tab" data-tab="profile"><i class="fa-regular fa-user"></i><span>Profile</span></a>' +
     '</div>';
@@ -431,6 +431,25 @@
       var dx = e.changedTouches[0].clientX - touchStartX;
       if (dx > 60) closeDrawer();
     }, { passive: true });
+
+    // Ensure top quick-nav buttons route correctly on every authenticated page.
+    [
+      { id: 'marketplaceBtn', path: basePath + 'pages/marketplace/marketplace.html' },
+      { id: 'exploreBtn', path: basePath + 'pages/search/search.html' },
+      { id: 'messagesBtn', path: basePath + 'pages/messaging/inbox.html' },
+      { id: 'notifBtn', path: basePath + 'pages/dashboard/notifications.html' }
+    ].forEach(function (entry) {
+      var el = document.getElementById(entry.id);
+      if (!el) return;
+      if (el.tagName === 'A') {
+        el.setAttribute('href', entry.path);
+      }
+      if (el.dataset && el.dataset.quickNavBound === '1') return;
+      if (el.dataset) el.dataset.quickNavBound = '1';
+      el.addEventListener('click', function () {
+        window.location.href = entry.path;
+      });
+    });
 
     /* ── 9. Logout from drawer ── */
     drawer.querySelector('[data-mobile-logout]').addEventListener('click', async function(e) {
