@@ -2581,13 +2581,13 @@
     </div>
     </div>
 
-    <button class="nav-item active" onclick="window.location.href='feed.html'"><i class="fa-solid fa-house"></i> Home</button>
+    <a class="nav-item active" href="/feed.html"><i class="fa-solid fa-house"></i> Home</a>
     <a class="nav-item" href="/pages/library/index.html"><i class="fa-regular fa-bookmark"></i> Library</a>
     <a class="nav-item" href="/pages/events/event.html"><i class="fa-regular fa-calendar"></i> Events <span class="nav-badge">3</span></a>
-    <button class="nav-item" onclick="window.location.href='/pages/sponsorship/sponsor.html'"><i class="fa-regular fa-star"></i> Sponsor</button>
-    <button class="nav-item" onclick="window.location.href='/pages/profiles/edit-profile.html#section-training'"><i class="fa-solid fa-dumbbell"></i> Training</button>
-    <button class="nav-item" onclick="window.location.href='/pages/community/forums.html'"><i class="fa-regular fa-hand-peace"></i> Community</button>
-    <button class="nav-item" onclick="window.location.href='/pages/marketplace/marketplace.html'"><i class="fa-solid fa-store"></i> Marketplace</button>
+    <a class="nav-item" href="/pages/sponsorship/sponsor.html"><i class="fa-regular fa-star"></i> Sponsor</a>
+    <a class="nav-item" href="/pages/profiles/edit-profile.html#section-training"><i class="fa-solid fa-dumbbell"></i> Training</a>
+    <a class="nav-item" href="/pages/community/forums.html"><i class="fa-regular fa-hand-peace"></i> Community</a>
+    <a class="nav-item" href="/pages/marketplace/marketplace.html"><i class="fa-solid fa-store"></i> Marketplace</a>
     <button class="nav-item" id="openAdminDashboardBtn" style="display:none;"><i class="fa-solid fa-shield-halved"></i> Admin Dashboard</button>
 
     <div class="sidebar-divider"></div>
@@ -2609,7 +2609,7 @@
 
     <!-- ── PHASE 5 – Monetization ── -->
     <div class="sidebar-section-label">Phase 5 – Monetization</div>
-    <button class="nav-item" onclick="window.location.href='/pages/sponsorship/sponsor.html'"><i class="fa-solid fa-handshake"></i> Sponsorship Hub</button>
+    <a class="nav-item" href="/pages/sponsorship/sponsor.html"><i class="fa-solid fa-handshake"></i> Sponsorship Hub</a>
     <button class="nav-item soon"><i class="fa-solid fa-crown"></i> Premium Content <span class="soon-badge">Soon</span></button>
     <button class="nav-item soon"><i class="fa-solid fa-coins"></i> Tipping <span class="soon-badge">Soon</span></button>
     <button class="nav-item soon"><i class="fa-solid fa-briefcase"></i> Jobs &amp; Opportunities <span class="soon-badge">Soon</span></button>
@@ -3035,6 +3035,7 @@
     if (window.CurrentUserStore) return window.CurrentUserStore.getCurrentUser() || {};
     try { return JSON.parse(localStorage.getItem('spopeer_user') || '{}') || {}; } catch { return {}; }
   }
+  window.getCurrentUserData = getCurrentUserData;
 
   function normalizeFeedProfile(user) {
     if (!user) return {};
@@ -3301,12 +3302,24 @@
   // Function to hydrate sidebar profile based on user type
   function hydrateSidebarProfile(profile) {
     if (!profile) return;
+    profile = normalizeFeedProfile(profile);
 
     const type = profile.role || profile.userType || 'athlete';
+
+    const profileLink = document.querySelector('.sp-profile-link');
+    if (profileLink) profileLink.href = getProfileUrl();
+    const editBtn = document.getElementById('editProfileBtn');
+    if (editBtn) editBtn.href = getEditProfileUrl();
 
     // Update handle with username
     const handleEl = document.getElementById('sidebarHandle');
     if (handleEl) handleEl.textContent = '@' + (profile.username || (profile.email ? profile.email.split('@')[0] : 'user'));
+
+    const locationEl = document.getElementById('spLocation');
+    if (locationEl) {
+      const locationText = profile.location || [profile.city, profile.country].filter(Boolean).join(', ') || 'Location';
+      locationEl.innerHTML = '<i class="fa-solid fa-location-dot"></i> ' + locationText;
+    }
     
     // Update cover background based on user type
     const cover = document.querySelector('.sp-cover');
@@ -3386,6 +3399,8 @@
       };
       const icon = sportIcons[sport] || 'fa-shoe-prints';
       sportBadge.innerHTML = `<i class="fa-solid ${icon}" style="font-size:8px"></i> ${sport}`;
+    } else if (sportBadge) {
+      sportBadge.innerHTML = '<i class="fa-solid fa-shoe-prints" style="font-size:8px"></i> Sport';
     }
 
     // Update plan pill
@@ -3454,11 +3469,24 @@
     const completionFill = document.getElementById('spCompletionFill');
     const completionPct = document.getElementById('spCompletionPct');
     if (completionFill && completionPct) {
-      const fields = ['name', 'bio', 'sport', 'city', 'country', 'avatarUrl', 'position', 'subscriptionPlan'];
+      const fields = ['displayName', 'bio', 'sport', 'primarySport', 'location', 'avatarUrl', 'position', 'subscriptionPlan'];
       const filled = fields.filter(f => profile[f]).length;
       const pct = Math.round((filled / fields.length) * 100);
       completionFill.style.width = pct + '%';
       completionPct.textContent = pct + '%';
+    }
+
+    const followersCountEl = document.getElementById('followersCount');
+    if (followersCountEl) {
+      followersCountEl.textContent = formatCount(profile.followersCount ?? profile.followers ?? 0);
+    }
+    const followingCountEl = document.getElementById('followingCount');
+    if (followingCountEl) {
+      followingCountEl.textContent = formatCount(profile.followingCount ?? profile.following ?? 0);
+    }
+    const postsCountEl = document.getElementById('postsCount');
+    if (postsCountEl) {
+      postsCountEl.textContent = formatCount(profile.postsCount ?? profile.mediaCount ?? 0);
     }
   }
   
@@ -3571,7 +3599,7 @@
   function getProfileUrl() {
     const userData = getCurrentUserData();
     const identifier = userData?.id || userData?.userId || userData?.email || userData?.userEmail || '';
-    return `pages/profiles/public-profile.html?userId=${encodeURIComponent(identifier)}`;
+    return `/pages/profiles/public-profile.html?userId=${encodeURIComponent(identifier)}`;
   }
 
   // Expose to global scope so inline onclick can reach them
@@ -3602,42 +3630,14 @@
 
   /* ====== sidebar nav ====== */
   document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', function () {
-      // Skip "soon" buttons
+    item.addEventListener('click', function (event) {
       if (this.classList.contains('soon')) {
+        event.preventDefault();
         return;
       }
 
       document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
       this.classList.add('active');
-
-      const buttonText = this.textContent.trim().toLowerCase();
-
-      if (buttonText.includes('profile')) {
-        navigateToProfile();
-      } else if (buttonText.includes('feed')) {
-        // Already on feed, do nothing
-      } else if (buttonText.includes('explore')) {
-        window.location.href = '/pages/search/search.html';
-      } else if (buttonText.includes('library')) {
-        window.location.href = '/pages/library/index.html';
-      } else if (buttonText.includes('events')) {
-        window.location.href = '/pages/events/event.html';
-      } else if (buttonText.includes('sponsor')) {
-        window.location.href = '/pages/sponsorship/sponsor.html';
-      } else if (buttonText.includes('training')) {
-        window.location.href = '/pages/profiles/edit-profile.html#section-training';
-      } else if (buttonText.includes('marketplace')) {
-        window.location.href = '/pages/marketplace/marketplace.html';
-      } else if (buttonText.includes('community')) {
-        window.location.href = '/pages/community/forums.html';
-      } else if (buttonText.includes('messages')) {
-        window.location.href = '/pages/messaging/inbox.html';
-      } else if (buttonText.includes('notifications')) {
-        window.location.href = '/pages/dashboard/notifications.html';
-      } else if (buttonText.includes('settings')) {
-        window.location.href = '/pages/dashboard/settings.html';
-      }
     });
   });
 
@@ -5104,12 +5104,13 @@ function openShareModal() {
       const _dn = ud.displayName || [ud.firstName, ud.lastName].filter(Boolean).join(' ') || 'User';
       const init = _dn.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || 'U';
       const handle = ud.email?.split('@')[0] || 'user';
+      const canonicalUrl = `${window.location.origin}/pages/profiles/public-profile.html?userId=${encodeURIComponent(ud?.id || ud?.userId || ud?.email || ud?.userEmail || handle)}`;
       const roleMap = { athlete:'Athlete', coach:'Coach', club:'Club', supportive_professional:'Pro' };
       document.getElementById('shareModalAv').textContent   = init;
       document.getElementById('shareModalName').textContent = _dn;
       document.getElementById('shareModalRole').textContent = roleMap[ud.role || ud.userType] || 'Athlete';
       document.getElementById('shareModalSport').textContent = ud.sport || '';
-      document.getElementById('shareModalUrl').textContent  = `spopeer.com/u/${handle}`;
+      document.getElementById('shareModalUrl').textContent  = canonicalUrl;
     }
     const overlay = document.getElementById('shareModalOverlay');
     if (overlay) {
@@ -5130,7 +5131,7 @@ function closeShareModal() {
 function copyShareLink() {
   const ud = getCurrentUserData();
   const handle = ud?.email?.split('@')[0] || 'user';
-  const url = `${window.location.origin}/pages/profiles/public-profile.html?userId=${encodeURIComponent(ud?.email || handle)}`;
+  const url = `${window.location.origin}/pages/profiles/public-profile.html?userId=${encodeURIComponent(ud?.id || ud?.userId || ud?.email || ud?.userEmail || handle)}`;
   navigator.clipboard?.writeText(url).catch(() => {});
   const btn = document.getElementById('shareCopyBtn');
   btn.classList.add('copied');
@@ -5144,8 +5145,9 @@ function copyShareLink() {
 function shareVia(platform) {
   const ud = getCurrentUserData();
   const handle = ud?.email?.split('@')[0] || 'user';
-  const url  = encodeURIComponent(`${window.location.origin}/pages/profiles/public-profile.html?userId=${encodeURIComponent(ud?.email || handle)}`);
-  const text = encodeURIComponent(`Check out ${ud?.name || 'my'} profile on Spopeer!`);
+  const canonical = `${window.location.origin}/pages/profiles/public-profile.html?userId=${encodeURIComponent(ud?.id || ud?.userId || ud?.email || ud?.userEmail || handle)}`;
+  const url  = encodeURIComponent(canonical);
+  const text = encodeURIComponent(`Check out ${ud?.displayName || ud?.name || 'my'} profile on Spopeer!`);
   const targets = {
     x:         `https://twitter.com/intent/tweet?url=${url}&text=${text}`,
     whatsapp:  `https://wa.me/?text=${text}%20${url}`,
