@@ -5,6 +5,8 @@ const PORT = process.env.PLAYWRIGHT_PORT || 4173;
 module.exports = defineConfig({
   testDir: './e2e',
   timeout: 60_000,
+  // Keep visual snapshot filenames stable across OSes (no -linux/-win32 suffixes).
+  snapshotPathTemplate: '{testDir}/{testFilePath}-snapshots/{arg}{ext}',
   expect: {
     timeout: 10_000
   },

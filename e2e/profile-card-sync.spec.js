@@ -20,6 +20,7 @@ async function seedAuth(page, viewer) {
 
 async function mockApi(page, options) {
   const viewer = options.viewer;
+  const authMeUser = options.authMeUser || viewer;
   const profilesById = options.profilesById || {};
 
   await page.route('**/api/**', async (route) => {
@@ -41,7 +42,7 @@ async function mockApi(page, options) {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ data: { user: viewer } })
+        body: JSON.stringify({ data: { user: authMeUser } })
       });
       return;
     }
@@ -59,7 +60,10 @@ test('Home -> Feed -> user chip -> View Profile uses canonical profile data', as
     firstName: 'Mina',
     lastName: 'Lopez',
     primarySport: 'Old Sport',
-    sport: 'Old Sport'
+    sport: 'Old Sport',
+    // Keep these populated to avoid placeholder churn if generic profile sync listeners run.
+    position: 'Forward',
+    currentTeam: 'City FC'
   });
 
   const viewerProfileFromApi = {
@@ -84,6 +88,7 @@ test('Home -> Feed -> user chip -> View Profile uses canonical profile data', as
   await seedAuth(page, viewer);
   await mockApi(page, {
     viewer,
+    authMeUser: viewerProfileFromApi,
     profilesById: {
       'viewer-1': viewerProfileFromApi,
       default: viewerProfileFromApi
@@ -198,8 +203,9 @@ test('viewing another profile ignores updates from current user', async ({ page 
     userType: 'athlete',
     sport: 'Football',
     primarySport: 'Football',
+    position: 'Striker',
     location: 'Rome, Italy',
-    visibility: { location: 'public' }
+    visibility: { location: 'public', position: 'public' }
   };
 
   await seedAuth(page, viewer);
@@ -213,6 +219,7 @@ test('viewing another profile ignores updates from current user', async ({ page 
 
   await page.goto('/pages/profiles/public-profile.html?userId=target-22');
   await expect(page.locator('#name')).toContainText('Target Athlete');
+  await expect(page.locator('#cardPosition')).toHaveText('Striker');
 
   await page.evaluate(() => {
     window.dispatchEvent(new CustomEvent('profileSyncUpdated', {
@@ -231,7 +238,7 @@ test('viewing another profile ignores updates from current user', async ({ page 
   });
 
   await expect(page.locator('#name')).toContainText('Target Athlete');
-  await expect(page.locator('#sport')).toHaveText('Football');
+  await expect(page.locator('#cardPosition')).toHaveText('Striker');
 });
 
 test('stale profile updates are ignored by timestamp guard', async ({ page }) => {
