@@ -10,6 +10,7 @@
   <script src="/js/sanitize.js"></script>
   <script src="/js/auth-guard.js"></script>
   <script src="/js/api.js"></script>
+  <script src="/js/profile-normalizer.js"></script>
   <script src="/js/current-user-store.js"></script>
   <script src="/js/user-ui.js"></script>
   <script>
@@ -3035,20 +3036,63 @@
     try { return JSON.parse(localStorage.getItem('spopeer_user') || '{}') || {}; } catch { return {}; }
   }
 
-  // Wire store updates to hydrate sidebar and bind chips
-  if (window.CurrentUserStore) {
-    window.CurrentUserStore.subscribe(user => {
-      hydrateSidebarProfile(user);
-      if (window.UserUI) window.UserUI.bindAllChips();
-    });
-    // initial run
-    hydrateSidebarProfile(window.CurrentUserStore.getCurrentUser());
-    if (window.UserUI) window.UserUI.bindAllChips();
+  function normalizeFeedProfile(user) {
+    if (!user) return {};
+    if (window.ProfileNormalizer && typeof window.ProfileNormalizer.normalizeProfile === 'function') {
+      return window.ProfileNormalizer.normalizeProfile(user);
+    }
+    return user;
   }
 
-  // Apply chosen card style on feed sidebar
-  (function applyFeedCardStyle() {
-    var user = getCurrentUserData();
+  function formatExperience(user) {
+    var raw = user.experience || user.sportsYears || user.profExperience || user.yearsOfExperience || user.yearsOfCoaching;
+    if (raw === undefined || raw === null || raw === '') return '';
+    var num = Number(raw);
+    if (!Number.isNaN(num)) return String(num) + ' years';
+    return String(raw);
+  }
+
+  function getFeedRoleFields(user) {
+    var role = user.userType || user.role || 'athlete';
+    var map = {
+      athlete: [
+        { label: 'Sport', value: user.primarySport || user.sport || '' },
+        { label: 'Position', value: user.position || '' },
+        { label: 'Team', value: user.currentTeam || '' },
+        { label: 'Level', value: user.playingLevel || user.sportsLevel || '' },
+        { label: 'Location', value: user.location || [user.city, user.country].filter(Boolean).join(', ') },
+        { label: 'Experience', value: formatExperience(user) }
+      ],
+      coach: [
+        { label: 'Sport', value: user.primarySport || user.sport || '' },
+        { label: 'Specialty', value: user.specialization || user.position || '' },
+        { label: 'Team', value: user.currentTeam || '' },
+        { label: 'Style', value: user.coachingStyle || user.playingLevel || user.sportsLevel || '' },
+        { label: 'Location', value: user.location || [user.city, user.country].filter(Boolean).join(', ') },
+        { label: 'Experience', value: formatExperience(user) }
+      ],
+      club: [
+        { label: 'Sport', value: user.primarySport || user.sport || '' },
+        { label: 'Founded', value: user.foundedYear ? String(user.foundedYear) : '' },
+        { label: 'Teams', value: user.teamsAndDivisions || user.currentTeam || '' },
+        { label: 'Type', value: user.clubType || user.facilities || '' },
+        { label: 'Location', value: user.location || [user.city, user.country].filter(Boolean).join(', ') },
+        { label: 'Years', value: formatExperience(user) }
+      ],
+      supportive_professional: [
+        { label: 'Sport', value: user.primarySport || user.sport || '' },
+        { label: 'Specialty', value: user.specializationField || user.specialization || '' },
+        { label: 'Org', value: user.companyName || user.currentTeam || '' },
+        { label: 'Title', value: user.professionalTitle || '' },
+        { label: 'Location', value: user.location || [user.city, user.country].filter(Boolean).join(', ') },
+        { label: 'Experience', value: formatExperience(user) }
+      ]
+    };
+    return map[role] || map.athlete;
+  }
+
+  function applyFeedCardStyle(userInput) {
+    var user = normalizeFeedProfile(userInput || getCurrentUserData());
     var style = (user && user.profileCardStyle) || 'card-stack';
     var valid = ['card-stack', 'minimal-list', 'sports-card'];
     if (valid.indexOf(style) === -1) style = 'card-stack';
@@ -3059,6 +3103,7 @@
 
     var name = user.displayName || ((user.firstName || '') + ' ' + (user.lastName || '')).trim() || 'User';
     var initials = name.split(' ').map(function(n){ return n[0] || ''; }).join('').toUpperCase().slice(0,2) || '?';
+    var fields = getFeedRoleFields(user).filter(function(field) { return !!field.value; });
 
     // Populate minimal-list variant
     if (style === 'minimal-list') {
@@ -3076,9 +3121,10 @@
       var mlFields = document.getElementById('feed-ml-fields');
       if (mlFields) {
         var rows = '';
-        [{k:'sport',l:'Sport'},{k:'location',l:'Location'},{k:'playingLevel',l:'Level'},{k:'position',l:'Position'},{k:'currentTeam',l:'Team'}].forEach(function(f) {
-          if (user[f.k]) rows += '<div class="feed-pc-minimal-row"><span class="feed-pc-minimal-fl">' + f.l + '</span><span class="feed-pc-minimal-fv">' + user[f.k] + '</span></div>';
+        fields.forEach(function(field) {
+          rows += '<div class="feed-pc-minimal-row"><span class="feed-pc-minimal-fl">' + field.label + '</span><span class="feed-pc-minimal-fv">' + field.value + '</span></div>';
         });
+        if (!rows) rows = '<div class="feed-pc-minimal-row"><span class="feed-pc-minimal-fl">No profile fields yet</span></div>';
         mlFields.innerHTML = rows;
       }
     }
@@ -3099,20 +3145,37 @@
       var scPills = document.getElementById('feed-sc-pills');
       if (scPills) {
         var pills = '';
-        if (user.position) pills += '<span class="feed-pc-sports-pill feed-pc-sports-pill--pos">' + user.position + '</span>';
-        if (user.playingLevel) pills += '<span class="feed-pc-sports-pill feed-pc-sports-pill--lvl">' + user.playingLevel + '</span>';
+        if (fields[1]) pills += '<span class="feed-pc-sports-pill feed-pc-sports-pill--pos">' + fields[1].value + '</span>';
+        if (fields[3]) pills += '<span class="feed-pc-sports-pill feed-pc-sports-pill--lvl">' + fields[3].value + '</span>';
         scPills.innerHTML = pills;
       }
       var scFields = document.getElementById('feed-sc-fields');
       if (scFields) {
         var tiles = '';
-        [{k:'sport',l:'Sport'},{k:'location',l:'Location'},{k:'currentTeam',l:'Team'},{k:'nationality',l:'Nationality'}].forEach(function(f) {
-          if (user[f.k]) tiles += '<div class="feed-pc-sports-tile"><div class="feed-pc-sports-tile-label">' + f.l + '</div><div class="feed-pc-sports-tile-val">' + user[f.k] + '</div></div>';
+        fields.forEach(function(field) {
+          tiles += '<div class="feed-pc-sports-tile"><div class="feed-pc-sports-tile-label">' + field.label + '</div><div class="feed-pc-sports-tile-val">' + field.value + '</div></div>';
         });
+        if (!tiles) tiles = '<div class="feed-pc-sports-tile"><div class="feed-pc-sports-tile-label">No profile fields yet</div></div>';
         scFields.innerHTML = tiles;
       }
     }
-  })();
+  }
+
+  // Wire store updates to hydrate sidebar and bind chips
+  if (window.CurrentUserStore) {
+    window.CurrentUserStore.subscribe(user => {
+      hydrateSidebarProfile(user);
+      applyFeedCardStyle(user);
+      if (window.UserUI) window.UserUI.bindAllChips();
+    });
+    // initial run
+    var initialUser = window.CurrentUserStore.getCurrentUser();
+    hydrateSidebarProfile(initialUser);
+    applyFeedCardStyle(initialUser);
+    if (window.UserUI) window.UserUI.bindAllChips();
+  } else {
+    applyFeedCardStyle(getCurrentUserData());
+  }
   
   // Hydration of avatars/names is handled centrally by CurrentUserStore and UserUI
 
@@ -3153,6 +3216,7 @@
 
     // Call sidebar hydration for user type-specific styling
     hydrateSidebarProfile(profile);
+    applyFeedCardStyle(profile);
   }
 
   // Format count for display (e.g. 1200 → "1.2K")
@@ -5710,24 +5774,6 @@ function escapeHtml(text) {
   };
   return (text || '').replace(/[&<>"']/g, m => map[m]);
 }
-</script>
-
-<script>
-  /* ====== user name sync from Auth ====== */
-  document.addEventListener('DOMContentLoaded', function() {
-    const user = window.Auth && window.Auth.getUser ? window.Auth.getUser() : null;
-    if (!user) return;
-    const fullName = user.displayName
-      || (((user.firstName || '') + ' ' + (user.lastName || '')).trim())
-      || 'User';
-    document.querySelectorAll('#chipName, .chip-name, #profileName, .sp-name').forEach(function(el) {
-      el.textContent = fullName;
-    });
-    // Also populate handle/email targets
-    document.querySelectorAll('#chipHandle, .chip-handle, .sp-handle').forEach(function(el) {
-      if (user.email) el.textContent = '@' + user.email.split('@')[0];
-    });
-  });
 </script>
 
 <script>

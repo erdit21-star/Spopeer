@@ -129,8 +129,10 @@
       return setCurrentUser(user);
     } catch (err) {
       console.warn('Failed to refresh current user:', err);
-      clearCurrentUser();
-      return null;
+      // Keep the last known user to avoid chip/card flicker across pages.
+      currentUser = getStoredUser();
+      emit();
+      return currentUser;
     }
   }
 
@@ -139,6 +141,15 @@
       currentUser = getStoredUser();
     }
     return currentUser;
+  }
+
+  function syncFromStorage() {
+    const next = getStoredUser();
+    const prevJson = JSON.stringify(currentUser || null);
+    const nextJson = JSON.stringify(next || null);
+    if (prevJson === nextJson) return;
+    currentUser = next;
+    emit();
   }
 
   function isLoggedIn() {
@@ -164,4 +175,13 @@
     isLoggedIn,
     subscribe
   };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', function (event) {
+      if (!event) return;
+      if (event.key === 'spopeer_user' || event.key === 'user' || event.key === '_profileLastUpdated_') {
+        syncFromStorage();
+      }
+    });
+  }
 })();
