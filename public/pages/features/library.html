@@ -212,7 +212,7 @@
 
     <button class="nav-item" onclick="window.location.href='../../feed.html'"><i class="fa-solid fa-house"></i> Home</button>
     <button class="nav-item active"><i class="fa-regular fa-bookmark"></i> Library</button>
-    <button class="nav-item" onclick="window.location.href='../../pages/features/athlete-read-more.html'"><i class="fa-regular fa-calendar"></i> Events <span class="nav-badge">3</span></button>
+    <button class="nav-item" onclick="window.location.href='../../pages/events/event.html'"><i class="fa-regular fa-calendar"></i> Events <span class="nav-badge">3</span></button>
     <button class="nav-item" onclick="window.location.href='../../pages/sponsorship/sponsor.html'"><i class="fa-solid fa-handshake-angle"></i> Sponsorship</button>
     <button class="nav-item" onclick="if (window.SpopeerToast) window.SpopeerToast.info('Training page coming soon')"><i class="fa-solid fa-dumbbell"></i> Training</button>
     <button class="nav-item" onclick="window.location.href='../../pages/community/forums.html'"><i class="fa-regular fa-hand-peace"></i> Community</button>
@@ -662,10 +662,14 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="/js/navigation.js"></script>
 <script src="/js/current-user-store.js"></script>
 <script src="/js/user-ui.js"></script>
+<script src="/js/shared-ui.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', async function () {
     if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
     if (window.UserUI) window.UserUI.bindAllChips();
+    if (window.sharedUi && typeof window.sharedUi.setupSocialFeedRuntime === 'function') {
+      window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+    }
   });
 </script>
 </body>

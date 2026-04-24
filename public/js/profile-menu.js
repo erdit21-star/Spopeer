@@ -8,16 +8,16 @@
 
   /* ── Helpers ── */
   function getEditProfileUrl() {
-    return 'edit-profile.html';
+    return '/pages/profiles/edit-profile.html';
   }
 
   function getProfileUrl() {
     if (window.SpopeerProfileIdentity) {
-      return 'public-profile.html?userId=' + encodeURIComponent(window.SpopeerProfileIdentity.getStableId());
+      return '/pages/profiles/public-profile.html?userId=' + encodeURIComponent(window.SpopeerProfileIdentity.getStableId());
     }
     var u = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
     var identifier = (u && (u.id || u.userId || u.email || u.userEmail)) || '';
-    return 'public-profile.html?userId=' + encodeURIComponent(identifier);
+    return '/pages/profiles/public-profile.html?userId=' + encodeURIComponent(identifier);
   }
 
   function navigateToProfile() { window.location.href = getProfileUrl(); }
@@ -88,22 +88,22 @@
     switch (action) {
       case 'view-profile': navigateToProfile(); break;
       case 'edit-profile': navigateToEditProfile(); break;
-      case 'your-activity': window.location.href = 'user-posts.html'; break;
-      case 'account-settings': window.location.href = '../dashboard/settings.html'; break;
-      case 'notifications': window.location.href = '../dashboard/notifications.html'; break;
-      case 'privacy': window.location.href = '../legal/privacy.html'; break;
-      case 'connections': window.location.href = '../messaging/inbox.html'; break;
-      case 'library': window.location.href = '../library/index.html'; break;
-      case 'events': window.location.href = '../events/event.html'; break;
-      case 'help': window.location.href = '../company/help-center.html'; break;
-      case 'report': window.location.href = '../contact/index.html'; break;
-      case 'changelog': window.location.href = '../company/changelog.html'; break;
-      case 'my-analytics': window.location.href = '../marketplace/analytics.html'; break;
-      case 'achievements': window.location.href = 'user-posts.html'; break;
-      case 'my-sports': window.location.href = 'edit-profile.html#section-sports'; break;
-      case 'invite-friends': window.location.href = '../contact/index.html'; break;
+      case 'your-activity': window.location.href = '/pages/profiles/user-posts.html'; break;
+      case 'account-settings': window.location.href = '/pages/dashboard/settings.html'; break;
+      case 'notifications': window.location.href = '/pages/dashboard/notifications.html'; break;
+      case 'privacy': window.location.href = '/pages/legal/privacy.html'; break;
+      case 'connections': window.location.href = '/pages/messaging/inbox.html'; break;
+      case 'library': window.location.href = '/pages/library/index.html'; break;
+      case 'events': window.location.href = '/pages/events/event.html'; break;
+      case 'help': window.location.href = '/pages/company/help-center.html'; break;
+      case 'report': window.location.href = '/pages/contact/index.html'; break;
+      case 'changelog': window.location.href = '/pages/company/changelog.html'; break;
+      case 'my-analytics': window.location.href = '/pages/marketplace/analytics.html'; break;
+      case 'achievements': window.location.href = '/pages/profiles/user-posts.html'; break;
+      case 'my-sports': window.location.href = '/pages/profiles/edit-profile.html#section-sports'; break;
+      case 'invite-friends': window.location.href = '/pages/contact/index.html'; break;
       case 'download-data': downloadUserData(); break;
-      case 'switch-account': window.location.href = '../auth/login.html'; break;
+      case 'switch-account': window.location.href = '/pages/auth/login.html'; break;
       case 'logout':
         ['spopeer_token','spopeer_user','spopeer_loggedIn','authToken','token','user','userToken','userData'].forEach(function(key){ localStorage.removeItem(key); });
         window.location.href = '/index.html';
