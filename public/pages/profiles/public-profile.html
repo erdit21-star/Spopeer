@@ -35,6 +35,7 @@
     .profile-type-badge{display:inline-flex;align-items:center;gap:5px;background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--pill);margin-bottom:8px}
     .profile-meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-bottom:5px}
     .profile-meta-item i{width:14px;text-align:center;font-size:12px;color:var(--muted-2)}
+    .profile-meta-label{font-size:11px;color:var(--muted-2);font-weight:700;letter-spacing:.01em}
     .profile-bio{font-size:13px;color:var(--ink-2);line-height:1.6;margin:12px 0;font-weight:300}
     .profile-stats-row{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:12px -20px;padding:0}
     .pstat{flex:1;text-align:center;padding:12px 6px;border-right:1px solid var(--border)}
@@ -240,6 +241,7 @@
 </style>
   <script src="../../js/api.js"></script>
   <script src="../../js/profile-identity.js"></script>
+  <script src="../../js/profile-normalizer.js"></script>
   <script src="../../js/profile-sync-service.js"></script>
   <script src="/js/current-user-store.js"></script>
   <script src="/js/user-ui.js"></script>
@@ -361,8 +363,12 @@
           <i class="fa-solid fa-circle-check verified-icon" id="verifiedBadge" style="display:none"></i>
         </div>
         <div class="profile-type-badge" id="userType"><i class="fa-solid fa-user" style="font-size:10px"></i> User</div>
-        <div class="profile-meta-item"><i class="fa-solid fa-futbol"></i> <span id="sport">-</span></div>
-        <div class="profile-meta-item"><i class="fa-solid fa-location-dot"></i> <span id="location">-</span></div>
+        <div class="profile-meta-item" id="metaSportRow"><i class="fa-solid fa-futbol"></i> <span class="profile-meta-label" id="metaSportLabel">Sport:</span> <span id="sport">-</span></div>
+        <div class="profile-meta-item" id="metaPositionRow"><i class="fa-solid fa-shirt"></i> <span class="profile-meta-label" id="metaPositionLabel">Position:</span> <span id="cardPosition">-</span></div>
+        <div class="profile-meta-item" id="metaTeamRow"><i class="fa-solid fa-people-group"></i> <span class="profile-meta-label" id="metaTeamLabel">Team:</span> <span id="cardTeam">-</span></div>
+        <div class="profile-meta-item" id="metaLevelRow"><i class="fa-solid fa-signal"></i> <span class="profile-meta-label" id="metaLevelLabel">Level:</span> <span id="cardLevel">-</span></div>
+        <div class="profile-meta-item" id="metaLocationRow"><i class="fa-solid fa-location-dot"></i> <span class="profile-meta-label" id="metaLocationLabel">Location:</span> <span id="location">-</span></div>
+        <div class="profile-meta-item" id="metaExperienceRow"><i class="fa-regular fa-clock"></i> <span class="profile-meta-label" id="metaExperienceLabel">Experience:</span> <span id="cardExperience">-</span></div>
         <div class="profile-bio" id="bio"></div>
         <div class="profile-stats-row">
           <div class="pstat"><div class="pstat-num" id="followers">0</div><div class="pstat-label">Followers</div></div>
@@ -646,6 +652,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
 
   let payload={};
   let profileFound=false;
+  let lastAppliedProfileTs = 0;
   
   // Build headers — include auth cookie so server can identify the viewer
   const _headers = {};
@@ -692,6 +699,12 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   if(!payload||!Object.keys(payload).length){
     payload={};
     profileFound=false;
+  } else {
+    payload = getNormalizer().withProfileTimestamp
+      ? getNormalizer().withProfileTimestamp(payload, payload._profileUpdatedAt || Date.now())
+      : payload;
+    payload = normalizeProfile(payload);
+    lastAppliedProfileTs = Number(getNormalizer().getProfileTimestamp ? getNormalizer().getProfileTimestamp(payload) : (payload._profileUpdatedAt || Date.now()));
   }
   
   // Visibility helper — respect per-field privacy settings
@@ -709,8 +722,183 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     return privateByDefault.indexOf(fieldName) === -1;
   }
 
+  function getNormalizer() {
+    return window.ProfileNormalizer || {
+      normalizeProfile: function (profile) { return profile || {}; },
+      withProfileTimestamp: function (profile) { return profile || {}; },
+      getProfileTimestamp: function (profile) { return Number((profile && profile._profileUpdatedAt) || 0) || 0; },
+      isIncomingNewer: function (incoming, current) { return Number(incoming || 0) >= Number(current || 0); },
+      matchesIdentifier: function (profile, target) {
+        var id = String(target || '').toLowerCase();
+        if (!id) return false;
+        var ids = [profile && profile.id, profile && profile.userId, profile && profile.email, profile && profile.userEmail]
+          .filter(function (v) { return v !== undefined && v !== null && String(v).trim() !== ''; })
+          .map(function (v) { return String(v).toLowerCase(); });
+        return ids.indexOf(id) !== -1;
+      }
+    };
+  }
+
+  function normalizeProfile(profile) {
+    return getNormalizer().normalizeProfile(profile || {});
+  }
+
+  function formatExperience(profile) {
+    var raw = profile.experience || profile.sportsYears || profile.profExperience || profile.yearsOfExperience || profile.yearsOfCoaching;
+    if (!raw && raw !== 0) return '';
+    var num = Number(raw);
+    if (!Number.isNaN(num) && num > 0) return String(num) + ' years';
+    if (!Number.isNaN(num) && num === 0) return '0 years';
+    return String(raw);
+  }
+
+  function normalizeLocation(profile) {
+    if (profile.location) return profile.location;
+    var fallback = [profile.city, profile.country].filter(Boolean).join(', ');
+    return fallback || '';
+  }
+
+  function getCoreSportCardData(profile) {
+    var data = normalizeProfile(profile || {});
+    var fullName = data.displayName || (String(data.firstName || '') + ' ' + String(data.lastName || '')).trim() || data.name || 'Spopeer User';
+    return {
+      name: fullName,
+      avatarUrl: data.avatarUrl || data.avatar || '',
+      sport: data.primarySport || data.sport || '',
+      location: normalizeLocation(data),
+      position: data.position || '',
+      currentTeam: data.currentTeam || '',
+      playingLevel: data.playingLevel || data.sportsLevel || '',
+      experienceLabel: formatExperience(data),
+      followers: String(data.followersCount ?? data.followers ?? 0),
+      following: String(data.followingCount ?? data.following ?? 0),
+      mediaCount: String(data.postsCount ?? data.mediaCount ?? 0)
+    };
+  }
+
+  function getRoleEmptyPlaceholder(role, label) {
+    var placeholders = {
+      athlete: {
+        Position: 'Position not set',
+        Team: 'Team not set',
+        Level: 'Level not set',
+        Location: 'Location not set',
+        Experience: 'Experience not set'
+      },
+      coach: {
+        Specialty: 'Specialty not set',
+        Team: 'Team not set',
+        Style: 'Style not set',
+        Location: 'Location not set',
+        Experience: 'Experience not set'
+      },
+      club: {
+        Founded: 'Year not set',
+        Teams: 'Teams not set',
+        Type: 'Type not set',
+        Location: 'Location not set',
+        Years: 'Years not set'
+      },
+      supportive_professional: {
+        Specialty: 'Specialty not set',
+        Org: 'Organization not set',
+        Title: 'Title not set',
+        Location: 'Location not set',
+        Experience: 'Experience not set'
+      }
+    };
+    var roleMap = placeholders[role] || placeholders.athlete;
+    return roleMap[label] || 'Not set';
+  }
+
+  function setMetaRow(rowId, valueId, labelId, labelText, value, visible, iconClass, placeholderText) {
+    var rowEl = document.getElementById(rowId);
+    var valueEl = document.getElementById(valueId);
+    var labelEl = document.getElementById(labelId);
+    if (!rowEl || !valueEl || !labelEl) return;
+    if (iconClass) {
+      var iconEl = rowEl.querySelector('i');
+      if (iconEl) iconEl.className = iconClass;
+    }
+    labelEl.textContent = (labelText || '').trim() + ':';
+    if (visible) {
+      valueEl.textContent = value || placeholderText || 'Not set';
+      valueEl.style.color = value ? '' : 'var(--muted)';
+      rowEl.style.display = 'flex';
+    } else {
+      rowEl.style.display = 'none';
+    }
+  }
+
+  function getCardStackRoleRows(profile, core) {
+    var role = profile.userType || 'athlete';
+    var rowsByRole = {
+      athlete: [
+        { rowId:'metaSportRow', valueId:'sport', labelId:'metaSportLabel', label:'Sport', value:core.sport, visible:true, icon:'fa-solid fa-futbol' },
+        { rowId:'metaPositionRow', valueId:'cardPosition', labelId:'metaPositionLabel', label:'Position', value:core.position, visible:isVisible(profile, 'position'), icon:'fa-solid fa-shirt' },
+        { rowId:'metaTeamRow', valueId:'cardTeam', labelId:'metaTeamLabel', label:'Team', value:core.currentTeam, visible:isVisible(profile, 'currentTeam'), icon:'fa-solid fa-people-group' },
+        { rowId:'metaLevelRow', valueId:'cardLevel', labelId:'metaLevelLabel', label:'Level', value:core.playingLevel, visible:isVisible(profile, 'playingLevel'), icon:'fa-solid fa-signal' },
+        { rowId:'metaLocationRow', valueId:'location', labelId:'metaLocationLabel', label:'Location', value:core.location, visible:isVisible(profile, 'location'), icon:'fa-solid fa-location-dot' },
+        { rowId:'metaExperienceRow', valueId:'cardExperience', labelId:'metaExperienceLabel', label:'Experience', value:core.experienceLabel, visible:isVisible(profile, 'experience'), icon:'fa-regular fa-clock' }
+      ],
+      coach: [
+        { rowId:'metaSportRow', valueId:'sport', labelId:'metaSportLabel', label:'Sport', value:core.sport, visible:true, icon:'fa-solid fa-futbol' },
+        { rowId:'metaPositionRow', valueId:'cardPosition', labelId:'metaPositionLabel', label:'Specialty', value:profile.specialization || core.position, visible:isVisible(profile, 'specialization') || isVisible(profile, 'position'), icon:'fa-solid fa-bullseye' },
+        { rowId:'metaTeamRow', valueId:'cardTeam', labelId:'metaTeamLabel', label:'Team', value:core.currentTeam, visible:isVisible(profile, 'currentTeam'), icon:'fa-solid fa-people-group' },
+        { rowId:'metaLevelRow', valueId:'cardLevel', labelId:'metaLevelLabel', label:'Style', value:profile.coachingStyle || core.playingLevel, visible:isVisible(profile, 'coachingStyle') || isVisible(profile, 'playingLevel'), icon:'fa-solid fa-chalkboard-user' },
+        { rowId:'metaLocationRow', valueId:'location', labelId:'metaLocationLabel', label:'Location', value:core.location, visible:isVisible(profile, 'location'), icon:'fa-solid fa-location-dot' },
+        { rowId:'metaExperienceRow', valueId:'cardExperience', labelId:'metaExperienceLabel', label:'Experience', value:core.experienceLabel, visible:isVisible(profile, 'experience'), icon:'fa-regular fa-clock' }
+      ],
+      club: [
+        { rowId:'metaSportRow', valueId:'sport', labelId:'metaSportLabel', label:'Sport', value:core.sport, visible:true, icon:'fa-solid fa-futbol' },
+        { rowId:'metaPositionRow', valueId:'cardPosition', labelId:'metaPositionLabel', label:'Founded', value:profile.foundedYear ? String(profile.foundedYear) : '', visible:isVisible(profile, 'foundedYear'), icon:'fa-solid fa-calendar-days' },
+        { rowId:'metaTeamRow', valueId:'cardTeam', labelId:'metaTeamLabel', label:'Teams', value:profile.teamsAndDivisions || core.currentTeam, visible:isVisible(profile, 'teamsAndDivisions') || isVisible(profile, 'currentTeam'), icon:'fa-solid fa-shield-halved' },
+        { rowId:'metaLevelRow', valueId:'cardLevel', labelId:'metaLevelLabel', label:'Type', value:profile.clubType || profile.facilities || core.playingLevel, visible:isVisible(profile, 'clubType') || isVisible(profile, 'facilities') || isVisible(profile, 'playingLevel'), icon:'fa-solid fa-building' },
+        { rowId:'metaLocationRow', valueId:'location', labelId:'metaLocationLabel', label:'Location', value:core.location, visible:isVisible(profile, 'location'), icon:'fa-solid fa-location-dot' },
+        { rowId:'metaExperienceRow', valueId:'cardExperience', labelId:'metaExperienceLabel', label:'Years', value:core.experienceLabel, visible:isVisible(profile, 'experience'), icon:'fa-regular fa-clock' }
+      ],
+      supportive_professional: [
+        { rowId:'metaSportRow', valueId:'sport', labelId:'metaSportLabel', label:'Sport', value:core.sport, visible:true, icon:'fa-solid fa-futbol' },
+        { rowId:'metaPositionRow', valueId:'cardPosition', labelId:'metaPositionLabel', label:'Specialty', value:profile.specializationField || profile.specialization || core.position, visible:isVisible(profile, 'specializationField') || isVisible(profile, 'specialization') || isVisible(profile, 'position'), icon:'fa-solid fa-star' },
+        { rowId:'metaTeamRow', valueId:'cardTeam', labelId:'metaTeamLabel', label:'Org', value:profile.companyName || core.currentTeam, visible:isVisible(profile, 'companyName') || isVisible(profile, 'currentTeam'), icon:'fa-solid fa-briefcase' },
+        { rowId:'metaLevelRow', valueId:'cardLevel', labelId:'metaLevelLabel', label:'Title', value:profile.professionalTitle || core.playingLevel, visible:isVisible(profile, 'professionalTitle') || isVisible(profile, 'playingLevel'), icon:'fa-solid fa-id-badge' },
+        { rowId:'metaLocationRow', valueId:'location', labelId:'metaLocationLabel', label:'Location', value:core.location, visible:isVisible(profile, 'location'), icon:'fa-solid fa-location-dot' },
+        { rowId:'metaExperienceRow', valueId:'cardExperience', labelId:'metaExperienceLabel', label:'Experience', value:core.experienceLabel, visible:isVisible(profile, 'experience'), icon:'fa-regular fa-clock' }
+      ]
+    };
+
+    return (rowsByRole[role] || rowsByRole.athlete).map(function (row) {
+      return Object.assign({}, row, {
+        placeholder: getRoleEmptyPlaceholder(role, row.label)
+      });
+    });
+  }
+
+  function getCompactVariantFields(profile, core) {
+    return getCardStackRoleRows(profile, core).map(function(row) {
+      return {
+        label: row.label,
+        value: row.value,
+        visible: row.visible
+      };
+    });
+  }
+
+  function getCompactPills(fields) {
+    return (fields || []).filter(function(field) {
+      return field.visible && field.value && field.label !== 'Sport' && field.label !== 'Location' && field.label !== 'Experience' && field.label !== 'Years';
+    }).slice(0, 2);
+  }
+
+  function matchesViewedProfile(profile) {
+    if (!profile) return false;
+    if (!userId) return isOwnProfile;
+    return getNormalizer().matchesIdentifier(profile, String(userId).toLowerCase());
+  }
+
   // Update UI with profile data
   function updateUI(profile) {
+    profile = normalizeProfile(profile);
     // STEP 7: Show "Profile not found" message if no profile data
     if(!profile||!Object.keys(profile).length){
       document.getElementById('avatar').innerHTML='<i class="fa-solid fa-question" style="font-size:32px; color:#999"></i>';
@@ -724,12 +912,13 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       return;
     }
     
-    const name=profile.displayName||`${profile.firstName||''} ${profile.lastName||''}`.trim()||'Spopeer User';
+    const core = getCoreSportCardData(profile);
+    const name = core.name;
     const initials=name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
     document.title=`${name} — Spopeer`;
     const avatarEl=document.getElementById('avatar');
-    if(profile.avatarUrl||profile.avatar){
-      avatarEl.innerHTML=`<img src="${profile.avatarUrl||profile.avatar}" alt="${name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    if(core.avatarUrl){
+      avatarEl.innerHTML=`<img src="${core.avatarUrl}" alt="${name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
     } else {
       avatarEl.textContent=initials;
     }
@@ -739,30 +928,25 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       if(coverEl) coverEl.style.background=`url('${coverUrl}') center/cover no-repeat`;
     }
     document.getElementById('name').textContent=name;
-    document.getElementById('sport').textContent=profile.sport||profile.primarySport||'-';
-    if (isVisible(profile, 'location')) {
-      document.getElementById('location').textContent=profile.location||'-';
-    } else {
-      document.getElementById('location').textContent=isOwnProfile ? '' : '-';
-      if (isOwnProfile && profile.location) document.getElementById('location').innerHTML='<span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-lock" style="font-size:10px"></i> Hidden</span>';
-    }
-    if (isVisible(profile, 'bio')) {
-      document.getElementById('bio').textContent=profile.bio||'';
-    } else if (isOwnProfile && profile.bio) {
-      document.getElementById('bio').innerHTML='<span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-lock" style="font-size:10px"></i> Bio hidden from visitors</span>';
-    } else {
-      document.getElementById('bio').textContent='';
+    getCardStackRoleRows(profile, core).forEach(function(row) {
+      setMetaRow(row.rowId, row.valueId, row.labelId, row.label, row.value, row.visible, row.icon, row.placeholder);
+    });
+
+    var bioEl = document.getElementById('bio');
+    if (bioEl) {
+      bioEl.textContent = '';
+      bioEl.style.display = 'none';
     }
     const typeMap={athlete:{label:'Athlete',icon:'fa-person-running'},coach:{label:'Coach',icon:'fa-bullseye'},club:{label:'Club',icon:'fa-shield-halved'},'supportive_professional':{label:'Support Pro',icon:'fa-star'}};
     const t=typeMap[profile.userType]||{label:'User',icon:'fa-user'};
     document.getElementById('userType').innerHTML=`<i class="fa-solid ${t.icon}" style="font-size:10px"></i> ${t.label}`;
-    document.getElementById('followers').textContent=String(profile.followersCount ?? profile.followers ?? 0);
-    document.getElementById('following').textContent=String(profile.followingCount ?? profile.following ?? 0);
-    document.getElementById('mediaCount').textContent=String(profile.postsCount ?? profile.mediaCount ?? 0);
+    document.getElementById('followers').textContent=core.followers;
+    document.getElementById('following').textContent=core.following;
+    document.getElementById('mediaCount').textContent=core.mediaCount;
     document.getElementById('joined-date').textContent=profile.createdAt?new Date(profile.createdAt).toLocaleDateString('en',{month:'long',year:'numeric'}):'-';
-    document.getElementById('primary-sport').textContent=profile.primarySport||profile.sport||'-';
-    document.getElementById('experience').textContent=profile.experience?profile.experience+' years':'N/A';
-    document.getElementById('stat-media').textContent=String(profile.postsCount ?? profile.mediaCount ?? 0);
+    document.getElementById('primary-sport').textContent=core.sport||'-';
+    document.getElementById('experience').textContent=core.experienceLabel || 'N/A';
+    document.getElementById('stat-media').textContent=core.mediaCount;
 
     /* About extra info — expanded per user type */
     const extras=[];
@@ -1045,7 +1229,9 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   updateUI(payload);
 
   // Apply chosen card style variant
-  (function applyCardStyle(data) {
+  function applyCardStyle(data) {
+    data = normalizeProfile(data || {});
+    var core = getCoreSportCardData(data);
     var style = (data && data.profileCardStyle) || 'card-stack';
     var valid = ['card-stack', 'minimal-list', 'sports-card'];
     if (valid.indexOf(style) === -1) style = 'card-stack';
@@ -1056,12 +1242,13 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
 
     // Populate minimal-list variant
     if (style === 'minimal-list') {
-      var name = data.displayName || ((data.firstName || '') + ' ' + (data.lastName || '')).trim() || 'User';
+      var compactFields = getCompactVariantFields(data, core);
+      var name = core.name || 'User';
       var initials = name.split(' ').map(function(n){ return n[0]; }).join('').toUpperCase().slice(0,2);
       var mlAv = document.getElementById('ml-avatar');
       if (mlAv) {
-        if (data.avatarUrl || data.avatar) {
-          mlAv.innerHTML = '<img src="' + (data.avatarUrl || data.avatar) + '" alt="' + name + '">';
+        if (core.avatarUrl) {
+          mlAv.innerHTML = '<img src="' + core.avatarUrl + '" alt="' + name + '">';
         } else {
           mlAv.textContent = initials;
         }
@@ -1069,33 +1256,28 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       var mlName = document.getElementById('ml-name');
       if (mlName) mlName.textContent = name;
       var mlSub = document.getElementById('ml-sub');
-      if (mlSub) mlSub.textContent = data.sport || data.primarySport || data.profession || 'User';
+      if (mlSub) mlSub.textContent = core.sport || data.profession || 'User';
       var mlFollowers = document.getElementById('ml-followers');
-      if (mlFollowers) mlFollowers.textContent = String(data.followersCount || data.followers || 0);
+      if (mlFollowers) mlFollowers.textContent = core.followers;
       var mlFollowing = document.getElementById('ml-following');
-      if (mlFollowing) mlFollowing.textContent = String(data.followingCount || data.following || 0);
+      if (mlFollowing) mlFollowing.textContent = core.following;
       var mlMedia = document.getElementById('ml-media');
-      if (mlMedia) mlMedia.textContent = String(data.postsCount || data.mediaCount || 0);
+      if (mlMedia) mlMedia.textContent = core.mediaCount;
 
       // Build field rows
       var mlFields = document.getElementById('ml-fields');
       if (mlFields) {
         var rows = '';
-        var fieldDefs = [
-          {k:'sport', l:'Sport'}, {k:'location', l:'Location'}, {k:'bio', l:'Bio'},
-          {k:'playingLevel', l:'Level'}, {k:'position', l:'Position'}, {k:'currentTeam', l:'Team'},
-          {k:'nationality', l:'Nationality'}, {k:'experience', l:'Experience'}
-        ];
-        fieldDefs.forEach(function(f) {
-          if (isVisible(data, f.k) && data[f.k]) {
-            rows += '<div class="pc-minimal-row"><span class="pc-minimal-fl">' + f.l + '</span><span class="pc-minimal-fv">' + data[f.k] + '</span></div>';
+        compactFields.forEach(function(field) {
+          if (field.visible) {
+            rows += '<div class="pc-minimal-row"><span class="pc-minimal-fl">' + field.label + '</span><span class="pc-minimal-fv" style="' + (field.value ? '' : 'color:var(--muted);') + '">' + (field.value || getRoleEmptyPlaceholder(data.userType || 'athlete', field.label)) + '</span></div>';
           }
         });
         mlFields.innerHTML = rows || '<div class="pc-minimal-row"><span class="pc-minimal-fl" style="color:var(--muted)">No public fields</span></div>';
 
         // completion bar
-        var total = fieldDefs.length;
-        var filled = fieldDefs.filter(function(f){ return data[f.k]; }).length;
+        var total = compactFields.length;
+        var filled = compactFields.filter(function(field){ return field.visible && field.value; }).length;
         var mlBar = document.getElementById('ml-bar');
         if (mlBar) mlBar.style.width = Math.round(filled / total * 100) + '%';
       }
@@ -1103,12 +1285,13 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
 
     // Populate sports-card variant
     if (style === 'sports-card') {
-      var sName = data.displayName || ((data.firstName || '') + ' ' + (data.lastName || '')).trim() || 'User';
+      var sportCardFields = getCompactVariantFields(data, core);
+      var sName = core.name || 'User';
       var sInitials = sName.split(' ').map(function(n){ return n[0]; }).join('').toUpperCase().slice(0,2);
       var scAv = document.getElementById('sc-avatar');
       if (scAv) {
-        if (data.avatarUrl || data.avatar) {
-          scAv.innerHTML = '<img src="' + (data.avatarUrl || data.avatar) + '" alt="' + sName + '">';
+        if (core.avatarUrl) {
+          scAv.innerHTML = '<img src="' + core.avatarUrl + '" alt="' + sName + '">';
         } else {
           scAv.textContent = sInitials;
         }
@@ -1116,20 +1299,21 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       var scName = document.getElementById('sc-name');
       if (scName) scName.textContent = sName;
       var scSub = document.getElementById('sc-sub');
-      if (scSub) scSub.textContent = data.sport || data.primarySport || data.profession || 'User';
+      if (scSub) scSub.textContent = core.sport || data.profession || 'User';
       var scFollowers = document.getElementById('sc-followers');
-      if (scFollowers) scFollowers.textContent = String(data.followersCount || data.followers || 0);
+      if (scFollowers) scFollowers.textContent = core.followers;
       var scFollowing = document.getElementById('sc-following');
-      if (scFollowing) scFollowing.textContent = String(data.followingCount || data.following || 0);
+      if (scFollowing) scFollowing.textContent = core.following;
       var scMedia = document.getElementById('sc-media');
-      if (scMedia) scMedia.textContent = String(data.postsCount || data.mediaCount || 0);
+      if (scMedia) scMedia.textContent = core.mediaCount;
 
       // Pills
       var scPills = document.getElementById('sc-pills');
       if (scPills) {
         var pills = '';
-        if (data.position) pills += '<span class="pc-sports-pill pc-sports-pill--pos">' + data.position + '</span>';
-        if (data.playingLevel) pills += '<span class="pc-sports-pill pc-sports-pill--lvl">' + data.playingLevel + '</span>';
+        var pillFields = getCompactPills(sportCardFields);
+        if (pillFields[0]) pills += '<span class="pc-sports-pill pc-sports-pill--pos">' + pillFields[0].value + '</span>';
+        if (pillFields[1]) pills += '<span class="pc-sports-pill pc-sports-pill--lvl">' + pillFields[1].value + '</span>';
         scPills.innerHTML = pills;
       }
 
@@ -1137,21 +1321,18 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       var scFields = document.getElementById('sc-fields');
       if (scFields) {
         var tiles = '';
-        var tileDefs = [
-          {k:'sport', l:'Sport'}, {k:'location', l:'Location'},
-          {k:'currentTeam', l:'Team'}, {k:'nationality', l:'Nationality'},
-          {k:'experience', l:'Experience'}, {k:'bio', l:'Bio'}
-        ];
-        tileDefs.forEach(function(f) {
-          if (isVisible(data, f.k) && data[f.k]) {
-            var val = f.k === 'bio' ? data[f.k].substring(0, 60) + (data[f.k].length > 60 ? '…' : '') : data[f.k];
-            tiles += '<div class="pc-sports-tile"><div class="pc-sports-tile-label">' + f.l + '</div><div class="pc-sports-tile-val">' + val + '</div></div>';
+        sportCardFields.forEach(function(field) {
+          if (field.visible) {
+            var tileVal = field.value || getRoleEmptyPlaceholder(data.userType || 'athlete', field.label);
+            tiles += '<div class="pc-sports-tile"><div class="pc-sports-tile-label">' + field.label + '</div><div class="pc-sports-tile-val" style="' + (field.value ? '' : 'color:var(--muted);font-weight:500;') + '">' + tileVal + '</div></div>';
           }
         });
         scFields.innerHTML = tiles || '<div class="pc-sports-tile"><div class="pc-sports-tile-label" style="color:var(--muted)">No public fields</div></div>';
       }
     }
-  })(payload);
+  }
+
+  applyCardStyle(payload);
 
   // Initialize connect/follow button to use numeric userId and FollowManager
   (function initProfileFollowButton(){
@@ -1212,11 +1393,30 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
 
   // Listen for profile sync updates
   window.addEventListener('profileSyncUpdated', (event) => {
-    const updated = event.detail.profile;
-    if (updated) {
-      payload = updated;
-      updateUI(updated);
+    const updated = normalizeProfile(event?.detail?.profile || {});
+    const incomingTs = Number(event?.detail?.timestamp || getNormalizer().getProfileTimestamp(updated) || Date.now());
+    const isCurrentProfile = matchesViewedProfile(updated);
+
+    if (!isCurrentProfile) {
+      console.debug('[Spopeer][ProfileSync] Ignored update for different profile', {
+        viewedProfileId: userId || '(own profile)',
+        incomingIdentifiers: getNormalizer().getIdentifierSet ? getNormalizer().getIdentifierSet(updated) : []
+      });
+      return;
     }
+
+    if (!getNormalizer().isIncomingNewer(incomingTs, lastAppliedProfileTs)) {
+      console.debug('[Spopeer][ProfileSync] Ignored stale profile update', {
+        incomingTs: incomingTs,
+        currentTs: lastAppliedProfileTs
+      });
+      return;
+    }
+
+    lastAppliedProfileTs = incomingTs;
+    payload = updated;
+    updateUI(updated);
+    applyCardStyle(updated);
   });
 
   /* Media — show real data or empty state */

@@ -15,6 +15,22 @@ const ProfileSyncService = {
   PROFILE_UPDATE_KEY: '_profileLastUpdated_',
   PROFILE_STORAGE_KEY: 'spopeer_user',
   lastUpdateToken: null,
+
+  normalizeProfile(profileData, timestamp) {
+    if (window.ProfileNormalizer && typeof window.ProfileNormalizer.withProfileTimestamp === 'function') {
+      return window.ProfileNormalizer.withProfileTimestamp(profileData || {}, timestamp || Date.now());
+    }
+    const next = { ...(profileData || {}) };
+    next._profileUpdatedAt = Number(timestamp || Date.now());
+    return next;
+  },
+
+  getProfileTimestamp(profileData) {
+    if (window.ProfileNormalizer && typeof window.ProfileNormalizer.getProfileTimestamp === 'function') {
+      return window.ProfileNormalizer.getProfileTimestamp(profileData || {});
+    }
+    return Number((profileData && profileData._profileUpdatedAt) || 0) || 0;
+  },
   
   /**
    * Initialize sync listeners on page load
@@ -121,16 +137,16 @@ const ProfileSyncService = {
     console.log('ProfileSyncService: Saving profile', profileData);
 
     const currentProfile = this.getProfile() || {};
-    let mergedProfile = { ...currentProfile, ...profileData };
+    let mergedProfile = this.normalizeProfile({ ...currentProfile, ...(profileData || {}) }, Date.now());
 
     if (window.SpopeerAPI && typeof window.SpopeerAPI.updateProfile === 'function') {
       const result = await window.SpopeerAPI.updateProfile(profileData);
-      mergedProfile = { ...mergedProfile, ...(result.user || {}) };
+      mergedProfile = this.normalizeProfile({ ...mergedProfile, ...(result.user || {}) }, Date.now());
     }
 
     localStorage.setItem(this.PROFILE_STORAGE_KEY, JSON.stringify(mergedProfile));
 
-    const updateToken = Date.now().toString();
+    const updateToken = String(this.getProfileTimestamp(mergedProfile) || Date.now());
     this.lastUpdateToken = updateToken;
     localStorage.setItem(this.PROFILE_UPDATE_KEY, updateToken);
 
@@ -143,7 +159,7 @@ const ProfileSyncService = {
    * Broadcast profile update to all listeners on this page
    */
   broadcastProfileUpdate() {
-    const profile = this.getProfile();
+    const profile = this.normalizeProfile(this.getProfile(), Date.now());
     
     if (!profile) {
       console.warn('ProfileSyncService: No profile found to broadcast');
@@ -153,7 +169,7 @@ const ProfileSyncService = {
     // Dispatch the canonical event and keep the legacy event for compatibility.
     const detail = {
       profile: profile,
-      timestamp: Date.now(),
+      timestamp: this.getProfileTimestamp(profile) || Date.now(),
       source: 'ProfileSyncService'
     };
     window.dispatchEvent(new CustomEvent(this.PROFILE_UPDATED_EVENT, { detail }));
@@ -279,7 +295,10 @@ const ProfileSyncService = {
       reader.onload = (evt) => {
         const profile = this.getProfile() || {};
         profile.coverPhoto = evt.target.result;
-        localStorage.setItem(this.PROFILE_STORAGE_KEY, JSON.stringify(profile));
+        const normalized = this.normalizeProfile(profile, Date.now());
+        localStorage.setItem(this.PROFILE_STORAGE_KEY, JSON.stringify(normalized));
+        this.lastUpdateToken = String(this.getProfileTimestamp(normalized));
+        localStorage.setItem(this.PROFILE_UPDATE_KEY, this.lastUpdateToken);
         this.broadcastProfileUpdate();
       };
       reader.readAsDataURL(file);
