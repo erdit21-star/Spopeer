@@ -1,533 +1,46 @@
-<!-- Updated  -->
+/* public/js/public-profile.js
+ * Extracted from public-profile.html inline script.
+ * Handles: tab switching, follow toggling, profile loading, card variants,
+ * privacy enforcement, sync updates, analytics events, and stale-update badge.
+ */
+window._spopeerProfilePageLoaded = true;
 
-
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Profile — Spopeer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  <link rel="stylesheet" href="/css/shared-tokens.css" />
-  <link rel="stylesheet" href="/css/shared-nav.css" />
-  <style>
-    /* Profile-specific token overrides */
-    :root{--accent-mid:#003366;--accent-light:#cce7ff;--accent-lt2:#e8f4ff;--nav-h:66px;--rS:7px;--rL:16px;}
-    /* Profile page uses <header>/<nav class="navbar"> instead of .topnav/.nav-inner */
-    header{background:rgba(250,250,248,0.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:300;height:var(--nav-h)}
-    .navbar{max-width:1280px;margin:0 auto;padding:0 24px;height:100%;display:flex;align-items:center;gap:16px;position:relative}
-    .btn-nav{padding:7px 16px;border:1.5px solid var(--border);border-radius:var(--pill);background:transparent;color:var(--muted);font-size:13px;font-weight:600;font-family:var(--fB);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s}
-    .btn-nav:hover{border-color:var(--accent);color:var(--accent)}
-    /* LAYOUT */
-    .page-wrap{max-width:1280px;margin:28px auto;padding:0 24px 60px;display:grid;grid-template-columns:300px 1fr 280px;gap:22px;align-items:start}
-    /* LEFT CARD */
-    .profile-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rL);overflow:hidden;position:sticky;top:calc(var(--nav-h)+16px)}
-    .profile-cover{height:90px;background:linear-gradient(135deg,var(--accent),var(--accent-mid));position:relative}
-    .profile-av-wrap{padding:0 20px;margin-top:-36px;position:relative;z-index:1}
-    .profile-av{width:72px;height:72px;border-radius:50%;background:var(--accent-mid);color:var(--accent-light);font-family:var(--fD);font-size:24px;font-weight:800;display:flex;align-items:center;justify-content:center;border:4px solid var(--white)}
-    .profile-body{padding:12px 20px 20px}
-    .profile-name-row{display:flex;align-items:center;gap:8px;margin-bottom:3px}
-    .profile-name{font-family:var(--fD);font-size:18px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
-    .verified-icon{color:var(--blue);font-size:15px}
-    .profile-type-badge{display:inline-flex;align-items:center;gap:5px;background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--pill);margin-bottom:8px}
-    .profile-meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-bottom:5px}
-    .profile-meta-item i{width:14px;text-align:center;font-size:12px;color:var(--muted-2)}
-    .profile-meta-label{font-size:11px;color:var(--muted-2);font-weight:700;letter-spacing:.01em}
-    .profile-bio{font-size:13px;color:var(--ink-2);line-height:1.6;margin:12px 0;font-weight:300}
-    .profile-stats-row{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:12px -20px;padding:0}
-    .pstat{flex:1;text-align:center;padding:12px 6px;border-right:1px solid var(--border)}
-    .pstat:last-child{border-right:none}
-    .pstat-num{font-family:var(--fD);font-size:18px;font-weight:800;color:var(--ink)}
-    .pstat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
-    .profile-actions{display:flex;flex-direction:column;gap:8px;margin-top:14px}
-    .btn-connect{padding:11px;background:var(--accent);color:var(--accent-light);border:none;border-radius:var(--r);font-size:14px;font-weight:700;font-family:var(--fB);cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px}
-    .btn-connect:hover{background:var(--accent-mid)}
-    .btn-connect.connected{background:var(--green-lt);color:var(--green);border:1.5px solid var(--green)}
-    .btn-message{padding:10px;background:transparent;color:var(--ink-2);border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;font-weight:600;font-family:var(--fB);cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px}
-    .btn-message:hover{border-color:var(--accent);color:var(--accent)}
-    .btn-share{padding:10px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;font-weight:600;font-family:var(--fB);cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px}
-    .btn-share:hover{border-color:var(--ink);color:var(--ink)}
-    .conn-status-label{font-size:12px;color:var(--muted);text-align:center}
-    /* MAIN CONTENT */
-    .main-content{min-width:0}
-    .tab-bar{display:flex;gap:0;background:var(--white);border:1px solid var(--border);border-radius:var(--rL);padding:5px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
-    .tab-bar::-webkit-scrollbar{display:none}
-    .tab-btn{flex-shrink:0;padding:8px 18px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--muted);border-radius:var(--r);cursor:pointer;font-family:var(--fB);transition:.2s;display:flex;align-items:center;gap:7px}
-    .tab-btn.active{background:var(--accent);color:var(--accent-light)}
-    .tab-btn:not(.active):hover{background:var(--surface);color:var(--ink)}
-    .tab-content{display:none}.tab-content.active{display:block}
-    .content-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rL);padding:22px;margin-bottom:14px}
-    .content-card-title{font-family:var(--fD);font-size:15px;font-weight:800;color:var(--ink);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-    .content-card-title i{color:var(--accent);font-size:14px}
-    .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
-    .about-item{padding:11px 0;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:3px}
-    .about-item:nth-child(odd){padding-right:20px;border-right:1px solid var(--border)}
-    .about-item:nth-child(even){padding-left:20px}
-    .about-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2)}
-    .about-value{font-size:14px;color:var(--ink-2);font-weight:500}
-    .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
-    .media-placeholder{aspect-ratio:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--rS);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--muted-2);position:relative;overflow:hidden}
-    .media-placeholder .media-badge{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase}
-    .achievement-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px}
-    .achievement-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px 10px;text-align:center}
-    .achievement-icon{font-size:26px;margin-bottom:7px}
-    .achievement-name{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:3px}
-    .achievement-date{font-size:11px;color:var(--muted)}
-    .testimonial-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px}
-    .testimonial-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-    .t-av{width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--accent-light);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .t-name{font-size:14px;font-weight:700;color:var(--ink)}
-    .t-role{font-size:12px;color:var(--muted)}
-    .t-stars{font-size:12px;color:#f59e0b;margin-top:2px}
-    .t-text{font-size:13px;color:var(--ink-2);line-height:1.6;font-style:italic;font-weight:300}
-    .recommended-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
-    .rec-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
-    .rec-av{width:48px;height:48px;border-radius:50%;background:var(--accent);color:var(--accent-light);font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
-    .rec-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px}
-    .rec-type{font-size:11px;color:var(--muted);margin-bottom:10px}
-    .rec-btn{padding:6px 14px;background:var(--accent-lt2);color:var(--accent);border:1.5px solid var(--accent-light);border-radius:var(--pill);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fB);transition:.2s;width:100%}
-    .rec-btn:hover{background:var(--accent);color:var(--accent-light)}
-    /* RIGHT SIDEBAR */
-    .right-sidebar{position:sticky;top:calc(var(--nav-h)+16px);display:flex;flex-direction:column;gap:14px}
-    .side-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rL);padding:18px}
-    .side-card-title{font-family:var(--fD);font-size:14px;font-weight:800;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:7px}
-    .side-card-title i{color:var(--accent)}
-    .trend-item{padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
-    .trend-item:last-child{border-bottom:none;padding-bottom:0}
-    .trend-cat{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-2)}
-    .trend-name{font-size:14px;font-weight:700;color:var(--ink);margin:2px 0}
-    .trend-count{font-size:12px;color:var(--muted)}
-    .follow-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--border)}
-    .follow-item:last-child{border-bottom:none;padding-bottom:0}
-    .follow-av{width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--accent-light);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .follow-info{flex:1;min-width:0}
-    .follow-name{font-size:13px;font-weight:700;color:var(--ink)}
-    .follow-type{font-size:11px;color:var(--muted)}
-    .follow-btn{padding:5px 12px;background:var(--accent-lt2);color:var(--accent);border:1.5px solid var(--accent-light);border-radius:var(--pill);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fB);transition:.2s;white-space:nowrap}
-    .follow-btn:hover{background:var(--accent);color:var(--accent-light)}
-    .banner{background:var(--accent);border-radius:var(--r);padding:16px;color:var(--accent-light)}
-    .banner-badge{display:inline-block;background:rgba(255,255,255,.2);font-size:10px;font-weight:800;padding:2px 8px;border-radius:var(--pill);margin-bottom:6px;letter-spacing:.04em}
-    .banner-title{font-family:var(--fD);font-size:15px;font-weight:800;margin-bottom:3px}
-    .banner-desc{font-size:12px;opacity:.75}
-    /* skeleton */
-    .skel{background:var(--surface);border-radius:var(--rS);animation:shimmer 1.4s ease-in-out infinite}
-    @keyframes shimmer{0%,100%{opacity:.45}50%{opacity:.9}}
-    /* responsive */
-    @media(max-width:1100px){.page-wrap{grid-template-columns:260px 1fr}.right-sidebar{display:none}}
-    @media(max-width:720px){
-      .page-wrap{grid-template-columns:1fr;padding:0 12px 40px;gap:14px}
-      .profile-card{position:static}
-
-      /* stats wrap instead of squeezing */
-      .profile-stats-row{flex-wrap:wrap}
-      .pstat{min-width:60px;flex:1 1 auto}
-
-      /* about grid becomes one column */
-      .about-grid{grid-template-columns:1fr}
-      .about-item:nth-child(odd){padding-right:0;border-right:none}
-      .about-item:nth-child(even){padding-left:0}
-
-      /* action buttons full width */
-      .profile-actions{flex-direction:column}
-      .btn-connect,.btn-message,.btn-share{width:100%}
-
-      /* content cards tighter spacing */
-      .content-card{padding:16px;margin-bottom:10px}
-      .content-card-title{font-size:14px}
-
-      /* media & recommendations fit narrow screens */
-      .media-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-      .achievement-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-      .recommended-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-
-      /* tab bar scroll-friendly */
-      .tab-bar{padding:4px;gap:0}
-      .tab-btn{padding:8px 14px;font-size:12px}
-
-      /* bottom spacing for mobile nav */
-      body{padding-bottom:60px}
+/* ── Analytics helper ── */
+function emitAnalytics(eventName, detail) {
+  try {
+    window.dispatchEvent(new CustomEvent('spopeer:analytics', {
+      bubbles: false,
+      detail: Object.assign({ event: eventName, ts: Date.now() }, detail || {})
+    }));
+    if (window.__spopeerAnalytics && typeof window.__spopeerAnalytics.track === 'function') {
+      window.__spopeerAnalytics.track(eventName, detail);
     }
-    @media(max-width:480px){
-      .page-wrap{padding:0 8px 40px;margin:12px auto}
-      .profile-body{padding:10px 14px 16px}
-      .profile-av-wrap{padding:0 14px}
-      .content-card{padding:12px}
-      .media-grid{grid-template-columns:repeat(2,1fr)}
-      .recommended-grid{grid-template-columns:1fr 1fr}
-      .testimonial-card{padding:12px}
-      .navbar{padding:0 12px}
-    }
-  .logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
+  } catch (e) { /* analytics must never throw */ }
 }
 
-.logo-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+/* ── Stale-update badge ── */
+function showStaleBadge(reason) {
+  var badge = document.getElementById('spopeer-stale-badge');
+  if (!badge) return;
+  badge.textContent = reason || 'Profile update ignored (stale)';
+  badge.style.display = 'block';
+  clearTimeout(badge._hideTimer);
+  badge._hideTimer = setTimeout(function() { badge.style.display = 'none'; }, 4000);
+  emitAnalytics('profile:sync:stale_ignored', { reason: reason });
 }
 
-.logo-mark img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+/* Tab switching */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    const tab=this.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById(tab).classList.add('active');
+  });
+});
 
-.logo-text {
-  font-family: var(--fd, var(--font-display, var(--fD, sans-serif)));
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--ink);
-  letter-spacing: -.03em;
-}
-
-/* Profile card style variants */
-.profile-card-variant { display: none; }
-.profile-card-variant.active { display: block; }
-
-/* Minimal List variant */
-.pc-minimal { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--rL); overflow: hidden; }
-.pc-minimal-top { display: flex; align-items: center; gap: 12px; padding: 16px; }
-.pc-minimal-av { width: 48px; height: 48px; border-radius: 8px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
-.pc-minimal-av img { width: 100%; height: 100%; object-fit: cover; }
-.pc-minimal-info { flex: 1; min-width: 0; }
-.pc-minimal-name { font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pc-minimal-sub { font-size: 12px; color: var(--muted); }
-.pc-minimal-bar { height: 3px; background: var(--border); margin: 0 16px 12px; border-radius: 2px; overflow: hidden; }
-.pc-minimal-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
-.pc-minimal-list { padding: 0 16px 16px; }
-.pc-minimal-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border-light, var(--border)); font-size: 13px; }
-.pc-minimal-row:last-child { border-bottom: none; }
-.pc-minimal-fl { color: var(--muted); flex-shrink: 0; width: 100px; }
-.pc-minimal-fv { flex: 1; color: var(--ink); font-weight: 500; }
-.pc-minimal-stats { display: flex; justify-content: space-around; padding: 12px 16px; border-top: 1px solid var(--border); }
-.pc-minimal-stat-num { font-size: 15px; font-weight: 700; color: var(--ink); text-align: center; }
-.pc-minimal-stat-label { font-size: 11px; color: var(--muted); text-align: center; }
-.pc-minimal-actions { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
-
-/* Sports Card variant */
-.pc-sports { border-radius: var(--rL); overflow: hidden; border: 1.5px solid var(--border); }
-.pc-sports-header { background: linear-gradient(135deg, #0a1e35, #163a6a); padding: 20px 16px 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.pc-sports-av { width: 56px; height: 56px; border-radius: 50%; background: #152d4a; border: 2px solid #2a5a9a; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #7ab2e0; overflow: hidden; }
-.pc-sports-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-.pc-sports-name { font-size: 16px; font-weight: 700; color: #fff; text-align: center; }
-.pc-sports-sub { font-size: 12px; color: rgba(255,255,255,.6); text-align: center; }
-.pc-sports-pills { display: flex; gap: 6px; margin-top: 4px; }
-.pc-sports-pill { font-size: 10px; padding: 2px 10px; border-radius: 99px; font-weight: 600; }
-.pc-sports-pill--pos { background: rgba(58,130,218,.25); color: #7ab2e0; }
-.pc-sports-pill--lvl { background: rgba(58,218,122,.2); color: #5ade8a; }
-.pc-sports-strip { display: grid; grid-template-columns: 1fr 1fr 1fr; background: #0d2240; }
-.pc-sports-stat { padding: 10px 4px; text-align: center; }
-.pc-sports-stat-num { font-size: 15px; font-weight: 700; color: #e8f0f8; }
-.pc-sports-stat-label { font-size: 10px; color: #6a8fb0; margin-top: 2px; }
-.pc-sports-body { background: var(--white); padding: 12px; }
-.pc-sports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.pc-sports-tile { background: var(--surface, #f5f7fa); border-radius: 8px; padding: 10px; }
-.pc-sports-tile-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
-.pc-sports-tile-val { font-size: 13px; font-weight: 600; color: var(--ink); }
-.pc-sports-actions { padding: 12px; border-top: 1px solid var(--border); background: var(--white); display: flex; gap: 8px; }
-</style>
-  <script src="../../js/api.js"></script>
-  <script src="../../js/profile-identity.js"></script>
-  <script src="../../js/profile-migration.js"></script>
-  <script src="../../js/profile-normalizer.js"></script>
-  <script src="../../js/profile-sync-service.js"></script>
-  <script src="/js/current-user-store.js"></script>
-  <script src="/js/user-ui.js"></script>
-  <style>
-    .notif-badge { display: none; }
-  </style>
-  <link rel="stylesheet" href="/css/fonts.css">
-
-  <link rel="stylesheet" href="../../css/mobile-responsive.css">
-  <script src="../../js/mobile-enhancements.js" defer></script>
-</head>
-<body>
-<header>
-  <nav class="navbar">
-    <a href="/index.html" class="logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
-
-    <div class="nav-search">
-      <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" id="navSearchInput" placeholder="Search athletes, clubs, coaches…"/>
-    </div>
-
-    <div class="nav-right">
-      <button class="nav-icon" id="feedBtn" title="Feed"><i class="fa-regular fa-house"></i></button>
-      <button class="nav-icon" id="exploreBtn" title="Explore"><i class="fa-regular fa-compass"></i></button>
-      <button class="nav-icon" id="messagesBtn" title="Messages"><i class="fa-regular fa-paper-plane"></i></button>
-      <button class="nav-icon" id="notifBtn" title="Notifications">
-        <i class="fa-regular fa-bell"></i>
-        <span class="notif-badge" id="notifBadge"></span>
-      </button>
-      <div class="notif-popover" id="notifPopover" aria-hidden="true">
-        <div class="notif-popover-header">
-          <div class="notif-popover-title">Notifications</div>
-          <button class="notif-popover-clear" id="clearNotifBtn">Clear All</button>
-        </div>
-        <div class="notif-popover-list" id="notifList">No notifications yet</div>
-        <button class="notif-popover-viewall" onclick="window.location.href='../dashboard/notifications.html'">View all</button>
-      </div>
-
-      <div class="user-chip" id="userChip" data-user-chip>
-        <span class="chip-avatar" id="chipAvatar" data-user-chip-avatar>?</span>
-        <span class="chip-name" id="chipName" data-user-chip-name>Loading…</span>
-        <i class="fa-solid fa-chevron-down chip-caret"></i>
-      </div>
-
-      <div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">
-        <div class="profile-menu-section" data-section="identity">
-          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
-            <div class="profile-menu-title">Your Identity</div>
-            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
-          </div>
-          <div class="profile-menu-section-items">
-            <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
-            <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
-            <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
-          </div>
-        </div>
-        <div class="profile-menu-section collapsed" data-section="account">
-          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
-            <div class="profile-menu-title">Account & Settings</div>
-            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
-          </div>
-          <div class="profile-menu-section-items">
-            <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
-            <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
-            <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy & Safety</button>
-            <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
-            <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
-            <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
-          </div>
-        </div>
-        <div class="profile-menu-section collapsed" data-section="features">
-          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
-            <div class="profile-menu-title">Platform Features</div>
-            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
-          </div>
-          <div class="profile-menu-section-items">
-            <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>
-            <button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements & Badges</button>
-            <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
-            <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
-            <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
-            <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
-          </div>
-        </div>
-        <div class="profile-menu-section collapsed" data-section="help">
-          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
-            <div class="profile-menu-title">Help & Misc</div>
-            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
-          </div>
-          <div class="profile-menu-section-items">
-            <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
-            <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
-            <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
-          </div>
-        </div>
-        <div class="profile-menu-section">
-          <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
-            <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
-</header>
-
-<div class="page-wrap">
-  <!-- LEFT: PROFILE CARD -->
-  <aside>
-    <!-- CARD STACK (Design 1) — default -->
-    <div class="profile-card-variant active" data-variant="card-stack">
-    <div class="profile-card">
-      <div class="profile-cover"></div>
-      <div class="profile-av-wrap">
-        <div class="profile-av" id="avatar">?</div>
-      </div>
-      <div class="profile-body">
-        <div class="profile-name-row">
-          <div class="profile-name" id="name">Loading…</div>
-          <i class="fa-solid fa-circle-check verified-icon" id="verifiedBadge" style="display:none"></i>
-        </div>
-        <div class="profile-type-badge" id="userType"><i class="fa-solid fa-user" style="font-size:10px"></i> User</div>
-        <div class="profile-meta-item" id="metaSportRow"><i class="fa-solid fa-futbol"></i> <span class="profile-meta-label" id="metaSportLabel">Sport:</span> <span id="sport">-</span></div>
-        <div class="profile-meta-item" id="metaPositionRow"><i class="fa-solid fa-shirt"></i> <span class="profile-meta-label" id="metaPositionLabel">Position:</span> <span id="cardPosition">-</span></div>
-        <div class="profile-meta-item" id="metaTeamRow"><i class="fa-solid fa-people-group"></i> <span class="profile-meta-label" id="metaTeamLabel">Team:</span> <span id="cardTeam">-</span></div>
-        <div class="profile-meta-item" id="metaLevelRow"><i class="fa-solid fa-signal"></i> <span class="profile-meta-label" id="metaLevelLabel">Level:</span> <span id="cardLevel">-</span></div>
-        <div class="profile-meta-item" id="metaLocationRow"><i class="fa-solid fa-location-dot"></i> <span class="profile-meta-label" id="metaLocationLabel">Location:</span> <span id="location">-</span></div>
-        <div class="profile-meta-item" id="metaExperienceRow"><i class="fa-regular fa-clock"></i> <span class="profile-meta-label" id="metaExperienceLabel">Experience:</span> <span id="cardExperience">-</span></div>
-        <div class="profile-bio" id="bio"></div>
-        <div class="profile-stats-row">
-          <div class="pstat"><div class="pstat-num" id="followers">0</div><div class="pstat-label">Followers</div></div>
-          <div class="pstat"><div class="pstat-num" id="following">0</div><div class="pstat-label">Following</div></div>
-          <div class="pstat"><div class="pstat-num" id="mediaCount">0</div><div class="pstat-label">Media</div></div>
-        </div>
-        <div class="profile-actions">
-          <button class="btn-connect" id="connectBtn"><i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow</button>
-          <div class="conn-status-label" id="connStatus">Not connected</div>
-          <button class="btn-message" id="messageBtn" style="display:none"><i class="fa-regular fa-paper-plane" style="font-size:12px"></i> Message</button>
-          <button class="btn-share" id="shareProfileBtn"><i class="fa-solid fa-share-nodes" style="font-size:12px"></i> Share Profile</button>
-          <button class="btn-share" id="editProfileBtn" style="display:none;background:var(--accent);color:var(--accent-light);border:none"><i class="fa-solid fa-edit" style="font-size:12px"></i> Edit Profile</button>
-        </div>
-      </div>
-    </div>
-    </div>
-
-    <!-- MINIMAL LIST (Design 2) -->
-    <div class="profile-card-variant" data-variant="minimal-list">
-    <div class="pc-minimal">
-      <div class="pc-minimal-top">
-        <div class="pc-minimal-av" id="ml-avatar">?</div>
-        <div class="pc-minimal-info">
-          <div class="pc-minimal-name" id="ml-name">Loading…</div>
-          <div class="pc-minimal-sub" id="ml-sub">User</div>
-        </div>
-      </div>
-      <div class="pc-minimal-bar"><div class="pc-minimal-bar-fill" id="ml-bar" style="width:0%"></div></div>
-      <div class="pc-minimal-list" id="ml-fields"></div>
-      <div class="pc-minimal-stats">
-        <div><div class="pc-minimal-stat-num" id="ml-followers">0</div><div class="pc-minimal-stat-label">Followers</div></div>
-        <div><div class="pc-minimal-stat-num" id="ml-following">0</div><div class="pc-minimal-stat-label">Following</div></div>
-        <div><div class="pc-minimal-stat-num" id="ml-media">0</div><div class="pc-minimal-stat-label">Media</div></div>
-      </div>
-      <div class="pc-minimal-actions">
-        <button class="btn-connect" data-mirror="connectBtn"><i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow</button>
-        <button class="btn-share" data-mirror="shareProfileBtn"><i class="fa-solid fa-share-nodes" style="font-size:12px"></i> Share</button>
-      </div>
-    </div>
-    </div>
-
-    <!-- SPORTS CARD (Design 3) -->
-    <div class="profile-card-variant" data-variant="sports-card">
-    <div class="pc-sports">
-      <div class="pc-sports-header">
-        <div class="pc-sports-av" id="sc-avatar">?</div>
-        <div class="pc-sports-name" id="sc-name">Loading…</div>
-        <div class="pc-sports-sub" id="sc-sub">User</div>
-        <div class="pc-sports-pills" id="sc-pills"></div>
-      </div>
-      <div class="pc-sports-strip">
-        <div class="pc-sports-stat"><div class="pc-sports-stat-num" id="sc-followers">0</div><div class="pc-sports-stat-label">Followers</div></div>
-        <div class="pc-sports-stat"><div class="pc-sports-stat-num" id="sc-following">0</div><div class="pc-sports-stat-label">Following</div></div>
-        <div class="pc-sports-stat"><div class="pc-sports-stat-num" id="sc-media">0</div><div class="pc-sports-stat-label">Media</div></div>
-      </div>
-      <div class="pc-sports-body">
-        <div class="pc-sports-grid" id="sc-fields"></div>
-      </div>
-      <div class="pc-sports-actions">
-        <button class="btn-connect" data-mirror="connectBtn"><i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow</button>
-        <button class="btn-share" data-mirror="shareProfileBtn"><i class="fa-solid fa-share-nodes" style="font-size:12px"></i> Share</button>
-      </div>
-    </div>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main-content">
-    <div class="tab-bar">
-      <button class="tab-btn active" data-tab="about"><i class="fa-regular fa-user" style="font-size:12px"></i> About</button>
-      <button class="tab-btn" data-tab="media"><i class="fa-regular fa-images" style="font-size:12px"></i> Media</button>
-      <button class="tab-btn" data-tab="achievements"><i class="fa-solid fa-trophy" style="font-size:12px"></i> Achievements</button>
-      <button class="tab-btn" data-tab="testimonials"><i class="fa-regular fa-comments" style="font-size:12px"></i> Reviews</button>
-      <button class="tab-btn" data-tab="recommended"><i class="fa-solid fa-people-arrows" style="font-size:12px"></i> Connections</button>
-    </div>
-
-    <!-- ABOUT -->
-    <div class="tab-content active" id="about">
-      <div class="content-card">
-        <div class="content-card-title"><i class="fa-regular fa-circle-user"></i> Profile Information</div>
-        <div class="about-grid" id="about-content">
-          <div class="about-item"><div class="about-label">Member Since</div><div class="about-value" id="joined-date">-</div></div>
-          <div class="about-item"><div class="about-label">Primary Sport</div><div class="about-value" id="primary-sport">-</div></div>
-          <div class="about-item"><div class="about-label">Experience</div><div class="about-value" id="experience">-</div></div>
-          <div class="about-item"><div class="about-label">Total Media</div><div class="about-value" id="stat-media">0</div></div>
-        </div>
-        <div id="extra-info" style="margin-top:14px"></div>
-      </div>
-    </div>
-
-    <!-- MEDIA -->
-    <div class="tab-content" id="media">
-      <div class="content-card">
-        <div class="content-card-title" style="justify-content:space-between">
-          <span><i class="fa-solid fa-photo-film"></i> Gallery</span>
-          <button id="uploadMediaBtn" style="display:none;padding:6px 14px;background:var(--accent);color:var(--accent-light);border:none;border-radius:var(--pill);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fB)"><i class="fa-solid fa-plus"></i> Upload</button>
-        </div>
-        <div id="media-container" class="media-grid"></div>
-      </div>
-    </div>
-
-    <!-- ACHIEVEMENTS -->
-    <div class="tab-content" id="achievements">
-      <div class="content-card">
-        <div class="content-card-title"><i class="fa-solid fa-trophy"></i> Achievements & Badges</div>
-        <div class="achievement-grid" id="achievements-content"></div>
-      </div>
-    </div>
-
-    <!-- TESTIMONIALS -->
-    <div class="tab-content" id="testimonials">
-      <div class="content-card">
-        <div class="content-card-title"><i class="fa-regular fa-comments"></i> Reviews & Testimonials</div>
-        <div id="testimonials-content"></div>
-      </div>
-    </div>
-
-    <!-- RECOMMENDED -->
-    <div class="tab-content" id="recommended">
-      <div class="content-card">
-        <div class="content-card-title"><i class="fa-solid fa-people-arrows"></i> Recommended Connections</div>
-        <div class="recommended-grid" id="recommended-content"></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- RIGHT -->
-  <aside class="right-sidebar">
-    <div class="side-card">
-      <div class="side-card-title"><i class="fa-solid fa-fire-flame-curved"></i> Trending Now</div>
-      <div class="trend-item"><div class="trend-cat">Sports · Trending</div><div class="trend-name">#Football</div><div class="trend-count">245K Posts</div></div>
-      <div class="trend-item"><div class="trend-cat">Sports · Live</div><div class="trend-name">Champions League</div><div class="trend-count">567K talking</div></div>
-      <div class="trend-item"><div class="trend-cat">Wellness</div><div class="trend-name">#Fitness</div><div class="trend-count">434K Posts</div></div>
-      <div class="trend-item"><div class="trend-cat">Health</div><div class="trend-name">#HealthyLiving</div><div class="trend-count">1.2M Posts</div></div>
-    </div>
-    <div class="side-card">
-      <div class="side-card-title"><i class="fa-regular fa-user-plus"></i> Who to Follow</div>
-      <div class="follow-item"><div class="follow-av">LM</div><div class="follow-info"><div class="follow-name">Leo Martinez</div><div class="follow-type">Athlete</div></div><button class="follow-btn">Follow</button></div>
-      <div class="follow-item"><div class="follow-av">SC</div><div class="follow-info"><div class="follow-name">Sarah Coach</div><div class="follow-type">Coach</div></div><button class="follow-btn">Follow</button></div>
-      <div class="follow-item"><div class="follow-av">MC</div><div class="follow-info"><div class="follow-name">Madrid Club</div><div class="follow-type">Club</div></div><button class="follow-btn">Follow</button></div>
-      <div class="follow-item"><div class="follow-av">EN</div><div class="follow-info"><div class="follow-name">Elena Nutrition</div><div class="follow-type">Professional</div></div><button class="follow-btn">Follow</button></div>
-    </div>
-    <div class="banner">
-      <div class="banner-badge">PRO</div>
-      <div class="banner-title">Upgrade to Pro</div>
-      <div class="banner-desc">Unlock premium features and get verified</div>
-    </div>
-  </aside>
-</div>
-
-<!-- Stale-update badge: shown briefly when a sync update is ignored -->
-<div id="spopeer-stale-badge" style="display:none;position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;font-size:12px;font-weight:600;padding:7px 16px;border-radius:20px;z-index:9999;pointer-events:none;white-space:nowrap;"></div>
-
-<script src="../../js/public-profile.js"></script>
-<!-- Profile page logic is in public/js/public-profile.js (inline block below is a fallback only) -->
-<script>
-/* Fallback: runs only if public-profile.js failed to load */
-if (!window._spopeerProfilePageLoaded) {
+/* Follow toggle */
 function bumpNumericStat(id, delta) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -895,12 +408,12 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   // Update UI with profile data
   function updateUI(profile) {
     profile = normalizeProfile(profile);
-    // STEP 7: Show "Profile not found" message if no profile data
+    // Show "Profile not found" message if no profile data
     if(!profile||!Object.keys(profile).length){
       document.getElementById('avatar').innerHTML='<i class="fa-solid fa-question" style="font-size:32px; color:#999"></i>';
       document.getElementById('name').textContent='Profile Not Found';
       document.getElementById('name').style.color='#999';
-      document.getElementById('bio').textContent='This user\\047s profile could not be found or is not available.';
+      document.getElementById('bio').textContent='This user\u2019s profile could not be found or is not available.';
       document.getElementById('followers').textContent='—';
       document.getElementById('following').textContent='—';
       document.getElementById('mediaCount').textContent='—';
@@ -998,6 +511,8 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         if(!isVisible(profile,pair[0])&&profile[pair[0]]) hiddenFields.push(pair[1]);
       });
       if(hiddenFields.length){
+        // Analytics: track which fields are hidden
+        emitAnalytics('profile:fields:hidden', { count: hiddenFields.length, fields: hiddenFields });
         var hint=document.createElement('div');
         hint.style.cssText='color:var(--muted);font-size:12px;margin-top:12px;padding:8px 12px;background:var(--surface);border-radius:8px;';
         hint.innerHTML='<i class="fa-solid fa-lock" style="font-size:10px;margin-right:4px"></i> '+hiddenFields.length+' field(s) hidden from visitors: '+hiddenFields.join(', ');
@@ -1032,7 +547,6 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     }
 
     if(uType==='athlete'){
-      /* Training & Goals (availability already in basic extras) */
       addSection('Training & Goals','fa-solid fa-dumbbell',[
         ['trainingDays','Training Days / Week',visVal('trainingDays',profile.trainingDays)],
         ['trainingHours','Hours / Day',visVal('trainingHours',profile.trainingHours)],
@@ -1042,7 +556,6 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         ['coaches','Coaches & Trainers',visVal('coaches',profile.coachesTrainers||profile.coaches)],
         ['goals','Goals',visVal('goals',profile.goals)]
       ]);
-      /* Physical (height/weight already in basic extras) */
       addSection('Physical Information','fa-solid fa-ruler-vertical',[
         ['chest','Chest',visVal('chest',profile.chest)],
         ['waist','Waist',visVal('waist',profile.waist)],
@@ -1050,19 +563,16 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         ['eyeColor','Eye Color',visVal('eyeColor',profile.eyeColor)],
         ['hairColor','Hair Color',visVal('hairColor',profile.hairColor)]
       ]);
-      /* Competition (upcomingEvents already in basic extras) */
       addSection('Competition','fa-solid fa-flag-checkered',[
         ['competitionHistory','Competition History',visVal('competitionHistory',profile.competitionHistory)],
         ['teamInfo','Team Information',visVal('teamInfo',profile.teamInfo)]
       ]);
-      /* Health & Wellness */
       addSection('Health & Wellness','fa-solid fa-heart-pulse',[
         ['injuryHistory','Injury History',visVal('injuryHistory',profile.injuryHistory)],
         ['currentInjuries','Current Injuries',visVal('currentInjuries',profile.currentInjuries)],
         ['medicalHistory','Medical History',visVal('medicalHistory',profile.medicalHistory)],
         ['nutritionDiet','Nutrition & Diet',visVal('nutritionDiet',profile.nutritionDiet)]
       ]);
-      /* Performance Stats */
       if(profile.stats){
         addSection('Performance Stats','fa-solid fa-chart-line',[
           ['stats','Goals / Points',profile.stats.goalsOrPoints?String(profile.stats.goalsOrPoints):null],
@@ -1071,74 +581,62 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         ]);
       }
     } else if(uType==='coach'){
-      /* Coaching Background (specialization/certifications/style/philosophy/achievements in extras) */
       addSection('Coaching Background','fa-solid fa-clipboard',[
         ['coachExperience','Years of Experience',visVal('coachExperience',profile.experience)],
         ['coachTeam','Current Team',visVal('coachTeam',profile.currentTeam)],
         ['education','Education & Qualifications',visVal('education',profile.coachEducation||profile.education)],
         ['teamsCoached','Teams Coached',visVal('teamsCoached',profile.teamsCoached)]
       ]);
-      /* Training & Development */
       addSection('Training & Development','fa-solid fa-chalkboard-user',[
         ['trainingPlans','Training Plans & Strategies',visVal('trainingPlans',profile.trainingPlans)],
         ['playerDevelopment','Player Development',visVal('playerDevelopment',profile.playerDevelopment)],
         ['techniques','Techniques & Methods',visVal('techniques',profile.techniquesMethods||profile.techniques)]
       ]);
-      /* Management */
       addSection('Management','fa-solid fa-users-gear',[
         ['teamManagement','Team Management',visVal('teamManagement',profile.teamManagement)],
         ['rosterManagement','Roster Management',visVal('rosterManagement',profile.rosterManagement)],
         ['playerSelection','Player Selection Criteria',visVal('playerSelection',profile.playerSelection)]
       ]);
     } else if(uType==='club'){
-      /* Contact Information */
       addSection('Contact Information','fa-solid fa-address-card',[
         ['clubEmail','Email',visVal('clubEmail',profile.clubEmail||profile.contactEmail)],
         ['clubPhone','Phone',visVal('clubPhone',profile.clubPhone)],
         ['clubAddress','Address',visVal('clubAddress',profile.clubAddress)]
       ]);
-      /* Staff */
       addSection('Coaching & Management Staff','fa-solid fa-users',[
         ['coachingStaff','Coaching Staff',visVal('coachingStaff',profile.coachingStaff)],
         ['managementStaff','Management Staff',visVal('managementStaff',profile.managementStaff)],
         ['clubPhilosophy','Club Philosophy',visVal('clubPhilosophy',profile.clubPhilosophy)]
       ]);
-      /* Financial */
       addSection('Financial Information','fa-solid fa-coins',[
         ['clubBudget','Annual Budget',visVal('clubBudget',profile.clubBudget)],
         ['sponsorship','Sponsorship Details',visVal('sponsorship',profile.sponsorship)],
         ['revenueStreams','Revenue Streams',visVal('revenueStreams',profile.revenueStreams)]
       ]);
-      /* Youth & Development (youthPrograms already in extras) */
       addSection('Youth & Development','fa-solid fa-seedling',[
         ['talentRecruitment','Talent Recruitment',visVal('talentRecruitment',profile.talentRecruitment)],
         ['scholarships','Scholarships & Grants',visVal('scholarships',profile.scholarships)]
       ]);
-      /* Community */
       addSection('Community & Social Responsibility','fa-solid fa-handshake-angle',[
         ['communityOutreach','Community Outreach',visVal('communityOutreach',profile.communityOutreach)],
         ['socialResponsibility','Social Responsibility',visVal('socialResponsibility',profile.socialResponsibility)],
         ['charitablePartnerships','Charitable Partnerships',visVal('charitablePartnerships',profile.charitablePartnerships)]
       ]);
-      /* Detailed Facilities (overview already in extras) */
       addSection('Detailed Facilities','fa-solid fa-building',[
         ['trainingFields','Training Fields / Pitches',visVal('trainingFields',profile.trainingFields)],
         ['gymFacilities','Gym & Fitness Centre',visVal('gymFacilities',profile.gymFacilities)],
         ['lockerRooms','Locker Rooms & Amenities',visVal('lockerRooms',profile.lockerRooms)],
         ['otherFacilities','Other Facilities',visVal('otherFacilities',profile.otherFacilities)]
       ]);
-      /* Equipment */
       addSection('Equipment Inventory','fa-solid fa-toolbox',[
         ['equipmentList','Equipment List',visVal('equipmentList',profile.equipmentList)],
         ['maintenanceSchedule','Maintenance Schedule',visVal('maintenanceSchedule',profile.maintenanceSchedule)]
       ]);
-      /* Legal */
       addSection('Legal & Compliance','fa-solid fa-scale-balanced',[
         ['clubLicensing','Licensing & Registration',visVal('clubLicensing',profile.clubLicensing)],
         ['clubCompliance','Compliance & Policies',visVal('clubCompliance',profile.clubCompliance)]
       ]);
     } else if(uType==='supportive_professional'){
-      /* Professional Background (title/specialization/services/credentials in extras) */
       addSection('Professional Background','fa-solid fa-briefcase',[
         ['companyName','Company / Organization',visVal('companyName',profile.companyName)],
         ['profExperience','Work Experience',visVal('profExperience',profile.profExperience||profile.experience)],
@@ -1146,30 +644,25 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         ['clientele','Clientele',visVal('clientele',profile.clientele)],
         ['profEmail','Contact Email',visVal('profEmail',profile.profEmail||profile.contactEmail)]
       ]);
-      /* Communication (availabilityHours already in extras) */
       addSection('Contact & Communication','fa-solid fa-comments',[
         ['preferredContact','Preferred Contact Method',visVal('preferredContact',profile.preferredContact)],
         ['communicationTools','Communication Tools',visVal('communicationTools',profile.communicationTools)]
       ]);
-      /* Testimonials & References */
       addSection('Testimonials & References','fa-solid fa-quote-left',[
         ['clientReviews','Client Reviews',visVal('clientReviews',profile.clientReviews)],
         ['professionalRefs','Professional References',visVal('professionalRefs',profile.professionalRefs)]
       ]);
-      /* Payment & Rates */
       addSection('Payment & Rates','fa-solid fa-credit-card',[
         ['feeStructure','Fee Structure',visVal('feeStructure',profile.feeStructure)],
         ['paymentMethods','Payment Methods',visVal('paymentMethods',profile.paymentMethods)],
         ['billingInfo','Billing Information',visVal('billingInfo',profile.billingInfo)]
       ]);
-      /* Legal */
       addSection('Legal & Compliance','fa-solid fa-scale-balanced',[
         ['profLicensing','Professional Licensing',visVal('profLicensing',profile.profLicensing)],
         ['profCompliance','Regulatory Compliance',visVal('profCompliance',profile.profCompliance)]
       ]);
     }
 
-    /* Contact Information for athlete & coach */
     if(uType==='athlete'||uType==='coach'){
       addSection('Contact Information','fa-solid fa-address-card',[
         ['contactEmail','Email',visVal('contactEmail',profile.contactEmail)],
@@ -1178,7 +671,6 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       ]);
     }
 
-    /* Social & Media Links (all types) */
     var socials=[];
     if(profile.mediaLinks){
       if(isVisible(profile,'highlightVideo')&&profile.mediaLinks.highlightVideo) socials.push(['highlightVideo','Highlight Video',profile.mediaLinks.highlightVideo]);
@@ -1199,13 +691,10 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   if (!isOwnProfile) {
     try {
       var targetSettings = {};
-      // Check spopeer_settings (the settings page saves here)
       var settingsRaw = localStorage.getItem('spopeer_settings');
       if (settingsRaw) targetSettings = JSON.parse(settingsRaw);
-      // Also check profile-level privacy flag
       var profilePrivacy = payload.privacy_public;
       if (targetSettings.profileVisibility === false || profilePrivacy === false) {
-        // Show private profile screen
         var wrap = document.querySelector('.page-wrap');
         if (wrap) {
           wrap.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:80px 20px;">' +
@@ -1215,7 +704,8 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
             '<p style="color:var(--muted);font-size:14px;max-width:340px;margin:0 auto 20px;">This user has set their profile to private. Connect with them to see their full profile.</p>' +
             '<a href="/feed.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:var(--accent);color:#fff;border-radius:var(--pill);text-decoration:none;font-size:14px;font-weight:700;font-family:var(--fB)"><i class="fa-solid fa-arrow-left" style="font-size:12px"></i> Back to Feed</a></div>';
         }
-        return; // stop rendering the rest of the profile
+        emitAnalytics('profile:view:blocked', { reason: 'private_profile' });
+        return;
       }
     } catch(e) {
       console.warn('Privacy check error:', e);
@@ -1223,6 +713,13 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   }
 
   updateUI(payload);
+
+  // Analytics: profile viewed
+  emitAnalytics('profile:view', {
+    userType: payload.userType || 'unknown',
+    isOwnProfile: isOwnProfile,
+    profileId: userId || (payload.id ? String(payload.id) : '')
+  });
 
   // Apply chosen card style variant
   function applyCardStyle(data) {
@@ -1234,6 +731,12 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
 
     document.querySelectorAll('.profile-card-variant').forEach(function(el) {
       el.classList.toggle('active', el.dataset.variant === style);
+    });
+
+    // Analytics: card variant rendered
+    emitAnalytics('profile:card:variant', {
+      variant: style,
+      userType: data.userType || 'unknown'
     });
 
     // Populate minimal-list variant
@@ -1260,7 +763,6 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       var mlMedia = document.getElementById('ml-media');
       if (mlMedia) mlMedia.textContent = core.mediaCount;
 
-      // Build field rows
       var mlFields = document.getElementById('ml-fields');
       if (mlFields) {
         var rows = '';
@@ -1271,7 +773,6 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         });
         mlFields.innerHTML = rows || '<div class="pc-minimal-row"><span class="pc-minimal-fl" style="color:var(--muted)">No public fields</span></div>';
 
-        // completion bar
         var total = compactFields.length;
         var filled = compactFields.filter(function(field){ return field.visible && field.value; }).length;
         var mlBar = document.getElementById('ml-bar');
@@ -1303,7 +804,6 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       var scMedia = document.getElementById('sc-media');
       if (scMedia) scMedia.textContent = core.mediaCount;
 
-      // Pills
       var scPills = document.getElementById('sc-pills');
       if (scPills) {
         var pills = '';
@@ -1313,7 +813,6 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         scPills.innerHTML = pills;
       }
 
-      // Tile grid
       var scFields = document.getElementById('sc-fields');
       if (scFields) {
         var tiles = '';
@@ -1335,7 +834,6 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     try {
       const connectBtn = document.getElementById('connectBtn');
       if (!connectBtn) return;
-      // use the URL param `userId` which may be numeric
       const urlParams = new URLSearchParams(window.location.search);
       const targetId = urlParams.get('userId') || urlParams.get('id') || '';
       if (!targetId) return;
@@ -1398,6 +896,8 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         viewedProfileId: userId || '(own profile)',
         incomingIdentifiers: getNormalizer().getIdentifierSet ? getNormalizer().getIdentifierSet(updated) : []
       });
+      showStaleBadge('Update ignored: different profile');
+      emitAnalytics('profile:sync:rejected', { reason: 'wrong_profile' });
       return;
     }
 
@@ -1406,6 +906,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         incomingTs: incomingTs,
         currentTs: lastAppliedProfileTs
       });
+      showStaleBadge('Update ignored: older than current data');
       return;
     }
 
@@ -1413,6 +914,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     payload = updated;
     updateUI(updated);
     applyCardStyle(updated);
+    emitAnalytics('profile:sync:applied', { ts: incomingTs });
   });
 
   /* Media — show real data or empty state */
@@ -1443,28 +945,3 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   const rc=document.getElementById('recommended-content');
   rc.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted)"><i class="fa-regular fa-user" style="font-size:24px;margin-bottom:8px;display:block"></i>No recommendations yet</div>';
 })();
-} // end fallback guard
-</script>
-<script src="../../js/follow.js"></script>
-<footer style="display:none">
-  <a href="../legal/privacy.html">Privacy Policy</a>
-  <a href="../legal/terms.html">Terms of Use</a>
-  <a href="../company/report-abuse.html">Report Abuse</a>
-</footer>
-<script src="../../js/public-profile-nav.js"></script>
-<script src="../../js/shared-ui.js"></script>
-<script>
-  if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
-    window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
-  }
-</script>
-<script>
-  document.addEventListener('DOMContentLoaded', async function () {
-    if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
-    if (window.UserUI) window.UserUI.bindAllChips();
-  });
-</script>
-<script src="/js/navigation.js"></script>
-</body>
-</html>
-

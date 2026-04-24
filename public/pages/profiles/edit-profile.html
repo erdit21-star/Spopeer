@@ -8,7 +8,9 @@
   <title>Edit Profile — Spopeer</title>
   <script src="../../js/profile-runtime.js"></script>
   <script src="../../js/profile-identity.js"></script>
+  <script src="../../js/profile-migration.js"></script>
   <script src="../../js/profile-normalizer.js"></script>
+  <script src="../../js/profile-schema.js"></script>
   <script src="../../js/profile-sync-service.js"></script>
   <script src="../../js/api.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -2873,6 +2875,17 @@ if (window.profileRuntime) {
   }
 
   async function saveSection(profileData) {
+    // Schema validation before sending to the server
+    if (window.ProfileSchema) {
+      var cleanPayload = window.ProfileSchema.sanitize(profileData);
+      var validation = window.ProfileSchema.validate(cleanPayload);
+      if (!validation.valid) {
+        var msg = 'Profile data invalid: ' + validation.errors.slice(0, 3).join('; ');
+        showToast(msg, 'error');
+        throw new Error(msg);
+      }
+      profileData = cleanPayload;
+    }
     var outgoing = normalizeProfileForSave(profileData, Date.now());
     var headers = { 'Content-Type': 'application/json' };
     var response = await fetch('/api/profiles', {
