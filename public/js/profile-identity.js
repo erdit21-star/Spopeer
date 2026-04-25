@@ -17,10 +17,25 @@
     return getStableId();
   }
 
+  function getAppRootPathname() {
+    var path = window.location.pathname || '/';
+    var pagesIndex = path.indexOf('/pages/');
+
+    if (pagesIndex !== -1) {
+      return path.slice(0, pagesIndex + 1);
+    }
+
+    var lastSlash = path.lastIndexOf('/');
+    return lastSlash === -1 ? '/' : path.slice(0, lastSlash + 1);
+  }
+
   /** Build a profile URL from any page depth — always uses stable id */
   function buildProfileUrl(basePath, userObj) {
     var identifier = getStableId(userObj);
-    return (basePath || '') + 'pages/profiles/public-profile.html?userId=' + encodeURIComponent(identifier);
+    return new URL(
+      'pages/profiles/public-profile.html?userId=' + encodeURIComponent(identifier),
+      window.location.origin + getAppRootPathname()
+    ).toString();
   }
 
   function buildOwnProfileUrl(basePath) {

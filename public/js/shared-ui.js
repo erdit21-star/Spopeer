@@ -27,17 +27,77 @@
     return document.querySelector('[data-user-menu]') || document.getElementById('profileMenu');
   };
 
+  function getAppRootPathname() {
+    var path = window.location.pathname || '/';
+    var pagesIndex = path.indexOf('/pages/');
+
+    if (pagesIndex !== -1) {
+      return path.slice(0, pagesIndex + 1);
+    }
+
+    var lastSlash = path.lastIndexOf('/');
+    return lastSlash === -1 ? '/' : path.slice(0, lastSlash + 1);
+  }
+
+  function buildAppUrl(relativePath) {
+    var normalizedPath = String(relativePath || '').replace(/^\/+/, '');
+    return new URL(normalizedPath, window.location.origin + getAppRootPathname()).toString();
+  }
+
+  function navigateToAppPath(relativePath) {
+    window.location.href = buildAppUrl(relativePath);
+  }
+
   function getProfileUrl(basePath) {
     if (window.SpopeerProfileIdentity) {
       return window.SpopeerProfileIdentity.buildProfileUrl(basePath);
     }
     var user = getUserProfile();
     var identifier = user.id || user.userId || user.email || user.userEmail || '';
-    return basePath + 'pages/profiles/public-profile.html?userId=' + encodeURIComponent(identifier);
+    return buildAppUrl('pages/profiles/public-profile.html?userId=' + encodeURIComponent(identifier));
   }
 
   function getEditProfileUrl(basePath) {
-    return basePath + 'pages/profiles/edit-profile.html';
+    return buildAppUrl('pages/profiles/edit-profile.html');
+  }
+
+  function getProfileMenuActionUrl(action, basePath) {
+    switch (action) {
+      case 'view-profile':
+        return getProfileUrl(basePath);
+      case 'edit-profile':
+        return getEditProfileUrl(basePath);
+      case 'your-activity':
+        return buildAppUrl('pages/profiles/user-posts.html');
+      case 'account-settings':
+        return buildAppUrl('pages/dashboard/settings.html');
+      case 'notifications':
+        return buildAppUrl('pages/dashboard/notifications.html');
+      case 'privacy':
+        return buildAppUrl('pages/legal/privacy.html');
+      case 'connections':
+        return buildAppUrl('pages/messaging/inbox.html');
+      case 'library':
+        return buildAppUrl('pages/library/index.html');
+      case 'events':
+        return buildAppUrl('pages/events/event.html');
+      case 'help':
+        return buildAppUrl('pages/company/help-center.html');
+      case 'report':
+        return buildAppUrl('pages/contact/index.html');
+      case 'my-analytics':
+        return buildAppUrl('pages/marketplace/analytics.html');
+      case 'achievements':
+        return buildAppUrl('pages/profiles/user-posts.html');
+      case 'my-sports':
+        return buildAppUrl('pages/profiles/edit-profile.html#section-sports');
+      case 'invite-friends':
+        return buildAppUrl('pages/contact/index.html');
+      case 'switch-account':
+        return buildAppUrl('pages/auth/login.html');
+      default:
+        return null;
+    }
   }
 
   function downloadUserData() {
@@ -195,23 +255,7 @@
         if (!button) return;
 
         var routes = {
-          'view-profile': function () { window.navigateToProfile(); },
-          'edit-profile': function () { window.navigateToEditProfile(); },
-          'your-activity': function () { window.location.href = basePath + 'pages/profiles/user-posts.html'; },
-          'account-settings': function () { window.location.href = basePath + 'pages/dashboard/settings.html'; },
-          'notifications': function () { window.location.href = basePath + 'pages/dashboard/notifications.html'; },
-          'privacy': function () { window.location.href = basePath + 'pages/legal/privacy.html'; },
-          'connections': function () { window.location.href = basePath + 'pages/messaging/inbox.html'; },
-          'library': function () { window.location.href = basePath + 'pages/library/index.html'; },
-          'events': function () { window.location.href = basePath + 'pages/events/event.html'; },
-          'help': function () { window.location.href = basePath + 'pages/company/help-center.html'; },
-          'report': function () { window.location.href = basePath + 'pages/contact/index.html'; },
-          'my-analytics': function () { window.location.href = basePath + 'pages/marketplace/analytics.html'; },
-          'achievements': function () { window.location.href = basePath + 'pages/profiles/user-posts.html'; },
-          'my-sports': function () { window.location.href = basePath + 'pages/profiles/edit-profile.html#section-sports'; },
-          'invite-friends': function () { window.location.href = basePath + 'pages/contact/index.html'; },
           'download-data': function () { downloadUserData(); showInlineStatus(statusNode, 'Your account data export has started.'); },
-          'switch-account': function () { window.location.href = '/pages/auth/login.html'; },
           'logout': async function () {
             try {
               if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === 'function') {
@@ -245,11 +289,14 @@
             }
 
             try { sessionStorage.clear(); } catch (err) { console.debug('sessionStorage.clear failed during shared-ui logout', err); }
-            window.location.replace('/index.html');
+            window.location.replace(buildAppUrl('index.html'));
           }
         };
 
-        if (routes[button.dataset.action]) {
+        var targetUrl = getProfileMenuActionUrl(button.dataset.action, basePath);
+        if (targetUrl) {
+          window.location.href = targetUrl;
+        } else if (routes[button.dataset.action]) {
           routes[button.dataset.action]();
         }
         closeMenu();
@@ -366,13 +413,13 @@
       '<div><div class="sp-mobile-drawer-name">' + firstName + ' ' + lastName + '</div>' +
       '<div class="sp-mobile-drawer-handle">' + handle + '</div></div></div>' +
       '<nav class="sp-mobile-drawer-nav">' +
-        '<a href="' + basePath + 'feed.html" class="sp-mobile-drawer-link"><i class="fa-solid fa-house"></i> Home</a>' +
+        '<a href="' + buildAppUrl('feed.html') + '" class="sp-mobile-drawer-link"><i class="fa-solid fa-house"></i> Home</a>' +
         '<a href="' + getProfileUrl(basePath) + '" class="sp-mobile-drawer-link"><i class="fa-regular fa-user"></i> View Profile</a>' +
         '<a href="' + getEditProfileUrl(basePath) + '" class="sp-mobile-drawer-link"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</a>' +
-        '<a href="' + basePath + 'pages/search/search.html" class="sp-mobile-drawer-link"><i class="fa-solid fa-magnifying-glass"></i> Search</a>' +
-        '<a href="' + basePath + 'pages/messaging/inbox.html" class="sp-mobile-drawer-link"><i class="fa-regular fa-paper-plane"></i> Messages</a>' +
-        '<a href="' + basePath + 'pages/dashboard/notifications.html" class="sp-mobile-drawer-link"><i class="fa-regular fa-bell"></i> Notifications</a>' +
-        '<a href="' + basePath + 'pages/dashboard/settings.html" class="sp-mobile-drawer-link"><i class="fa-regular fa-gear"></i> Settings</a>' +
+        '<a href="' + buildAppUrl('pages/search/search.html') + '" class="sp-mobile-drawer-link"><i class="fa-solid fa-magnifying-glass"></i> Search</a>' +
+        '<a href="' + buildAppUrl('pages/messaging/inbox.html') + '" class="sp-mobile-drawer-link"><i class="fa-regular fa-paper-plane"></i> Messages</a>' +
+        '<a href="' + buildAppUrl('pages/dashboard/notifications.html') + '" class="sp-mobile-drawer-link"><i class="fa-regular fa-bell"></i> Notifications</a>' +
+        '<a href="' + buildAppUrl('pages/dashboard/settings.html') + '" class="sp-mobile-drawer-link"><i class="fa-regular fa-gear"></i> Settings</a>' +
         '<a href="#" class="sp-mobile-drawer-link logout" data-mobile-logout><i class="fa-solid fa-right-from-bracket"></i> Log Out</a>' +
       '</nav>';
     document.body.appendChild(drawer);
@@ -381,9 +428,9 @@
     var bottomNav = document.createElement('nav');
     bottomNav.className = 'sp-mobile-bottom-nav';
     bottomNav.innerHTML = '<div class="sp-mobile-bottom-nav-inner">' +
-      '<a href="' + basePath + 'feed.html" class="sp-mobile-tab" data-tab="home"><i class="fa-solid fa-house"></i><span>Home</span></a>' +
-      '<a href="' + basePath + 'pages/search/search.html" class="sp-mobile-tab" data-tab="search"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></a>' +
-      '<a href="' + basePath + 'pages/messaging/inbox.html" class="sp-mobile-tab" data-tab="inbox"><i class="fa-regular fa-paper-plane"></i><span>Inbox</span></a>' +
+      '<a href="' + buildAppUrl('feed.html') + '" class="sp-mobile-tab" data-tab="home"><i class="fa-solid fa-house"></i><span>Home</span></a>' +
+      '<a href="' + buildAppUrl('pages/search/search.html') + '" class="sp-mobile-tab" data-tab="search"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></a>' +
+      '<a href="' + buildAppUrl('pages/messaging/inbox.html') + '" class="sp-mobile-tab" data-tab="inbox"><i class="fa-regular fa-paper-plane"></i><span>Inbox</span></a>' +
       '<a href="' + getProfileUrl(basePath) + '" class="sp-mobile-tab" data-tab="profile"><i class="fa-regular fa-user"></i><span>Profile</span></a>' +
     '</div>';
     document.body.appendChild(bottomNav);
@@ -434,10 +481,10 @@
 
     // Ensure top quick-nav buttons route correctly on every authenticated page.
     [
-      { id: 'marketplaceBtn', path: basePath + 'pages/marketplace/marketplace.html' },
-      { id: 'exploreBtn', path: basePath + 'pages/search/search.html' },
-      { id: 'messagesBtn', path: basePath + 'pages/messaging/inbox.html' },
-      { id: 'notifBtn', path: basePath + 'pages/dashboard/notifications.html' }
+      { id: 'marketplaceBtn', path: buildAppUrl('pages/marketplace/marketplace.html') },
+      { id: 'exploreBtn', path: buildAppUrl('pages/search/search.html') },
+      { id: 'messagesBtn', path: buildAppUrl('pages/messaging/inbox.html') },
+      { id: 'notifBtn', path: buildAppUrl('pages/dashboard/notifications.html') }
     ].forEach(function (entry) {
       var el = document.getElementById(entry.id);
       if (!el) return;
@@ -469,7 +516,7 @@
       });
 
       try { sessionStorage.clear(); } catch (err) { console.debug('sessionStorage.clear failed during mobile logout', err); }
-      window.location.replace('/index.html');
+      window.location.replace(buildAppUrl('index.html'));
     });
   }
 
@@ -477,6 +524,7 @@
   window.sharedUi.setupSocialFeedRuntime = setupSocialFeedRuntime;
   window.sharedUi.downloadUserData = downloadUserData;
   window.sharedUi.ensureMobileChrome = ensureMobileChrome;
+  window.sharedUi.getProfileMenuActionUrl = getProfileMenuActionUrl;
 
   /* ── Shared notification helpers ── */
   var NOTIF_KEY = 'spopeer_notifications';
