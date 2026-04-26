@@ -727,6 +727,46 @@
    */
 
   /**
+   * Injects an Ads Manager icon button into the topnav .nav-right area,
+   * before the user-chip, on every authenticated page.
+   * Skips pages that are themselves the Ads Manager page (already there).
+   * Skips if already injected (idempotent).
+   */
+  function ensureAdsNavItem() {
+    var navRight = document.querySelector('.nav-right');
+    if (!navRight) return;
+
+    // Already injected?
+    if (navRight.querySelector('[data-ads-nav]')) return;
+
+    var adsUrl = buildAppUrl('pages/ads/ads-manager.html');
+
+    var btn = document.createElement('button');
+    btn.className = 'nav-icon';
+    btn.setAttribute('title', 'Ads Manager');
+    btn.setAttribute('data-ads-nav', '1');
+    btn.setAttribute('aria-label', 'Ads Manager');
+    btn.innerHTML = '<i class="fa-solid fa-bullhorn"></i>';
+
+    // Highlight if currently on the ads-manager page
+    if (window.location.pathname.indexOf('/ads/ads-manager') !== -1) {
+      btn.classList.add('active-page');
+    }
+
+    btn.addEventListener('click', function () {
+      window.location.href = adsUrl;
+    });
+
+    // Insert before the user-chip (last child) so it sits alongside other nav icons
+    var userChipEl = navRight.querySelector('[data-user-chip]');
+    if (userChipEl) {
+      navRight.insertBefore(btn, userChipEl);
+    } else {
+      navRight.appendChild(btn);
+    }
+  }
+
+  /**
    * Normalize all Sponsor/Sponsorship links to use the canonical absolute path.
    * Handles: <a> href, <button> onclick, sidebar .nav-item links.
    */
@@ -814,6 +854,7 @@
     // User chip/menu rendering is now handled by UserUI/CurrentUserStore only.
     normalizeSponsorLinks();
     ensureSponsorNavItem();
+    ensureAdsNavItem();
 
     // Auto-call setupSocialFeedRuntime if not already done
     // (pages that explicitly call it will have already set it up)
@@ -827,6 +868,7 @@
   // window.sharedUi.ensureUserChipAndMenu = ensureUserChipAndMenu;
   window.sharedUi.normalizeSponsorLinks = normalizeSponsorLinks;
   window.sharedUi.ensureSponsorNavItem = ensureSponsorNavItem;
+  window.sharedUi.ensureAdsNavItem = ensureAdsNavItem;
   window.sharedUi.SPONSOR_ROUTE = SPONSOR_ROUTE;
   window.sharedUi.getDisplayName = getDisplayName;
 

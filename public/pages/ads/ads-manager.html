@@ -26,7 +26,8 @@
   <script src="../../js/mobile-enhancements.js" defer></script>
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* [hidden] must be explicit for cross-browser safety */
+    [hidden] { display: none !important; }
 
     .ads-layout {
       display: grid;
@@ -887,7 +888,7 @@
               <div class="audience-filters-label">Active filters</div>
               <span class="audience-pill"><i class="fa-solid fa-location-dot"></i> Greece</span>
               <span class="audience-pill"><i class="fa-solid fa-futbol"></i> Rugby</span>
-              <span class="audience-pill"><i class="fa-solid fa-bow-arrow"></i> Archery</span>
+              <span class="audience-pill"><i class="fa-solid fa-bullseye"></i> Archery</span>
               <span class="audience-pill"><i class="fa-solid fa-users"></i> Ages 18–35</span>
             </div>
           </div>
@@ -912,7 +913,7 @@
               <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
             </div>
             <div class="placement-row">
-              <div class="placement-name"><i class="fa-solid fa-sidebar"></i> Right sidebar</div>
+              <div class="placement-name"><i class="fa-solid fa-table-columns"></i> Right sidebar</div>
               <div class="toggle off" role="switch" aria-checked="false" onclick="togglePlacement(this)"></div>
             </div>
             <div class="placement-row">
@@ -1020,7 +1021,7 @@
           <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
         </div>
         <div class="placement-row">
-          <div class="placement-name"><i class="fa-solid fa-sidebar"></i> Right sidebar</div>
+          <div class="placement-name"><i class="fa-solid fa-table-columns"></i> Right sidebar</div>
           <div class="toggle off" role="switch" aria-checked="false" onclick="togglePlacement(this)"></div>
         </div>
         <div class="placement-row">
@@ -1138,20 +1139,27 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', async function () {
-  if (window.CurrentUserStore && window.CurrentUserStore.refreshCurrentUser) {
-    await window.CurrentUserStore.refreshCurrentUser();
-  }
-  if (window.UserUI && window.UserUI.bindAllChips) {
-    window.UserUI.bindAllChips();
-  }
-  if (window.sharedUi && typeof window.sharedUi.setupSocialFeedRuntime === 'function') {
-    window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
-  }
-
+document.addEventListener('DOMContentLoaded', function () {
+  // UserUI chip binding and shared runtime are handled by shared-ui.js autoInit.
+  // We only need to populate dynamic content here.
   loadCampaigns();
   renderChart();
   updateMetrics();
+
+  // Attach modal event listeners after DOM is ready
+  var modal = document.getElementById('campaignModal');
+  if (modal) {
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  var btnNew = document.getElementById('btnNewCampaign');
+  if (btnNew) btnNew.addEventListener('click', openModal);
 });
 
 // ── Local campaign store ──────────────────────────────────────
@@ -1282,16 +1290,6 @@ function openModal() {
 function closeModal() {
   document.getElementById('campaignModal').classList.remove('open');
 }
-
-document.getElementById('campaignModal').addEventListener('click', function (e) {
-  if (e.target === this) closeModal();
-});
-
-document.addEventListener('keydown', function (e) {
-  if (e.key === 'Escape') closeModal();
-});
-
-document.getElementById('btnNewCampaign').addEventListener('click', openModal);
 
 function createCampaign() {
   var name = document.getElementById('campName').value.trim();
