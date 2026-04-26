@@ -4,6 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spopeer - Ads Manager</title>
+  <script>
+    // Keep Ads Manager outside SES lockdown to avoid breaking navigation/UI APIs.
+    window.__SES_DISABLED__ = true;
+  </script>
+  <script src="/js/lockdown-install.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/sanitize.js"></script>
   <script src="/js/auth-guard.js"></script>
