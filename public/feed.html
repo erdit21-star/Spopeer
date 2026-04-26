@@ -16,6 +16,22 @@
   <script>
     window.Auth.requireAuth();
   </script>
+  <!-- Register service worker — inline so it runs regardless of JS cache state -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/js/service-worker.js').then(function (reg) {
+        // When the SW takes over a previously-uncontrolled page, reload once to
+        // ensure all JS files are served through the new SW (fresh from network).
+        if (!navigator.serviceWorker.controller) {
+          navigator.serviceWorker.addEventListener('controllerchange', function () {
+            window.location.reload();
+          });
+        }
+      }).catch(function (err) {
+        console.debug('SW registration failed:', err);
+      });
+    }
+  </script>
   <script src="/js/role-router.js"></script>
   <script src="js/stats-manager.js"></script>
   <script src="js/feed-engine.js"></script>

@@ -856,6 +856,13 @@
     ensureSponsorNavItem();
     ensureAdsNavItem();
 
+    // Register service worker if not already registered (idempotent — browser deduplicates).
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/js/service-worker.js').catch(function (err) {
+        console.debug('SW registration failed:', err);
+      });
+    }
+
     // Auto-call setupSocialFeedRuntime if not already done
     // (pages that explicitly call it will have already set it up)
     if (!window._spSharedRuntimeDone) {
