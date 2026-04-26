@@ -87,6 +87,8 @@
         return buildAppUrl('pages/contact/index.html');
       case 'my-analytics':
         return buildAppUrl('pages/marketplace/analytics.html');
+      case 'ads-manager':
+        return buildAppUrl('pages/ads/ads-manager.html');
       case 'achievements':
         return buildAppUrl('pages/profiles/user-posts.html');
       case 'my-sports':

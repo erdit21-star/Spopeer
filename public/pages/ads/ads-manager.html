@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spopeer - Ads Manager</title>
+  <script src="/js/auth.js"></script>
+  <script src="/js/sanitize.js"></script>
+  <script src="/js/auth-guard.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/profile-normalizer.js"></script>
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/user-ui.js"></script>
+  <script src="/js/shared-ui.js"></script>
+  <script>
+    window.Auth && window.Auth.requireAuth && window.Auth.requireAuth();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <link rel="stylesheet" href="/css/shared-nav.css" />
+  <link rel="stylesheet" href="/css/fonts.css">
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    .ads-layout {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      min-height: calc(100vh - var(--nav-h));
+      background: var(--white);
+    }
+
+    /* ── Ads Sidenav ── */
+    .ads-sidenav {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: var(--nav-h);
+      height: calc(100vh - var(--nav-h));
+      overflow-y: auto;
+    }
+
+    .ads-sidenav::-webkit-scrollbar { width: 4px; }
+    .ads-sidenav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .sidenav-header {
+      padding: 0 16px 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    .sidenav-header .wordmark {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      font-family: var(--fB);
+    }
+
+    .sidenav-header .sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .ads-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-family: var(--fB);
+      color: var(--muted);
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: .15s;
+      background: none;
+      border-top: none;
+      border-right: none;
+      border-bottom: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .ads-nav-item:hover {
+      color: var(--ink);
+      background: rgba(0, 0, 0, .03);
+    }
+
+    .ads-nav-item.active {
+      color: var(--ink);
+      background: var(--white);
+      border-left-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .ads-nav-item i { width: 16px; text-align: center; flex-shrink: 0; opacity: .7; }
+    .ads-nav-item.active i { opacity: 1; }
+
+    .ads-nav-section {
+      font-size: 10px;
+      color: var(--muted-2);
+      padding: 12px 16px 4px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-family: var(--fB);
+      font-weight: 700;
+    }
+
+    /* ── Main area ── */
+    .ads-main {
+      padding: 24px;
+      overflow: auto;
+      background: var(--white);
+    }
+
+    .ads-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .ads-topbar h1 {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: var(--fD);
+      color: var(--ink);
+    }
+
+    .btn-new-campaign {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border: none;
+      border-radius: var(--rM);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--fB);
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+
+    .btn-new-campaign:hover { opacity: .88; }
+
+    /* ── Metrics grid ── */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rM);
+      padding: 16px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--fB);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .metric-val {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: var(--fD);
+      color: var(--ink);
+    }
+
+    .metric-change {
+      font-size: 11px;
+      margin-top: 4px;
+      font-family: var(--fB);
+    }
+
+    .metric-change.up { color: #3B6D11; }
+    .metric-change.dn { color: #A32D2D; }
+
+    /* ── Two-column layout ── */
+    .ads-two-col {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 16px;
+    }
+
+    .ads-col { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Cards ── */
+    .ads-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--rL);
+      padding: 16px;
+    }
+
+    .ads-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--fD);
+      color: var(--ink);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title-right {
+      font-size: 11px;
+      color: var(--blue);
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--fB);
+    }
+
+    .card-title-right:hover { text-decoration: underline; }
+
+    /* ── Campaign rows ── */
+    .campaign-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .campaign-row:last-child { border-bottom: none; }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-dot.live { background: #3B6D11; }
+    .status-dot.paused { background: #BA7517; }
+    .status-dot.ended { background: var(--muted-2); }
+
+    .camp-name {
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--fB);
+      color: var(--ink);
+    }
+
+    .camp-type {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .camp-stat {
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--fB);
+      color: var(--ink);
+      text-align: right;
+      min-width: 52px;
+    }
+
+    .camp-stat-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .pill {
+      font-size: 10px;
+      padding: 3px 9px;
+      border-radius: var(--pill);
+      font-weight: 600;
+      font-family: var(--fB);
+    }
+
+    .pill.live { background: #EAF3DE; color: #3B6D11; }
+    .pill.paused { background: #FAEEDA; color: #854F0B; }
+    .pill.ended { background: var(--surface); color: var(--muted); }
+
+    /* ── Mini chart ── */
+    .mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 56px;
+      margin: 4px 0 10px;
+    }
+
+    .chart-bar {
+      flex: 1;
+      border-radius: 3px 3px 0 0;
+      min-height: 4px;
+      background: var(--blue);
+      opacity: .5;
+      transition: opacity .15s;
+    }
+
+    .chart-bar:hover { opacity: 1; }
+    .chart-bar.current { opacity: 1; background: var(--accent); }
+
+    .sparkline-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted-2);
+      margin-top: 4px;
+      font-family: var(--fB);
+    }
+
+    /* ── Audience reach ── */
+    .mini-bar-wrap { margin-bottom: 12px; }
+
+    .mini-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-family: var(--fB);
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .mini-bar-label .pct { font-weight: 600; color: var(--ink); }
+
+    .mini-bar-track {
+      height: 6px;
+      background: var(--surface);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--accent);
+      transition: width .4s ease;
+    }
+
+    /* ── Audience filters ── */
+    .audience-filters {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      margin-top: 8px;
+    }
+
+    .audience-filters-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--fB);
+      margin-bottom: 8px;
+    }
+
+    .audience-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--pill);
+      color: var(--muted);
+      background: var(--surface);
+      margin: 2px;
+      font-family: var(--fB);
+    }
+
+    /* ── Placements ── */
+    .placement-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 13px;
+      font-family: var(--fB);
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .placement-row:last-child { border-bottom: none; }
+
+    .placement-name { display: flex; align-items: center; gap: 8px; }
+    .placement-name i { color: var(--blue); width: 16px; text-align: center; }
+
+    .toggle {
+      width: 28px;
+      height: 16px;
+      border-radius: 8px;
+      background: var(--accent);
+      position: relative;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .toggle::after {
+      content: '';
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      transition: right .2s;
+    }
+
+    .toggle.off {
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .toggle.off::after {
+      right: auto;
+      left: 2px;
+    }
+
+    /* ── Format grid ── */
+    .format-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .format-card {
+      border: 1px solid var(--border);
+      border-radius: var(--rM);
+      padding: 12px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+
+    .format-card:hover {
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
+    .format-card-icon {
+      font-size: 18px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .format-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--fB);
+      color: var(--ink);
+      margin-bottom: 3px;
+    }
+
+    .format-card-desc {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--fB);
+    }
+
+    /* ── New Campaign Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--white);
+      border-radius: var(--rL);
+      padding: 28px;
+      width: 540px;
+      max-width: calc(100vw - 32px);
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(12px);
+      transition: transform .2s;
+    }
+
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: var(--fD);
+      color: var(--ink);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: var(--rS);
+      transition: color .15s;
+    }
+
+    .modal-close:hover { color: var(--ink); }
+
+    .form-group { margin-bottom: 18px; }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--fB);
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--rM);
+      font-size: 13px;
+      font-family: var(--fB);
+      color: var(--ink);
+      background: var(--white);
+      transition: border-color .15s;
+      outline: none;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .form-textarea { resize: vertical; min-height: 72px; }
+
+    .placement-checkboxes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .placement-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--rM);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      font-size: 13px;
+      font-family: var(--fB);
+      color: var(--muted);
+    }
+
+    .placement-checkbox input[type="checkbox"] { accent-color: var(--accent); }
+
+    .placement-checkbox:has(input:checked) {
+      border-color: var(--accent);
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .budget-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-secondary {
+      padding: 9px 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--rM);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--fB);
+      color: var(--muted);
+      background: var(--white);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+
+    .btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+    .btn-primary {
+      padding: 9px 18px;
+      border: none;
+      border-radius: var(--rM);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--fB);
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+
+    .btn-primary:hover { opacity: .88; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state i {
+      font-size: 36px;
+      color: var(--border);
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      font-size: 13px;
+      font-family: var(--fB);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .ads-layout { grid-template-columns: 1fr; }
+      .ads-sidenav { display: none; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .ads-two-col { grid-template-columns: 1fr; }
+      .format-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 540px) {
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .format-grid { grid-template-columns: 1fr; }
+      .placement-checkboxes { grid-template-columns: 1fr; }
+      .budget-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="nav-inner">
+    <a href="/index.html" class="logo">
+      <span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer" onerror="this.style.display='none'"></span>
+      <span class="logo-text">Spopeer</span>
+    </a>
+
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="navSearchInput" placeholder="Search campaigns, audiences, placements">
+    </div>
+
+    <div class="nav-right">
+      <button class="nav-icon" title="Marketplace" onclick="window.location.href='/pages/marketplace/marketplace.html'"><i class="fa-solid fa-store"></i></button>
+      <button class="nav-icon" title="Explore" onclick="window.location.href='/pages/search/search.html'"><i class="fa-regular fa-compass"></i></button>
+      <button class="nav-icon" title="Messages" onclick="window.location.href='/pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
+      <button class="nav-icon" title="Notifications" onclick="window.location.href='/pages/dashboard/notifications.html'">
+        <i class="fa-regular fa-bell"></i>
+      </button>
+      <div class="user-chip" id="userChip" data-user-chip role="button" aria-haspopup="menu" aria-expanded="false">
+        <span class="chip-avatar" data-user-chip-avatar>U</span>
+        <span class="chip-name" data-user-chip-name>Loading...</span>
+        <i class="fa-solid fa-chevron-down chip-caret"></i>
+      </div>
+      <div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">
+        <div class="profile-menu-section" data-section="identity">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
+            <div class="profile-menu-title">Your Identity</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
+            <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
+            <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="account">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Account and Settings</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
+            <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
+            <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy and Safety</button>
+            <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
+            <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
+            <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="features">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Platform Features</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>
+            <button class="profile-menu-item" data-action="ads-manager"><i class="fa-solid fa-bullhorn"></i> Ads Manager</button>
+            <button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements and Badges</button>
+            <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
+            <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
+            <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
+            <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="help">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Help and Misc</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
+            <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
+            <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
+          </div>
+        </div>
+        <div class="profile-menu-section">
+          <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
+            <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Ads Manager Layout -->
+<div class="ads-layout">
+
+  <!-- Sidenav -->
+  <nav class="ads-sidenav" aria-label="Ads Manager navigation">
+    <div class="sidenav-header">
+      <div class="wordmark">Spopeer</div>
+      <div class="sub">Ads Manager</div>
+    </div>
+
+    <button class="ads-nav-item active" data-ads-section="overview" onclick="showSection('overview', this)">
+      <i class="fa-solid fa-table-cells-large"></i> Overview
+    </button>
+    <button class="ads-nav-item" data-ads-section="campaigns" onclick="showSection('campaigns', this)">
+      <i class="fa-solid fa-chart-line"></i> Campaigns
+    </button>
+    <button class="ads-nav-item" data-ads-section="schedule" onclick="showSection('schedule', this)">
+      <i class="fa-regular fa-clock"></i> Ad Schedule
+    </button>
+
+    <div class="ads-nav-section">Targeting</div>
+    <button class="ads-nav-item" data-ads-section="audience" onclick="showSection('audience', this)">
+      <i class="fa-regular fa-users"></i> Audience
+    </button>
+    <button class="ads-nav-item" data-ads-section="placements" onclick="showSection('placements', this)">
+      <i class="fa-solid fa-star"></i> Placements
+    </button>
+
+    <div class="ads-nav-section">Billing</div>
+    <button class="ads-nav-item" data-ads-section="billing" onclick="showSection('billing', this)">
+      <i class="fa-regular fa-credit-card"></i> Budget &amp; Billing
+    </button>
+    <button class="ads-nav-item" data-ads-section="invoices" onclick="showSection('invoices', this)">
+      <i class="fa-regular fa-file-lines"></i> Invoices
+    </button>
+  </nav>
+
+  <!-- Main dashboard -->
+  <main class="ads-main">
+
+    <!-- Overview section -->
+    <div id="section-overview" class="ads-section">
+      <div class="ads-topbar">
+        <h1>Campaign overview</h1>
+        <button class="btn-new-campaign" id="btnNewCampaign">
+          <i class="fa-solid fa-plus"></i> New Campaign
+        </button>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Total Spend</div>
+          <div class="metric-val" id="metricSpend">€0</div>
+          <div class="metric-change up" id="metricSpendChange">— vs last month</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Impressions</div>
+          <div class="metric-val" id="metricImpressions">0</div>
+          <div class="metric-change up" id="metricImpChange">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Clicks</div>
+          <div class="metric-val" id="metricClicks">0</div>
+          <div class="metric-change up" id="metricClickChange">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Avg. CTR</div>
+          <div class="metric-val" id="metricCtr">0%</div>
+          <div class="metric-change" id="metricCtrChange">—</div>
+        </div>
+      </div>
+
+      <!-- Two-column content -->
+      <div class="ads-two-col">
+
+        <!-- Left column -->
+        <div class="ads-col">
+          <!-- Active campaigns card -->
+          <div class="ads-card">
+            <div class="ads-card-title">
+              Active campaigns
+              <span class="card-title-right" onclick="showSection('campaigns', document.querySelector('[data-ads-section=campaigns]'))">View all</span>
+            </div>
+            <div id="campaignList">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Impressions chart -->
+          <div class="ads-card">
+            <div class="ads-card-title">Impressions this month</div>
+            <div class="mini-chart" id="impressionsChart">
+              <!-- bars generated by JS -->
+            </div>
+            <div class="sparkline-labels">
+              <span>Apr 1</span><span>Apr 10</span><span>Apr 20</span><span>Apr 27</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="ads-col">
+          <!-- Audience reach -->
+          <div class="ads-card">
+            <div class="ads-card-title">Audience reach</div>
+            <div class="mini-bar-wrap">
+              <div class="mini-bar-label"><span>Athletes</span><span class="pct">62%</span></div>
+              <div class="mini-bar-track"><div class="mini-bar-fill" style="width:62%;background:var(--accent)"></div></div>
+            </div>
+            <div class="mini-bar-wrap">
+              <div class="mini-bar-label"><span>Coaches</span><span class="pct">21%</span></div>
+              <div class="mini-bar-track"><div class="mini-bar-fill" style="width:21%;background:#378ADD"></div></div>
+            </div>
+            <div class="mini-bar-wrap">
+              <div class="mini-bar-label"><span>Clubs</span><span class="pct">12%</span></div>
+              <div class="mini-bar-track"><div class="mini-bar-fill" style="width:12%;background:#85B7EB"></div></div>
+            </div>
+            <div class="mini-bar-wrap">
+              <div class="mini-bar-label"><span>Support pros</span><span class="pct">5%</span></div>
+              <div class="mini-bar-track"><div class="mini-bar-fill" style="width:5%;background:#B5D4F4"></div></div>
+            </div>
+            <div class="audience-filters">
+              <div class="audience-filters-label">Active filters</div>
+              <span class="audience-pill"><i class="fa-solid fa-location-dot"></i> Greece</span>
+              <span class="audience-pill"><i class="fa-solid fa-futbol"></i> Rugby</span>
+              <span class="audience-pill"><i class="fa-solid fa-bow-arrow"></i> Archery</span>
+              <span class="audience-pill"><i class="fa-solid fa-users"></i> Ages 18–35</span>
+            </div>
+          </div>
+
+          <!-- Ad placements -->
+          <div class="ads-card">
+            <div class="ads-card-title">Ad placements</div>
+            <div class="placement-row">
+              <div class="placement-name"><i class="fa-regular fa-newspaper"></i> Feed (sponsored post)</div>
+              <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
+            </div>
+            <div class="placement-row">
+              <div class="placement-name"><i class="fa-solid fa-users"></i> Community page</div>
+              <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
+            </div>
+            <div class="placement-row">
+              <div class="placement-name"><i class="fa-solid fa-magnifying-glass"></i> Search results</div>
+              <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
+            </div>
+            <div class="placement-row">
+              <div class="placement-name"><i class="fa-solid fa-store"></i> Marketplace</div>
+              <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
+            </div>
+            <div class="placement-row">
+              <div class="placement-name"><i class="fa-solid fa-sidebar"></i> Right sidebar</div>
+              <div class="toggle off" role="switch" aria-checked="false" onclick="togglePlacement(this)"></div>
+            </div>
+            <div class="placement-row">
+              <div class="placement-name"><i class="fa-solid fa-film"></i> Reels / Stories</div>
+              <div class="toggle off" role="switch" aria-checked="false" onclick="togglePlacement(this)"></div>
+            </div>
+          </div>
+
+          <!-- Ad formats -->
+          <div class="ads-card">
+            <div class="ads-card-title">Ad formats</div>
+            <div class="format-grid">
+              <div class="format-card">
+                <div class="format-card-icon"><i class="fa-regular fa-image"></i></div>
+                <div class="format-card-name">Sponsored post</div>
+                <div class="format-card-desc">Image + text + CTA</div>
+              </div>
+              <div class="format-card">
+                <div class="format-card-icon"><i class="fa-solid fa-rectangle-ad"></i></div>
+                <div class="format-card-name">Banner ad</div>
+                <div class="format-card-desc">Sidebar display</div>
+              </div>
+              <div class="format-card">
+                <div class="format-card-icon"><i class="fa-solid fa-thumbtack"></i></div>
+                <div class="format-card-name">Community pin</div>
+                <div class="format-card-desc">Pinned group post</div>
+              </div>
+              <div class="format-card">
+                <div class="format-card-icon"><i class="fa-solid fa-arrow-up-right-dots"></i></div>
+                <div class="format-card-name">Search boost</div>
+                <div class="format-card-desc">Top of results</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /overview -->
+
+    <!-- Campaigns section -->
+    <div id="section-campaigns" class="ads-section" hidden>
+      <div class="ads-topbar">
+        <h1>Campaigns</h1>
+        <button class="btn-new-campaign" onclick="openModal()">
+          <i class="fa-solid fa-plus"></i> New Campaign
+        </button>
+      </div>
+      <div class="ads-card">
+        <div id="allCampaignList"></div>
+      </div>
+    </div>
+
+    <!-- Schedule section -->
+    <div id="section-schedule" class="ads-section" hidden>
+      <div class="ads-topbar"><h1>Ad Schedule</h1></div>
+      <div class="ads-card">
+        <div class="empty-state">
+          <i class="fa-regular fa-clock"></i>
+          <p>Ad scheduling will be available soon.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audience section -->
+    <div id="section-audience" class="ads-section" hidden>
+      <div class="ads-topbar"><h1>Audience</h1></div>
+      <div class="ads-card">
+        <div class="mini-bar-wrap">
+          <div class="mini-bar-label"><span>Athletes</span><span class="pct">62%</span></div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:62%;background:var(--accent)"></div></div>
+        </div>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar-label"><span>Coaches</span><span class="pct">21%</span></div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:21%;background:#378ADD"></div></div>
+        </div>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar-label"><span>Clubs</span><span class="pct">12%</span></div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:12%;background:#85B7EB"></div></div>
+        </div>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar-label"><span>Support pros</span><span class="pct">5%</span></div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:5%;background:#B5D4F4"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Placements section -->
+    <div id="section-placements" class="ads-section" hidden>
+      <div class="ads-topbar"><h1>Placements</h1></div>
+      <div class="ads-card">
+        <div class="placement-row">
+          <div class="placement-name"><i class="fa-regular fa-newspaper"></i> Feed (sponsored post)</div>
+          <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
+        </div>
+        <div class="placement-row">
+          <div class="placement-name"><i class="fa-solid fa-users"></i> Community page</div>
+          <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
+        </div>
+        <div class="placement-row">
+          <div class="placement-name"><i class="fa-solid fa-magnifying-glass"></i> Search results</div>
+          <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
+        </div>
+        <div class="placement-row">
+          <div class="placement-name"><i class="fa-solid fa-store"></i> Marketplace</div>
+          <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
+        </div>
+        <div class="placement-row">
+          <div class="placement-name"><i class="fa-solid fa-sidebar"></i> Right sidebar</div>
+          <div class="toggle off" role="switch" aria-checked="false" onclick="togglePlacement(this)"></div>
+        </div>
+        <div class="placement-row">
+          <div class="placement-name"><i class="fa-solid fa-film"></i> Reels / Stories</div>
+          <div class="toggle off" role="switch" aria-checked="false" onclick="togglePlacement(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Billing section -->
+    <div id="section-billing" class="ads-section" hidden>
+      <div class="ads-topbar"><h1>Budget &amp; Billing</h1></div>
+      <div class="ads-card">
+        <div class="empty-state">
+          <i class="fa-regular fa-credit-card"></i>
+          <p>Billing and payment methods coming soon.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoices section -->
+    <div id="section-invoices" class="ads-section" hidden>
+      <div class="ads-topbar"><h1>Invoices</h1></div>
+      <div class="ads-card">
+        <div class="empty-state">
+          <i class="fa-regular fa-file-lines"></i>
+          <p>Your invoices will appear here.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- New Campaign Modal -->
+<div class="modal-overlay" id="campaignModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">New Campaign</div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close modal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="campName">Campaign name</label>
+      <input class="form-input" type="text" id="campName" placeholder="e.g. Tryouts 2025 — Athens" maxlength="100" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="campType">Campaign type</label>
+      <select class="form-select" id="campType">
+        <option value="">Select type…</option>
+        <option value="sport-club">Sport Club promotion</option>
+        <option value="coach">Coach / Trainer promo</option>
+        <option value="event">Event / Tryout</option>
+        <option value="sponsor">Sponsorship outreach</option>
+        <option value="product">Product / Service</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="campDescription">Ad description</label>
+      <textarea class="form-textarea" id="campDescription" placeholder="Write your ad copy here…" maxlength="280"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Ad placements</label>
+      <div class="placement-checkboxes">
+        <label class="placement-checkbox">
+          <input type="checkbox" name="placement" value="feed" checked>
+          <i class="fa-regular fa-newspaper"></i> Feed
+        </label>
+        <label class="placement-checkbox">
+          <input type="checkbox" name="placement" value="marketplace" checked>
+          <i class="fa-solid fa-store"></i> Marketplace
+        </label>
+        <label class="placement-checkbox">
+          <input type="checkbox" name="placement" value="community">
+          <i class="fa-solid fa-users"></i> Community
+        </label>
+        <label class="placement-checkbox">
+          <input type="checkbox" name="placement" value="search">
+          <i class="fa-solid fa-magnifying-glass"></i> Search
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="campFormat">Ad format</label>
+      <select class="form-select" id="campFormat">
+        <option value="sponsored-post">Sponsored post (Image + text + CTA)</option>
+        <option value="banner">Banner ad (Sidebar display)</option>
+        <option value="community-pin">Community pin (Pinned group post)</option>
+        <option value="search-boost">Search boost (Top of results)</option>
+      </select>
+    </div>
+
+    <div class="budget-row">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label" for="campBudget">Daily budget (€)</label>
+        <input class="form-input" type="number" id="campBudget" placeholder="10" min="1" max="10000">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label" for="campDuration">Duration (days)</label>
+        <input class="form-input" type="number" id="campDuration" placeholder="7" min="1" max="90">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="createCampaign()">Launch Campaign</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+  if (window.CurrentUserStore && window.CurrentUserStore.refreshCurrentUser) {
+    await window.CurrentUserStore.refreshCurrentUser();
+  }
+  if (window.UserUI && window.UserUI.bindAllChips) {
+    window.UserUI.bindAllChips();
+  }
+  if (window.sharedUi && typeof window.sharedUi.setupSocialFeedRuntime === 'function') {
+    window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+  }
+
+  loadCampaigns();
+  renderChart();
+  updateMetrics();
+});
+
+// ── Local campaign store ──────────────────────────────────────
+var STORE_KEY = 'spopeer_ad_campaigns';
+
+function getCampaigns() {
+  try {
+    return JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveCampaigns(list) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(list));
+}
+
+// ── Section navigation ────────────────────────────────────────
+function showSection(sectionId, navBtn) {
+  document.querySelectorAll('.ads-section').forEach(function (s) { s.hidden = true; });
+  var target = document.getElementById('section-' + sectionId);
+  if (target) target.hidden = false;
+
+  document.querySelectorAll('.ads-nav-item').forEach(function (b) { b.classList.remove('active'); });
+  if (navBtn) navBtn.classList.add('active');
+
+  if (sectionId === 'campaigns') renderAllCampaigns();
+}
+
+// ── Campaign rendering ────────────────────────────────────────
+function statusClass(s) {
+  return { live: 'live', paused: 'paused', ended: 'ended' }[s] || 'ended';
+}
+
+function campaignRowHTML(c) {
+  var sc = statusClass(c.status);
+  return [
+    '<div class="campaign-row">',
+    '  <div class="status-dot ' + sc + '"></div>',
+    '  <div><div class="camp-name">' + escStr(c.name) + '</div>',
+    '       <div class="camp-type">' + escStr(c.type) + ' &middot; ' + escStr(c.placements) + '</div></div>',
+    '  <div><div class="camp-stat">' + escStr(c.impressions) + '</div><div class="camp-stat-lbl">impressions</div></div>',
+    '  <div><div class="camp-stat">€' + escStr(c.spend) + '</div><div class="camp-stat-lbl">spent</div></div>',
+    '  <span class="pill ' + sc + '">' + sc.charAt(0).toUpperCase() + sc.slice(1) + '</span>',
+    '</div>'
+  ].join('');
+}
+
+function escStr(v) {
+  if (v === null || v === undefined) return '';
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+function loadCampaigns() {
+  var campaigns = getCampaigns();
+
+  // Seed demo data on first load
+  if (campaigns.length === 0) {
+    campaigns = [
+      { id: 1, name: 'Tryouts 2025 — Athens', type: 'Sport Club', placements: 'Feed + Community', impressions: '14.2k', spend: '120', status: 'live' },
+      { id: 2, name: 'Coaching clinic — June', type: 'Coach promo', placements: 'Sidebar + Search', impressions: '9.8k', spend: '88', status: 'live' },
+      { id: 3, name: 'Kit sponsor outreach', type: 'Sponsor', placements: 'Community page', impressions: '6.1k', spend: '54', status: 'paused' },
+      { id: 4, name: 'Spring membership drive', type: 'Sport Club', placements: 'Feed', impressions: '18.1k', spend: '80', status: 'ended' }
+    ];
+    saveCampaigns(campaigns);
+  }
+
+  var list = document.getElementById('campaignList');
+  if (list) list.innerHTML = campaigns.map(campaignRowHTML).join('');
+}
+
+function renderAllCampaigns() {
+  var campaigns = getCampaigns();
+  var list = document.getElementById('allCampaignList');
+  if (!list) return;
+  if (campaigns.length === 0) {
+    list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-bullhorn"></i><p>No campaigns yet. Create your first campaign!</p></div>';
+    return;
+  }
+  list.innerHTML = campaigns.map(campaignRowHTML).join('');
+}
+
+// ── Metrics ───────────────────────────────────────────────────
+function updateMetrics() {
+  var campaigns = getCampaigns();
+  var totalSpend = campaigns.reduce(function (acc, c) { return acc + (parseFloat(c.spend) || 0); }, 0);
+  var el = function (id) { return document.getElementById(id); };
+  if (el('metricSpend')) el('metricSpend').textContent = '€' + totalSpend;
+  if (el('metricSpendChange')) el('metricSpendChange').textContent = '+18% vs last month';
+  if (el('metricImpressions')) el('metricImpressions').textContent = '48.2k';
+  if (el('metricImpChange')) el('metricImpChange').textContent = '+24%';
+  if (el('metricClicks')) el('metricClicks').textContent = '1,840';
+  if (el('metricClickChange')) el('metricClickChange').textContent = '+11%';
+  if (el('metricCtr')) el('metricCtr').textContent = '3.8%';
+  var ctrEl = el('metricCtrChange');
+  if (ctrEl) { ctrEl.textContent = '-0.3%'; ctrEl.className = 'metric-change dn'; }
+}
+
+// ── Chart ─────────────────────────────────────────────────────
+function renderChart() {
+  var container = document.getElementById('impressionsChart');
+  if (!container) return;
+  var heights = [35, 45, 40, 60, 50, 70, 65, 80, 75, 90, 85, 100];
+  container.innerHTML = heights.map(function (h, i) {
+    var cls = i >= 9 ? 'chart-bar current' : 'chart-bar';
+    return '<div class="' + cls + '" style="height:' + h + '%"></div>';
+  }).join('');
+}
+
+// ── Placement toggle ──────────────────────────────────────────
+function togglePlacement(el) {
+  el.classList.toggle('off');
+  var checked = !el.classList.contains('off');
+  el.setAttribute('aria-checked', String(checked));
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('campaignModal').classList.add('open');
+  document.getElementById('campName').focus();
+}
+
+function closeModal() {
+  document.getElementById('campaignModal').classList.remove('open');
+}
+
+document.getElementById('campaignModal').addEventListener('click', function (e) {
+  if (e.target === this) closeModal();
+});
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') closeModal();
+});
+
+document.getElementById('btnNewCampaign').addEventListener('click', openModal);
+
+function createCampaign() {
+  var name = document.getElementById('campName').value.trim();
+  var type = document.getElementById('campType').value;
+  var description = document.getElementById('campDescription').value.trim();
+  var budget = document.getElementById('campBudget').value;
+  var duration = document.getElementById('campDuration').value;
+  var format = document.getElementById('campFormat').value;
+
+  if (!name) {
+    document.getElementById('campName').focus();
+    return;
+  }
+
+  var checkedPlacements = Array.from(document.querySelectorAll('input[name="placement"]:checked'))
+    .map(function (cb) { return cb.value; });
+
+  if (checkedPlacements.length === 0) {
+    alert('Please select at least one ad placement.');
+    return;
+  }
+
+  var typeLabels = {
+    'sport-club': 'Sport Club',
+    'coach': 'Coach promo',
+    'event': 'Event / Tryout',
+    'sponsor': 'Sponsor',
+    'product': 'Product'
+  };
+
+  var campaigns = getCampaigns();
+  var newId = campaigns.length > 0 ? Math.max.apply(null, campaigns.map(function (c) { return c.id; })) + 1 : 1;
+
+  campaigns.push({
+    id: newId,
+    name: name,
+    type: typeLabels[type] || type,
+    placements: checkedPlacements.join(' + '),
+    format: format,
+    description: description,
+    budget: budget,
+    duration: duration,
+    impressions: '0',
+    spend: '0',
+    status: 'live'
+  });
+
+  saveCampaigns(campaigns);
+  loadCampaigns();
+  updateMetrics();
+  renderAllCampaigns();
+  closeModal();
+
+  // Reset form
+  document.getElementById('campName').value = '';
+  document.getElementById('campType').value = '';
+  document.getElementById('campDescription').value = '';
+  document.getElementById('campBudget').value = '';
+  document.getElementById('campDuration').value = '';
+  document.querySelectorAll('input[name="placement"]').forEach(function (cb) {
+    cb.checked = (cb.value === 'feed' || cb.value === 'marketplace');
+  });
+}
+</script>
+</body>
+</html>
