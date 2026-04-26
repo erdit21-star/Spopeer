@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spopeer Articles — Press Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/sanitize.js"></script>
+</head>
+<body>
+
+  <!-- ── NAV ── -->
+  <nav class="topnav" style="background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:200;">
+    <div style="max-width:1180px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+      <a href="/index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+        <span style="width:34px;height:34px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+        </span>
+        <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#001f3f;letter-spacing:-.03em;">Spopeer</span>
+      </a>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <a href="/feed.html" style="font-size:13px;font-weight:700;color:#475569;text-decoration:none;padding:8px 14px;border-radius:999px;transition:.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+          <i class="fa-solid fa-house"></i> Feed
+        </a>
+        <a href="/pages/community/community.html" style="font-size:13px;font-weight:700;color:#475569;text-decoration:none;padding:8px 14px;border-radius:999px;transition:.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+          <i class="fa-solid fa-people-group"></i> Community
+        </a>
+        <a href="/pages/search/search.html" style="font-size:13px;font-weight:700;color:#475569;text-decoration:none;padding:8px 14px;border-radius:999px;transition:.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+          <i class="fa-solid fa-magnifying-glass"></i> Search
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="articles-page">
+
+    <!-- ── HERO ── -->
+    <section class="articles-hero">
+      <div>
+        <span class="articles-kicker">Spopeer Articles · Press Room</span>
+        <h1>Read, write and share sports stories</h1>
+        <p>
+          Articles are public spaces where athletes, coaches, clubs and sports professionals
+          can publish stories, press releases, opinions, news, announcements and sport-related content.
+        </p>
+      </div>
+      <button class="primary-btn" onclick="openArticleComposer()">
+        <i class="fa-solid fa-pen-nib"></i> Write Article
+      </button>
+    </section>
+
+    <!-- ── COMPOSER (modal overlay) ── -->
+    <section class="article-composer" id="articleComposer" role="dialog" aria-modal="true" aria-label="Create Article">
+      <div class="composer-card">
+        <div class="composer-header">
+          <h2>Create Article</h2>
+          <button onclick="closeArticleComposer()" aria-label="Close composer">×</button>
+        </div>
+
+        <label for="articleType">Article type</label>
+        <select id="articleType">
+          <option value="General Article">General Article</option>
+          <option value="Press Release">Press Release / Δελτίο Τύπου</option>
+          <option value="Athlete Story">Athlete Story</option>
+          <option value="Club Announcement">Club Announcement</option>
+          <option value="Coach Opinion">Coach Opinion</option>
+          <option value="Sport News">Sport News</option>
+        </select>
+
+        <label for="articleAudience">Audience</label>
+        <select id="articleAudience">
+          <option value="Everyone">Everyone</option>
+          <option value="Athletes">Athletes</option>
+          <option value="Coaches">Coaches</option>
+          <option value="Clubs">Clubs</option>
+          <option value="Support Professionals">Support Professionals</option>
+          <option value="My Connections">My Connections</option>
+        </select>
+
+        <label for="articleTitle">Title</label>
+        <input id="articleTitle" type="text" placeholder="Write your article title..." maxlength="200" />
+
+        <label for="articleBody">Article text</label>
+        <textarea id="articleBody" rows="8" placeholder="Write your article here..." maxlength="10000"></textarea>
+
+        <div id="composerError" style="display:none;color:#dc2626;font-size:13px;font-weight:700;margin-top:8px;padding:8px 12px;background:#fef2f2;border-radius:10px;"></div>
+
+        <button class="primary-btn full" onclick="publishArticle()">
+          <i class="fa-solid fa-paper-plane"></i> Publish Article
+        </button>
+      </div>
+    </section>
+
+    <!-- ── LAYOUT: filters + feed ── -->
+    <section class="articles-layout">
+
+      <aside class="articles-filters">
+        <h3>Filter articles</h3>
+        <button class="filter-btn active" onclick="filterArticles('All', this)">
+          <i class="fa-solid fa-border-all"></i> All Articles
+        </button>
+        <button class="filter-btn" onclick="filterArticles('Press Release', this)">
+          <i class="fa-regular fa-file-lines"></i> Press Releases
+        </button>
+        <button class="filter-btn" onclick="filterArticles('Athlete Story', this)">
+          <i class="fa-solid fa-person-running"></i> Athlete Stories
+        </button>
+        <button class="filter-btn" onclick="filterArticles('Club Announcement', this)">
+          <i class="fa-solid fa-shield-halved"></i> Club Announcements
+        </button>
+        <button class="filter-btn" onclick="filterArticles('Coach Opinion', this)">
+          <i class="fa-solid fa-whistle"></i> Coach Opinions
+        </button>
+        <button class="filter-btn" onclick="filterArticles('Sport News', this)">
+          <i class="fa-regular fa-newspaper"></i> Sport News
+        </button>
+        <button class="filter-btn" onclick="filterArticles('General Article', this)">
+          <i class="fa-solid fa-file-word"></i> General Articles
+        </button>
+      </aside>
+
+      <section class="articles-feed" id="articlesFeed" aria-label="Articles feed">
+
+        <article class="article-card" data-type="Press Release">
+          <div class="article-meta">
+            <span><i class="fa-regular fa-file-lines"></i> Press Release / Δελτίο Τύπου</span>
+            <span><i class="fa-solid fa-eye"></i> Everyone</span>
+          </div>
+          <h2>Young Athlete Announces New Season Goals</h2>
+          <p>
+            This article works like a public press release where an athlete can announce
+            achievements, updates, goals, transfers, trials or personal sports news.
+          </p>
+          <div class="article-author">
+            <strong>Example Athlete</strong>
+            <span>Football · Greece</span>
+          </div>
+          <div class="article-actions">
+            <button onclick="likeArticle(this)"><i class="fa-regular fa-thumbs-up"></i> Like <span class="action-count">0</span></button>
+            <button onclick="voteArticle(this)"><i class="fa-solid fa-trophy"></i> Vote <span class="action-count">0</span></button>
+            <button onclick="repostArticle(this)"><i class="fa-solid fa-retweet"></i> Repost</button>
+            <button onclick="shareArticle()"><i class="fa-solid fa-arrow-up-from-bracket"></i> Share</button>
+          </div>
+        </article>
+
+        <article class="article-card" data-type="Club Announcement">
+          <div class="article-meta">
+            <span><i class="fa-solid fa-shield-halved"></i> Club Announcement</span>
+            <span><i class="fa-solid fa-person-running"></i> Athletes</span>
+          </div>
+          <h2>Club Looking for New Players</h2>
+          <p>
+            Clubs can publish announcements, trials, open training days, recruitment posts
+            and official updates for their audience.
+          </p>
+          <div class="article-author">
+            <strong>Example Club</strong>
+            <span>Basketball · Europe</span>
+          </div>
+          <div class="article-actions">
+            <button onclick="likeArticle(this)"><i class="fa-regular fa-thumbs-up"></i> Like <span class="action-count">0</span></button>
+            <button onclick="voteArticle(this)"><i class="fa-solid fa-trophy"></i> Vote <span class="action-count">0</span></button>
+            <button onclick="repostArticle(this)"><i class="fa-solid fa-retweet"></i> Repost</button>
+            <button onclick="shareArticle()"><i class="fa-solid fa-arrow-up-from-bracket"></i> Share</button>
+          </div>
+        </article>
+
+      </section>
+    </section>
+
+  </main>
+
+  <script>
+    function openArticleComposer() {
+      document.getElementById('articleComposer').classList.add('open');
+      document.getElementById('articleTitle').focus();
+    }
+
+    function closeArticleComposer() {
+      document.getElementById('articleComposer').classList.remove('open');
+      document.getElementById('composerError').style.display = 'none';
+    }
+
+    // Close on backdrop click
+    document.getElementById('articleComposer').addEventListener('click', function (e) {
+      if (e.target === this) closeArticleComposer();
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeArticleComposer();
+    });
+
+    function publishArticle() {
+      var esc = window.SpopeerSanitize ? window.SpopeerSanitize.escapeHtml : function (s) { return String(s).replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]; }); };
+
+      var type     = document.getElementById('articleType').value;
+      var audience = document.getElementById('articleAudience').value;
+      var title    = document.getElementById('articleTitle').value.trim();
+      var body     = document.getElementById('articleBody').value.trim();
+      var errorEl  = document.getElementById('composerError');
+
+      if (!title || !body) {
+        errorEl.textContent = 'Please add a title and article text before publishing.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      errorEl.style.display = 'none';
+
+      var article = document.createElement('article');
+      article.className = 'article-card new-article';
+      article.dataset.type = type;
+
+      // Use escapeHtml for all user-supplied values — prevents XSS
+      article.innerHTML =
+        '<div class="article-meta">' +
+          '<span>' + esc(type) + '</span>' +
+          '<span><i class="fa-solid fa-eye"></i> ' + esc(audience) + '</span>' +
+        '</div>' +
+        '<h2>' + esc(title) + '</h2>' +
+        '<p>' + esc(body).replace(/\n/g, '<br>') + '</p>' +
+        '<div class="article-author">' +
+          '<strong>You</strong>' +
+          '<span>Spopeer User</span>' +
+        '</div>' +
+        '<div class="article-actions">' +
+          '<button onclick="likeArticle(this)"><i class="fa-regular fa-thumbs-up"></i> Like <span class="action-count">0</span></button>' +
+          '<button onclick="voteArticle(this)"><i class="fa-solid fa-trophy"></i> Vote <span class="action-count">0</span></button>' +
+          '<button onclick="repostArticle(this)"><i class="fa-solid fa-retweet"></i> Repost</button>' +
+          '<button onclick="shareArticle()"><i class="fa-solid fa-arrow-up-from-bracket"></i> Share</button>' +
+        '</div>';
+
+      var feed = document.getElementById('articlesFeed');
+      feed.insertBefore(article, feed.firstChild);
+
+      // Scroll new article into view
+      article.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      document.getElementById('articleTitle').value = '';
+      document.getElementById('articleBody').value = '';
+      closeArticleComposer();
+    }
+
+    function likeArticle(button) {
+      var span = button.querySelector('.action-count');
+      span.textContent = Number(span.textContent) + 1;
+      button.classList.toggle('active-action');
+    }
+
+    function voteArticle(button) {
+      var span = button.querySelector('.action-count');
+      span.textContent = Number(span.textContent) + 1;
+      button.classList.toggle('active-action');
+    }
+
+    function repostArticle() {
+      alert('Repost feature will connect with the Spopeer feed in a future update.');
+    }
+
+    function shareArticle() {
+      if (navigator.share) {
+        navigator.share({ title: 'Spopeer Article', url: window.location.href }).catch(function () {});
+      } else {
+        navigator.clipboard && navigator.clipboard.writeText(window.location.href)
+          .then(function () { alert('Link copied to clipboard!'); })
+          .catch(function () { alert('Share feature will connect with public article links in a future update.'); });
+      }
+    }
+
+    function filterArticles(type, btn) {
+      document.querySelectorAll('.articles-filters .filter-btn').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      if (btn) btn.classList.add('active');
+
+      document.querySelectorAll('.article-card').forEach(function (article) {
+        article.style.display = (type === 'All' || article.dataset.type === type) ? '' : 'none';
+      });
+    }
+  </script>
+
+</body>
+</html>
