@@ -1291,67 +1291,6 @@
     }
     .side-card-title i { color: var(--accent); font-size: 15px; }
 
-    /* ══ TICKER CSS ══ */
-    .ticker-wrap {
-      overflow: hidden;
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-      flex: 1;
-      margin-bottom: 14px;
-    }
-    .ticker-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .1em;
-      color: var(--accent);
-      text-transform: uppercase;
-      white-space: nowrap;
-      flex-shrink: 0;
-      padding: 3px 8px;
-      background: var(--accent-lt);
-      border-radius: 4px;
-    }
-    .ticker-inner {
-      display: flex;
-      gap: 28px;
-      align-items: center;
-      white-space: nowrap;
-      animation: ticker-scroll 32s linear infinite;
-    }
-    .ticker-inner:hover {
-      animation-play-state: paused;
-    }
-    @keyframes ticker-scroll {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-    .ticker-item {
-      font-size: 12px;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      cursor: pointer;
-      transition: color .2s;
-    }
-    .ticker-item:hover {
-      color: var(--accent);
-    }
-    .ticker-item strong {
-      color: var(--ink);
-      font-weight: 600;
-    }
-    .ticker-dot {
-      width: 3px;
-      height: 3px;
-      border-radius: 50%;
-      background: var(--muted-2);
-      flex-shrink: 0;
-    }
-
     /* trending */
     .trend-item {
       padding: 11px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: .15s;
@@ -1362,155 +1301,234 @@
     .trend-name { font-size: 14px; font-weight: 700; color: var(--ink); margin: 2px 0; }
     .trend-count { font-size: 12px; color: var(--muted); }
 
-    /* ══ TRENDING NOW - ADVANCED DESIGN ══ */
-    .tn-tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1.5px solid var(--border);
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    .tn-tabs::-webkit-scrollbar { height: 3px; }
-    .tn-tabs::-webkit-scrollbar-thumb { background: var(--muted-2); border-radius: 2px; }
-
-    .tn-tab {
-      padding: 6px 14px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--pill);
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all .2s;
-      flex-shrink: 0;
-    }
-    .tn-tab:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .tn-tab.active {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-
-    #tnList {
+    /* ══ SPOPEER AGENT HUB ══ */
+    .spopeer-agent-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rM);
+      padding: 18px 16px 14px;
+      margin-bottom: 16px;
       display: flex;
       flex-direction: column;
-      gap: 0;
-      max-height: 380px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding-right: 4px;
+      gap: 14px;
     }
-    #tnList::-webkit-scrollbar { width: 4px; }
-    #tnList::-webkit-scrollbar-track { background: transparent; }
-    #tnList::-webkit-scrollbar-thumb { background: var(--muted-2); border-radius: 2px; }
-    #tnList::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-
-    .tn-row {
+    .agent-top {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-      transition: .15s;
+      justify-content: space-between;
+      gap: 8px;
     }
-    .tn-row:last-child { border-bottom: none; }
-    .tn-row:hover { background: var(--surface); padding-left: 6px; border-radius: 6px; cursor: pointer; }
-
-    .tn-rank {
+    .agent-top h3 {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      margin: 2px 0 4px;
+      font-family: var(--fD, 'Syne', sans-serif);
+    }
+    .agent-top p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin: 0;
+    }
+    .agent-kicker {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--blue, #1a6bff);
+    }
+    .agent-live-badge {
+      flex-shrink: 0;
+      background: var(--accent, #001f3f);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      padding: 3px 8px;
+      border-radius: var(--pill);
+    }
+    .agent-mode-box label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .agent-mode-box select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--rS);
+      font-size: 13px;
+      font-family: var(--fB, 'Plus Jakarta Sans', sans-serif);
+      color: var(--ink);
+      background: var(--surface);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7a7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      transition: border-color .2s;
+    }
+    .agent-mode-box select:focus { outline: none; border-color: var(--accent); }
+    .agent-memory {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rS);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .agent-memory strong {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-right: 4px;
+    }
+    .agent-memory span { color: var(--ink); }
+    .agent-quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .agent-quick-actions button {
+      padding: 5px 11px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--fB, 'Plus Jakarta Sans', sans-serif);
+      border: 1.5px solid var(--border);
+      border-radius: var(--pill);
+      background: var(--white);
+      color: var(--ink);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .agent-quick-actions button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--surface);
+    }
+    .agent-chat {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    .agent-chat::-webkit-scrollbar { width: 3px; }
+    .agent-chat::-webkit-scrollbar-thumb { background: var(--muted-2); border-radius: 2px; }
+    .agent-message {
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      line-height: 1.45;
+      max-width: 94%;
+    }
+    .agent-message.bot {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      align-self: flex-start;
+      border-bottom-left-radius: 3px;
+    }
+    .agent-message.user {
+      background: var(--accent, #001f3f);
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 3px;
+    }
+    .agent-form {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+    .agent-form input {
+      flex: 1;
+      padding: 9px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--pill);
+      font-size: 12px;
+      font-family: var(--fB, 'Plus Jakarta Sans', sans-serif);
+      color: var(--ink);
+      background: var(--surface);
+      transition: border-color .2s;
+    }
+    .agent-form input:focus { outline: none; border-color: var(--accent); background: var(--white); }
+    .agent-form button {
+      padding: 9px 16px;
+      background: var(--accent, #001f3f);
+      color: #fff;
+      border: none;
+      border-radius: var(--pill);
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--fB, 'Plus Jakarta Sans', sans-serif);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity .2s;
+    }
+    .agent-form button:hover { opacity: .85; }
+    .agent-results { display: none; flex-direction: column; gap: 10px; }
+    .agent-results.visible { display: flex; }
+    .agent-results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .agent-results-header h4 {
       font-size: 13px;
       font-weight: 800;
-      color: var(--muted-2);
-      min-width: 24px;
-      height: 24px;
+      color: var(--ink);
+      margin: 0;
+    }
+    .agent-results-header span {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .agent-result-block {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 11px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rS);
+      text-decoration: none;
+      transition: border-color .2s;
+    }
+    .agent-result-block:hover { border-color: var(--accent); }
+    .agent-result-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--accent, #001f3f);
+      color: #fff;
+      font-size: 13px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--surface-2);
-      border-radius: 50%;
       flex-shrink: 0;
     }
-    .tn-rank.r1 { background: linear-gradient(135deg, #ffc400, #ff9500); color: #fff; font-weight: 900; }
-    .tn-rank.r2 { background: linear-gradient(135deg, #c0c0c0, #808080); color: #fff; }
-    .tn-rank.r3 { background: linear-gradient(135deg, #cd7f32, #8b5a2b); color: #fff; }
-
-    .tn-body { flex: 1; min-width: 0; }
-
-    .tn-name-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-    .tn-name {
-      font-size: 13px;
+    .agent-result-label {
+      font-size: 12px;
       font-weight: 700;
       color: var(--ink);
-      word-break: break-word;
-      line-height: 1.3;
     }
-    .tn-chip {
-      font-size: 9px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 3px;
-      text-transform: capitalize;
-      white-space: nowrap;
-      flex-shrink: 0;
-      letter-spacing: .05em;
-    }
-    .chip-sports { background: rgba(255, 152, 0, 0.15); color: #ff9800; }
-    .chip-event { background: rgba(244, 67, 54, 0.15); color: #f44336; }
-    .chip-coaching { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
-    .chip-wellness { background: rgba(156, 39, 176, 0.15); color: #9c27f0; }
-    .chip-trending { background: var(--accent-lt); color: var(--accent); }
-
-    .tn-bar-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .agent-result-sub {
       font-size: 11px;
-    }
-    .tn-bar-track {
-      flex: 1;
-      height: 6px;
-      background: var(--surface-2);
-      border-radius: 3px;
-      overflow: hidden;
-      position: relative;
-    }
-    .tn-bar-fill {
-      height: 100%;
-      border-radius: 3px;
-      transition: width .3s ease;
-      position: relative;
-    }
-    .tn-bar-fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.3)); }
-    .bar-gold { background: linear-gradient(90deg, #ffc400, #ff9500); }
-    .bar-red { background: linear-gradient(90deg, #f44336, #e53935); }
-    .bar-green { background: linear-gradient(90deg, #4caf50, #45a049); }
-    .bar-blue { background: linear-gradient(90deg, #1a6bff, #1556d6); }
-    .bar-amber { background: linear-gradient(90deg, #ff9800, #f57c00); }
-
-    .tn-vol {
-      font-weight: 700;
-      color: var(--ink);
-      min-width: 35px;
-      text-align: right;
-    }
-    .tn-delta {
-      font-weight: 700;
-      color: var(--green);
-      min-width: 30px;
-      text-align: right;
+      color: var(--muted);
     }
 
     /* connections */
@@ -2885,29 +2903,73 @@
   <!-- RIGHT SIDEBAR -->
   <aside class="sidebar-right">
 
-    <!-- trending -->
-    <div class="side-card">
-      <div class="side-card-title"><i class="fa-solid fa-fire-flame-curved"></i> Trending Now</div>
-      
-      <!-- Trending Ticker -->
-      <div class="ticker-wrap">
-        <div class="ticker-label">🔥 HOT</div>
-        <div class="ticker-inner" id="trendingTicker">
-          <!-- Populated by JS with trending items -->
+    <!-- Spopeer Agent Hub -->
+    <section class="spopeer-agent-card" id="spopeerAgentCard">
+      <div class="agent-top">
+        <div>
+          <span class="agent-kicker">AI TOOL AGENT</span>
+          <h3>Spopeer Agent Hub</h3>
+          <p>Your personal sports assistant, secretary, manager and content helper.</p>
+        </div>
+        <span class="agent-live-badge">AI</span>
+      </div>
+
+      <div class="agent-mode-box">
+        <label for="agentMode">Choose agent mode</label>
+        <select id="agentMode">
+          <option value="secretary">Secretary Agent</option>
+          <option value="manager">Manager Agent</option>
+          <option value="journalist">Journalist Agent</option>
+          <option value="scout">Scout Agent</option>
+          <option value="athlete">Athlete Finder</option>
+          <option value="coach">Coach Finder</option>
+          <option value="club">Club Finder</option>
+          <option value="sponsor">Sponsor Agent</option>
+        </select>
+      </div>
+
+      <div class="agent-memory" id="agentMemory">
+        <div>
+          <strong>Current goal</strong>
+          <span id="agentGoal">Not selected yet</span>
+        </div>
+        <div>
+          <strong>Next step</strong>
+          <span id="agentNextStep">Ask the agent what you want to do</span>
         </div>
       </div>
-      
-      <!-- Trending Tabs -->
-      <div class="tn-tabs" id="tnTabs">
-        <button class="tn-tab active" onclick="tnSwitchTab(this, 'all')">All</button>
-        <button class="tn-tab" onclick="tnSwitchTab(this, 'sports')">Sports</button>
-        <button class="tn-tab" onclick="tnSwitchTab(this, 'coaching')">Coaching</button>
-        <button class="tn-tab" onclick="tnSwitchTab(this, 'wellness')">Wellness</button>
+
+      <div class="agent-quick-actions">
+        <button type="button" data-prompt="I want to search for athletes">Find athletes</button>
+        <button type="button" data-prompt="I want to search for coaches">Find coaches</button>
+        <button type="button" data-prompt="I want to contact clubs">Contact clubs</button>
+        <button type="button" data-prompt="Write an article about my profile">Write article</button>
       </div>
-      
-      <!-- Trending List -->
-      <div id="tnList"></div>
-    </div>
+
+      <div class="agent-chat" id="agentChat">
+        <div class="agent-message bot">
+          Hi, I'm your Spopeer AI Agent. Tell me what you want to do today.
+        </div>
+      </div>
+
+      <form class="agent-form" id="agentForm">
+        <input
+          id="agentInput"
+          type="text"
+          placeholder="Example: I want to find football coaches in Greece..."
+          autocomplete="off"
+        />
+        <button type="submit">Send</button>
+      </form>
+
+      <div class="agent-results" id="agentResults">
+        <div class="agent-results-header">
+          <h4>Agent Results</h4>
+          <span>Suggested actions</span>
+        </div>
+        <div id="agentResultsContent"></div>
+      </div>
+    </section>
 
     <!-- who to follow -->
     <div class="side-card">
@@ -3912,118 +3974,6 @@
 
   // formatCount defined earlier in updateSidebarFromProfile section
 
-  function renderTrendingTicker(trends) {
-    const tc = document.getElementById('trendingTicker');
-    if (!tc) return;
-    const topTrends = trends.combined.slice(0, 8);
-    let html = '';
-    topTrends.forEach((t, i) => {
-      if (i > 0) html += '<span class="ticker-dot"></span>';
-      const ico = t.icon === '#' ? '#' : `<i class="fa-solid ${t.icon}" style="font-size:10px"></i>`;
-      html += `<span class="ticker-item"><strong>${ico} ${t.name}</strong> ${formatCount(t.count)}</span>`;
-    });
-    html += '<span class="ticker-dot"></span>' + html;
-    tc.innerHTML = html;
-  }
-
-  // Trending Now Data Structure
-  let tnData = {
-    all: [],
-    sports: [],
-    coaching: [],
-    wellness: []
-  };
-  let tnCurrent = 'all';
-
-  function buildTrendingData(trends) {
-    // Sort trends by count descending and add rank
-    let hashtags = trends.combined.filter(t => t.type === 'hashtag').slice(0, 8);
-    let sports = trends.combined.filter(t => t.type === 'sport').slice(0, 6);
-    let roles = trends.combined.filter(t => t.type === 'role').slice(0, 4);
-
-    // Helper to add ranks
-    const addRanks = (arr) => arr.map((t, i) => ({
-      ...t,
-      rank: i + 1,
-      vol: formatCount(t.count),
-      pct: Math.round((t.count / (arr[0]?.count || 1)) * 100),
-      delta: '+' + (Math.floor(Math.random() * 45) + 5) + '%'
-    }));
-
-    // Build category data
-    const tagChips = addRanks(hashtags);
-    const sportChips = addRanks(sports);
-    const roleChips = addRanks(roles);
-
-    // All combined
-    let allChips = [...tagChips, ...sportChips, ...roleChips].slice(0, 10).map((t, i) => ({ ...t, rank: i + 1, pct: Math.round((t.count / trends.combined[0]?.count || 1) * 100) }));
-
-    tnData = {
-      all: allChips,
-      sports: sportChips,
-      coaching: tagChips.filter(t => t.name.toLowerCase().includes('train') || t.name.toLowerCase().includes('lift') || t.name.toLowerCase().includes('coach')),
-      wellness: roleChips
-    };
-
-    // Fallback - fill coaching with tags if empty
-    if (tnData.coaching.length === 0) {
-      tnData.coaching = tagChips.slice(0, 4);
-    }
-
-    tnRender('all');
-  }
-
-  function tnRender(tab) {
-    tnCurrent = tab;
-    const list = document.getElementById('tnList');
-    if (!list || !tnData[tab]) return;
-
-    const getChipType = (t) => {
-      if (t.type === 'hashtag') return 'trending';
-      if (t.type === 'sport') return 'sports';
-      if (t.type === 'role') return 'wellness';
-      return 'trending';
-    };
-
-    const getBarType = (rank) => {
-      if (rank === 1) return 'bar-gold';
-      if (rank === 2) return 'bar-red';
-      if (rank === 3) return 'bar-amber';
-      if (rank <= 5) return 'bar-blue';
-      return 'bar-green';
-    };
-
-    list.innerHTML = tnData[tab].map(t => {
-      const rc = t.rank === 1 ? 'r1' : t.rank === 2 ? 'r2' : t.rank === 3 ? 'r3' : '';
-      const chipType = getChipType(t);
-      const catLabel = t.type === 'hashtag' ? 'Trending' : t.type === 'sport' ? 'Sports' : t.type === 'role' ? 'Community' : t.type;
-      return `
-        <div class="tn-row">
-          <span class="tn-rank ${rc}">${t.rank}</span>
-          <div class="tn-body">
-            <div class="tn-name-row">
-              <span class="tn-name">${t.name}</span>
-              <span class="tn-chip chip-${chipType}">${catLabel}</span>
-            </div>
-            <div class="tn-bar-row">
-              <div class="tn-bar-track">
-                <div class="tn-bar-fill ${getBarType(t.rank)}" style="width:${t.pct}%"></div>
-              </div>
-              <span class="tn-vol">${t.vol}</span>
-              <span class="tn-delta">${t.delta}</span>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function tnSwitchTab(btn, tab) {
-    document.querySelectorAll('.tn-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    tnRender(tab);
-  }
-
   /* ══ STORIES SYSTEM ══ */
   const STORY_TTL_MS = 24 * 60 * 60 * 1000;
   const DEFAULT_STORIES = [
@@ -4399,24 +4349,7 @@
     refreshStoriesStrip();
   })();
 
-  function initTrending() {
-    setTimeout(() => {
-      const trends = analyzeTrendingData();
-      if (trends.combined.length > 0) {
-        renderTrendingTicker(trends);
-        buildTrendingData(trends);
-      }
-    }, 500);
-  }
 
-  initTrending();
-  setInterval(() => {
-    const trends = analyzeTrendingData();
-    if (trends.combined.length > 0) {
-      renderTrendingTicker(trends);
-      buildTrendingData(trends);
-    }
-  }, 30000);
 
   /* ====== accept / reject ====== */
   document.querySelectorAll('.conn-accept').forEach(btn => btn.addEventListener('click', () => btn.closest('li').remove()));
@@ -5085,7 +5018,6 @@
   });
 
   // Expose functions that HTML onclick attributes depend on
-  window.tnSwitchTab = tnSwitchTab;
   window.closeStories = closeStories;
   window.nextStory = nextStory;
   window.prevStory = prevStory;
@@ -5841,7 +5773,200 @@ function escapeHtml(text) {
   });
 </script>
 
+
 <script src="/js/navigation.js"></script>
+
+<script>
+/* ══ SPOPEER AGENT HUB ══ */
+(function () {
+  const AGENT_MODES = {
+    secretary: {
+      greeting: "Hi! I'm your Secretary Agent. I can help you schedule tasks, draft messages, or manage your sports to-do list.",
+      actions: [
+        { label: 'Draft a message', url: '/pages/messaging/inbox.html', icon: 'fa-envelope' },
+        { label: 'Edit your profile', url: '/pages/profiles/edit-profile.html', icon: 'fa-user-pen' },
+        { label: 'Go to your feed', url: '/feed.html', icon: 'fa-rss' },
+        { label: 'Contact support', url: '/pages/contact/index.html', icon: 'fa-headset' }
+      ]
+    },
+    manager: {
+      greeting: "Hi! I'm your Manager Agent. I help you grow your sports career — visibility, connections, and opportunities.",
+      actions: [
+        { label: 'Find coaches', url: '/pages/search/search.html', icon: 'fa-whistle' },
+        { label: 'Find athletes', url: '/pages/search/search.html', icon: 'fa-person-running' },
+        { label: 'Browse clubs', url: '/pages/search/search.html', icon: 'fa-shield-halved' },
+        { label: 'Your followers', url: '/pages/profiles/followers.html', icon: 'fa-users' }
+      ]
+    },
+    journalist: {
+      greeting: "Hi! I'm your Journalist Agent. I can help you write posts, articles, and sports content.",
+      actions: [
+        { label: 'Write a post on feed', url: '/feed.html', icon: 'fa-pen-nib' },
+        { label: 'Browse community', url: '/pages/community/community.html', icon: 'fa-people-group' },
+        { label: 'Check your profile', url: '/pages/profiles/edit-profile.html', icon: 'fa-id-badge' },
+        { label: 'Explore the platform', url: '/pages/search/search.html', icon: 'fa-magnifying-glass' }
+      ]
+    },
+    scout: {
+      greeting: "Hi! I'm your Scout Agent. I discover athletes, coaches and clubs for you.",
+      actions: [
+        { label: 'Search athletes', url: '/pages/search/search.html', icon: 'fa-person-running' },
+        { label: 'Search coaches', url: '/pages/search/search.html', icon: 'fa-whistle' },
+        { label: 'Search clubs', url: '/pages/search/search.html', icon: 'fa-shield-halved' },
+        { label: 'Send a message', url: '/pages/messaging/inbox.html', icon: 'fa-envelope' }
+      ]
+    },
+    athlete: {
+      greeting: "Hi! I'm the Athlete Finder. Tell me what sport, level or country you're looking for.",
+      actions: [
+        { label: 'Search athletes', url: '/pages/search/search.html', icon: 'fa-person-running' },
+        { label: 'View athlete profiles', url: '/pages/profiles/athlete-profile.html', icon: 'fa-id-card' },
+        { label: 'Connect with athletes', url: '/pages/messaging/inbox.html', icon: 'fa-envelope' },
+        { label: 'Explore community', url: '/pages/community/community.html', icon: 'fa-people-group' }
+      ]
+    },
+    coach: {
+      greeting: "Hi! I'm the Coach Finder. I help you find the right coach for your sport and level.",
+      actions: [
+        { label: 'Search coaches', url: '/pages/search/search.html', icon: 'fa-whistle' },
+        { label: 'View coach profiles', url: '/pages/profiles/coach-profile.html', icon: 'fa-id-card' },
+        { label: 'Message a coach', url: '/pages/messaging/inbox.html', icon: 'fa-envelope' },
+        { label: 'Browse community', url: '/pages/community/community.html', icon: 'fa-people-group' }
+      ]
+    },
+    club: {
+      greeting: "Hi! I'm the Club Finder. I help you discover and connect with sports clubs worldwide.",
+      actions: [
+        { label: 'Search clubs', url: '/pages/search/search.html', icon: 'fa-shield-halved' },
+        { label: 'View club profiles', url: '/pages/profiles/club-profile.html', icon: 'fa-id-card' },
+        { label: 'Contact a club', url: '/pages/messaging/inbox.html', icon: 'fa-envelope' },
+        { label: 'Your connections', url: '/pages/profiles/followers.html', icon: 'fa-users' }
+      ]
+    },
+    sponsor: {
+      greeting: "Hi! I'm your Sponsor Agent. I help you find sponsorship opportunities or connect sponsors with talent.",
+      actions: [
+        { label: 'Browse marketplace', url: '/pages/marketplace/index.html', icon: 'fa-store' },
+        { label: 'Find athletes', url: '/pages/search/search.html', icon: 'fa-person-running' },
+        { label: 'Manage ads', url: '/pages/ads/ads-manager.html', icon: 'fa-bullhorn' },
+        { label: 'Contact support', url: '/pages/contact/index.html', icon: 'fa-headset' }
+      ]
+    }
+  };
+
+  let agentMemory = { goal: 'Not selected yet', nextStep: 'Ask the agent what you want to do' };
+
+  function appendMessage(text, role) {
+    const chat = document.getElementById('agentChat');
+    if (!chat) return;
+    const div = document.createElement('div');
+    div.className = 'agent-message ' + role;
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function showResults(actions) {
+    const resultsEl = document.getElementById('agentResults');
+    const content = document.getElementById('agentResultsContent');
+    if (!resultsEl || !content) return;
+    content.innerHTML = actions.map(a => `
+      <a class="agent-result-block" href="${a.url}">
+        <span class="agent-result-icon"><i class="fa-solid ${a.icon}"></i></span>
+        <div>
+          <div class="agent-result-label">${a.label}</div>
+        </div>
+      </a>
+    `).join('');
+    resultsEl.classList.add('visible');
+  }
+
+  function updateMemory(goal, nextStep) {
+    agentMemory = { goal, nextStep };
+    const goalEl = document.getElementById('agentGoal');
+    const stepEl = document.getElementById('agentNextStep');
+    if (goalEl) goalEl.textContent = goal;
+    if (stepEl) stepEl.textContent = nextStep;
+  }
+
+  function handleUserMessage(text) {
+    const mode = document.getElementById('agentMode');
+    const modeKey = mode ? mode.value : 'secretary';
+    const modeData = AGENT_MODES[modeKey] || AGENT_MODES.secretary;
+
+    appendMessage(text, 'user');
+    updateMemory(text, 'Showing suggested actions below');
+
+    const lower = text.toLowerCase();
+    let reply = "Got it! Here are some suggested actions based on what you told me.";
+    if (lower.includes('coach') || lower.includes('trainer')) {
+      reply = "Looking for coaches! Here are the best ways to find and connect with coaches on Spopeer.";
+    } else if (lower.includes('athlete') || lower.includes('player')) {
+      reply = "Looking for athletes! Here is how to find and connect with athletes on Spopeer.";
+    } else if (lower.includes('club') || lower.includes('team')) {
+      reply = "Looking for clubs or teams! Here is how to find them on Spopeer.";
+    } else if (lower.includes('message') || lower.includes('contact') || lower.includes('reach out')) {
+      reply = "Sure! Head to your inbox to send messages and reach out to anyone on Spopeer.";
+    } else if (lower.includes('write') || lower.includes('article') || lower.includes('post')) {
+      reply = "Great! You can write posts directly in your feed or community pages.";
+    } else if (lower.includes('sponsor') || lower.includes('brand') || lower.includes('deal')) {
+      reply = "Let's explore sponsorship opportunities on Spopeer!";
+    } else if (lower.includes('profile')) {
+      reply = "Let's update your profile so you can stand out to coaches and clubs!";
+    }
+
+    setTimeout(() => {
+      appendMessage(reply, 'bot');
+      showResults(modeData.actions);
+    }, 320);
+  }
+
+  function initAgentHub() {
+    const modeSelect = document.getElementById('agentMode');
+    const form = document.getElementById('agentForm');
+    const input = document.getElementById('agentInput');
+    const quickBtns = document.querySelectorAll('.agent-quick-actions button');
+    const resultsEl = document.getElementById('agentResults');
+
+    if (!form || !input) return;
+
+    // Set greeting on mode change
+    if (modeSelect) {
+      modeSelect.addEventListener('change', function () {
+        const modeData = AGENT_MODES[this.value] || AGENT_MODES.secretary;
+        const chat = document.getElementById('agentChat');
+        if (chat) chat.innerHTML = '';
+        if (resultsEl) resultsEl.classList.remove('visible');
+        appendMessage(modeData.greeting, 'bot');
+        updateMemory('Mode: ' + this.options[this.selectedIndex].text, 'Ask the agent what you want to do');
+      });
+    }
+
+    // Quick action buttons
+    quickBtns.forEach(btn => {
+      btn.addEventListener('click', function () {
+        const prompt = this.dataset.prompt;
+        if (prompt) handleUserMessage(prompt);
+      });
+    });
+
+    // Form submit
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      handleUserMessage(text);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAgentHub);
+  } else {
+    initAgentHub();
+  }
+})();
+</script>
 </body>
 </html>
 
