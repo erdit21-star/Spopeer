@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spopeer - Community Hub</title>
+  <script src="/js/auth.js"></script>
+  <script src="/js/sanitize.js"></script>
+  <script src="/js/auth-guard.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/profile-normalizer.js"></script>
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/user-ui.js"></script>
+  <script src="/js/shared-ui.js"></script>
+  <script>
+    window.Auth && window.Auth.requireAuth && window.Auth.requireAuth();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <link rel="stylesheet" href="/css/shared-nav.css" />
+  <link rel="stylesheet" href="/css/fonts.css">
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+
+  <style>
+    .app-layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 24px 0;
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr) 288px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .sidebar-left {
+      position: sticky;
+      top: calc(var(--nav-h) + 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+      max-height: calc(100vh - var(--nav-h) - 32px);
+    }
+
+    .sidebar-left::-webkit-scrollbar { width: 4px; }
+    .sidebar-left::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .sidebar-profile {
+      width: 100%;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .sp-cover {
+      height: 64px;
+      background: linear-gradient(135deg, var(--accent) 0%, #003d7a 50%, var(--blue) 100%);
+      position: relative;
+    }
+
+    .sp-cover::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,.12) 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+
+    .sp-body {
+      padding: 0 16px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .sp-avatar-wrap { position: relative; margin-top: -24px; margin-bottom: 8px; z-index: 2; }
+
+    .sp-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      font-family: var(--fD);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid var(--white);
+      box-shadow: 0 4px 14px rgba(0,31,63,.2);
+    }
+
+    .sp-name { font-size: 14px; font-weight: 700; font-family: var(--fD); color: var(--ink); }
+    .sp-handle { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+
+    .sp-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      width: 100%;
+      gap: 4px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .sp-stat-num { font-size: 15px; font-weight: 800; font-family: var(--fD); color: var(--ink); }
+    .sp-stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-radius: var(--rM);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-2);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      text-decoration: none;
+      transition: .15s;
+    }
+
+    .nav-item:hover { background: var(--surface); color: var(--ink); }
+    .nav-item.active { background: var(--accent); color: #fff; font-weight: 600; }
+    .nav-item i { width: 18px; text-align: center; flex-shrink: 0; }
+
+    .soon-badge {
+      margin-left: auto;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .sidebar-divider { height: 1px; background: var(--border); margin: 8px 0; }
+
+    .sidebar-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted-2);
+      padding: 4px 14px;
+    }
+
+    .sidebar-right {
+      position: sticky;
+      top: calc(var(--nav-h) + 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: calc(100vh - var(--nav-h) - 32px);
+      overflow-y: auto;
+    }
+
+    .sidebar-right::-webkit-scrollbar { width: 4px; }
+    .sidebar-right::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .side-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .side-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--fD);
+      color: var(--ink);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .side-card-title i { color: var(--blue); }
+
+    .trend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .trend-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .trend-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--rS);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .trend-info { flex: 1; min-width: 0; }
+    .trend-name { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trend-meta { font-size: 11px; color: var(--muted); }
+
+    .trend-join {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--blue);
+      border: 1.5px solid var(--blue);
+      border-radius: var(--pill);
+      padding: 3px 10px;
+      background: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: .15s;
+    }
+
+    .trend-join:hover { background: var(--blue); color: #fff; }
+
+    .suggest-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .suggest-item:last-child { border-bottom: none; }
+
+    .suggest-av {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .suggest-info { flex: 1; min-width: 0; }
+    .suggest-name { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .suggest-role { font-size: 11px; color: var(--muted); }
+
+    .follow-btn {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      border: 1.5px solid var(--accent);
+      border-radius: var(--pill);
+      padding: 3px 10px;
+      background: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: .15s;
+    }
+
+    .follow-btn:hover { background: var(--accent); color: #fff; }
+
+    .community-col { display: flex; flex-direction: column; gap: 16px; }
+
+    .community-hero {
+      background: linear-gradient(135deg, var(--accent) 0%, #003d7a 60%, #1a6bff 100%);
+      border-radius: var(--rL);
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    .community-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,.08) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .community-hero::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      right: -40px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.05);
+    }
+
+    .hero-inner { position: relative; z-index: 1; }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: var(--pill);
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      backdrop-filter: blur(4px);
+    }
+
+    .hero-tag i { color: #fbbf24; }
+    .hero-title { font-family: var(--fD); font-size: 26px; font-weight: 800; margin-bottom: 8px; line-height: 1.2; }
+    .hero-sub { font-size: 14px; opacity: .85; max-width: 480px; margin-bottom: 20px; line-height: 1.6; }
+
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn-hero-primary {
+      background: #fff;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      border-radius: var(--pill);
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: .2s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .btn-hero-primary:hover { background: rgba(255,255,255,.9); transform: translateY(-1px); }
+
+    .btn-hero-secondary {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      font-weight: 600;
+      font-size: 13px;
+      border: 1.5px solid rgba(255,255,255,.3);
+      border-radius: var(--pill);
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: .2s;
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .btn-hero-secondary:hover { background: rgba(255,255,255,.2); }
+
+    .hero-stats { display: flex; gap: 24px; margin-top: 24px; }
+    .hero-stat-num { font-family: var(--fD); font-size: 20px; font-weight: 800; }
+    .hero-stat-lbl { font-size: 11px; opacity: .7; }
+
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 14px 16px;
+    }
+
+    .filter-search {
+      flex: 1;
+      min-width: 180px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border-radius: var(--pill);
+      padding: 8px 14px;
+    }
+
+    .filter-search i { color: var(--muted); font-size: 13px; }
+
+    .filter-search input {
+      border: none;
+      background: none;
+      font-size: 13px;
+      color: var(--ink);
+      width: 100%;
+      outline: none;
+    }
+
+    .filter-search input::placeholder { color: var(--muted-2); }
+    .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .chip {
+      padding: 6px 14px;
+      border-radius: var(--pill);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--ink-2);
+      transition: .15s;
+      white-space: nowrap;
+    }
+
+    .chip:hover { border-color: var(--accent); color: var(--accent); }
+    .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .filter-select {
+      border: 1.5px solid var(--border);
+      border-radius: var(--pill);
+      padding: 7px 12px;
+      font-size: 12px;
+      color: var(--ink);
+      font-family: var(--fB);
+      background: var(--white);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .filter-select:focus { border-color: var(--accent); }
+
+    .type-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+    .type-tabs::-webkit-scrollbar { height: 0; }
+
+    .type-tab {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: var(--pill);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--ink-2);
+      transition: .15s;
+    }
+
+    .type-tab:hover { border-color: var(--blue); color: var(--blue); }
+    .type-tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .type-tab .tab-icon { font-size: 15px; }
+
+    .type-tab .tab-count {
+      background: rgba(0,0,0,.1);
+      border-radius: var(--pill);
+      font-size: 10px;
+      padding: 1px 7px;
+      font-weight: 700;
+    }
+
+    .type-tab.active .tab-count { background: rgba(255,255,255,.25); }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .section-title {
+      font-family: var(--fD);
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title i { color: var(--blue); font-size: 14px; }
+
+    .see-all {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--blue);
+      cursor: pointer;
+      background: none;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .see-all:hover { text-decoration: underline; }
+
+    .community-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+    .comm-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+      position: relative;
+    }
+
+    .comm-card:hover {
+      border-color: var(--blue);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(26,107,255,.1);
+    }
+
+    .comm-card-banner {
+      height: 80px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #001f3f, #1a6bff);
+    }
+
+    .comm-card-banner.green { background: linear-gradient(135deg, #064e3b, #16a34a); }
+    .comm-card-banner.amber { background: linear-gradient(135deg, #78350f, #d97706); }
+    .comm-card-banner.purple { background: linear-gradient(135deg, #3b0764, #7c3aed); }
+    .comm-card-banner.red { background: linear-gradient(135deg, #7f1d1d, #dc2626); }
+    .comm-card-banner.teal { background: linear-gradient(135deg, #134e4a, #0d9488); }
+
+    .comm-card-banner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,.1) 1px, transparent 1px);
+      background-size: 14px 14px;
+    }
+
+    .comm-card-type-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 1;
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 3px 8px;
+      border-radius: var(--pill);
+      border: 1px solid rgba(255,255,255,.15);
+    }
+
+    .comm-card-sport-icon {
+      position: absolute;
+      bottom: -16px;
+      left: 16px;
+      z-index: 2;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--rS);
+      background: var(--white);
+      border: 2px solid var(--white);
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .comm-card-body { padding: 22px 16px 16px; }
+
+    .comm-card-name {
+      font-family: var(--fD);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .comm-card-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .comm-card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .comm-card-meta { display: flex; align-items: center; gap: 10px; }
+
+    .comm-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .comm-meta-item i { font-size: 10px; color: var(--muted-2); }
+
+    .comm-join-btn {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 14px;
+      border-radius: var(--pill);
+      border: 1.5px solid var(--blue);
+      color: var(--blue);
+      background: none;
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    .comm-join-btn:hover { background: var(--blue); color: #fff; }
+    .comm-join-btn.joined { background: var(--green-lt); color: var(--green); border-color: var(--green); }
+    .comm-card-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+
+    .comm-tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: var(--pill);
+      background: var(--blue-lt);
+      color: var(--blue);
+    }
+
+    .comm-tag.green { background: var(--green-lt); color: var(--green); }
+    .comm-tag.amber { background: var(--amber-lt); color: var(--amber); }
+
+    .comm-card-featured {
+      grid-column: 1 / -1;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .comm-card-featured:hover { border-color: var(--blue); box-shadow: 0 8px 24px rgba(26,107,255,.1); }
+
+    .featured-visual {
+      background: linear-gradient(160deg, #001f3f, #1a6bff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .featured-visual::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,.1) 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+
+    .featured-body { padding: 20px 22px; display: flex; flex-direction: column; justify-content: center; }
+
+    .featured-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--amber-lt);
+      color: var(--amber);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--pill);
+      margin-bottom: 10px;
+      width: fit-content;
+    }
+
+    .featured-name { font-family: var(--fD); font-size: 18px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+    .featured-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+    .featured-footer { display: flex; align-items: center; gap: 16px; }
+    .featured-stat { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+    .featured-stat i { color: var(--blue); font-size: 11px; }
+
+    .btn-join-featured {
+      margin-left: auto;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--pill);
+      padding: 9px 20px;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .btn-join-featured:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+    .forum-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 18px;
+      display: flex;
+      gap: 14px;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .forum-card:hover { border-color: var(--blue); }
+
+    .forum-av {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .forum-content { flex: 1; min-width: 0; }
+    .forum-meta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .forum-meta b { color: var(--ink-2); }
+    .forum-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+
+    .forum-preview {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .forum-stats { display: flex; gap: 12px; margin-top: 8px; }
+    .forum-stat { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+    .forum-stat i { font-size: 10px; }
+    .forum-tags { margin-top: 6px; display: flex; gap: 5px; }
+
+    .ftag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--pill);
+      background: var(--surface);
+      color: var(--muted);
+    }
+
+    .ftag.sport { background: var(--blue-lt); color: var(--blue); }
+    .ftag.pinned { background: var(--amber-lt); color: var(--amber); }
+
+    .create-cta {
+      background: var(--white);
+      border: 2px dashed var(--border);
+      border-radius: var(--rL);
+      padding: 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .create-cta:hover { border-color: var(--blue); background: var(--blue-lt); }
+
+    .create-cta-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--blue-lt);
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin: 0 auto 12px;
+    }
+
+    .create-cta h3 { font-family: var(--fD); font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+    .create-cta p { font-size: 13px; color: var(--muted); max-width: 360px; margin: 0 auto 16px; }
+
+    .create-cta-btn {
+      background: var(--blue);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--pill);
+      padding: 10px 24px;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .create-cta-btn:hover { background: #0058e6; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--white);
+      border-radius: var(--rXL);
+      width: 100%;
+      max-width: 540px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+
+    .modal-head {
+      padding: 24px 24px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-title { font-family: var(--fD); font-size: 20px; font-weight: 800; color: var(--ink); }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .modal-close:hover { background: var(--border); }
+    .modal-body { padding: 0 24px 24px; }
+    .form-group { margin-bottom: 16px; }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-2);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--rM);
+      font-family: var(--fB);
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--white);
+      transition: .15s;
+      outline: none;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,107,255,.08); }
+
+    .form-textarea { resize: vertical; min-height: 90px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+    .type-option {
+      border: 1.5px solid var(--border);
+      border-radius: var(--rM);
+      padding: 12px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    .type-option:hover { border-color: var(--blue); }
+    .type-option.selected { border-color: var(--blue); background: var(--blue-lt); }
+    .type-option-icon { font-size: 20px; margin-bottom: 6px; }
+    .type-option-label { font-size: 11px; font-weight: 700; color: var(--ink-2); }
+    .type-option.selected .type-option-label { color: var(--blue); }
+    .tag-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .tag-pill {
+      padding: 5px 12px;
+      border-radius: var(--pill);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      color: var(--ink-2);
+      background: var(--white);
+      transition: .15s;
+    }
+
+    .tag-pill:hover,
+    .tag-pill.sel { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+    .modal-footer { padding: 0 24px 24px; display: flex; gap: 10px; justify-content: flex-end; }
+
+    .btn-cancel {
+      padding: 10px 20px;
+      border-radius: var(--pill);
+      border: 1.5px solid var(--border);
+      background: none;
+      color: var(--muted);
+      font-family: var(--fB);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      padding: 10px 24px;
+      border-radius: var(--pill);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--fB);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .btn-submit:hover { background: var(--accent-hover); }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .breadcrumb a { color: var(--blue); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb i { font-size: 10px; }
+
+    .my-comm-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      border-radius: var(--rM);
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    .my-comm-item:hover { background: var(--surface); }
+
+    .my-comm-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--rS);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .my-comm-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .my-comm-role { font-size: 11px; color: var(--muted); }
+
+    .my-comm-badge {
+      margin-left: auto;
+      background: var(--blue);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--pill);
+    }
+
+    .mission-card {
+      background: linear-gradient(135deg, #f0f7ff, #e8f5e9);
+      border: 1.5px solid #c8e6c9;
+      border-radius: var(--rL);
+      padding: 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .mission-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--rM);
+      background: var(--blue);
+      color: #fff;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .mission-text h4 { font-family: var(--fD); font-size: 14px; font-weight: 800; color: var(--accent); margin-bottom: 5px; }
+    .mission-text p { font-size: 12px; color: #4a6741; line-height: 1.6; }
+
+    @media (max-width: 1100px) {
+      .app-layout { grid-template-columns: 220px minmax(0, 1fr) 260px; }
+      .comm-card-featured { grid-template-columns: 160px 1fr; }
+    }
+
+    @media (max-width: 900px) {
+      .app-layout { grid-template-columns: 200px minmax(0, 1fr); }
+      .sidebar-right { display: none; }
+      .community-grid { grid-template-columns: 1fr; }
+      .comm-card-featured { grid-template-columns: 1fr; }
+      .featured-visual { height: 100px; }
+    }
+
+    @media (max-width: 650px) {
+      .app-layout { grid-template-columns: 1fr; padding: 12px; }
+      .sidebar-left { display: none; }
+      .community-hero { padding: 24px 20px; }
+      .hero-title { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="nav-inner">
+    <a href="/index.html" class="logo">
+      <span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer" onerror="this.style.display='none'"></span>
+      <span class="logo-text">Spopeer</span>
+    </a>
+
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="navSearchInput" placeholder="Search communities, sports, people">
+    </div>
+
+    <div class="nav-right">
+      <button class="nav-icon" title="Marketplace" onclick="window.location.href='/pages/marketplace/marketplace.html'"><i class="fa-solid fa-store"></i></button>
+      <button class="nav-icon" title="Explore" onclick="window.location.href='/pages/search/search.html'"><i class="fa-regular fa-compass"></i></button>
+      <button class="nav-icon" title="Messages" onclick="window.location.href='/pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
+      <button class="nav-icon" title="Notifications" onclick="window.location.href='/pages/dashboard/notifications.html'">
+        <i class="fa-regular fa-bell"></i>
+      </button>
+      <div class="user-chip" id="userChip" data-user-chip role="button" aria-haspopup="menu" aria-expanded="false">
+        <span class="chip-avatar" data-user-chip-avatar>U</span>
+        <span class="chip-name" data-user-chip-name>Loading...</span>
+        <i class="fa-solid fa-chevron-down chip-caret"></i>
+      </div>
+      <div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">
+        <div class="profile-menu-section" data-section="identity">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
+            <div class="profile-menu-title">Your Identity</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
+            <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
+            <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="account">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Account and Settings</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
+            <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
+            <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy and Safety</button>
+            <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
+            <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
+            <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="features">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Platform Features</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="my-analytics"><i class="fa-solid fa-chart-bar"></i> My Analytics</button>
+            <button class="profile-menu-item" data-action="achievements"><i class="fa-solid fa-trophy"></i> Achievements and Badges</button>
+            <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
+            <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
+            <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
+            <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
+          </div>
+        </div>
+        <div class="profile-menu-section collapsed" data-section="help">
+          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="profile-menu-title">Help and Misc</div>
+            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+          </div>
+          <div class="profile-menu-section-items">
+            <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
+            <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
+            <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
+          </div>
+        </div>
+        <div class="profile-menu-section">
+          <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
+            <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="app-layout">
+  <aside class="sidebar-left">
+    <div class="sidebar-profile">
+      <div class="sp-cover"></div>
+      <div class="sp-body">
+        <div class="sp-avatar-wrap">
+          <div class="sp-avatar" id="sidebarAvatar" data-user-chip-avatar>U</div>
+        </div>
+        <div class="sp-name" id="sidebarName" data-user-chip-name>Loading...</div>
+        <div class="sp-handle" data-user-handle>@user</div>
+        <div class="sp-stats">
+          <div><div class="sp-stat-num">-</div><div class="sp-stat-lbl">Posts</div></div>
+          <div><div class="sp-stat-num">-</div><div class="sp-stat-lbl">Follow</div></div>
+          <div><div class="sp-stat-num">-</div><div class="sp-stat-lbl">Groups</div></div>
+        </div>
+      </div>
+    </div>
+
+    <a class="nav-item" href="/feed.html"><i class="fa-solid fa-house"></i> Home</a>
+    <a class="nav-item" href="/pages/library/index.html"><i class="fa-regular fa-bookmark"></i> Library</a>
+    <a class="nav-item" href="/pages/events/event.html"><i class="fa-regular fa-calendar"></i> Events</a>
+    <a class="nav-item" href="/pages/sponsorship/sponsor.html"><i class="fa-regular fa-star"></i> Sponsor</a>
+    <a class="nav-item" href="/pages/profiles/edit-profile.html#section-training"><i class="fa-solid fa-dumbbell"></i> Training</a>
+    <a class="nav-item active" href="/pages/community/community.html"><i class="fa-solid fa-people-group"></i> Community</a>
+    <a class="nav-item" href="/pages/marketplace/marketplace.html"><i class="fa-solid fa-store"></i> Marketplace</a>
+    <a class="nav-item" href="/pages/community/forums.html"><i class="fa-regular fa-comments"></i> Forums</a>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section-label">My Communities</div>
+    <div class="my-comm-item">
+      <div class="my-comm-icon" style="background:#eff6ff;">A</div>
+      <div><div class="my-comm-name">Archery Balkans</div><div class="my-comm-role">Admin</div></div>
+      <span class="my-comm-badge">3</span>
+    </div>
+    <div class="my-comm-item">
+      <div class="my-comm-icon" style="background:#f0fdf4;">W</div>
+      <div><div class="my-comm-name">Greco-Roman Wrestling</div><div class="my-comm-role">Member</div></div>
+    </div>
+    <div class="my-comm-item">
+      <div class="my-comm-icon" style="background:#fefce8;">R</div>
+      <div><div class="my-comm-name">Athens Rugby Starters</div><div class="my-comm-role">Member</div></div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Discover More</div>
+    <button class="nav-item soon"><i class="fa-solid fa-circle-dot" style="color:#dc2626"></i> Live Streaming <span class="soon-badge">Soon</span></button>
+    <button class="nav-item soon"><i class="fa-solid fa-users-viewfinder"></i> Watch Parties <span class="soon-badge">Soon</span></button>
+    <button class="nav-item soon"><i class="fa-solid fa-square-poll-vertical"></i> Polls and Quizzes <span class="soon-badge">Soon</span></button>
+    <button class="nav-item soon"><i class="fa-solid fa-bullseye"></i> Fan Zones <span class="soon-badge">Soon</span></button>
+    <div class="sidebar-divider"></div>
+  </aside>
+
+  <main class="community-col">
+    <div class="breadcrumb">
+      <a href="/feed.html"><i class="fa-solid fa-house"></i> Home</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Community Hub</span>
+    </div>
+
+    <div class="community-hero">
+      <div class="hero-inner">
+        <div class="hero-tag"><i class="fa-solid fa-globe"></i> Global Sports Communities</div>
+        <h1 class="hero-title">Where Niche Sports<br>Find Their People</h1>
+        <p class="hero-sub">Connect with athletes, coaches, and enthusiasts around underrepresented sports. Start or join a community to build clubs, federations, and training groups.</p>
+        <div class="hero-actions">
+          <button class="btn-hero-primary" onclick="openCreateModal()">
+            <i class="fa-solid fa-plus"></i> Start a Community
+          </button>
+          <button class="btn-hero-secondary" onclick="document.getElementById('discoverSection').scrollIntoView({behavior:'smooth'})">
+            <i class="fa-solid fa-compass"></i> Discover Groups
+          </button>
+        </div>
+        <div class="hero-stats">
+          <div><div class="hero-stat-num">2,840+</div><div class="hero-stat-lbl">Communities</div></div>
+          <div><div class="hero-stat-num">127</div><div class="hero-stat-lbl">Sports Represented</div></div>
+          <div><div class="hero-stat-num">48K</div><div class="hero-stat-lbl">Members Active</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mission-card">
+      <div class="mission-icon"><i class="fa-solid fa-seedling"></i></div>
+      <div class="mission-text">
+        <h4>Growing the Invisible Sports World</h4>
+        <p>Many sports thrive in small pockets of the world but never reach global audiences. Spopeer Community exists to change that by giving every sport a home to organize, grow, and connect.</p>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <div class="type-tabs" id="typeTabs">
+        <button class="type-tab active" data-type="all" onclick="filterType(this,'all')"><span class="tab-icon"><i class="fa-solid fa-earth-europe"></i></span> All Groups <span class="tab-count">2,840</span></button>
+        <button class="type-tab" data-type="sport-club" onclick="filterType(this,'sport-club')"><span class="tab-icon"><i class="fa-solid fa-landmark-dome"></i></span> Sport Clubs <span class="tab-count">920</span></button>
+        <button class="type-tab" data-type="federation" onclick="filterType(this,'federation')"><span class="tab-icon"><i class="fa-solid fa-building-columns"></i></span> Federations <span class="tab-count">148</span></button>
+        <button class="type-tab" data-type="coach-community" onclick="filterType(this,'coach-community')"><span class="tab-icon"><i class="fa-solid fa-chalkboard-user"></i></span> Coach Communities <span class="tab-count">374</span></button>
+        <button class="type-tab" data-type="athlete-group" onclick="filterType(this,'athlete-group')"><span class="tab-icon"><i class="fa-solid fa-person-running"></i></span> Athlete Groups <span class="tab-count">612</span></button>
+        <button class="type-tab" data-type="professional" onclick="filterType(this,'professional')"><span class="tab-icon"><i class="fa-solid fa-briefcase-medical"></i></span> Support Pros <span class="tab-count">286</span></button>
+        <button class="type-tab" data-type="fan-zone" onclick="filterType(this,'fan-zone')"><span class="tab-icon"><i class="fa-solid fa-bullhorn"></i></span> Fan Zones <span class="tab-count">500</span></button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="commSearch" placeholder="Search communities by sport, location, name...">
+      </div>
+      <div class="filter-chips">
+        <button class="chip active" onclick="filterChip(this,'all')">All</button>
+        <button class="chip" onclick="filterChip(this,'open')">Open</button>
+        <button class="chip" onclick="filterChip(this,'near')">Near Me</button>
+        <button class="chip" onclick="filterChip(this,'new')">New</button>
+        <button class="chip" onclick="filterChip(this,'active')">Most Active</button>
+      </div>
+      <select class="filter-select">
+        <option>Any Sport</option>
+        <option>Archery</option>
+        <option>Kabaddi</option>
+        <option>Sepak Takraw</option>
+        <option>Canoe Polo</option>
+        <option>Hurling</option>
+        <option>Pelota</option>
+        <option>Netball</option>
+        <option>Lacrosse</option>
+        <option>Floorball</option>
+        <option>Rugby</option>
+      </select>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title"><i class="fa-solid fa-fire-flame-curved"></i> Featured Community</div>
+    </div>
+    <div class="comm-card-featured">
+      <div class="featured-visual">A</div>
+      <div class="featured-body">
+        <div class="featured-badge"><i class="fa-solid fa-bolt"></i> Featured This Week</div>
+        <div class="featured-name">Mediterranean Archery Alliance</div>
+        <div class="featured-desc">A growing federation-style community for archery athletes, coaches, and clubs across Southern Europe and North Africa.</div>
+        <div class="featured-footer">
+          <div class="featured-stat"><i class="fa-solid fa-users"></i> 1,240 members</div>
+          <div class="featured-stat"><i class="fa-solid fa-location-dot"></i> Greece, Italy, Spain</div>
+          <div class="featured-stat"><i class="fa-solid fa-shield-halved"></i> Federation-forming</div>
+          <button class="btn-join-featured">Join Community</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="discoverSection">
+      <div class="section-header">
+        <div class="section-title"><i class="fa-solid fa-compass"></i> Discover Communities</div>
+        <button class="see-all">See all <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+
+      <div class="community-grid" id="communityGrid">
+        <div class="comm-card">
+          <div class="comm-card-banner amber">
+            <span class="comm-card-type-badge">Sport Club</span>
+            <div class="comm-card-sport-icon">W</div>
+          </div>
+          <div class="comm-card-body">
+            <div class="comm-card-name">Greco-Roman Wrestling Athens</div>
+            <div class="comm-card-tags">
+              <span class="comm-tag">Wrestling</span>
+              <span class="comm-tag amber">Open to Join</span>
+            </div>
+            <div class="comm-card-desc">Looking for members to revive the ancient sport in modern Athens. Training sessions twice a week.</div>
+            <div class="comm-card-footer">
+              <div class="comm-card-meta">
+                <span class="comm-meta-item"><i class="fa-solid fa-users"></i> 47</span>
+                <span class="comm-meta-item"><i class="fa-solid fa-location-dot"></i> Athens</span>
+              </div>
+              <button class="comm-join-btn" onclick="toggleJoin(this)">Join</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="comm-card">
+          <div class="comm-card-banner purple">
+            <span class="comm-card-type-badge">Coach Community</span>
+            <div class="comm-card-sport-icon">C</div>
+          </div>
+          <div class="comm-card-body">
+            <div class="comm-card-name">Badminton Coaches Balkans</div>
+            <div class="comm-card-tags">
+              <span class="comm-tag">Coaching</span>
+              <span class="comm-tag">Education</span>
+            </div>
+            <div class="comm-card-desc">A private community for certified and aspiring badminton coaches to share methods and drills.</div>
+            <div class="comm-card-footer">
+              <div class="comm-card-meta">
+                <span class="comm-meta-item"><i class="fa-solid fa-users"></i> 89</span>
+                <span class="comm-meta-item"><i class="fa-solid fa-lock"></i> Private</span>
+              </div>
+              <button class="comm-join-btn" onclick="toggleJoin(this)">Request</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="comm-card">
+          <div class="comm-card-banner green">
+            <span class="comm-card-type-badge">Federation</span>
+            <div class="comm-card-sport-icon">R</div>
+          </div>
+          <div class="comm-card-body">
+            <div class="comm-card-name">Hellenic Rugby Federation</div>
+            <div class="comm-card-tags">
+              <span class="comm-tag">Rugby</span>
+              <span class="comm-tag green">Official</span>
+            </div>
+            <div class="comm-card-desc">The official home for rugby growth in Greece. Connecting clubs, athletes, referees, and sponsors.</div>
+            <div class="comm-card-footer">
+              <div class="comm-card-meta">
+                <span class="comm-meta-item"><i class="fa-solid fa-users"></i> 634</span>
+                <span class="comm-meta-item"><i class="fa-solid fa-location-dot"></i> Greece</span>
+              </div>
+              <button class="comm-join-btn joined">Joined</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="comm-card">
+          <div class="comm-card-banner teal">
+            <span class="comm-card-type-badge">Athlete Group</span>
+            <div class="comm-card-sport-icon">P</div>
+          </div>
+          <div class="comm-card-body">
+            <div class="comm-card-name">Canoe Polo Europe</div>
+            <div class="comm-card-tags">
+              <span class="comm-tag">Canoe Polo</span>
+              <span class="comm-tag">Water Sports</span>
+            </div>
+            <div class="comm-card-desc">Canoe polo athletes across Europe connecting to organize tournaments, share training tips, and find teammates.</div>
+            <div class="comm-card-footer">
+              <div class="comm-card-meta">
+                <span class="comm-meta-item"><i class="fa-solid fa-users"></i> 218</span>
+                <span class="comm-meta-item"><i class="fa-solid fa-globe"></i> Europe</span>
+              </div>
+              <button class="comm-join-btn" onclick="toggleJoin(this)">Join</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header" style="margin-top:8px;">
+      <div class="section-title"><i class="fa-regular fa-comments"></i> Active Discussions</div>
+      <button class="see-all" onclick="window.location.href='/pages/community/forums.html'">All threads <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+
+    <div class="forum-card">
+      <div class="forum-av">KD</div>
+      <div class="forum-content">
+        <div class="forum-meta"><b>Kostas Dimos</b> - 2h ago - in Greco-Roman Wrestling Athens</div>
+        <div class="forum-title">Looking for a wrestling partner - Marousi area, training 3x/week</div>
+        <div class="forum-preview">I have been practicing for 2 years and looking for someone at a similar level to spar with.</div>
+        <div class="forum-tags"><span class="ftag sport">Wrestling</span><span class="ftag">Athens</span></div>
+        <div class="forum-stats">
+          <span class="forum-stat"><i class="fa-regular fa-message"></i> 12 replies</span>
+          <span class="forum-stat"><i class="fa-regular fa-heart"></i> 34</span>
+          <span class="forum-stat"><i class="fa-regular fa-eye"></i> 189</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="forum-card">
+      <div class="forum-av" style="background:linear-gradient(135deg,#064e3b,#16a34a)">MC</div>
+      <div class="forum-content">
+        <div class="forum-meta"><b>Maria C.</b> - 5h ago - in Badminton Coaches Balkans</div>
+        <div class="forum-title">Sharing my 8-week footwork progression curriculum for junior players</div>
+        <div class="forum-preview">After testing this with 3 different age groups, here is what works best for footwork development.</div>
+        <div class="forum-tags"><span class="ftag sport">Coaching</span><span class="ftag">Education</span><span class="ftag pinned">Pinned</span></div>
+        <div class="forum-stats">
+          <span class="forum-stat"><i class="fa-regular fa-message"></i> 28 replies</span>
+          <span class="forum-stat"><i class="fa-regular fa-heart"></i> 91</span>
+          <span class="forum-stat"><i class="fa-regular fa-bookmark"></i> 47 saved</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="create-cta" onclick="openCreateModal()">
+      <div class="create-cta-icon"><i class="fa-solid fa-plus"></i></div>
+      <h3>Cannot find your sport community?</h3>
+      <p>Start one. Whether you are an athlete, coach, club founder, or supportive professional, build a community around any sport.</p>
+      <button class="create-cta-btn"><i class="fa-solid fa-people-group"></i> Create a Community</button>
+    </div>
+
+    <div style="height:32px;"></div>
+  </main>
+
+  <aside class="sidebar-right">
+    <div class="side-card">
+      <div class="side-card-title"><i class="fa-solid fa-fire-flame-curved"></i> Trending Near Athens</div>
+      <div class="trend-item">
+        <div class="trend-icon">A</div>
+        <div class="trend-info">
+          <div class="trend-name">Med Archery Alliance</div>
+          <div class="trend-meta">1,240 members - Federation</div>
+        </div>
+        <button class="trend-join">Join</button>
+      </div>
+      <div class="trend-item">
+        <div class="trend-icon">W</div>
+        <div class="trend-info">
+          <div class="trend-name">Wrestling Athens</div>
+          <div class="trend-meta">47 members - Sport Club</div>
+        </div>
+        <button class="trend-join">Join</button>
+      </div>
+      <div class="trend-item">
+        <div class="trend-icon">R</div>
+        <div class="trend-info">
+          <div class="trend-name">Hellenic Rugby Fed.</div>
+          <div class="trend-meta">634 members - Federation</div>
+        </div>
+        <button class="trend-join" style="color:var(--green);border-color:var(--green)">Joined</button>
+      </div>
+    </div>
+
+    <div class="side-card">
+      <div class="side-card-title"><i class="fa-regular fa-user-plus"></i> People to Connect With</div>
+      <div class="suggest-item">
+        <div class="suggest-av">PK</div>
+        <div class="suggest-info">
+          <div class="suggest-name">Petros Kakouris</div>
+          <div class="suggest-role">Archer - Athens, GR</div>
+        </div>
+        <button class="follow-btn">Follow</button>
+      </div>
+      <div class="suggest-item">
+        <div class="suggest-av" style="background:linear-gradient(135deg,#064e3b,#16a34a)">EV</div>
+        <div class="suggest-info">
+          <div class="suggest-name">Elena Vasiliou</div>
+          <div class="suggest-role">Badminton Coach - Thessaloniki</div>
+        </div>
+        <button class="follow-btn">Follow</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div class="modal-overlay" id="createModal" onclick="handleOverlayClick(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">Create a Community</div>
+      <button class="modal-close" onclick="closeCreateModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:6px;margin-bottom:20px;" id="stepIndicator">
+        <div style="height:3px;flex:1;border-radius:2px;background:var(--blue);transition:.3s;" id="stepBar1"></div>
+        <div style="height:3px;flex:1;border-radius:2px;background:var(--border);transition:.3s;" id="stepBar2"></div>
+        <div style="height:3px;flex:1;border-radius:2px;background:var(--border);transition:.3s;" id="stepBar3"></div>
+      </div>
+
+      <div id="step1">
+        <div class="form-group">
+          <label class="form-label">What kind of community are you creating?</label>
+          <div class="type-grid">
+            <div class="type-option selected" data-type="sport-club" onclick="selectType(this)">
+              <div class="type-option-icon"><i class="fa-solid fa-landmark-dome"></i></div>
+              <div class="type-option-label">Sport Club</div>
+            </div>
+            <div class="type-option" data-type="federation" onclick="selectType(this)">
+              <div class="type-option-icon"><i class="fa-solid fa-building-columns"></i></div>
+              <div class="type-option-label">Federation</div>
+            </div>
+            <div class="type-option" data-type="coach-edu" onclick="selectType(this)">
+              <div class="type-option-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+              <div class="type-option-label">Coach Community</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Community Name</label>
+          <input type="text" class="form-input" id="commName" placeholder="Example: Athens Kabaddi Club" maxlength="80">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="commDesc" placeholder="Tell people what your community is about" maxlength="500"></textarea>
+        </div>
+      </div>
+
+      <div id="step2" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Primary Sport</label>
+          <input type="text" class="form-input" id="commSport" placeholder="Example: Kabaddi">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Country</label>
+            <input type="text" class="form-input" id="commCountry" placeholder="Country">
+          </div>
+          <div class="form-group">
+            <label class="form-label">City / Region</label>
+            <input type="text" class="form-input" id="commCity" placeholder="City or Region">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Visibility</label>
+          <select class="form-select" id="commVisibility">
+            <option value="open">Open - Anyone can join</option>
+            <option value="request">Request to Join - Members approved by admin</option>
+            <option value="private">Private - Invite only</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="step3" style="display:none;">
+        <div style="text-align:center;padding:20px 0 10px;">
+          <div style="font-size:48px;margin-bottom:12px;"><i class="fa-solid fa-party-horn"></i></div>
+          <div style="font-family:var(--fD);font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px;">Ready to Launch!</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;max-width:340px;margin:0 auto;">
+            Your community will be visible to Spopeer members.
+          </div>
+        </div>
+        <div id="reviewSummary" style="background:var(--surface);border-radius:var(--rM);padding:16px;margin-top:16px;font-size:13px;line-height:2;color:var(--ink-2);"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="modalBackBtn" onclick="modalBack()" style="display:none;">Back</button>
+      <button class="btn-cancel" onclick="closeCreateModal()">Cancel</button>
+      <button class="btn-submit" id="modalNextBtn" onclick="modalNext()">Next</button>
+    </div>
+  </div>
+</div>
+
+<footer style="border-top:1px solid var(--border);margin-top:40px;padding:24px;text-align:center;font-size:12px;color:var(--muted);">
+  <span style="font-family:var(--fD);font-weight:800;color:var(--ink);margin-right:12px;">Spopeer</span>
+  <a href="/pages/legal/about.html" style="color:var(--muted);margin-right:10px;">About</a>
+  <a href="/pages/legal/privacy.html" style="color:var(--muted);margin-right:10px;">Privacy</a>
+  <a href="/pages/legal/terms.html" style="color:var(--muted);margin-right:10px;">Terms</a>
+  <a href="/pages/company/help-center.html" style="color:var(--muted);">Help</a>
+  <span style="margin-left:16px;">Copyright 2026 Spopeer</span>
+</footer>
+
+<script>
+  function filterChip(el) {
+    document.querySelectorAll('.filter-chips .chip').forEach(function(c) { c.classList.remove('active'); });
+    el.classList.add('active');
+  }
+
+  function filterType(el) {
+    document.querySelectorAll('.type-tab').forEach(function(t) { t.classList.remove('active'); });
+    el.classList.add('active');
+  }
+
+  function toggleJoin(btn) {
+    if (btn.classList.contains('joined')) {
+      btn.classList.remove('joined');
+      btn.textContent = 'Join';
+    } else {
+      btn.classList.add('joined');
+      btn.textContent = 'Joined';
+    }
+  }
+
+  var currentStep = 1;
+  var totalSteps = 3;
+
+  function openCreateModal() {
+    document.getElementById('createModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    currentStep = 1;
+    renderStep();
+  }
+
+  function closeCreateModal() {
+    document.getElementById('createModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('createModal')) closeCreateModal();
+  }
+
+  function renderStep() {
+    for (var i = 1; i <= 3; i++) {
+      document.getElementById('step' + i).style.display = i === currentStep ? 'block' : 'none';
+      document.getElementById('stepBar' + i).style.background = i <= currentStep ? 'var(--blue)' : 'var(--border)';
+    }
+
+    document.getElementById('modalBackBtn').style.display = currentStep > 1 ? 'inline-block' : 'none';
+    document.getElementById('modalNextBtn').textContent = currentStep === totalSteps ? 'Create Community' : 'Next';
+
+    if (currentStep === 3) buildReview();
+  }
+
+  function modalNext() {
+    if (currentStep === totalSteps) {
+      submitCommunity();
+      return;
+    }
+
+    currentStep += 1;
+    renderStep();
+  }
+
+  function modalBack() {
+    if (currentStep > 1) {
+      currentStep -= 1;
+      renderStep();
+    }
+  }
+
+  function selectType(el) {
+    document.querySelectorAll('.type-option').forEach(function(o) { o.classList.remove('selected'); });
+    el.classList.add('selected');
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;');
+  }
+
+  function buildReview() {
+    var name = document.getElementById('commName').value || '(unnamed)';
+    var desc = document.getElementById('commDesc').value || '-';
+    var sport = document.getElementById('commSport').value || '-';
+    var country = document.getElementById('commCountry').value || '-';
+    var city = document.getElementById('commCity').value || '-';
+    var vis = document.getElementById('commVisibility').value || 'open';
+    var type = (document.querySelector('.type-option.selected') || {}).dataset ? document.querySelector('.type-option.selected').dataset.type : '-';
+
+    document.getElementById('reviewSummary').innerHTML =
+      '<b>Name:</b> ' + escHtml(name) + '<br>' +
+      '<b>Type:</b> ' + escHtml(type) + '<br>' +
+      '<b>Sport:</b> ' + escHtml(sport) + '<br>' +
+      '<b>Location:</b> ' + escHtml(city) + ', ' + escHtml(country) + '<br>' +
+      '<b>Visibility:</b> ' + escHtml(vis) + '<br>' +
+      '<b>About:</b> ' + escHtml(desc.slice(0, 120)) + (desc.length > 120 ? '...' : '');
+  }
+
+  function submitCommunity() {
+    closeCreateModal();
+    alert('Community created! It will appear in the feed once reviewed.');
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeCreateModal();
+  });
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    if (window.CurrentUserStore && window.CurrentUserStore.refreshCurrentUser) {
+      await window.CurrentUserStore.refreshCurrentUser();
+    }
+
+    if (window.UserUI && window.UserUI.bindAllChips) {
+      window.UserUI.bindAllChips();
+    }
+
+    if (window.sharedUi && typeof window.sharedUi.setupSocialFeedRuntime === 'function') {
+      window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+    }
+  });
+</script>
+</body>
+</html>
