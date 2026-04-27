@@ -54,7 +54,7 @@
   }
 
   function unwrapUser(data) {
-    return (data && data.data && data.data.user) || (data && data.user) || null;
+    return (data && data.data && (data.data.user || data.data.payload)) || (data && data.payload) || (data && data.user) || null;
   }
 
   function clearAuthStorage() {
@@ -198,7 +198,13 @@
         status: response.status,
         response: data
       });
-      throw new Error((data.error && data.error.message) || data.message || data.error || "Request failed");
+      const err = new Error((data.error && data.error.message) || data.message || data.error || "Request failed");
+      err.status = response.status;
+      err.response = data;
+      err.endpoint = path;
+      err.method = method;
+      err.validationField = data && data.error && data.error.field;
+      throw err;
     }
 
     return data;
@@ -275,6 +281,24 @@
     return data;
   }
 
+  async function uploadAvatar(file) {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    return request("/api/users/avatar", {
+      method: "POST",
+      body: formData
+    });
+  }
+
+  async function uploadCover(file) {
+    const formData = new FormData();
+    formData.append("cover", file);
+    return request("/api/users/cover", {
+      method: "POST",
+      body: formData
+    });
+  }
+
   const api = {
     API_BASE,
     buildUrl,
@@ -296,6 +320,8 @@
     me,
     getProfile,
     updateProfile,
+    uploadAvatar,
+    uploadCover,
     saveProfile: updateProfile,
     getPublicProfile: function (identifier) {
       return request("/api/profile/" + encodeURIComponent(identifier));

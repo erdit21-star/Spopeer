@@ -141,7 +141,8 @@ const ProfileSyncService = {
 
     if (window.SpopeerAPI && typeof window.SpopeerAPI.updateProfile === 'function') {
       const result = await window.SpopeerAPI.updateProfile(profileData);
-      mergedProfile = this.normalizeProfile({ ...mergedProfile, ...(result.user || {}) }, Date.now());
+      const apiUser = (result && result.data && (result.data.user || result.data.payload)) || (result && result.payload) || (result && result.user) || {};
+      mergedProfile = this.normalizeProfile({ ...mergedProfile, ...apiUser }, Date.now());
     }
 
     localStorage.setItem(this.PROFILE_STORAGE_KEY, JSON.stringify(mergedProfile));
@@ -288,20 +289,46 @@ const ProfileSyncService = {
 
     coverEditBtn.addEventListener('click', () => { coverInput.click(); });
 
-    coverInput.addEventListener('change', (e) => {
+    coverInput.addEventListener('change', async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const profile = this.getProfile() || {};
-        profile.coverPhoto = evt.target.result;
-        const normalized = this.normalizeProfile(profile, Date.now());
-        localStorage.setItem(this.PROFILE_STORAGE_KEY, JSON.stringify(normalized));
-        this.lastUpdateToken = String(this.getProfileTimestamp(normalized));
+      if (!window.SpopeerAPI || typeof window.SpopeerAPI.uploadCover !== 'function') {
+        console.error('Cover upload API unavailable in ProfileSyncService');
+        return;
+      }
+
+      const localPreview = URL.createObjectURL(file);
+      const coverEl = document.querySelector('.sp-cover');
+      if (coverEl) {
+        coverEl.style.backgroundImage = `url("${localPreview}")`;
+        coverEl.style.backgroundSize = 'cover';
+        coverEl.style.backgroundPosition = 'center';
+      }
+
+      try {
+        const uploadResult = await window.SpopeerAPI.uploadCover(file);
+        const coverPhotoUrl = (uploadResult.data && uploadResult.data.coverPhotoUrl) || uploadResult.coverPhotoUrl;
+        if (!coverPhotoUrl) {
+          throw new Error('Cover upload returned no URL.');
+        }
+
+        await window.SpopeerAPI.updateProfile({ payload: { coverPhotoUrl } });
+        const latestUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) || {};
+        const merged = this.normalizeProfile({ ...latestUser, coverPhotoUrl, coverUrl: coverPhotoUrl }, Date.now());
+        if (window.SpopeerAPI.setUser) {
+          window.SpopeerAPI.setUser(merged, 'ProfileSyncServiceCoverUpload');
+        }
+
+        localStorage.setItem(this.PROFILE_STORAGE_KEY, JSON.stringify(merged));
+        this.lastUpdateToken = String(this.getProfileTimestamp(merged));
         localStorage.setItem(this.PROFILE_UPDATE_KEY, this.lastUpdateToken);
-        this.broadcastProfileUpdate();
-      };
-      reader.readAsDataURL(file);
+        this.updatePageElements(merged);
+        this.updateDataAttributes(merged);
+      } catch (error) {
+        console.error('Cover upload failed in ProfileSyncService', error);
+      } finally {
+        URL.revokeObjectURL(localPreview);
+      }
     });
   },
 

@@ -2381,9 +2381,10 @@ if (window.profileRuntime) {
   }
 
   // ── Cover strip ──
-  if (ud.coverUrl) {
+  if (ud.coverPhotoUrl || ud.coverUrl) {
     var cs = document.getElementById('coverStrip');
-    if (cs) cs.style.backgroundImage = 'url('+ud.coverUrl+')';
+    var coverUrl = ud.coverPhotoUrl || ud.coverUrl;
+    if (cs) cs.style.backgroundImage = 'url('+coverUrl+')';
   }
 
   // ── Bio char counter ──
@@ -2462,25 +2463,42 @@ if (window.profileRuntime) {
     avatarRing.addEventListener('click', function(){ photoInput.click(); });
   }
   if (photoInput) {
-    photoInput.addEventListener('change', function(e) {
+    photoInput.addEventListener('change', async function(e) {
       var file = e.target.files && e.target.files[0];
       if (!file) return;
       if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
       if (file.size > 5*1024*1024) { showToast('File must be under 5 MB', 'error'); return; }
-      var reader = new FileReader();
-      reader.onload = function(ev) {
-        var b64 = ev.target.result;
-        ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-        ud.avatarUrl = b64;
-        safeSave(ud);
-        var av = document.getElementById('avatarPreviewEl');
-        if (av) av.innerHTML = '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      var previewUrl = URL.createObjectURL(file);
+      var av = document.getElementById('avatarPreviewEl');
+      if (av) av.innerHTML = '<img src="'+previewUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      try {
+        if (!window.SpopeerAPI || typeof window.SpopeerAPI.uploadAvatar !== 'function') {
+          throw new Error('Avatar upload API unavailable.');
+        }
+        var uploadResult = await window.SpopeerAPI.uploadAvatar(file);
+        var avatarUrl = (uploadResult.data && uploadResult.data.avatarUrl) || uploadResult.avatarUrl;
+        if (!avatarUrl) throw new Error('Avatar upload returned no URL.');
+
+        // Persist via canonical profile endpoint when upload response has no full user payload.
+        await window.SpopeerAPI.updateProfile({ payload: { avatarUrl: avatarUrl } });
+
+        var savedUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) || JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+        var mergedUser = Object.assign({}, savedUser, { avatarUrl: avatarUrl });
+        if (window.SpopeerAPI.setUser) {
+          window.SpopeerAPI.setUser(mergedUser, 'EditProfileAvatarUpload');
+        }
+
         var sa2 = document.getElementById('sidebarAv');
-        if (sa2) sa2.innerHTML = '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        if (sa2) sa2.innerHTML = '<img src="'+avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        if (av) av.innerHTML = '<img src="'+avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
         showToast('Photo updated!', 'success');
         recalcCompletion();
-      };
-      reader.readAsDataURL(file);
+      } catch (uploadErr) {
+        console.error('Avatar upload failed', uploadErr);
+        showToast('Could not upload avatar. Please try again.', 'error');
+      } finally {
+        URL.revokeObjectURL(previewUrl);
+      }
     });
   }
 
@@ -2503,20 +2521,48 @@ if (window.profileRuntime) {
   var coverInput = document.getElementById('coverInput');
   if (coverStrip && coverInput) {
     coverStrip.addEventListener('click', function() { coverInput.click(); });
-    coverInput.addEventListener('change', function(e) {
+    coverInput.addEventListener('change', async function(e) {
       var file = e.target.files && e.target.files[0];
       if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function(ev) {
-        var b64 = ev.target.result;
-        ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-        ud.coverUrl = b64;
-        safeSave(ud);
-        var cs = document.getElementById('coverStrip');
-        if (cs) { cs.style.backgroundImage = 'url('+b64+')'; cs.style.backgroundSize = 'cover'; cs.style.backgroundPosition = 'center'; }
+      if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
+      if (file.size > 8*1024*1024) { showToast('Cover file must be under 8 MB', 'error'); return; }
+
+      var previewUrl = URL.createObjectURL(file);
+      var cs = document.getElementById('coverStrip');
+      if (cs) {
+        cs.style.backgroundImage = 'url('+previewUrl+')';
+        cs.style.backgroundSize = 'cover';
+        cs.style.backgroundPosition = 'center';
+      }
+
+      try {
+        if (!window.SpopeerAPI || typeof window.SpopeerAPI.uploadCover !== 'function') {
+          throw new Error('Cover upload API unavailable.');
+        }
+        var uploadResult = await window.SpopeerAPI.uploadCover(file);
+        var coverUrl = (uploadResult.data && uploadResult.data.coverPhotoUrl) || uploadResult.coverPhotoUrl;
+        if (!coverUrl) throw new Error('Cover upload returned no URL.');
+
+        await window.SpopeerAPI.updateProfile({ payload: { coverPhotoUrl: coverUrl } });
+
+        var savedUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) || JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+        var mergedUser = Object.assign({}, savedUser, { coverPhotoUrl: coverUrl, coverUrl: coverUrl });
+        if (window.SpopeerAPI.setUser) {
+          window.SpopeerAPI.setUser(mergedUser, 'EditProfileCoverUpload');
+        }
+
+        if (cs) {
+          cs.style.backgroundImage = 'url('+coverUrl+')';
+          cs.style.backgroundSize = 'cover';
+          cs.style.backgroundPosition = 'center';
+        }
         showToast('Cover photo updated!', 'success');
-      };
-      reader.readAsDataURL(file);
+      } catch (uploadErr) {
+        console.error('Cover upload failed', uploadErr);
+        showToast('Could not upload cover. Please try again.', 'error');
+      } finally {
+        URL.revokeObjectURL(previewUrl);
+      }
     });
   }
 
@@ -2818,6 +2864,98 @@ if (window.profileRuntime) {
     }
   }
 
+  function buildCombinedProfileFromForm() {
+    var draft = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+
+    var fullName = v('fullNameInput');
+    if (fullName) {
+      var split = splitName(fullName);
+      draft.name = fullName;
+      if (split[0]) draft.firstName = split[0];
+      if (split[1]) draft.lastName = split[1];
+    }
+
+    var primarySport = v('primarySportInput') || v('coachSportInput') || v('clubSportInput');
+    if (primarySport) {
+      draft.primarySport = primarySport;
+      draft.sport = primarySport;
+    }
+
+    var map = {
+      displayNameInput: 'displayName',
+      usernameInput: 'username',
+      dobInput: 'dateOfBirth',
+      genderInput: 'gender',
+      nationalityInput: 'nationality',
+      locationInput: 'location',
+      bioInput: 'bio',
+      contactEmailInput: 'contactEmail',
+      contactPhoneInput: 'contactPhone',
+      contactAddressInput: 'contactAddress',
+      playingLevelInput: 'playingLevel',
+      positionInput: 'position',
+      currentTeamInput: 'currentTeam',
+      achievementsInput: 'achievements',
+      highestLevelInput: 'highestLevelAchieved',
+      trainingInput: 'trainingRoutine',
+      trainingLocationInput: 'trainingLocation',
+      injuryHistoryInput: 'injuryHistory',
+      nutritionDietInput: 'nutritionDiet',
+      specializationInput: 'specialization',
+      coachEducationInput: 'coachEducation',
+      philosophyInput: 'coachingPhilosophy',
+      teamsCoached: 'teamsCoached',
+      clubNameInput: 'clubName',
+      clubEmailInput: 'contactEmail',
+      clubPhoneInput: 'clubPhone',
+      clubAddressInput: 'clubAddress',
+      clubWebsiteInput: 'website',
+      companyNameInput: 'companyName',
+      profEmailInput: 'profEmail',
+      preferredContactInput: 'preferredContact',
+      availabilityHoursInput: 'availabilityHours',
+      feeStructureInput: 'feeStructure'
+    };
+
+    Object.keys(map).forEach(function(inputId) {
+      var value = v(inputId);
+      if (value !== null && value !== undefined) {
+        draft[map[inputId]] = value;
+      }
+    });
+
+    draft.stats = {
+      goalsOrPoints: v('statGoals') || '',
+      assists: v('statAssists') || '',
+      appearances: v('statApps') || ''
+    };
+
+    draft.mediaLinks = {
+      highlightVideo: v('highlightInput') || '',
+      instagram: v('instagramInput') || '',
+      youtubeChannel: v('youtubeInput') || '',
+      linkedIn: v('linkedinInput') || '',
+      website: v('websiteInput') || ''
+    };
+
+    draft.sharingPreferences = {
+      contact: !!document.getElementById('share_contact').checked,
+      stats: !!document.getElementById('share_stats').checked,
+      media: !!document.getElementById('share_media').checked,
+      searchable: !!document.getElementById('share_searchable').checked,
+      messaging: !!document.getElementById('share_messaging').checked
+    };
+
+    draft.visibility = collectVisibilitySettings();
+    draft.profileVisibility = v('profileVisibilityInput') || draft.profileVisibility || 'public';
+    draft.privacyPublic = draft.profileVisibility !== 'private';
+
+    var selectedCard = document.querySelector('.card-style-option.selected');
+    draft.profileCardStyle = selectedCard ? selectedCard.dataset.value : (draft.profileCardStyle || 'card-stack');
+
+    return draft;
+  }
+
   document.getElementById('saveAllBtn').addEventListener('click', async function() {
     if (saveAllInFlight) return;
     saveAllInFlight = true;
@@ -2828,12 +2966,12 @@ if (window.profileRuntime) {
     saveAllBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size:11px"></i> Saving...';
 
     try {
-      var buttons = Array.prototype.slice.call(document.querySelectorAll('.btn-save-section'));
-      for (var i = 0; i < buttons.length; i++) {
-        await handleSectionSave(buttons[i]);
-      }
-      showToast('All sections saved!', 'success');
+      var combined = buildCombinedProfileFromForm();
+      var merged = await saveSection(combined);
+      ud = merged;
       recalcCompletion();
+      showToast('All sections saved!', 'success');
+      if(window.clearProfileDirty) window.clearProfileDirty();
     } catch (_error) {
       showToast('Could not save all sections. Please review the highlighted section.', 'error');
     } finally {
@@ -2923,6 +3061,69 @@ if (window.profileRuntime) {
     }
   }
 
+  function normalizeSavedUserFromResponse(result) {
+    return (result && result.data && (result.data.user || result.data.payload)) || (result && result.payload) || (result && result.user) || {};
+  }
+
+  function sanitizeProfilePayload(rawPayload) {
+    var payload = Object.assign({}, rawPayload || {});
+    var jsonFields = ['stats', 'mediaLinks', 'sharingPreferences', 'visibility', 'extendedProfile'];
+    var boolFields = ['privacyPublic'];
+
+    Object.keys(payload).forEach(function(key) {
+      var value = payload[key];
+
+      if (value === undefined || value === null) {
+        delete payload[key];
+        return;
+      }
+
+      if (typeof value === 'string') {
+        var trimmed = value.trim();
+        if (!trimmed) {
+          // Avoid sending empty values that trigger server validation for profile save.
+          delete payload[key];
+          return;
+        }
+        payload[key] = trimmed;
+      }
+    });
+
+    // Explicitly guard known validation-sensitive fields.
+    if (!payload.firstName) delete payload.firstName;
+    if (!payload.lastName) delete payload.lastName;
+    if (!payload.contactEmail) delete payload.contactEmail;
+
+    // Normalize booleans.
+    boolFields.forEach(function(field) {
+      if (payload[field] !== undefined) {
+        payload[field] = !!payload[field];
+      }
+    });
+
+    // Ensure JSON fields are plain objects when present.
+    jsonFields.forEach(function(field) {
+      if (payload[field] === undefined) return;
+      if (typeof payload[field] === 'string') {
+        try {
+          payload[field] = JSON.parse(payload[field]);
+        } catch (_e) {
+          delete payload[field];
+          return;
+        }
+      }
+      if (!payload[field] || typeof payload[field] !== 'object' || Array.isArray(payload[field])) {
+        delete payload[field];
+        return;
+      }
+      if (!Object.keys(payload[field]).length) {
+        delete payload[field];
+      }
+    });
+
+    return payload;
+  }
+
   async function saveSection(profileData) {
     // Schema validation before sending to the server
     if (window.ProfileSchema) {
@@ -2936,16 +3137,30 @@ if (window.profileRuntime) {
       profileData = cleanPayload;
     }
     var outgoing = normalizeProfileForSave(profileData, Date.now());
+    var sanitizedOutgoing = sanitizeProfilePayload(outgoing);
     if (!window.SpopeerAPI || typeof window.SpopeerAPI.updateProfile !== 'function') {
       throw new Error('Profile API is unavailable.');
     }
-    var result = await window.SpopeerAPI.updateProfile({ payload: outgoing });
-    var returnedUser = (result.data && result.data.user) || result.user || outgoing;
-    var saved = normalizeProfileForSave(returnedUser, Date.now());
-    var existing = readStoredUserSafe();
-    var merged = normalizeProfileForSave(Object.assign({}, existing, saved), saved._profileUpdatedAt || Date.now());
-    localStorage.setItem('_profileLastUpdated_', String(merged._profileUpdatedAt));
-    return merged;
+    try {
+      var result = await window.SpopeerAPI.updateProfile({ payload: sanitizedOutgoing });
+      var returnedUser = normalizeSavedUserFromResponse(result);
+      var saved = normalizeProfileForSave(returnedUser, Date.now());
+      var existing = readStoredUserSafe();
+      var merged = normalizeProfileForSave(Object.assign({}, existing, saved), saved._profileUpdatedAt || Date.now());
+      localStorage.setItem('_profileLastUpdated_', String(merged._profileUpdatedAt));
+      return merged;
+    } catch (saveErr) {
+      console.log('Edit profile save failure details', {
+        endpoint: (saveErr && saveErr.endpoint) || '/api/profile/me',
+        method: (saveErr && saveErr.method) || 'PATCH',
+        payload: sanitizedOutgoing,
+        backendResponse: saveErr && saveErr.response,
+        validationField: saveErr && saveErr.validationField,
+        statusCode: saveErr && saveErr.status,
+        message: saveErr && saveErr.message
+      });
+      throw saveErr;
+    }
   }
   function showToast(msg, type) {
     var t = document.getElementById('toast');
