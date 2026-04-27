@@ -163,6 +163,14 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   let profileFound=false;
   let lastAppliedProfileTs = 0;
 
+  function extractUserPayload(resp) {
+    return (resp && resp.data && resp.data.user) || (resp && resp.data && resp.data.payload) || (resp && resp.user) || (resp && resp.payload) || {};
+  }
+
+  function hasProfileData(obj) {
+    return !!(obj && typeof obj === 'object' && Object.keys(obj).length > 0);
+  }
+
   const authToken = localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
   
   // Build headers — include auth cookie so server can identify the viewer
@@ -174,17 +182,31 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       const r=await fetch(`/api/profile/${encodeURIComponent(userId)}`, { headers: _headers, credentials: 'include' });
       if(r.ok){
         const d=await r.json();
-        payload=(d.data && d.data.user) || d.data || d.user || d.payload || {};
-        if (payload && payload.message === 'This profile is private.') {
+        payload = extractUserPayload(d);
+        if ((d && d.data && d.data.message === 'This profile is private.') || (payload && payload.message === 'This profile is private.')) {
           var headName = document.getElementById('ppName');
           if (headName) headName.textContent = 'This profile is private.';
           return;
         }
-        profileFound=true;
+        profileFound = hasProfileData(payload);
       } else {
         console.warn('Profile fetch returned', r.status, await r.text().catch(()=>''));
       }
     }catch(e){
+      // ...existing code...
+    }
+  }
+
+  // Compatibility fallback for older frontend mocks/handlers: /api/users/:id
+  if(!profileFound && userId){
+    try {
+      const r = await fetch(`/api/users/${encodeURIComponent(userId)}`, { headers: _headers, credentials: 'include' });
+      if (r.ok) {
+        const d = await r.json();
+        payload = extractUserPayload(d);
+        profileFound = hasProfileData(payload);
+      }
+    } catch (_e) {
       // ...existing code...
     }
   }
@@ -195,8 +217,8 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       const r=await fetch('/api/auth/me', { headers: _headers, credentials: 'include' });
       if(r.ok){
         const d=await r.json();
-        payload=(d.data && d.data.user) || d.data || d.user || d.payload || {};
-        profileFound=true;
+        payload = extractUserPayload(d);
+        profileFound = hasProfileData(payload);
         // ...existing code...
       }
     }catch(e){
@@ -210,8 +232,8 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       const r = await fetch('/api/profile/me', { headers: _headers, credentials: 'include' });
       if (r.ok) {
         const d = await r.json();
-        payload = (d.data && (d.data.user || d.data.payload)) || d.payload || d.user || {};
-        profileFound = true;
+        payload = extractUserPayload(d);
+        profileFound = hasProfileData(payload);
       }
     } catch (_e) {
       // ...existing code...
