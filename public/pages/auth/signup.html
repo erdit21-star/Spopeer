@@ -14,7 +14,7 @@
   <script src="/js/auth.js"></script>
   <script src="/js/role-router.js"></script>
   <link rel="stylesheet" href="/css/fonts.css">
-
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
   <script src="../../js/mobile-enhancements.js" defer></script>
 </head>
@@ -48,6 +48,25 @@
         <h2>Create your account</h2>
         <p>Join the global sports community — free</p>
       </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:20px;">
+        <div id="g_id_onload"
+          data-client_id="527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com"
+          data-callback="handleGoogleCredential"
+          data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+          data-type="standard"
+          data-shape="rectangular"
+          data-theme="outline"
+          data-text="signup_with"
+          data-size="large"
+          data-logo_alignment="left"
+          data-width="320">
+        </div>
+        <div style="width:100%;text-align:center;color:#94a3b8;font-size:13px;margin:4px 0;">or sign up with email</div>
+      </div>
+
       <form id="signupForm">
         <div id="signupError" style="display:none;margin-bottom:14px;padding:10px 12px;border-radius:8px;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:600;"></div>
         <div class="form-group">
@@ -293,6 +312,25 @@
         }
       });
     })();
+  </script>
+  <script>
+    async function handleGoogleCredential(response) {
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Google sign-in failed.');
+        if (data.user && window.Auth) window.Auth.login(data.user);
+        if (data.token) localStorage.setItem('token', data.token);
+        window.location.href = '/feed.html';
+      } catch (err) {
+        const errorBox = document.getElementById('signupError');
+        if (errorBox) { errorBox.textContent = err.message; errorBox.style.display = 'block'; }
+      }
+    }
   </script>
 <script src="/js/navigation.js"></script>
 </body>

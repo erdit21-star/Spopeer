@@ -184,6 +184,11 @@ module.exports = (sequelize) => {
     emailVerifyToken: {
       type: DataTypes.STRING(128),
       allowNull: true
+    },
+    googleId: {
+      type: DataTypes.STRING(128),
+      allowNull: true,
+      unique: true
     }
   }, {
     tableName: 'users',

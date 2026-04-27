@@ -56,6 +56,7 @@ const config = {
   appUrl: process.env.APP_URL || `http://localhost:${process.env.PORT || 5000}`,
   frontendUrl: process.env.FRONTEND_URL || '',
   frontendUrlAlt: process.env.FRONTEND_URL_ALT || '',
+  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   db: {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT, 10) || 5432,
