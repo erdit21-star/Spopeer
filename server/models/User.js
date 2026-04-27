@@ -22,7 +22,7 @@ module.exports = (sequelize) => {
     },
     password: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      allowNull: true // allow null for Google users
     },
     firstName: {
       type: DataTypes.STRING(100),
