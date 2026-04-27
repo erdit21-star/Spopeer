@@ -5,9 +5,14 @@ const { OAuth2Client } = require('google-auth-library');
 const { User } = require('../models');
 const { sequelize } = require('../config/database');
 const { sendPasswordResetEmail } = require('../services/email');
+const { extractToken, getCookieOptions } = require('../middleware/auth');
 const { JWT_SECRET } = process.env;
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+function setAccessTokenCookie(res, token) {
+  res.cookie('access_token', token, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+}
 
 exports.register = async (req, res) => {
   try {
@@ -18,6 +23,7 @@ exports.register = async (req, res) => {
     const hash = await bcrypt.hash(password, 12);
     const user = await User.create({ firstName, lastName, email: email.toLowerCase(), password: hash, role });
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    setAccessTokenCookie(res, token);
     res.status(201).json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     if (err.name === 'SequelizeUniqueConstraintError') {
@@ -41,6 +47,7 @@ exports.login = async (req, res) => {
     // if (!user.emailVerified) return res.status(403).json({ error: 'Please verify your email before logging in.' });
     await User.update({ lastLogin: new Date() }, { where: { id: user.id } });
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    setAccessTokenCookie(res, token);
     res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -48,12 +55,13 @@ exports.login = async (req, res) => {
 };
 
 exports.verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'No token provided' });
-  const token = authHeader.split(' ')[1];
+  const token = extractToken(req);
+  if (!token) return res.status(401).json({ error: 'No token provided' });
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) return res.status(401).json({ error: 'Invalid token' });
-    req.user = decoded;
+    const userId = decoded.userId || decoded.id;
+    if (!userId) return res.status(401).json({ error: 'Invalid token payload' });
+    req.user = { ...decoded, id: userId };
     next();
   });
 };
@@ -100,6 +108,7 @@ exports.googleAuth = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    setAccessTokenCookie(res, token);
     res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     console.error('[Google Auth]', err.message);
