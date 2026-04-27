@@ -16,19 +16,33 @@ module.exports = (sequelize) => {
       allowNull: false,
       references: { model: 'users', key: 'id' }
     },
+    conversationId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: 'conversations', key: 'id' }
+    },
     receiverId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: { model: 'users', key: 'id' }
+    },
+    body: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      validate: { len: [1, 5000] }
     },
     content: {
       type: DataTypes.TEXT,
       allowNull: false,
-      validate: { len: [1, 2000] }
+      validate: { len: [1, 5000] }
     },
     read: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
+    },
+    readAt: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   }, {
     tableName: 'messages',

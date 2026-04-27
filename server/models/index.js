@@ -9,6 +9,8 @@ const User = require('./User')(sequelize);
 const Post = require('./Post')(sequelize);
 const Connection = require('./Connection')(sequelize);
 const Message = require('./Message')(sequelize);
+const Conversation = require('./Conversation')(sequelize);
+const ConversationParticipant = require('./ConversationParticipant')(sequelize);
 const Job = require('./Job')(sequelize);
 const Like = require('./Like')(sequelize);
 const Comment = require('./Comment')(sequelize);
@@ -45,6 +47,26 @@ User.hasMany(Message, { foreignKey: 'senderId', as: 'sentMessages' });
 User.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
 Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
+
+// Conversation messaging
+Conversation.hasMany(Message, { foreignKey: 'conversationId', as: 'messages' });
+Message.belongsTo(Conversation, { foreignKey: 'conversationId', as: 'conversation' });
+Conversation.hasMany(ConversationParticipant, { foreignKey: 'conversationId', as: 'participants' });
+ConversationParticipant.belongsTo(Conversation, { foreignKey: 'conversationId', as: 'conversation' });
+User.hasMany(ConversationParticipant, { foreignKey: 'userId', as: 'conversationMemberships' });
+ConversationParticipant.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.belongsToMany(Conversation, {
+  through: ConversationParticipant,
+  foreignKey: 'userId',
+  otherKey: 'conversationId',
+  as: 'conversations'
+});
+Conversation.belongsToMany(User, {
+  through: ConversationParticipant,
+  foreignKey: 'conversationId',
+  otherKey: 'userId',
+  as: 'users'
+});
 
 // User <-> Job
 User.hasMany(Job, { foreignKey: 'clubId', as: 'jobs' });
@@ -135,6 +157,8 @@ module.exports = {
   Post,
   Connection,
   Message,
+  Conversation,
+  ConversationParticipant,
   Job,
   Like,
   Comment,

@@ -372,8 +372,11 @@
 
   var _loggedIn = (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true');
   let currentConversation=null;
+  let currentConversationId=null;
   let myInitials='??';
   let allConvs=[];
+  let messagingEnabled=true;
+  const BACKEND_DISABLED_MSG='Messaging will be available after backend activation.';
 
   /* ── Helper: Escape HTML ── */
   function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
@@ -392,6 +395,34 @@
 
   /* ── Avatar initials helper ── */
   function initFor(id){return String(id||'?').slice(0,2).toUpperCase();}
+
+  function getAuthHeaders(extra){
+    var token = localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
+    var headers = Object.assign({}, extra || {});
+    if (token) headers.Authorization = 'Bearer ' + token;
+    return headers;
+  }
+
+  function parsePayload(data){
+    if (data && typeof data === 'object' && data.success === true && data.data !== undefined) {
+      return data.data;
+    }
+    return data;
+  }
+
+  function setMessagingAvailability(enabled){
+    messagingEnabled = !!enabled;
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) sendBtn.disabled = !messagingEnabled || !document.getElementById('messageText').value.trim();
+    const messageText = document.getElementById('messageText');
+    if (messageText) {
+      messageText.placeholder = messagingEnabled ? 'Write a message…' : BACKEND_DISABLED_MSG;
+      messageText.disabled = !messagingEnabled;
+    }
+    if (!messagingEnabled && window.SpopeerToast) {
+      window.SpopeerToast.info(BACKEND_DISABLED_MSG);
+    }
+  }
 
   /* ── Get user name from profiles ── */
   function getOtherUserName(email){
@@ -438,7 +469,7 @@
           <div class="conv-time">${c.lastAt?fmtTime(c.lastAt):''}</div>
           ${unread?`<div class="unread-badge">${c.unread}</div>`:''}
         </div>`;
-      div.addEventListener('click',()=>openConversation(c.otherId||c.id||c.email));
+      div.addEventListener('click',()=>openConversation(c.otherId||c.id||c.email,c.id||null));
       list.appendChild(div);
     });
   }
@@ -451,11 +482,16 @@
     
     try{
       // Try API first
-      const r=await fetch('/api/messages/conversations',{credentials:'include'});
+      const r=await fetch('/api/messages/conversations',{credentials:'include',headers:getAuthHeaders()});
       if(r.ok){
-        allConvs=await r.json();
+        const raw=await r.json();
+        allConvs=parsePayload(raw)||[];
+        setMessagingAvailability(true);
         renderConvList(allConvs);
         return;
+      }
+      if (r.status === 404 || r.status === 501 || r.status === 503) {
+        setMessagingAvailability(false);
       }
     }catch(e){
       console.error('Failed to load conversations:', e);
@@ -465,9 +501,11 @@
   }
 
   /* ── Open conversation ── */
-  async function openConversation(otherId){
+  async function openConversation(otherId, conversationId){
     if(!me){if (window.SpopeerToast) window.SpopeerToast.warning('Please log in to use messaging');return;}
+    if(!messagingEnabled){if (window.SpopeerToast) window.SpopeerToast.info(BACKEND_DISABLED_MSG);return;}
     currentConversation=String(otherId);
+    currentConversationId=conversationId?String(conversationId):null;
 
     /* update list active state */
     document.querySelectorAll('.conv-item').forEach(i=>{i.classList.toggle('active',i.dataset.other===String(otherId));});
@@ -482,15 +520,38 @@
     document.getElementById('chatHeadName').textContent=otherName;
 
     /* enable send */
-    document.getElementById('sendBtn').disabled=false;
+    document.getElementById('sendBtn').disabled=!messagingEnabled;
 
     /* load messages */
-    const userEmail = ud?.email || 'user@example.com';
     try{
-      const r=await fetch('/api/messages/conversation/'+encodeURIComponent(me)+'/'+encodeURIComponent(otherId),{credentials:'include'});
-      if(r.ok){
-        const data=await r.json();
-        renderMessages(data,String(me));
+      if(!currentConversationId){
+        const createResp = await fetch('/api/messages/conversations', {
+          method:'POST',
+          credentials:'include',
+          headers:getAuthHeaders({'Content-Type':'application/json'}),
+          body:JSON.stringify({participantId:String(otherId)})
+        });
+        if(createResp.ok){
+          const createdData=parsePayload(await createResp.json());
+          currentConversationId = String(createdData && createdData.id ? createdData.id : '');
+        }
+      }
+
+      if(currentConversationId){
+        const r=await fetch('/api/messages/conversations/'+encodeURIComponent(currentConversationId),{credentials:'include',headers:getAuthHeaders()});
+        if(r.ok){
+          const raw=await r.json();
+          const data=parsePayload(raw);
+          renderMessages((data&&data.messages)||[],String(me));
+          return;
+        }
+      }
+
+      const rFallback=await fetch('/api/messages/conversation/'+encodeURIComponent(me)+'/'+encodeURIComponent(otherId),{credentials:'include',headers:getAuthHeaders()});
+      if(rFallback.ok){
+        const rawFallback=await rFallback.json();
+        const dataFallback=parsePayload(rawFallback)||[];
+        renderMessages(dataFallback,String(me));
         return;
       }
     }catch(e){
@@ -538,25 +599,51 @@
 
   /* ── Send message ── */
   async function sendMessage(){
-    if(!currentConversation)return;
+    if(!currentConversation||!messagingEnabled)return;
     const text=document.getElementById('messageText').value.trim();
     if(!text)return;
-    
-    const userEmail = ud?.email || 'user@example.com';
-    
+
     try{
-      const r=await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({toId:currentConversation,text})});
-      if(r.ok){
+      if(!currentConversationId){
+        const createResp = await fetch('/api/messages/conversations', {
+          method:'POST',
+          headers:getAuthHeaders({'Content-Type':'application/json'}),
+          credentials:'include',
+          body:JSON.stringify({participantId:String(currentConversation)})
+        });
+        if(createResp.ok){
+          const createdData=parsePayload(await createResp.json());
+          currentConversationId = String(createdData && createdData.id ? createdData.id : '');
+        }
+      }
+
+      if(currentConversationId){
+        const r=await fetch('/api/messages/conversations/'+encodeURIComponent(currentConversationId)+'/messages',{
+          method:'POST',
+          headers:getAuthHeaders({'Content-Type':'application/json'}),
+          credentials:'include',
+          body:JSON.stringify({body:text})
+        });
+        if(r.ok){
+          document.getElementById('messageText').value='';
+          document.getElementById('sendBtn').disabled=true;
+          openConversation(currentConversation,currentConversationId);
+          return;
+        }
+      }
+
+      const fallback=await fetch('/api/messages/send',{method:'POST',headers:getAuthHeaders({'Content-Type':'application/json'}),credentials:'include',body:JSON.stringify({toId:currentConversation,text})});
+      if(fallback.ok){
         document.getElementById('messageText').value='';
         document.getElementById('sendBtn').disabled=true;
-        openConversation(currentConversation);
+        openConversation(currentConversation,currentConversationId);
         return;
       }
     }catch(e){
       console.error('Failed to send message:', e);
     }
-    
-    if (window.SpopeerToast) window.SpopeerToast.error('Error sending message');
+
+    if (window.SpopeerToast) window.SpopeerToast.error('Failed to send message. Please try again.');
   }
 
   document.getElementById('sendBtn').addEventListener('click',sendMessage);
@@ -564,7 +651,7 @@
     if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
   });
   document.getElementById('messageText').addEventListener('input',function(){
-    document.getElementById('sendBtn').disabled=!this.value.trim();
+    document.getElementById('sendBtn').disabled=!messagingEnabled||!this.value.trim();
     this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';
   });
 
@@ -581,13 +668,13 @@
     
     if(firstMsg){
       try {
-        await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({toId:otherId,text:firstMsg})});
+        await fetch('/api/messages/send',{method:'POST',headers:getAuthHeaders({'Content-Type':'application/json'}),credentials:'include',body:JSON.stringify({toId:otherId,text:firstMsg})});
       } catch (e) {
         console.error('Failed to send initial message:', e);
       }
       loadConversations();
     }
-    openConversation(otherId);
+    openConversation(otherId,null);
   });
 
   /* ── Search filter ── */

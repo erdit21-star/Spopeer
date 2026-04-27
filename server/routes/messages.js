@@ -1,287 +1,422 @@
-// Updated
-/**
- * Message Routes
- * POST /api/messages              - Send a message
- * POST /api/messages/send         - Send a message (frontend compat)
- * POST /api/messages/mark-read    - Mark messages from sender as read
- * GET  /api/messages/conversations - Get all conversations
- * GET  /api/messages/unread/:userId - Get unread count
- * GET  /api/messages/conversation/:userId1/:userId2 - Get conversation
- * GET  /api/messages/:userId      - Get messages with a specific user
- * PUT  /api/messages/:id/read     - Mark single message as read
- */
 const express = require('express');
 const router = express.Router();
-const { Message, User, sequelize } = require('../models');
+const { Op, Sequelize } = require('sequelize');
+const {
+  Message,
+  User,
+  Conversation,
+  ConversationParticipant,
+  sequelize
+} = require('../models');
 const { authenticate } = require('../middleware/auth');
-const { Op } = require('sequelize');
 const { sanitizeString } = require('../utils/validation');
-
-// ─── SEND MESSAGE (compatibility: /api/messages/send) ───
 const { ok, created, fail } = require('../utils/response');
-router.post('/send', authenticate, async (req, res) => {
+
+function logApiError(scope, req, error) {
+  console.error(`[MESSAGES_API] ${scope} failed`, {
+    requestId: req.requestId || null,
+    userId: req.userId || null,
+    path: req.originalUrl,
+    method: req.method,
+    message: error && error.message,
+    stack: error && error.stack
+  });
+}
+
+function formatMessage(message) {
+  return {
+    id: message.id,
+    conversationId: message.conversationId,
+    senderId: message.senderId,
+    fromId: message.senderId,
+    receiverId: message.receiverId,
+    body: message.body || message.content,
+    text: message.body || message.content,
+    readAt: message.readAt,
+    createdAt: message.createdAt,
+    updatedAt: message.updatedAt
+  };
+}
+
+async function findUserByIdentifier(identifier, options) {
+  const asNumber = Number(identifier);
+  if (!Number.isNaN(asNumber) && asNumber > 0) {
+    return User.findByPk(asNumber, options || {});
+  }
+  const email = String(identifier || '').trim().toLowerCase();
+  if (!email) return null;
+  return User.findOne({ where: { email }, ...(options || {}) });
+}
+
+async function isConversationParticipant(conversationId, userId) {
+  const row = await ConversationParticipant.findOne({
+    where: { conversationId, userId }
+  });
+  return !!row;
+}
+
+async function findOrCreateDirectConversation(userIdA, userIdB, transaction) {
+  const [rows] = await sequelize.query(
+    `
+      SELECT cp."conversationId"
+      FROM conversation_participants cp
+      INNER JOIN conversation_participants cp2
+        ON cp."conversationId" = cp2."conversationId"
+      WHERE cp."userId" = :userIdA
+        AND cp2."userId" = :userIdB
+      LIMIT 1
+    `,
+    {
+      replacements: { userIdA, userIdB },
+      transaction
+    }
+  );
+
+  if (rows && rows.length) {
+    return Conversation.findByPk(rows[0].conversationId, { transaction });
+  }
+
+  const conversation = await Conversation.create({}, { transaction });
+  await ConversationParticipant.bulkCreate(
+    [
+      { conversationId: conversation.id, userId: userIdA },
+      { conversationId: conversation.id, userId: userIdB }
+    ],
+    { transaction }
+  );
+  return conversation;
+}
+
+router.use(authenticate);
+
+// POST /api/messages/conversations
+router.post('/conversations', async (req, res) => {
+  const transaction = await sequelize.transaction();
   try {
-    const receiverId = req.body.toId || req.body.receiverId;
-    const rawContent = req.body.text || req.body.content;
-
-    if (!receiverId || !rawContent) {
-      return fail(res, 400, 'VALIDATION', 'toId/receiverId and text/content are required.');
+    const targetIdentifier = req.body.participantId || req.body.otherUserId || req.body.toId || req.body.userId;
+    if (!targetIdentifier) {
+      await transaction.rollback();
+      return fail(res, 400, 'VALIDATION', 'participantId is required.');
     }
 
-    const content = sanitizeString(rawContent, 5000);
-    if (!content) {
-      return fail(res, 400, 'VALIDATION', 'Message content cannot be empty.');
+    const target = await findUserByIdentifier(targetIdentifier, { transaction });
+    if (!target || !target.isActive) {
+      await transaction.rollback();
+      return fail(res, 404, 'NOT_FOUND', 'Participant not found.');
     }
 
-    if (parseInt(receiverId) === req.userId) {
-      return fail(res, 400, 'VALIDATION', 'You cannot message yourself.');
+    if (target.id === req.userId) {
+      await transaction.rollback();
+      return fail(res, 400, 'VALIDATION', 'You cannot create a conversation with yourself.');
     }
 
-    const receiver = await User.findByPk(receiverId);
-    if (!receiver || !receiver.isActive) {
-      return fail(res, 404, 'NOT_FOUND', 'Recipient not found.');
-    }
-
-    const message = await Message.create({
-      senderId: req.userId,
-      receiverId: parseInt(receiverId),
-      content
-    });
-
-    const fullMessage = await Message.findByPk(message.id, {
-      include: [
-        { model: User, as: 'sender', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] },
-        { model: User, as: 'receiver', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }
-      ]
-    });
-
-    created(res, fullMessage);
+    const conversation = await findOrCreateDirectConversation(req.userId, target.id, transaction);
+    await transaction.commit();
+    return created(res, { id: conversation.id });
   } catch (error) {
-    console.error('Send message error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Failed to send message.');
+    await transaction.rollback();
+    logApiError('create_conversation', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to create conversation.');
   }
 });
 
-// ─── MARK MESSAGES AS READ (from sender) ───
-router.post('/mark-read', authenticate, async (req, res) => {
+// GET /api/messages/conversations
+router.get('/conversations', async (req, res) => {
   try {
-    const fromId = req.body.fromId;
+    const memberships = await ConversationParticipant.findAll({
+      where: { userId: req.userId },
+      attributes: ['conversationId'],
+      raw: true
+    });
+
+    const conversationIds = memberships.map((m) => Number(m.conversationId)).filter(Boolean);
+    if (!conversationIds.length) {
+      return ok(res, []);
+    }
+
+    const conversations = await Conversation.findAll({
+      where: { id: { [Op.in]: conversationIds } },
+      include: [
+        {
+          model: ConversationParticipant,
+          as: 'participants',
+          include: [{ model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email', 'avatarUrl'] }]
+        },
+        {
+          model: Message,
+          as: 'messages',
+          attributes: ['id', 'body', 'content', 'senderId', 'receiverId', 'createdAt', 'readAt', 'read'],
+          separate: true,
+          limit: 1,
+          order: [['createdAt', 'DESC']]
+        }
+      ],
+      order: [['updatedAt', 'DESC']]
+    });
+
+    const payload = await Promise.all(conversations.map(async (conversation) => {
+      const otherParticipant = (conversation.participants || []).find((p) => p.userId !== req.userId);
+      const otherUser = otherParticipant ? otherParticipant.user : null;
+      const latest = (conversation.messages || [])[0] || null;
+
+      const unread = await Message.count({
+        where: {
+          conversationId: conversation.id,
+          senderId: { [Op.ne]: req.userId },
+          receiverId: req.userId,
+          [Op.or]: [{ readAt: null }, { read: false }]
+        }
+      });
+
+      const otherName = otherUser
+        ? [otherUser.firstName, otherUser.lastName].filter(Boolean).join(' ').trim() || otherUser.email
+        : 'User';
+
+      return {
+        id: conversation.id,
+        otherId: otherUser ? otherUser.id : null,
+        otherName,
+        unread,
+        lastMessage: latest ? (latest.body || latest.content || '') : '',
+        lastAt: latest ? latest.createdAt : conversation.updatedAt
+      };
+    }));
+
+    return ok(res, payload);
+  } catch (error) {
+    logApiError('list_conversations', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch conversations.');
+  }
+});
+
+// GET /api/messages/conversations/:id
+router.get('/conversations/:id', async (req, res) => {
+  try {
+    const conversationId = Number(req.params.id);
+    if (!conversationId) {
+      return fail(res, 400, 'VALIDATION', 'Invalid conversation id.');
+    }
+
+    const allowed = await isConversationParticipant(conversationId, req.userId);
+    if (!allowed) {
+      return fail(res, 403, 'FORBIDDEN', 'You are not a participant in this conversation.');
+    }
+
+    const conversation = await Conversation.findByPk(conversationId, {
+      include: [
+        {
+          model: ConversationParticipant,
+          as: 'participants',
+          include: [{ model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email', 'avatarUrl'] }]
+        }
+      ]
+    });
+
+    const messages = await Message.findAll({
+      where: { conversationId },
+      order: [['createdAt', 'ASC']]
+    });
+
+    return ok(res, {
+      id: conversation.id,
+      participants: (conversation.participants || []).map((p) => p.user),
+      messages: messages.map(formatMessage)
+    });
+  } catch (error) {
+    logApiError('get_conversation', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch conversation.');
+  }
+});
+
+// POST /api/messages/conversations/:id/messages
+router.post('/conversations/:id/messages', async (req, res) => {
+  try {
+    const conversationId = Number(req.params.id);
+    if (!conversationId) {
+      return fail(res, 400, 'VALIDATION', 'Invalid conversation id.');
+    }
+
+    const allowed = await isConversationParticipant(conversationId, req.userId);
+    if (!allowed) {
+      return fail(res, 403, 'FORBIDDEN', 'You are not a participant in this conversation.');
+    }
+
+    const bodyInput = sanitizeString(req.body.body || req.body.text || req.body.content, 5000);
+    if (!bodyInput) {
+      return fail(res, 400, 'VALIDATION', 'Message body is required.');
+    }
+
+    const participants = await ConversationParticipant.findAll({
+      where: { conversationId },
+      attributes: ['userId']
+    });
+    const receiver = participants.find((p) => p.userId !== req.userId);
+
+    const message = await Message.create({
+      conversationId,
+      senderId: req.userId,
+      receiverId: receiver ? receiver.userId : null,
+      body: bodyInput,
+      content: bodyInput,
+      read: false,
+      readAt: null
+    });
+
+    return created(res, formatMessage(message));
+  } catch (error) {
+    logApiError('send_message', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to send message.');
+  }
+});
+
+// Compatibility: POST /api/messages/send
+router.post('/send', async (req, res) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const toId = req.body.toId || req.body.receiverId || req.body.userId;
+    const text = sanitizeString(req.body.text || req.body.body || req.body.content, 5000);
+
+    if (!toId || !text) {
+      await transaction.rollback();
+      return fail(res, 400, 'VALIDATION', 'toId and text are required.');
+    }
+
+    const receiver = await findUserByIdentifier(toId, { transaction });
+    if (!receiver || !receiver.isActive) {
+      await transaction.rollback();
+      return fail(res, 404, 'NOT_FOUND', 'Recipient not found.');
+    }
+
+    const conversation = await findOrCreateDirectConversation(req.userId, receiver.id, transaction);
+
+    const message = await Message.create({
+      conversationId: conversation.id,
+      senderId: req.userId,
+      receiverId: receiver.id,
+      body: text,
+      content: text,
+      read: false,
+      readAt: null
+    }, { transaction });
+
+    await transaction.commit();
+    return created(res, formatMessage(message));
+  } catch (error) {
+    await transaction.rollback();
+    logApiError('send_message_compat', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to send message.');
+  }
+});
+
+// Compatibility: GET /api/messages/conversation/:userId1/:userId2
+router.get('/conversation/:userId1/:userId2', async (req, res) => {
+  try {
+    const aUser = await findUserByIdentifier(req.params.userId1);
+    const bUser = await findUserByIdentifier(req.params.userId2);
+
+    if (!aUser || !bUser) {
+      return fail(res, 404, 'NOT_FOUND', 'Conversation participants not found.');
+    }
+
+    const userId1 = aUser.id;
+    const userId2 = bUser.id;
+
+    if (req.userId !== userId1 && req.userId !== userId2) {
+      return fail(res, 403, 'FORBIDDEN', 'You can only view your own conversations.');
+    }
+
+    const conversation = await findOrCreateDirectConversation(userId1, userId2);
+    const messages = await Message.findAll({
+      where: { conversationId: conversation.id },
+      order: [['createdAt', 'ASC']]
+    });
+
+    return ok(res, messages.map(formatMessage));
+  } catch (error) {
+    logApiError('get_conversation_compat', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch conversation.');
+  }
+});
+
+router.post('/mark-read', async (req, res) => {
+  try {
+    const fromId = Number(req.body.fromId);
     if (!fromId) {
       return fail(res, 400, 'VALIDATION', 'fromId is required.');
     }
 
     await Message.update(
-      { read: true },
-      { where: { senderId: parseInt(fromId), receiverId: req.userId, read: false } }
+      { read: true, readAt: new Date() },
+      {
+        where: {
+          senderId: fromId,
+          receiverId: req.userId,
+          [Op.or]: [{ readAt: null }, { read: false }]
+        }
+      }
     );
 
-    ok(res, { message: 'Messages marked as read.' });
+    return ok(res, { message: 'Messages marked as read.' });
   } catch (error) {
-    console.error('Mark read error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Failed to mark messages as read.');
+    logApiError('mark_read', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to mark messages as read.');
   }
 });
 
-// ─── GET UNREAD COUNT ───
-router.get('/unread/:userId', authenticate, async (req, res) => {
+router.get('/unread/:userId', async (req, res) => {
   try {
-    // Only allow users to check their own unread count
-    if (parseInt(req.params.userId) !== req.userId) {
+    if (Number(req.params.userId) !== req.userId) {
       return fail(res, 403, 'FORBIDDEN', 'You can only check your own unread count.');
     }
 
-    const count = await Message.count({
-      where: { receiverId: req.userId, read: false }
-    });
-
-    ok(res, { unread: count });
-  } catch (error) {
-    console.error('Unread count error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Failed to get unread count.');
-  }
-});
-
-// ─── GET CONVERSATION BETWEEN TWO USERS ───
-router.get('/conversation/:userId1/:userId2', authenticate, async (req, res) => {
-  try {
-    const { userId1, userId2 } = req.params;
-
-    // Only participants can read their own conversations
-    if (req.userId !== parseInt(userId1) && req.userId !== parseInt(userId2)) {
-      return fail(res, 403, 'FORBIDDEN', 'You can only view your own conversations.');
-    }
-
-    const { page = 1, limit = 50 } = req.query;
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-
-    const messages = await Message.findAll({
-      where: {
-        [Op.or]: [
-          { senderId: parseInt(userId1), receiverId: parseInt(userId2) },
-          { senderId: parseInt(userId2), receiverId: parseInt(userId1) }
-        ]
-      },
-      include: [
-        { model: User, as: 'sender', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] },
-        { model: User, as: 'receiver', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }
-      ],
-      order: [['createdAt', 'ASC']],
-      limit: parseInt(limit),
-      offset
-    });
-
-    ok(res, messages);
-  } catch (error) {
-    console.error('Get conversation error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch conversation.');
-  }
-});
-
-// ─── SEND MESSAGE ───
-router.post('/', authenticate, async (req, res) => {
-  try {
-    const { receiverId, content: rawContent } = req.body;
-
-    if (!receiverId || !rawContent) {
-      return fail(res, 400, 'VALIDATION', 'receiverId and content are required.');
-    }
-
-    const content = sanitizeString(rawContent, 5000);
-    if (!content) {
-      return fail(res, 400, 'VALIDATION', 'Message content cannot be empty.');
-    }
-
-    if (parseInt(receiverId) === req.userId) {
-      return fail(res, 400, 'VALIDATION', 'You cannot message yourself.');
-    }
-
-    const receiver = await User.findByPk(receiverId);
-    if (!receiver || !receiver.isActive) {
-      return fail(res, 404, 'NOT_FOUND', 'Recipient not found.');
-    }
-
-    const message = await Message.create({
-      senderId: req.userId,
-      receiverId: parseInt(receiverId),
-      content
-    });
-
-    const fullMessage = await Message.findByPk(message.id, {
-      include: [
-        { model: User, as: 'sender', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] },
-        { model: User, as: 'receiver', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }
-      ]
-    });
-
-    created(res, fullMessage);
-  } catch (error) {
-    console.error('Send message error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Failed to send message.');
-  }
-});
-
-// ─── GET CONVERSATIONS ───
-router.get('/conversations', authenticate, async (req, res) => {
-  try {
-    const latestMessages = await Message.findAll({
-      where: {
-        id: {
-          [Op.in]: sequelize.literal(`(
-            SELECT MAX(id)
-            FROM "Messages"
-            WHERE "senderId" = ${req.userId} OR "receiverId" = ${req.userId}
-            GROUP BY CASE
-              WHEN "senderId" = ${req.userId} THEN "receiverId"
-              ELSE "senderId"
-            END
-          )`)
-        }
-      },
-      include: [
-        { model: User, as: 'sender', attributes: ['id', 'firstName', 'lastName', 'avatarUrl', 'role'] },
-        { model: User, as: 'receiver', attributes: ['id', 'firstName', 'lastName', 'avatarUrl', 'role'] }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
-
-    const unreadRows = await Message.findAll({
+    const unread = await Message.count({
       where: {
         receiverId: req.userId,
-        read: false
-      },
-      attributes: [
-        'senderId',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'unreadCount']
-      ],
-      group: ['senderId'],
-      raw: true
-    });
-    const unreadBySender = new Map(
-      unreadRows.map(row => [Number(row.senderId), Number(row.unreadCount) || 0])
-    );
-
-    const conversations = latestMessages.map(msg => {
-      const partnerId = msg.senderId === req.userId ? msg.receiverId : msg.senderId;
-      const partner = msg.senderId === req.userId ? msg.receiver : msg.sender;
-      return {
-        partnerId,
-        partner: partner.toJSON(),
-        lastMessage: msg.toJSON(),
-        unreadCount: unreadBySender.get(partnerId) || 0
-      };
+        [Op.or]: [{ readAt: null }, { read: false }]
+      }
     });
 
-    ok(res, conversations);
+    return ok(res, { unread });
   } catch (error) {
-    console.error('Get conversations error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch conversations.');
+    logApiError('unread_count', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to get unread count.');
   }
 });
 
-// ─── GET MESSAGES WITH USER ───
-router.get('/:userId', authenticate, async (req, res) => {
+router.get('/:userId', async (req, res) => {
   try {
-    const { page = 1, limit = 50 } = req.query;
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-
+    const otherUser = await findUserByIdentifier(req.params.userId);
+    if (!otherUser) {
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
+    }
+    const conversation = await findOrCreateDirectConversation(req.userId, otherUser.id);
     const messages = await Message.findAll({
-      where: {
-        [Op.or]: [
-          { senderId: req.userId, receiverId: parseInt(req.params.userId) },
-          { senderId: parseInt(req.params.userId), receiverId: req.userId }
-        ]
-      },
-      include: [
-        { model: User, as: 'sender', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] },
-        { model: User, as: 'receiver', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }
-      ],
-      order: [['createdAt', 'ASC']],
-      limit: parseInt(limit),
-      offset
+      where: { conversationId: conversation.id },
+      order: [['createdAt', 'ASC']]
     });
 
-    ok(res, messages);
+    return ok(res, messages.map(formatMessage));
   } catch (error) {
-    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch messages.');
+    logApiError('list_messages_with_user', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch messages.');
   }
 });
 
-// ─── MARK AS READ ───
-router.put('/:id/read', authenticate, async (req, res) => {
+router.put('/:id/read', async (req, res) => {
   try {
     const message = await Message.findByPk(req.params.id);
     if (!message) {
       return fail(res, 404, 'NOT_FOUND', 'Message not found.');
     }
-
     if (message.receiverId !== req.userId) {
       return fail(res, 403, 'FORBIDDEN', 'You can only mark your own messages as read.');
     }
 
-    await message.update({ read: true });
-    ok(res, { message: 'Message marked as read.' });
+    await message.update({ read: true, readAt: new Date() });
+    return ok(res, { message: 'Message marked as read.' });
   } catch (error) {
-    fail(res, 500, 'SERVER_ERROR', 'Failed to mark message as read.');
+    logApiError('mark_single_read', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to mark message as read.');
   }
 });
 
