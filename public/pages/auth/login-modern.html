@@ -406,7 +406,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Google sign-in failed.');
         if (data.user && window.Auth) window.Auth.login(data.user);
-        if (data.token) localStorage.setItem('token', data.token);
+        if (data.token) localStorage.setItem('spopeer_token', data.token);
         window.location.href = '/feed.html';
       } catch (err) {
         console.error('[Google Auth]', err);

@@ -17,7 +17,7 @@ exports.register = async (req, res) => {
     const { firstName, lastName, email, password, role } = req.body;
     const hash = await bcrypt.hash(password, 12);
     const user = await User.create({ firstName, lastName, email: email.toLowerCase(), password: hash, role });
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
     res.status(201).json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     if (err.name === 'SequelizeUniqueConstraintError') {
@@ -37,7 +37,7 @@ exports.login = async (req, res) => {
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ error: 'Invalid credentials' });
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -96,7 +96,7 @@ exports.googleAuth = async (req, res) => {
       await user.update({ googleId, avatarUrl: user.avatarUrl || avatarUrl || null, emailVerified: true });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     console.error('[Google Auth]', err.message);
