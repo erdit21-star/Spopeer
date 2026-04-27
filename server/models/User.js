@@ -4,7 +4,7 @@
  * Roles: athlete, coach, club, supportive_professional, admin
  */
 const { DataTypes } = require('sequelize');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const { USER_ROLES } = require('../utils/constants');
 
 module.exports = (sequelize) => {

@@ -241,6 +241,12 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
   }
 });
 
+// Register alias to keep backend route naming consistent with /api/auth/register.
+router.post('/register', (req, res, next) => {
+  req.url = '/signup';
+  return router.handle(req, res, next);
+});
+
 // ─── LOGIN ───
 router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (req, res, next) => {
   const requestId = req.requestId || 'n/a';
@@ -382,6 +388,15 @@ router.get('/me', authenticate, async (req, res) => {
   } catch (error) {
     console.error('[GET-USER-BY-EMAIL] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
     return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
+  }
+});
+
+router.get('/profile', authenticate, async (req, res) => {
+  try {
+    return ok(res, { user: req.user.toJSON() });
+  } catch (error) {
+    console.error('[GET-PROFILE] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');
   }
 });
 
