@@ -52,7 +52,7 @@ function buttonHtml(href, label) {
   return `<a href="${href}" style="display:inline-block;padding:14px 28px;background:${BRAND_COLOR};color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;">${label}</a>`;
 }
 
-async function sendEmail({ to, subject, html }) {
+async function sendEmail({ to, subject, html, replyTo }) {
   if (!isEmailConfigured) {
     if (isProduction) {
       throw new Error('Email provider is not configured.');
@@ -64,18 +64,21 @@ async function sendEmail({ to, subject, html }) {
   }
 
   try {
+    const body = {
+      from: process.env.EMAIL_FROM || `${APP_NAME} <noreply@spopeer.com>`,
+      to,
+      subject,
+      html
+    };
+    if (replyTo) body.reply_to = replyTo;
+
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        from: process.env.EMAIL_FROM || `${APP_NAME} <noreply@spopeer.com>`,
-        to,
-        subject,
-        html
-      })
+      body: JSON.stringify(body)
     });
 
     const data = await response.json();

@@ -22,6 +22,7 @@
 
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
   <script src="../../js/mobile-enhancements.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -55,8 +56,26 @@
         <p>Log in to your sports network</p>
       </div>
       <div class="social-login">
-        <button class="social-btn" type="button" disabled title="Coming soon" style="opacity:0.5;cursor:not-allowed;">
-          <span class="social-icon"><i class="fab fa-google"></i></span> Google — coming soon
+        <div id="g_id_onload"
+          data-client_id="527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com"
+          data-callback="handleGoogleCredential"
+          data-auto_prompt="false">
+        </div>
+        <button type="button" onclick="google.accounts.id.prompt()" style="
+          display:flex;align-items:center;justify-content:center;gap:12px;
+          width:100%;padding:12px 20px;
+          border:1.5px solid #e0e7f0;border-radius:12px;
+          background:#fff;color:#1a2938;
+          font-family:inherit;font-weight:600;font-size:0.95rem;
+          cursor:pointer;transition:box-shadow 0.2s,border-color 0.2s;
+          box-shadow:0 1px 3px rgba(0,0,0,0.07);margin-bottom:8px;">
+          <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+            <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/>
+            <path fill="#FBBC05" d="M10.6 28.1A14.7 14.7 0 0 1 9.5 24c0-1.4.2-2.8.6-4.1l-6.9-5.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l8-6.6z"/>
+            <path fill="#34A853" d="M24 47c5.4 0 9.9-1.8 13.2-4.8l-7.5-5.8c-1.8 1.2-4.2 2-5.7 2-6.4 0-11.8-4.3-13.7-10.1l-8 6.6C7 41.3 14.8 47 24 47z"/>
+          </svg>
+          Continue with Google
         </button>
         <button class="social-btn" type="button" disabled title="Coming soon" style="opacity:0.5;cursor:not-allowed;">
           <span class="social-icon"><i class="fab fa-apple"></i></span> Apple — coming soon
@@ -216,6 +235,32 @@
     });
   </script>
   <script src="/js/components/password-toggle.js"></script>
+  <script>
+    async function handleGoogleCredential(response) {
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Google sign-in failed.');
+        if (data.user && window.Auth) window.Auth.login(data.user);
+        if (data.token) localStorage.setItem('token', data.token);
+        window.location.href = '/feed.html';
+      } catch (err) {
+        console.error('[Google Auth]', err);
+        const errorBox = document.getElementById('loginError');
+        if (errorBox) {
+          errorBox.textContent = err.message || 'Google sign-in failed. Please try email/password.';
+          errorBox.style.display = 'block';
+          errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          alert('Google sign-in error: ' + (err.message || 'Unknown error'));
+        }
+      }
+    }
+  </script>
 <script src="/js/navigation.js"></script>
 </body>
 </html>
