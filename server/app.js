@@ -31,7 +31,7 @@ const { createLimiter } = require('./services/rateLimiter');
 require('./models');
 
 // Import routes
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/users');
 const postRoutes = require('./routes/posts');
 const connectionRoutes = require('./routes/connections');

@@ -5,12 +5,15 @@ const { JWT_SECRET } = process.env;
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { firstName, lastName, email, password, role } = req.body;
     const hash = await bcrypt.hash(password, 12);
-    const user = await User.create({ name, email, password: hash, role });
+    const user = await User.create({ firstName, lastName, email: email.toLowerCase(), password: hash, role });
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    res.status(201).json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
+    if (err.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({ error: 'Email already registered.' });
+    }
     res.status(400).json({ error: err.message });
   }
 };
@@ -18,12 +21,12 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { email: email.toLowerCase() }, attributes: ['id', 'email', 'password', 'role', 'firstName', 'lastName'] });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ error: 'Invalid credentials' });
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
