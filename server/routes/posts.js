@@ -210,6 +210,22 @@ router.post('/', authenticate, validate(createPostSchema), uploadPost.single('im
   }
 });
 
+// ─── GET SAVED POSTS FOR CURRENT USER ───
+router.get('/saved', authenticate, async (req, res) => {
+  try {
+    const saved = await SavedPost.findAll({
+      where: { userId: req.userId },
+      include: [{ model: Post, as: 'post', include: [{ model: User, as: 'author', attributes: ['id','firstName','lastName','avatarUrl'] }] }],
+      order: [['createdAt','DESC']]
+    });
+
+    ok(res, saved);
+  } catch (error) {
+    console.error('Get saved posts error:', error);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch saved posts.');
+  }
+});
+
 // ─── GET SINGLE POST ───
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
@@ -387,22 +403,6 @@ router.post('/:id/save', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Toggle save error:', error);
     fail(res, 500, 'SERVER_ERROR', 'Failed to toggle save.');
-  }
-});
-
-// ─── GET SAVED POSTS FOR CURRENT USER ───
-router.get('/saved', authenticate, async (req, res) => {
-  try {
-    const saved = await SavedPost.findAll({
-      where: { userId: req.userId },
-      include: [{ model: Post, as: 'post', include: [{ model: User, as: 'author', attributes: ['id','firstName','lastName','avatarUrl'] }] }],
-      order: [['createdAt','DESC']]
-    });
-
-    ok(res, saved);
-  } catch (error) {
-    console.error('Get saved posts error:', error);
-    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch saved posts.');
   }
 });
 
