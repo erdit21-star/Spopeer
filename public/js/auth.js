@@ -23,7 +23,7 @@ const Auth = {
     }
   },
 
-  clearDemoSessionData() {
+  clearSessionCacheData() {
     [
       "spopeer_user_posts",
       "spopeer_saved_posts",
@@ -59,7 +59,7 @@ const Auth = {
   },
 
   login(user) {
-    this.clearDemoSessionData();
+    this.clearSessionCacheData();
 
     const normalizedUser = this.normalizeUserForSession({ ...this.getUser(), ...user });
 
