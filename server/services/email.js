@@ -109,7 +109,7 @@ async function sendPasswordResetEmail(email, token) {
     <h2 style="margin:0 0 16px;color:#333;">Password Reset</h2>
     <p style="color:#555;line-height:1.6;">We received a request to reset your password. Click the button below to choose a new one.</p>
     <div style="text-align:center;margin:28px 0;">${buttonHtml(resetUrl, 'Reset Password')}</div>
-    <p style="color:#999;font-size:13px;">This link expires in 1 hour. If you didn't request this, ignore this email.</p>
+    <p style="color:#999;font-size:13px;">This link expires in 30 minutes. If you didn't request this, ignore this email.</p>
   `);
   return sendEmail({ to: email, subject: `Reset your ${APP_NAME} password`, html });
 }
