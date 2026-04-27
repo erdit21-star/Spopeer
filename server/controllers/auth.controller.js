@@ -6,6 +6,7 @@ const { User } = require('../models');
 const { sequelize } = require('../config/database');
 const { sendPasswordResetEmail } = require('../services/email');
 const { extractToken, getCookieOptions, clearAuthCookies } = require('../middleware/auth');
+const { issueCsrfToken } = require('../middleware/csrf');
 const { JWT_SECRET } = process.env;
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -32,6 +33,7 @@ exports.register = async (req, res) => {
     const user = await User.create({ firstName, lastName, email: email.toLowerCase(), password: hash, role });
     const token = signAuthToken(user);
     setAccessTokenCookie(res, token);
+    issueCsrfToken(req, res);
     res.status(201).json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     if (err.name === 'SequelizeUniqueConstraintError') {
@@ -56,6 +58,7 @@ exports.login = async (req, res) => {
     await User.update({ lastLogin: new Date() }, { where: { id: user.id } });
     const token = signAuthToken(user);
     setAccessTokenCookie(res, token);
+    issueCsrfToken(req, res);
     res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -117,6 +120,7 @@ exports.googleAuth = async (req, res) => {
 
     const token = signAuthToken(user);
     setAccessTokenCookie(res, token);
+    issueCsrfToken(req, res);
     res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
     console.error('[Google Auth]', err.message);
@@ -131,6 +135,15 @@ exports.logout = async (req, res) => {
   } catch (err) {
     console.error('[Logout]', err.message);
     return res.status(500).json({ success: false, error: 'Logout failed.' });
+  }
+};
+
+exports.csrfToken = async (req, res) => {
+  try {
+    const token = issueCsrfToken(req, res);
+    return res.json({ success: true, data: { csrfToken: token } });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: { code: 'CSRF_TOKEN_ERROR', message: 'Failed to issue CSRF token.' } });
   }
 };
 
