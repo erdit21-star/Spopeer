@@ -3093,8 +3093,7 @@ if (window.profileRuntime) {
       if (typeof value === 'string') {
         var trimmed = value.trim();
         if (!trimmed) {
-          // Avoid sending empty values that trigger server validation for profile save.
-          delete payload[key];
+          payload[key] = '';
           return;
         }
         payload[key] = trimmed;
@@ -3165,7 +3164,7 @@ if (window.profileRuntime) {
       return merged;
     } catch (saveErr) {
       console.log('Edit profile save failure details', {
-        endpoint: (saveErr && saveErr.endpoint) || '/api/profile/me',
+        endpoint: (saveErr && saveErr.endpoint) || '/api/users/me',
         method: (saveErr && saveErr.method) || 'PATCH',
         payload: sanitizedOutgoing,
         backendResponse: saveErr && saveErr.response,

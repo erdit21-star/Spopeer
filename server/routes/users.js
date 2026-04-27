@@ -24,11 +24,11 @@ const logger = require('../utils/logger');
 // Login / /me / logout are NOT rate-limited so normal usage is never blocked.
 const PROFILE_STRING_FIELDS = {
   firstName: 100, lastName: 100, displayName: 150, username: 100,
-  sport: 100, primarySport: 100, profession: 200, bio: 1000, location: 200,
+  sport: 100, primarySport: 100, profession: 200, bio: 2000, location: 200,
   gender: 50, nationality: 100, contactEmail: 255, contactPhone: 100,
   contactAddress: 500, playingLevel: 100, position: 100, currentTeam: 150,
   achievements: 2000, profileVisibility: 50, avatarUrl: 500, coverPhotoUrl: 500,
-  profileCardStyle: 30
+  profileCardStyle: 30, role: 50
 };
 const PROFILE_JSON_FIELDS = ['stats', 'mediaLinks', 'sharingPreferences', 'visibility'];
 const PROFILE_DATE_FIELDS = ['dateOfBirth'];
@@ -36,7 +36,7 @@ const PROFILE_BOOL_FIELDS = ['privacyPublic'];
 
 // Known columns that are NOT profile-editable — skip these in extendedProfile
 const SYSTEM_FIELDS = new Set([
-  'id','email','password','role','followersCount','followingCount','postsCount',
+  'id','email','password','followersCount','followingCount','postsCount',
   'verified','subscription','isActive','lastLogin','createdAt','updatedAt',
   'extendedProfile','coverUrl','name'
 ]);

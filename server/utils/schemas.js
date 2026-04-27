@@ -49,7 +49,7 @@ const profileUpdateSchema = z.object({
   lastName: z.string().min(1).max(100).optional(),
   displayName: z.string().max(150).optional(),
   username: z.string().max(100).optional(),
-  bio: z.string().max(1000).optional(),
+  bio: z.string().max(2000).optional(),
   location: z.string().max(200).optional(),
   sport: z.string().max(100).optional(),
   primarySport: z.string().max(100).optional(),
