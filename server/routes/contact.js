@@ -3,7 +3,7 @@ const express = require('express');
 const router  = express.Router();
 const { sendEmail } = require('../services/email');
 
-const CONTACT_RECIPIENT = 'erditgr@yahoo.gr';
+const CONTACT_RECIPIENT = process.env.CONTACT_TO_EMAIL || 'erditgr@yahoo.gr';
 
 router.post('/', async (req, res) => {
   const { firstName, lastName, email, subject, message, type } = req.body || {};
