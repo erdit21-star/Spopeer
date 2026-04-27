@@ -323,6 +323,14 @@ app.get('/admin/{*rest}', authenticate, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'pages', 'admin', 'dashboard.html'));
 });
 
+// Temporary auth connectivity probe (remove after deployment verification).
+app.get('/api/auth/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Auth route is connected'
+  });
+});
+
 // ─── CATCH-ALL: serve index.html for frontend routes ───
 app.get('{*path}', (req, res) => {
   if (req.path.startsWith('/api/')) {
