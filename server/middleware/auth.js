@@ -87,13 +87,13 @@ async function optionalAuth(req, res, next) {
 }
 
 /**
- * Generate short-lived access token (15 minutes)
+ * Generate MVP access token (7 days)
  */
 function generateAccessToken(user) {
   return jwt.sign(
     { userId: user.id, email: user.email, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: '15m' }
+    { expiresIn: '7d' }
   );
 }
 
@@ -137,7 +137,7 @@ function getCookieOptions(maxAgeMs) {
 function setAuthCookies(res, user) {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
-  res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
+  res.cookie('access_token', accessToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
   res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
   return { accessToken, refreshToken };
 }

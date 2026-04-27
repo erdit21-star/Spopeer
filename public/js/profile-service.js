@@ -59,21 +59,8 @@ class ProfileService {
    */
   async loadProfile() {
     try {
-      const token = localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
-      const headers = token ? { Authorization: 'Bearer ' + token } : {};
-
-      const meResponse = await fetch('/api/auth/me', { credentials: 'include', headers });
-      if (!meResponse.ok) {
-        throw new Error('User not authenticated');
-      }
-      const meData = await meResponse.json().catch(function () { return {}; });
-      const meUser = (meData.data && meData.data.user) || meData.user || meData.payload || null;
-      if (!meUser || !meUser.id) {
-        throw new Error('User not authenticated');
-      }
-
-      // Check cache first
-      const cacheKeyIdentity = meUser.email || String(meUser.id);
+      const storedUser = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('spopeerUser') || '{}');
+      const cacheKeyIdentity = storedUser.email || String(storedUser.id || 'me');
       const cached = this.getFromCache(cacheKeyIdentity);
       if (cached) {
         this.currentProfile = cached;
@@ -83,20 +70,20 @@ class ProfileService {
 
       this.isLoading = true;
 
-      const response = await fetch('/api/profile/me', { headers, credentials: 'include' });
-      if (!response.ok) {
-        throw new Error('Failed to load persisted profile');
-      }
-      const data = await response.json();
-      const profileData = ((data.data && data.data.payload) || data.payload || data.user || {});
+      const data = window.SpopeerAPI && typeof window.SpopeerAPI.getProfile === 'function'
+        ? await window.SpopeerAPI.getProfile()
+        : await fetch('/api/profile/me', { credentials: 'include' }).then(function (response) {
+            if (!response.ok) {
+              throw new Error('Failed to load persisted profile');
+            }
+            return response.json();
+          });
+      const profileData = ((data.data && data.data.user) || data.user || {});
 
       // Cache the result
       this.saveToCache(cacheKeyIdentity, profileData);
       this.currentProfile = profileData;
       this.isLoading = false;
-
-      // Update localStorage with profile data
-      localStorage.setItem('spopeer_user', JSON.stringify({ ...meUser, ...profileData }));
 
       // Notify all subscribers
       this.notifySubscribers(profileData);
@@ -121,29 +108,16 @@ class ProfileService {
       }
 
       const result = await window.SpopeerAPI.updateProfile(profileData);
-      const updatedProfile = result.payload || result.user || profileData;
+      const updatedProfile = (result.data && result.data.user) || result.user || profileData;
 
       // Update current profile
       this.currentProfile = updatedProfile;
-
-      // Update localStorage
-      const user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-      localStorage.setItem('spopeer_user', JSON.stringify({ ...user, ...updatedProfile }));
 
       // Clear cache to force refresh
       this.clearCache();
 
       // Notify subscribers
       this.notifySubscribers(updatedProfile);
-
-      // Emit global event
-      window.dispatchEvent(new CustomEvent('profileUpdated', {
-        detail: {
-          profile: updatedProfile,
-          timestamp: Date.now(),
-          source: 'ProfileService'
-        }
-      }));
 
       return updatedProfile;
     } catch (error) {

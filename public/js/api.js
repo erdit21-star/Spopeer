@@ -53,6 +53,10 @@
     return user;
   }
 
+  function unwrapUser(data) {
+    return (data && data.data && data.data.user) || (data && data.user) || null;
+  }
+
   function clearAuthStorage() {
     [
       "spopeer_user",
@@ -182,27 +186,18 @@
 
     const data = await response.json().catch(function () { return {}; });
     if (response.status === 401) {
-      // Try to refresh token once before giving up
-      if (!config._retried && path !== "/api/auth/refresh") {
-        try {
-          const refreshResp = await request("/api/auth/refresh", { method: "POST", _retried: true });
-          // if refresh succeeded, retry original request
-          if (refreshResp) {
-            config._retried = true;
-            return request(path, config);
-          }
-        } catch (err) {
-          console.debug("Auth refresh retry failed in api.js", err);
-        }
-      }
-      // Don't clear storage here — let the caller decide (e.g. show
-      // "session expired" UI vs. silently retrying on next navigation).
       const msg = (data.error && data.error.message) || data.message || data.error || "Session expired. Please log in again.";
       const err = new Error(msg);
       err.code = "UNAUTHORIZED";
       throw err;
     }
     if (!response.ok) {
+      console.error("API request failed", {
+        path,
+        method,
+        status: response.status,
+        response: data
+      });
       throw new Error((data.error && data.error.message) || data.message || data.error || "Request failed");
     }
 
@@ -231,7 +226,7 @@
       body: JSON.stringify(payload)
     });
     // Store user profile (not token) for UI — auth is cookie-based now
-    const user = (data.data && data.data.user) || data.user;
+    const user = unwrapUser(data);
     if (user) {
       setUser(user, "api-login");
     }
@@ -243,7 +238,7 @@
       method: "POST",
       body: JSON.stringify(payload)
     });
-    const user = (data.data && data.data.user) || data.user;
+    const user = unwrapUser(data);
     if (user) {
       setUser(user, "api-signup");
     }
@@ -252,7 +247,7 @@
 
   async function me() {
     const data = await request("/api/auth/me");
-    const user = (data.data && data.data.user) || data.user;
+    const user = unwrapUser(data);
     if (user) {
       setUser(user, "api-me");
     }
@@ -260,8 +255,8 @@
   }
 
   async function getProfile() {
-    const data = await me();
-    const user = (data.data && data.data.user) || data.user;
+    const data = await request("/api/profile/me");
+    const user = unwrapUser(data);
     if (user) {
       setUser(user, "api-profile");
     }
@@ -273,7 +268,7 @@
       method: "PATCH",
       body: JSON.stringify(payload)
     });
-    const savedUser = (data.data && (data.data.user || data.data.payload)) || data.payload || data.user;
+    const savedUser = unwrapUser(data);
     if (savedUser) {
       setUser(savedUser, "api-profile-update");
     }
