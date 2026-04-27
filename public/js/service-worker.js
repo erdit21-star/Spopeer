@@ -20,7 +20,6 @@ const CRITICAL_ASSETS = [
   '/js/current-user-store.js',
   '/js/marketplace-service.js',
   '/js/profile-sync-service.js',
-  '/js/performance-service.js',
   '/pages/marketplace/marketplace.html'
 ];
 
