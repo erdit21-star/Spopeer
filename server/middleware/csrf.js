@@ -49,7 +49,7 @@ function csrfProtection(options = {}) {
       return res.status(403).json({
         success: false,
         error: {
-          code: 'CSRF_INVALID',
+          code: 'CSRF_FAILED',
           message: 'CSRF validation failed. Refresh and try again.'
         }
       });

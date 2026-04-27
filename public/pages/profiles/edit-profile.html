@@ -2484,8 +2484,16 @@ if (window.profileRuntime) {
 
         var savedUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) || JSON.parse(localStorage.getItem('spopeer_user') || '{}');
         var mergedUser = Object.assign({}, savedUser, { avatarUrl: avatarUrl });
+        localStorage.setItem('spopeer_user', JSON.stringify(mergedUser));
         if (window.SpopeerAPI.setUser) {
           window.SpopeerAPI.setUser(mergedUser, 'EditProfileAvatarUpload');
+        }
+        if (window.SpopeerAPI && typeof window.SpopeerAPI.getProfile === 'function') {
+          try {
+            await window.SpopeerAPI.getProfile();
+          } catch (refreshErr) {
+            console.warn('Profile refresh after avatar upload failed', refreshErr);
+          }
         }
 
         var sa2 = document.getElementById('sidebarAv');
@@ -2495,7 +2503,8 @@ if (window.profileRuntime) {
         recalcCompletion();
       } catch (uploadErr) {
         console.error('Avatar upload failed', uploadErr);
-        showToast('Could not upload avatar. Please try again.', 'error');
+        var backendMessage = (uploadErr && uploadErr.response && uploadErr.response.error && uploadErr.response.error.message) || (uploadErr && uploadErr.message) || 'Could not upload avatar.';
+        showToast(backendMessage, 'error');
       } finally {
         URL.revokeObjectURL(previewUrl);
       }

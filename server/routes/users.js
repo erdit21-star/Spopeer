@@ -42,6 +42,30 @@ const SYSTEM_FIELDS = new Set([
 
 const { ok, fail } = require('../utils/response');
 const { sanitizePublicProfile, sanitizeUserList } = require('../utils/privacy');
+
+function handleUploadMiddleware(uploadMiddleware) {
+  return (req, res, next) => {
+    uploadMiddleware(req, res, (error) => {
+      if (!error) {
+        return next();
+      }
+
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return fail(res, 413, 'FILE_TOO_LARGE', 'File is too large. Maximum allowed size is 10MB.');
+      }
+
+      if (error.code === 'UNSUPPORTED_FILE_TYPE') {
+        return fail(res, 400, 'UNSUPPORTED_FILE_TYPE', 'Unsupported file type. Please upload a valid image file.');
+      }
+
+      if (error.name === 'MulterError') {
+        return fail(res, 400, 'UPLOAD_ERROR', `Upload failed: ${error.message}`);
+      }
+
+      return fail(res, 400, 'UPLOAD_ERROR', error.message || 'Upload failed.');
+    });
+  };
+}
 function pickProfileUpdates(body) {
   const updates = {};
   const knownFields = new Set();
@@ -304,7 +328,7 @@ router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res)
 });
 
 // ─── UPLOAD AVATAR ───
-router.post('/avatar', authenticate, uploadAvatar.single('avatar'), async (req, res) => {
+router.post('/avatar', authenticate, handleUploadMiddleware(uploadAvatar.single('avatar')), async (req, res) => {
   try {
     if (!req.file) {
       return fail(res, 400, 'VALIDATION', 'No file uploaded.');
@@ -315,12 +339,21 @@ router.post('/avatar', authenticate, uploadAvatar.single('avatar'), async (req, 
 
     ok(res, { avatarUrl }, { message: 'Avatar uploaded.' });
   } catch (error) {
+    logger.error({
+      event: 'avatar_upload_error',
+      message: error.message,
+      stack: error.stack,
+      userId: req.userId
+    });
+    if (error.code === 'CLOUDINARY_NOT_CONFIGURED') {
+      return fail(res, 500, 'CLOUDINARY_NOT_CONFIGURED', 'Cloud storage is not configured for uploads.');
+    }
     fail(res, 500, 'SERVER_ERROR', 'Failed to upload avatar.');
   }
 });
 
 // ─── UPLOAD COVER PHOTO ───
-router.post('/cover', authenticate, uploadCover.single('cover'), async (req, res) => {
+router.post('/cover', authenticate, handleUploadMiddleware(uploadCover.single('cover')), async (req, res) => {
   try {
     if (!req.file) {
       return fail(res, 400, 'VALIDATION', 'No file uploaded.');
@@ -331,6 +364,9 @@ router.post('/cover', authenticate, uploadCover.single('cover'), async (req, res
 
     ok(res, { coverPhotoUrl }, { message: 'Cover photo uploaded.' });
   } catch (error) {
+    if (error.code === 'CLOUDINARY_NOT_CONFIGURED') {
+      return fail(res, 500, 'CLOUDINARY_NOT_CONFIGURED', 'Cloud storage is not configured for uploads.');
+    }
     fail(res, 500, 'SERVER_ERROR', 'Failed to upload cover photo.');
   }
 });

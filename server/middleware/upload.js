@@ -25,16 +25,24 @@ const ALLOWED_TYPES = {
 
 const fileFilter = (_req, file, cb) => {
   const allowedExts = ALLOWED_TYPES[file.mimetype];
-  if (!allowedExts) return cb(new Error('Only image and video files are allowed.'), false);
+  if (!allowedExts) {
+    const err = new Error('Only image and video files are allowed.');
+    err.code = 'UNSUPPORTED_FILE_TYPE';
+    return cb(err, false);
+  }
   const ext = path.extname(file.originalname).toLowerCase();
-  if (!allowedExts.includes(ext)) return cb(new Error(`Extension ${ext} does not match MIME type ${file.mimetype}.`), false);
+  if (!allowedExts.includes(ext)) {
+    const err = new Error(`Extension ${ext} does not match MIME type ${file.mimetype}.`);
+    err.code = 'UNSUPPORTED_FILE_TYPE';
+    return cb(err, false);
+  }
   cb(null, true);
 };
 
 // Always use memory storage so buffer is available for cloud upload
 const memStorage = multer.memoryStorage();
 
-const maxSize = parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024; // 5 MB
+const maxSize = parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024; // 10 MB
 
 const uploadAvatar = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize, files: 1 } });
 const uploadCover  = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize, files: 1 } });
@@ -61,7 +69,9 @@ async function persistFile(file, folder, userId) {
 
   // In production we require cloud storage — do not silently fall back to disk.
   if (process.env.NODE_ENV === 'production' && !isCloudEnabled()) {
-    throw new Error('Uploads require cloud storage in production');
+    const err = new Error('Uploads require cloud storage in production');
+    err.code = 'CLOUDINARY_NOT_CONFIGURED';
+    throw err;
   }
 
   // Fallback: write to local disk (non-production)
