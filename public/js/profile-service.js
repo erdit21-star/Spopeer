@@ -59,13 +59,22 @@ class ProfileService {
    */
   async loadProfile() {
     try {
-      const user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-      if (!user.email) {
+      const token = localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
+      const headers = token ? { Authorization: 'Bearer ' + token } : {};
+
+      const meResponse = await fetch('/api/auth/me', { credentials: 'include', headers });
+      if (!meResponse.ok) {
+        throw new Error('User not authenticated');
+      }
+      const meData = await meResponse.json().catch(function () { return {}; });
+      const meUser = (meData.data && meData.data.user) || meData.user || meData.payload || null;
+      if (!meUser || !meUser.id) {
         throw new Error('User not authenticated');
       }
 
       // Check cache first
-      const cached = this.getFromCache(user.email);
+      const cacheKeyIdentity = meUser.email || String(meUser.id);
+      const cached = this.getFromCache(cacheKeyIdentity);
       if (cached) {
         this.currentProfile = cached;
         this.notifySubscribers(cached);
@@ -74,31 +83,20 @@ class ProfileService {
 
       this.isLoading = true;
 
-      // Fetch from API (with timeout so page doesn't hang if no server)
-      let profileData = null;
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        const headers = {};
-        const response = await fetch(`/api/users/${encodeURIComponent(user.id)}`, { signal: controller.signal, headers, credentials: 'include' });
-        clearTimeout(timeoutId);
-        if (response.ok) {
-          const data = await response.json();
-          profileData = data.payload || data.user || {};
-        } else {
-          throw new Error('Failed to load persisted profile');
-        }
-      } catch (_fetchErr) {
-        profileData = { ...user };
+      const response = await fetch('/api/profiles/me', { headers, credentials: 'include' });
+      if (!response.ok) {
+        throw new Error('Failed to load persisted profile');
       }
+      const data = await response.json();
+      const profileData = ((data.data && data.data.payload) || data.payload || data.user || {});
 
       // Cache the result
-      this.saveToCache(user.email, profileData);
+      this.saveToCache(cacheKeyIdentity, profileData);
       this.currentProfile = profileData;
       this.isLoading = false;
 
       // Update localStorage with profile data
-      localStorage.setItem('spopeer_user', JSON.stringify({ ...user, ...profileData }));
+      localStorage.setItem('spopeer_user', JSON.stringify({ ...meUser, ...profileData }));
 
       // Notify all subscribers
       this.notifySubscribers(profileData);

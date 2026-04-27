@@ -14,6 +14,14 @@ function setAccessTokenCookie(res, token) {
   res.cookie('access_token', token, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 }
 
+function signAuthToken(user) {
+  return jwt.sign(
+    { userId: user.id, id: user.id, email: user.email, role: user.role },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+}
+
 exports.register = async (req, res) => {
   try {
     if (!req.body || typeof req.body !== 'object') {
@@ -22,7 +30,7 @@ exports.register = async (req, res) => {
     const { firstName, lastName, email, password, role } = req.body;
     const hash = await bcrypt.hash(password, 12);
     const user = await User.create({ firstName, lastName, email: email.toLowerCase(), password: hash, role });
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = signAuthToken(user);
     setAccessTokenCookie(res, token);
     res.status(201).json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
@@ -46,7 +54,7 @@ exports.login = async (req, res) => {
     // For MVP, do not require emailVerified. If you want to enforce, uncomment below:
     // if (!user.emailVerified) return res.status(403).json({ error: 'Please verify your email before logging in.' });
     await User.update({ lastLogin: new Date() }, { where: { id: user.id } });
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = signAuthToken(user);
     setAccessTokenCookie(res, token);
     res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {
@@ -107,7 +115,7 @@ exports.googleAuth = async (req, res) => {
       await user.update({ googleId, avatarUrl: user.avatarUrl || avatarUrl || null, emailVerified: true });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = signAuthToken(user);
     setAccessTokenCookie(res, token);
     res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {

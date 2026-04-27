@@ -162,9 +162,11 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   let payload={};
   let profileFound=false;
   let lastAppliedProfileTs = 0;
+
+  const authToken = localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
   
   // Build headers — include auth cookie so server can identify the viewer
-  const _headers = {};
+  const _headers = authToken ? { Authorization: 'Bearer ' + authToken } : {};
 
   // Try /api/users/:id (handles both numeric id and email)
   if(userId){
@@ -197,11 +199,18 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     }
   }
 
-  // Last resort for own profile: use localStorage data
-  if(!profileFound && isOwnProfile && currentUser && currentUser.email){
-    payload={...currentUser};
-    profileFound=true;
-    // ...existing code...
+  // Last resort for own profile: use /api/profiles/me
+  if(!profileFound && isOwnProfile){
+    try {
+      const r = await fetch('/api/profiles/me', { headers: _headers, credentials: 'include' });
+      if (r.ok) {
+        const d = await r.json();
+        payload = (d.data && d.data.payload) || d.payload || d.user || {};
+        profileFound = true;
+      }
+    } catch (_e) {
+      // ...existing code...
+    }
   }
 
   // No demo/sample fallback in production.

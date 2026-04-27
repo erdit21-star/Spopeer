@@ -158,6 +158,65 @@ router.get('/', optionalAuth, async (req, res) => {
   }
 });
 
+// ─── GET MY PROFILE (authenticated) ───
+router.get('/me', authenticate, async (req, res) => {
+  try {
+    const freshUser = await User.findByPk(req.userId, {
+      attributes: { exclude: ['password'] }
+    });
+    if (!freshUser || !freshUser.isActive) {
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
+    }
+    ok(res, { payload: flattenUserPayload(freshUser) });
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');
+  }
+});
+
+// ─── UPDATE MY PROFILE (authenticated) ───
+router.put('/me', authenticate, validate(profileUpdateSchema), async (req, res) => {
+  try {
+    const updates = pickProfileUpdates(req.body.payload || req.body);
+
+    if (updates.username) {
+      const existing = await User.findOne({ where: { username: updates.username } });
+      if (existing && existing.id !== req.userId) {
+        return fail(res, 409, 'CONFLICT', 'Username is already taken.');
+      }
+    }
+
+    const user = await User.findByPk(req.userId);
+    if (!user) {
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
+    }
+
+    await applyExtendedMerge(user, updates);
+    await user.update(updates);
+    ok(res, { payload: flattenUserPayload(user) }, { message: 'Profile updated.' });
+  } catch (error) {
+    logger.error({ event: 'update_my_profile_error', message: error.message });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
+  }
+});
+
+// ─── GET PROFILE BY EMAIL (public, for frontend compatibility) ───
+router.get('/profile/:email', optionalAuth, async (req, res) => {
+  try {
+    const user = await User.findOne({
+      where: { email: req.params.email.toLowerCase(), isActive: true },
+      attributes: { exclude: ['password'] }
+    });
+
+    if (!user) {
+      return fail(res, 404, 'NOT_FOUND', 'Profile not found.');
+    }
+
+    ok(res, sanitizePublicProfile(req.user || null, user, { level: 'full' }));
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');
+  }
+});
+
 // ─── GET USER BY ID (or email) ───
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
@@ -245,24 +304,6 @@ router.post('/cover', authenticate, uploadCover.single('cover'), async (req, res
     ok(res, { coverPhotoUrl }, { message: 'Cover photo uploaded.' });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to upload cover photo.');
-  }
-});
-
-// ─── GET PROFILE BY EMAIL (public, for frontend compatibility) ───
-router.get('/profile/:email', optionalAuth, async (req, res) => {
-  try {
-    const user = await User.findOne({
-      where: { email: req.params.email.toLowerCase(), isActive: true },
-      attributes: { exclude: ['password'] }
-    });
-
-    if (!user) {
-      return fail(res, 404, 'NOT_FOUND', 'Profile not found.');
-    }
-
-    ok(res, sanitizePublicProfile(req.user || null, user, { level: 'full' }));
-  } catch (error) {
-    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');
   }
 });
 
