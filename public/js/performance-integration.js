@@ -98,7 +98,7 @@ function optimizeDetailPageGallery() {
   const optimizationCode = `
     // Hero image (eager load for LCP)
     <img 
-      src="../../images/logo.png"
+      src="../../assets/images/logo.png"
       alt="Product"
       width="1200"
       height="800"
@@ -107,7 +107,7 @@ function optimizeDetailPageGallery() {
     // Thumbnail gallery (lazy load)
     <div class="gallery-thumbnails">
       <img 
-        data-src="../../images/logo.png"
+        data-src="../../assets/images/logo.png"
         alt="View 2"
         loading="lazy"
         width="150"
@@ -115,7 +115,7 @@ function optimizeDetailPageGallery() {
         class="gallery-thumb"
       >
       <img 
-        data-src="../../images/logo.png"
+        data-src="../../assets/images/logo.png"
         alt="View 3"
         loading="lazy"
         width="150"
@@ -258,7 +258,7 @@ function optimizeSEOTags() {
       title: 'Marketplace — Spopeer | Buy & Sell Sports Equipment',
       description: 'Discover sports equipment, coaching services, and athletics marketplace. Connect with athletes, coaches, and professionals in Spopeer community.',
       keywords: 'sports equipment, marketplace, buying, selling, coaching, athlete community',
-      ogImage: '/images/marketplace-og.png'
+      ogImage: '/assets/images/marketplace-og.png'
     },
     'listing-detail.html': {
       titleTemplate: '{item} - Spopeer Marketplace',

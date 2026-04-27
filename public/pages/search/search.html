@@ -1262,7 +1262,7 @@
       mpResults.forEach(listing=>{
         const card = document.createElement('div');
         card.className = 'marketplace-result-card';
-        const image = listing.images && listing.images.length > 0 ? listing.images[0] : '/images/placeholder.png';
+        const image = listing.images && listing.images.length > 0 ? listing.images[0] : '/assets/images/placeholder.png';
         const price = listing.price ? `$${parseFloat(listing.price).toFixed(2)}` : 'Contact';
         card.innerHTML = `
           <img src="${image}" alt="${listing.title}" class="marketplace-result-image" onclick="window.location.href='../marketplace/listing-detail.html?id=${listing.id}'">
