@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spopeer - Ads Manager</title>
+  <title>Spopeer · Ads Manager</title>
   <script>
     // Keep Ads Manager outside SES lockdown to avoid breaking navigation/UI APIs.
     window.__SES_DISABLED__ = true;
@@ -20,689 +20,425 @@
   <script>
     window.Auth && window.Auth.requireAuth && window.Auth.requireAuth();
   </script>
+  <script>
+    window.toggleProfileMenuGlobal = function() {
+      const menu = document.querySelector('[data-user-menu]') || document.getElementById('profileMenu');
+      if (menu) menu.classList.toggle('visible');
+    };
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="/css/shared-tokens.css" />
   <link rel="stylesheet" href="/css/shared-nav.css" />
-  <link rel="stylesheet" href="/css/fonts.css">
-  <link rel="stylesheet" href="../../css/mobile-responsive.css">
-  <script src="../../js/mobile-enhancements.js" defer></script>
 
   <style>
-    /* [hidden] must be explicit for cross-browser safety */
-    [hidden] { display: none !important; }
+    /* ================================================================
+       SPOPEER ADS MANAGER — Full Page Styles
+    ================================================================ */
 
-    .ads-layout {
+    /* App Layout */
+    .app-layout {
+      max-width: 1280px; margin: 0 auto;
+      padding: 24px 24px 0;
       display: grid;
-      grid-template-columns: 200px 1fr;
-      min-height: calc(100vh - var(--nav-h));
-      background: var(--white);
+      grid-template-columns: 248px minmax(0, 1fr) 288px;
+      gap: 20px;
+      align-items: start;
     }
 
-    /* ── Ads Sidenav ── */
-    .ads-sidenav {
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      padding: 16px 0;
-      display: flex;
-      flex-direction: column;
-      position: sticky;
-      top: var(--nav-h);
-      height: calc(100vh - var(--nav-h));
+    /* LEFT SIDEBAR */
+    .sidebar-left {
+      position: sticky; top: calc(var(--nav-h) + 16px);
+      display: flex; flex-direction: column; gap: 4px;
+      max-height: calc(100vh - var(--nav-h) - 32px);
       overflow-y: auto;
     }
+    .sidebar-left::-webkit-scrollbar { width: 4px; }
+    .sidebar-left::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    .ads-sidenav::-webkit-scrollbar { width: 4px; }
-    .ads-sidenav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-    .sidenav-header {
-      padding: 0 16px 16px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 8px;
+    .sidebar-profile {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--rL); overflow: hidden; margin-bottom: 8px;
     }
-
-    .sidenav-header .wordmark {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--ink);
-      font-family: var(--fB);
-    }
-
-    .sidenav-header .sub {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .ads-nav-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 16px;
-      font-size: 13px;
-      font-family: var(--fB);
-      color: var(--muted);
-      cursor: pointer;
-      border-left: 2px solid transparent;
-      transition: .15s;
-      background: none;
-      border-top: none;
-      border-right: none;
-      border-bottom: none;
-      width: 100%;
-      text-align: left;
-    }
-
-    .ads-nav-item:hover {
-      color: var(--ink);
-      background: rgba(0, 0, 0, .03);
-    }
-
-    .ads-nav-item.active {
-      color: var(--ink);
-      background: var(--white);
-      border-left-color: var(--accent);
-      font-weight: 600;
-    }
-
-    .ads-nav-item i { width: 16px; text-align: center; flex-shrink: 0; opacity: .7; }
-    .ads-nav-item.active i { opacity: 1; }
-
-    .ads-nav-section {
-      font-size: 10px;
-      color: var(--muted-2);
-      padding: 12px 16px 4px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      font-family: var(--fB);
-      font-weight: 700;
-    }
-
-    /* ── Main area ── */
-    .ads-main {
-      padding: 24px;
-      overflow: auto;
-      background: var(--white);
-    }
-
-    .ads-topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-
-    .ads-topbar h1 {
-      font-size: 18px;
-      font-weight: 700;
-      font-family: var(--fD);
-      color: var(--ink);
-    }
-
-    .btn-new-campaign {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 9px 16px;
-      border: none;
-      border-radius: var(--rM);
-      font-size: 13px;
-      font-weight: 600;
-      font-family: var(--fB);
-      background: var(--accent);
-      color: #fff;
-      cursor: pointer;
-      transition: opacity .15s;
-    }
-
-    .btn-new-campaign:hover { opacity: .88; }
-
-    /* ── Metrics grid ── */
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .metric {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--rM);
-      padding: 16px;
-    }
-
-    .metric-label {
-      font-size: 11px;
-      color: var(--muted);
-      font-family: var(--fB);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-
-    .metric-val {
-      font-size: 24px;
-      font-weight: 700;
-      font-family: var(--fD);
-      color: var(--ink);
-    }
-
-    .metric-change {
-      font-size: 11px;
-      margin-top: 4px;
-      font-family: var(--fB);
-    }
-
-    .metric-change.up { color: #3B6D11; }
-    .metric-change.dn { color: #A32D2D; }
-
-    /* ── Two-column layout ── */
-    .ads-two-col {
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      gap: 16px;
-    }
-
-    .ads-col { display: flex; flex-direction: column; gap: 16px; }
-
-    /* ── Cards ── */
-    .ads-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--rL);
-      padding: 16px;
-    }
-
-    .ads-card-title {
-      font-size: 13px;
-      font-weight: 700;
-      font-family: var(--fD);
-      color: var(--ink);
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .card-title-right {
-      font-size: 11px;
-      color: var(--blue);
-      font-weight: 500;
-      cursor: pointer;
-      font-family: var(--fB);
-    }
-
-    .card-title-right:hover { text-decoration: underline; }
-
-    /* ── Campaign rows ── */
-    .campaign-row {
-      display: grid;
-      grid-template-columns: auto 1fr auto auto auto;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .campaign-row:last-child { border-bottom: none; }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .status-dot.live { background: #3B6D11; }
-    .status-dot.paused { background: #BA7517; }
-    .status-dot.ended { background: var(--muted-2); }
-
-    .camp-name {
-      font-size: 13px;
-      font-weight: 600;
-      font-family: var(--fB);
-      color: var(--ink);
-    }
-
-    .camp-type {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 1px;
-    }
-
-    .camp-stat {
-      font-size: 13px;
-      font-weight: 600;
-      font-family: var(--fB);
-      color: var(--ink);
-      text-align: right;
-      min-width: 52px;
-    }
-
-    .camp-stat-lbl {
-      font-size: 10px;
-      color: var(--muted);
-      text-align: right;
-    }
-
-    .pill {
-      font-size: 10px;
-      padding: 3px 9px;
-      border-radius: var(--pill);
-      font-weight: 600;
-      font-family: var(--fB);
-    }
-
-    .pill.live { background: #EAF3DE; color: #3B6D11; }
-    .pill.paused { background: #FAEEDA; color: #854F0B; }
-    .pill.ended { background: var(--surface); color: var(--muted); }
-
-    /* ── Mini chart ── */
-    .mini-chart {
-      display: flex;
-      align-items: flex-end;
-      gap: 3px;
-      height: 56px;
-      margin: 4px 0 10px;
-    }
-
-    .chart-bar {
-      flex: 1;
-      border-radius: 3px 3px 0 0;
-      min-height: 4px;
-      background: var(--blue);
-      opacity: .5;
-      transition: opacity .15s;
-    }
-
-    .chart-bar:hover { opacity: 1; }
-    .chart-bar.current { opacity: 1; background: var(--accent); }
-
-    .sparkline-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: var(--muted-2);
-      margin-top: 4px;
-      font-family: var(--fB);
-    }
-
-    /* ── Audience reach ── */
-    .mini-bar-wrap { margin-bottom: 12px; }
-
-    .mini-bar-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      font-family: var(--fB);
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    .mini-bar-label .pct { font-weight: 600; color: var(--ink); }
-
-    .mini-bar-track {
-      height: 6px;
-      background: var(--surface);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .mini-bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: var(--accent);
-      transition: width .4s ease;
-    }
-
-    /* ── Audience filters ── */
-    .audience-filters {
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
-      margin-top: 8px;
-    }
-
-    .audience-filters-label {
-      font-size: 11px;
-      color: var(--muted);
-      font-family: var(--fB);
-      margin-bottom: 8px;
-    }
-
-    .audience-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      padding: 4px 10px;
-      border: 1px solid var(--border);
-      border-radius: var(--pill);
-      color: var(--muted);
-      background: var(--surface);
-      margin: 2px;
-      font-family: var(--fB);
-    }
-
-    /* ── Placements ── */
-    .placement-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 0;
-      font-size: 13px;
-      font-family: var(--fB);
-      color: var(--muted);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .placement-row:last-child { border-bottom: none; }
-
-    .placement-name { display: flex; align-items: center; gap: 8px; }
-    .placement-name i { color: var(--blue); width: 16px; text-align: center; }
-
-    .toggle {
-      width: 28px;
-      height: 16px;
-      border-radius: 8px;
-      background: var(--accent);
+    .sp-cover {
+      height: 64px;
+      background: linear-gradient(135deg, var(--accent) 0%, #003d7a 50%, var(--blue) 100%);
       position: relative;
-      flex-shrink: 0;
-      cursor: pointer;
-      transition: background .2s;
     }
-
-    .toggle::after {
-      content: '';
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #fff;
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      transition: right .2s;
+    .sp-cover::after {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,.12) 1px, transparent 1px);
+      background-size: 16px 16px;
     }
-
-    .toggle.off {
-      background: var(--surface);
-      border: 1px solid var(--border);
+    .sp-body { padding: 0 16px 14px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .sp-avatar-wrap { position: relative; margin-top: -22px; margin-bottom: 8px; z-index: 2; }
+    .sp-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      color: #fff; font-size: 14px; font-weight: 800; font-family: var(--fD);
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid var(--white); box-shadow: 0 4px 14px rgba(0,31,63,.2);
     }
-
-    .toggle.off::after {
-      right: auto;
-      left: 2px;
+    .sp-name { font-size: 13px; font-weight: 700; font-family: var(--fD); color: var(--ink); }
+    .sp-handle { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .sp-stats {
+      display: grid; grid-template-columns: repeat(3,1fr); width: 100%; gap: 4px;
+      border-top: 1px solid var(--border); padding-top: 10px;
     }
+    .sp-stat-num { font-size: 14px; font-weight: 800; font-family: var(--fD); color: var(--ink); }
+    .sp-stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 
-    /* ── Format grid ── */
-    .format-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 4px;
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; border-radius: var(--rM);
+      font-size: 13px; font-weight: 500; color: var(--ink-2);
+      cursor: pointer; border: none; background: none; width: 100%;
+      text-align: left; text-decoration: none; transition: .15s;
     }
+    .nav-item:hover { background: var(--surface); color: var(--ink); }
+    .nav-item.active { background: var(--accent); color: #fff; font-weight: 600; }
+    .nav-item.active i { color: #fff; }
+    .nav-item i { width: 16px; text-align: center; flex-shrink: 0; }
+    .nav-badge { margin-left: auto; background: var(--blue); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: var(--pill); }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 8px 0; }
+    .sidebar-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted-2); padding: 4px 14px; }
 
-    .format-card {
-      border: 1px solid var(--border);
-      border-radius: var(--rM);
-      padding: 12px;
-      cursor: pointer;
-      transition: border-color .15s, background .15s;
-    }
-
-    .format-card:hover {
-      border-color: var(--accent);
-      background: var(--surface);
-    }
-
-    .format-card-icon {
-      font-size: 18px;
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-
-    .format-card-name {
-      font-size: 13px;
-      font-weight: 600;
-      font-family: var(--fB);
-      color: var(--ink);
-      margin-bottom: 3px;
-    }
-
-    .format-card-desc {
-      font-size: 11px;
-      color: var(--muted);
-      font-family: var(--fB);
-    }
-
-    /* ── New Campaign Modal ── */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, .5);
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s;
-    }
-
-    .modal-overlay.open {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .modal {
-      background: var(--white);
-      border-radius: var(--rL);
-      padding: 28px;
-      width: 540px;
-      max-width: calc(100vw - 32px);
-      max-height: 90vh;
+    /* RIGHT SIDEBAR */
+    .sidebar-right {
+      position: sticky; top: calc(var(--nav-h) + 16px);
+      display: flex; flex-direction: column; gap: 14px;
+      max-height: calc(100vh - var(--nav-h) - 32px);
       overflow-y: auto;
-      transform: translateY(12px);
-      transition: transform .2s;
     }
+    .sidebar-right::-webkit-scrollbar { width: 4px; }
+    .sidebar-right::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    .modal-overlay.open .modal { transform: translateY(0); }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
+    .side-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--rL); padding: 18px; }
+    .side-card-title {
+      font-size: 12px; font-weight: 700; font-family: var(--fD); color: var(--ink);
+      margin-bottom: 14px; display: flex; align-items: center; gap: 7px;
+      text-transform: uppercase; letter-spacing: .05em;
     }
+    .side-card-title i { color: var(--blue); font-size: 11px; }
 
-    .modal-title {
-      font-size: 18px;
-      font-weight: 700;
-      font-family: var(--fD);
-      color: var(--ink);
+    /* MAIN CONTENT */
+    .ads-col { display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px; }
+
+    .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .breadcrumb { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .breadcrumb a { color: var(--blue); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb i { font-size: 9px; }
+    .page-title { font-family: var(--fD); font-size: 22px; font-weight: 800; color: var(--ink); }
+    .page-subtitle { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #fff;
+      font-family: var(--fB); font-size: 13px; font-weight: 700;
+      border: none; border-radius: var(--pill); padding: 11px 22px;
+      cursor: pointer; transition: .2s;
     }
-
-    .modal-close {
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px;
-      border-radius: var(--rS);
-      transition: color .15s;
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: none; color: var(--ink);
+      font-family: var(--fB); font-size: 13px; font-weight: 600;
+      border: 1.5px solid var(--border); border-radius: var(--pill); padding: 10px 18px;
+      cursor: pointer; transition: .2s;
     }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
 
-    .modal-close:hover { color: var(--ink); }
+    /* Stats strip */
+    .stats-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .stat-card {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--rL); padding: 18px 20px;
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; border-radius: var(--rL) var(--rL) 0 0;
+    }
+    .stat-card.blue::before { background: var(--blue); }
+    .stat-card.green::before { background: var(--green); }
+    .stat-card.amber::before { background: var(--amber); }
+    .stat-card.accent::before { background: var(--accent); }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .stat-val { font-family: var(--fD); font-size: 26px; font-weight: 800; color: var(--ink); }
+    .stat-change {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600; margin-top: 4px;
+      padding: 2px 7px; border-radius: var(--pill);
+    }
+    .stat-change.up { background: var(--green-lt); color: var(--green); }
+    .stat-change.down { background: var(--red-lt); color: var(--red); }
+    .stat-change.neutral { background: var(--surface); color: var(--muted); }
+
+    /* Section card */
+    .section-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--rL); padding: 22px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .section-title { font-family: var(--fD); font-size: 15px; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+    .section-title i { color: var(--blue); font-size: 13px; }
+    .section-action { font-size: 12px; font-weight: 600; color: var(--blue); background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .section-action:hover { text-decoration: underline; }
+
+    /* Chart */
+    .chart-wrap { position: relative; height: 160px; display: flex; align-items: flex-end; gap: 6px; }
+    .chart-bar-group { flex: 1; display: flex; align-items: flex-end; gap: 2px; }
+    .chart-bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 4px; transition: opacity .2s; }
+    .chart-bar:hover { opacity: .75; }
+    .chart-bar.impressions { background: var(--blue); }
+    .chart-bar.clicks { background: var(--accent); opacity: .7; }
+    .chart-x-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 6px; padding: 0 2px; }
+    .chart-legend { display: flex; gap: 16px; margin-bottom: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* Campaign table */
+    .camp-table { width: 100%; border-collapse: collapse; }
+    .camp-table th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 12px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    .camp-table th:last-child { text-align: right; }
+    .camp-table td { padding: 13px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .camp-table tbody tr:last-child td { border-bottom: none; }
+    .camp-table tbody tr { transition: background .15s; }
+    .camp-table tbody tr:hover { background: var(--surface); }
+    .camp-name { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+    .camp-type { font-size: 11px; color: var(--muted); }
+    .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: var(--pill); }
+    .status-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+    .status-badge.live { background: var(--green-lt); color: var(--green); }
+    .status-badge.live::before { background: var(--green); }
+    .status-badge.paused { background: var(--amber-lt); color: var(--amber); }
+    .status-badge.paused::before { background: var(--amber); }
+    .status-badge.ended { background: var(--surface); color: var(--muted); }
+    .status-badge.ended::before { background: var(--muted-2); }
+    .status-badge.review { background: var(--blue-lt); color: var(--blue); }
+    .status-badge.review::before { background: var(--blue); }
+    .camp-stat-cell { text-align: right; }
+    .camp-stat-num { font-size: 13px; font-weight: 700; color: var(--ink); }
+    .camp-stat-sub { font-size: 10px; color: var(--muted); }
+    .camp-progress { width: 72px; height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden; margin-top: 3px; margin-left: auto; }
+    .camp-progress-fill { height: 100%; border-radius: 2px; background: var(--blue); }
+    .camp-actions { display: flex; gap: 6px; justify-content: flex-end; }
+    .icon-btn { width: 28px; height: 28px; border-radius: var(--rS); border: 1.5px solid var(--border); background: none; color: var(--muted); font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: .15s; }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-lt); }
+    .icon-btn.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-lt); }
+
+    /* Format tags */
+    .format-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: var(--pill); background: var(--blue-lt); color: var(--blue); }
+    .format-tag.community { background: var(--amber-lt); color: var(--amber); }
+    .format-tag.search { background: var(--green-lt); color: var(--green); }
+    .format-tag.sidebar { background: var(--surface); color: var(--muted); }
+
+    /* Splits */
+    .split-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .split-3-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+
+    /* Audience bars */
+    .audience-bar-row { margin-bottom: 12px; }
+    .audience-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+    .audience-bar-label span:last-child { font-weight: 700; color: var(--ink); }
+    .audience-bar-track { height: 6px; background: var(--surface); border-radius: 3px; overflow: hidden; }
+    .audience-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--blue)); transition: width .6s ease; }
+
+    /* Placement toggles */
+    .placement-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .placement-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .placement-info { flex: 1; }
+    .placement-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .placement-desc { font-size: 11px; color: var(--muted); }
+    .placement-reach { font-size: 11px; color: var(--blue); font-weight: 600; margin-right: 12px; }
+    .toggle-switch { position: relative; width: 36px; height: 20px; cursor: pointer; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track { position: absolute; inset: 0; border-radius: 10px; background: var(--border); transition: .2s; }
+    .toggle-switch input:checked + .toggle-track { background: var(--blue); }
+    .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--white); transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .toggle-switch input:checked ~ .toggle-thumb { left: 18px; }
+
+    /* Budget display */
+    .budget-display { background: linear-gradient(135deg, var(--accent), #003d7a); border-radius: var(--rL); padding: 20px; color: #fff; position: relative; overflow: hidden; }
+    .budget-display::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(255,255,255,.08) 1px, transparent 1px); background-size: 14px 14px; }
+    .budget-inner { position: relative; z-index: 1; }
+    .budget-label { font-size: 11px; opacity: .7; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+    .budget-amount { font-family: var(--fD); font-size: 32px; font-weight: 800; margin-bottom: 4px; }
+    .budget-sub { font-size: 12px; opacity: .75; }
+    .budget-bar-track { height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; margin: 14px 0 6px; }
+    .budget-bar-fill { height: 100%; border-radius: 2px; background: rgba(255,255,255,.7); }
+    .budget-bar-labels { display: flex; justify-content: space-between; font-size: 10px; opacity: .65; }
+
+    /* Quick stats */
+    .quick-stat { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .quick-stat:last-child { border-bottom: none; padding-bottom: 0; }
+    .quick-stat-label { color: var(--muted); }
+    .quick-stat-val { font-weight: 700; color: var(--ink); }
+
+    /* Tips */
+    .tip-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+    .tip-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .tip-icon { color: var(--blue); font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+    .tip-text b { color: var(--ink-2); display: block; font-size: 12px; margin-bottom: 2px; }
+
+    /* CTA banner */
+    .cta-banner { background: linear-gradient(135deg, var(--blue-lt), #e0eaff); border: 1.5px solid #c7d9fb; border-radius: var(--rL); padding: 18px; text-align: center; }
+    .cta-banner h4 { font-family: var(--fD); font-size: 14px; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
+    .cta-banner p { font-size: 12px; color: #4a5e8a; margin-bottom: 14px; line-height: 1.6; }
+    .btn-cta-small { background: var(--blue); color: #fff; font-size: 12px; font-weight: 700; border: none; border-radius: var(--pill); padding: 8px 18px; cursor: pointer; font-family: var(--fB); transition: .2s; width: 100%; }
+    .btn-cta-small:hover { background: #0058e6; }
+
+    /* Date pills */
+    .date-range-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .date-pill { padding: 5px 12px; border-radius: var(--pill); font-size: 11px; font-weight: 600; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); cursor: pointer; transition: .15s; }
+    .date-pill:hover { border-color: var(--blue); color: var(--blue); }
+    .date-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ══ MODAL ══ */
+    .modal-overlay { display: none; position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); align-items: flex-start; justify-content: center; padding: 32px 20px; overflow-y: auto; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: var(--rXL); width: 100%; max-width: 640px; box-shadow: 0 24px 64px rgba(0,0,0,.18); animation: modalIn .2s ease; }
+    @keyframes modalIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+
+    .modal-topbar { padding: 24px 28px 0; display: flex; align-items: flex-start; justify-content: space-between; }
+    .modal-title { font-family: var(--fD); font-size: 20px; font-weight: 800; color: var(--ink); }
+    .modal-subtitle { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .modal-close { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .modal-close:hover { background: var(--surface); }
+
+    .step-progress { display: flex; gap: 0; margin: 20px 28px 0; }
+    .step-item { flex: 1; display: flex; align-items: center; position: relative; }
+    .step-item:not(:last-child)::after { content: ''; flex: 1; height: 2px; background: var(--border); margin: 0 8px; transition: background .3s; }
+    .step-item.done:not(:last-child)::after { background: var(--blue); }
+    .step-num { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; font-family: var(--fD); border: 2px solid var(--border); background: var(--white); color: var(--muted); transition: .2s; z-index: 1; }
+    .step-item.active .step-num { border-color: var(--blue); background: var(--blue); color: #fff; }
+    .step-item.done .step-num { border-color: var(--blue); background: var(--blue); color: #fff; }
+
+    .modal-body { padding: 22px 28px; }
+    .step-panel { display: none; animation: fadeIn .2s ease; }
+    .step-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
     .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+    .form-required { color: var(--red); }
+    .form-input, .form-select, .form-textarea { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--rM); font-family: var(--fB); font-size: 13px; color: var(--ink); background: var(--white); outline: none; transition: .15s; box-sizing: border-box; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,107,255,.08); }
+    .form-input::placeholder { color: var(--muted-2); }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
 
-    .form-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      font-family: var(--fB);
-      color: var(--ink);
-      margin-bottom: 6px;
+    .obj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .obj-card { border: 1.5px solid var(--border); border-radius: var(--rM); padding: 14px 10px; text-align: center; cursor: pointer; transition: .15s; }
+    .obj-card:hover, .obj-card.selected { border-color: var(--blue); background: var(--blue-lt); }
+    .obj-card.selected .obj-name { color: var(--blue); }
+    .obj-icon { font-size: 22px; margin-bottom: 8px; }
+    .obj-name { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+    .obj-desc { font-size: 10px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+    .format-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .format-card { border: 1.5px solid var(--border); border-radius: var(--rM); padding: 12px; cursor: pointer; transition: .15s; display: flex; gap: 10px; align-items: flex-start; }
+    .format-card:hover, .format-card.selected { border-color: var(--blue); background: var(--blue-lt); }
+    .format-card-icon { width: 36px; height: 36px; border-radius: var(--rS); background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .format-card.selected .format-card-icon { background: rgba(26,107,255,.12); }
+    .format-card-name { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+    .format-card-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+    .tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-pill { padding: 5px 12px; border-radius: var(--pill); font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); color: var(--muted); background: var(--white); transition: .15s; }
+    .tag-pill:hover, .tag-pill.sel { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .budget-slider { width: 100%; height: 4px; border-radius: 2px; outline: none; background: linear-gradient(to right, var(--blue) 0%, var(--blue) var(--pct, 40%), var(--border) var(--pct, 40%), var(--border) 100%); -webkit-appearance: none; cursor: pointer; margin: 8px 0; }
+    .budget-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--white); border: 2px solid var(--blue); box-shadow: 0 2px 6px rgba(26,107,255,.3); cursor: pointer; }
+    .budget-preview { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--blue-lt); border-radius: var(--rM); margin-top: 10px; }
+    .budget-preview-label { font-size: 12px; color: var(--blue); font-weight: 600; }
+    .budget-preview-val { font-family: var(--fD); font-size: 20px; font-weight: 800; color: var(--blue); }
+    .budget-est { font-size: 11px; color: var(--muted); margin-top: 6px; text-align: center; }
+
+    .creative-drop { border: 2px dashed var(--border); border-radius: var(--rL); padding: 28px; text-align: center; cursor: pointer; transition: .2s; }
+    .creative-drop:hover { border-color: var(--blue); background: var(--blue-lt); }
+    .creative-drop-icon { font-size: 28px; color: var(--muted-2); margin-bottom: 10px; }
+    .creative-drop h4 { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .creative-drop p { font-size: 12px; color: var(--muted); }
+    .creative-preview { display: none; border: 1.5px solid var(--border); border-radius: var(--rL); padding: 14px; align-items: center; gap: 14px; }
+    .creative-preview.show { display: flex; }
+    .creative-preview-thumb { width: 72px; height: 52px; border-radius: var(--rS); background: linear-gradient(135deg, var(--accent), var(--blue)); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .creative-preview-info { flex: 1; }
+    .creative-preview-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+    .creative-preview-size { font-size: 11px; color: var(--muted); }
+    .cta-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cta-option { padding: 6px 14px; border-radius: var(--pill); font-size: 12px; font-weight: 600; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); cursor: pointer; transition: .15s; }
+    .cta-option:hover, .cta-option.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .review-section { margin-bottom: 16px; }
+    .review-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .review-section-title i { color: var(--blue); }
+    .review-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 7px 12px; border-radius: var(--rS); font-size: 12px; }
+    .review-row:nth-child(odd) { background: var(--surface); }
+    .review-key { color: var(--muted); }
+    .review-val { font-weight: 600; color: var(--ink); text-align: right; max-width: 60%; }
+    .review-alert { background: var(--amber-lt); border: 1.5px solid #fde68a; border-radius: var(--rM); padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: #92400e; margin-top: 12px; }
+    .review-alert i { color: var(--amber); flex-shrink: 0; margin-top: 1px; }
+
+    .modal-footer { padding: 0 28px 24px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 18px; margin-top: 4px; }
+    .step-indicator-text { font-size: 12px; color: var(--muted); }
+    .btn-back { background: none; border: 1.5px solid var(--border); border-radius: var(--pill); padding: 9px 18px; font-family: var(--fB); font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; transition: .15s; }
+    .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-next { background: var(--blue); color: #fff; border: none; border-radius: var(--pill); padding: 10px 24px; font-family: var(--fB); font-size: 13px; font-weight: 700; cursor: pointer; transition: .2s; display: flex; align-items: center; gap: 8px; }
+    .btn-next:hover { background: #0058e6; transform: translateY(-1px); }
+    .btn-launch { background: var(--accent); color: #fff; border: none; border-radius: var(--pill); padding: 10px 24px; font-family: var(--fB); font-size: 13px; font-weight: 700; cursor: pointer; transition: .2s; display: flex; align-items: center; gap: 8px; }
+    .btn-launch:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+    .success-screen { text-align: center; padding: 32px 0 16px; }
+    .success-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--green-lt); color: var(--green); font-size: 30px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; animation: popIn .4s ease; }
+    @keyframes popIn { 0% { transform: scale(0); } 70% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    .success-title { font-family: var(--fD); font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .success-sub { font-size: 13px; color: var(--muted); max-width: 380px; margin: 0 auto 24px; line-height: 1.6; }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .app-layout { grid-template-columns: 220px minmax(0,1fr) 260px; }
+      .stats-strip { grid-template-columns: repeat(2,1fr); }
     }
-
-    .form-input,
-    .form-select,
-    .form-textarea {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--rM);
-      font-size: 13px;
-      font-family: var(--fB);
-      color: var(--ink);
-      background: var(--white);
-      transition: border-color .15s;
-      outline: none;
-    }
-
-    .form-input:focus,
-    .form-select:focus,
-    .form-textarea:focus {
-      border-color: var(--accent);
-    }
-
-    .form-textarea { resize: vertical; min-height: 72px; }
-
-    .placement-checkboxes {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .placement-checkbox {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--rM);
-      cursor: pointer;
-      transition: border-color .15s, background .15s;
-      font-size: 13px;
-      font-family: var(--fB);
-      color: var(--muted);
-    }
-
-    .placement-checkbox input[type="checkbox"] { accent-color: var(--accent); }
-
-    .placement-checkbox:has(input:checked) {
-      border-color: var(--accent);
-      background: var(--surface);
-      color: var(--ink);
-    }
-
-    .budget-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 24px;
-      padding-top: 18px;
-      border-top: 1px solid var(--border);
-    }
-
-    .btn-secondary {
-      padding: 9px 18px;
-      border: 1px solid var(--border);
-      border-radius: var(--rM);
-      font-size: 13px;
-      font-weight: 500;
-      font-family: var(--fB);
-      color: var(--muted);
-      background: var(--white);
-      cursor: pointer;
-      transition: border-color .15s, color .15s;
-    }
-
-    .btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
-
-    .btn-primary {
-      padding: 9px 18px;
-      border: none;
-      border-radius: var(--rM);
-      font-size: 13px;
-      font-weight: 600;
-      font-family: var(--fB);
-      background: var(--accent);
-      color: #fff;
-      cursor: pointer;
-      transition: opacity .15s;
-    }
-
-    .btn-primary:hover { opacity: .88; }
-
-    /* ── Empty state ── */
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--muted);
-    }
-
-    .empty-state i {
-      font-size: 36px;
-      color: var(--border);
-      margin-bottom: 12px;
-    }
-
-    .empty-state p {
-      font-size: 13px;
-      font-family: var(--fB);
-    }
-
-    /* ── Responsive ── */
     @media (max-width: 900px) {
-      .ads-layout { grid-template-columns: 1fr; }
-      .ads-sidenav { display: none; }
-      .metrics { grid-template-columns: repeat(2, 1fr); }
-      .ads-two-col { grid-template-columns: 1fr; }
-      .format-grid { grid-template-columns: 1fr 1fr; }
+      .app-layout { grid-template-columns: 200px minmax(0,1fr); }
+      .sidebar-right { display: none; }
+      .stats-strip { grid-template-columns: repeat(2,1fr); }
+      .split-2, .split-3-1 { grid-template-columns: 1fr; }
     }
-
-    @media (max-width: 540px) {
-      .metrics { grid-template-columns: 1fr 1fr; }
-      .format-grid { grid-template-columns: 1fr; }
-      .placement-checkboxes { grid-template-columns: 1fr; }
-      .budget-row { grid-template-columns: 1fr; }
+    @media (max-width: 650px) {
+      .app-layout { grid-template-columns: 1fr; padding: 12px; }
+      .sidebar-left { display: none; }
+      .stats-strip { grid-template-columns: repeat(2,1fr); }
+      .obj-grid { grid-template-columns: repeat(2,1fr); }
+      .form-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
+<!-- TOP NAV -->
 <nav class="topnav">
   <div class="nav-inner">
-    <a href="/index.html" class="logo">
+    <a href="/index.html" class="logo" data-home-link>
       <span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer" onerror="this.style.display='none'"></span>
       <span class="logo-text">Spopeer</span>
     </a>
-
     <div class="nav-search">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" id="navSearchInput" placeholder="Search campaigns, audiences, placements">
+      <input type="text" id="navSearchInput" placeholder="Search campaigns, audiences, reports…">
     </div>
-
     <div class="nav-right">
       <button class="nav-icon" title="Marketplace" onclick="window.location.href='/pages/marketplace/marketplace.html'"><i class="fa-solid fa-store"></i></button>
       <button class="nav-icon" title="Explore" onclick="window.location.href='/pages/search/search.html'"><i class="fa-regular fa-compass"></i></button>
       <button class="nav-icon" title="Messages" onclick="window.location.href='/pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
-      <button class="nav-icon" title="Notifications" onclick="window.location.href='/pages/dashboard/notifications.html'">
+      <button class="nav-icon" title="Notifications" id="notifBtn">
         <i class="fa-regular fa-bell"></i>
+        <span class="notif-badge-dot" id="notifBadge" style="display:none;"></span>
       </button>
-      <div class="user-chip" id="userChip" data-user-chip role="button" aria-haspopup="menu" aria-expanded="false">
+      <div class="user-chip" id="userChip" data-user-chip onclick="toggleProfileMenuGlobal()">
         <span class="chip-avatar" data-user-chip-avatar>U</span>
-        <span class="chip-name" data-user-chip-name>Loading...</span>
+        <span class="chip-name" data-user-chip-name>Loading…</span>
         <i class="fa-solid fa-chevron-down chip-caret"></i>
       </div>
       <div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">
@@ -719,16 +455,13 @@
         </div>
         <div class="profile-menu-section collapsed" data-section="account">
           <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
-            <div class="profile-menu-title">Account and Settings</div>
+            <div class="profile-menu-title">Account &amp; Settings</div>
             <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
           </div>
           <div class="profile-menu-section-items">
             <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
             <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
             <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy and Safety</button>
-            <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
-            <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
-            <button class="profile-menu-item" data-action="switch-account"><i class="fa-solid fa-repeat"></i> Switch Account</button>
           </div>
         </div>
         <div class="profile-menu-section collapsed" data-section="features">
@@ -746,17 +479,6 @@
             <button class="profile-menu-item" data-action="invite-friends"><i class="fa-solid fa-user-plus"></i> Invite Friends</button>
           </div>
         </div>
-        <div class="profile-menu-section collapsed" data-section="help">
-          <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
-            <div class="profile-menu-title">Help and Misc</div>
-            <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
-          </div>
-          <div class="profile-menu-section-items">
-            <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
-            <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
-            <button class="profile-menu-item" data-action="changelog"><i class="fa-regular fa-list"></i> What's New / Changelog</button>
-          </div>
-        </div>
         <div class="profile-menu-section">
           <div class="profile-menu-section-items" style="padding: 10px 16px 10px;">
             <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
@@ -767,597 +489,844 @@
   </div>
 </nav>
 
-<!-- Ads Manager Layout -->
-<div class="ads-layout">
+<!-- APP LAYOUT -->
+<div class="app-layout">
 
-  <!-- Sidenav -->
-  <nav class="ads-sidenav" aria-label="Ads Manager navigation">
-    <div class="sidenav-header">
-      <div class="wordmark">Spopeer</div>
-      <div class="sub">Ads Manager</div>
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar-left">
+    <div class="sidebar-profile">
+      <div class="sp-cover"></div>
+      <div class="sp-body">
+        <div class="sp-avatar-wrap">
+          <div class="sp-avatar" data-user-chip-avatar>U</div>
+        </div>
+        <div class="sp-name" data-user-chip-name>Loading…</div>
+        <div class="sp-handle" data-user-handle>@user</div>
+        <div class="sp-stats">
+          <div><div class="sp-stat-num">3</div><div class="sp-stat-lbl">Campaigns</div></div>
+          <div><div class="sp-stat-num">€342</div><div class="sp-stat-lbl">Spent</div></div>
+          <div><div class="sp-stat-num">48k</div><div class="sp-stat-lbl">Reach</div></div>
+        </div>
+      </div>
     </div>
 
-    <button class="ads-nav-item active" data-ads-section="overview" onclick="showSection('overview', this)">
-      <i class="fa-solid fa-table-cells-large"></i> Overview
-    </button>
-    <button class="ads-nav-item" data-ads-section="campaigns" onclick="showSection('campaigns', this)">
-      <i class="fa-solid fa-chart-line"></i> Campaigns
-    </button>
-    <button class="ads-nav-item" data-ads-section="schedule" onclick="showSection('schedule', this)">
-      <i class="fa-regular fa-clock"></i> Ad Schedule
-    </button>
+    <a class="nav-item" href="/feed.html"><i class="fa-solid fa-house"></i> Home</a>
+    <a class="nav-item" href="/pages/library/index.html"><i class="fa-regular fa-bookmark"></i> Library</a>
+    <a class="nav-item" href="/pages/events/event.html"><i class="fa-regular fa-calendar"></i> Events</a>
+    <a class="nav-item" href="/pages/sponsorship/sponsor.html"><i class="fa-regular fa-star"></i> Sponsor</a>
+    <a class="nav-item" href="/pages/community/community.html"><i class="fa-solid fa-people-group"></i> Community</a>
+    <a class="nav-item" href="/articles.html"><i class="fa-solid fa-newspaper"></i> Articles</a>
+    <a class="nav-item" href="/pages/marketplace/marketplace.html"><i class="fa-solid fa-store"></i> Marketplace</a>
 
-    <div class="ads-nav-section">Targeting</div>
-    <button class="ads-nav-item" data-ads-section="audience" onclick="showSection('audience', this)">
-      <i class="fa-regular fa-users"></i> Audience
-    </button>
-    <button class="ads-nav-item" data-ads-section="placements" onclick="showSection('placements', this)">
-      <i class="fa-solid fa-star"></i> Placements
-    </button>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Ads Manager</div>
 
-    <div class="ads-nav-section">Billing</div>
-    <button class="ads-nav-item" data-ads-section="billing" onclick="showSection('billing', this)">
-      <i class="fa-regular fa-credit-card"></i> Budget &amp; Billing
-    </button>
-    <button class="ads-nav-item" data-ads-section="invoices" onclick="showSection('invoices', this)">
-      <i class="fa-regular fa-file-lines"></i> Invoices
-    </button>
-  </nav>
+    <a class="nav-item active" href="#"><i class="fa-solid fa-rectangle-ad"></i> Overview</a>
+    <a class="nav-item" href="#" onclick="switchTab('campaigns',this)"><i class="fa-solid fa-layer-group"></i> Campaigns</a>
+    <a class="nav-item" href="#" onclick="switchTab('audience',this)"><i class="fa-solid fa-users"></i> Audience</a>
+    <a class="nav-item" href="#" onclick="switchTab('placements',this)"><i class="fa-solid fa-map-pin"></i> Placements</a>
+    <a class="nav-item" href="#" onclick="switchTab('billing',this)"><i class="fa-solid fa-credit-card"></i> Billing</a>
+    <a class="nav-item" href="#" onclick="switchTab('reports',this)"><i class="fa-solid fa-chart-bar"></i> Reports</a>
 
-  <!-- Main dashboard -->
-  <main class="ads-main">
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Back to Platform</div>
+    <a class="nav-item" href="/feed.html"><i class="fa-solid fa-arrow-left"></i> Exit Ads Manager</a>
+  </aside>
 
-    <!-- Overview section -->
-    <div id="section-overview" class="ads-section">
-      <div class="ads-topbar">
-        <h1>Campaign overview</h1>
-        <button class="btn-new-campaign" id="btnNewCampaign">
+  <!-- MAIN CONTENT -->
+  <main class="ads-col">
+
+    <div class="page-header">
+      <div class="page-title-group">
+        <div class="breadcrumb">
+          <a href="/feed.html"><i class="fa-solid fa-house"></i> Home</a>
+          <i class="fa-solid fa-chevron-right"></i>
+          <span>Ads Manager</span>
+          <i class="fa-solid fa-chevron-right"></i>
+          <span>Overview</span>
+        </div>
+        <h1 class="page-title">Campaign Overview</h1>
+        <div class="page-subtitle">Manage your ads and reach the right sports audience on Spopeer.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div class="date-range-row">
+          <button class="date-pill active" onclick="setDatePill(this)">7d</button>
+          <button class="date-pill" onclick="setDatePill(this)">30d</button>
+          <button class="date-pill" onclick="setDatePill(this)">90d</button>
+        </div>
+        <button class="btn-primary" onclick="openModal()">
           <i class="fa-solid fa-plus"></i> New Campaign
         </button>
       </div>
+    </div>
 
-      <!-- Metrics -->
-      <div class="metrics">
-        <div class="metric">
-          <div class="metric-label">Total Spend</div>
-          <div class="metric-val" id="metricSpend">€0</div>
-          <div class="metric-change up" id="metricSpendChange">— vs last month</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Impressions</div>
-          <div class="metric-val" id="metricImpressions">0</div>
-          <div class="metric-change up" id="metricImpChange">—</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Clicks</div>
-          <div class="metric-val" id="metricClicks">0</div>
-          <div class="metric-change up" id="metricClickChange">—</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Avg. CTR</div>
-          <div class="metric-val" id="metricCtr">0%</div>
-          <div class="metric-change" id="metricCtrChange">—</div>
-        </div>
+    <!-- Stats Strip -->
+    <div class="stats-strip">
+      <div class="stat-card blue">
+        <div class="stat-label">Total Impressions</div>
+        <div class="stat-val">48,240</div>
+        <span class="stat-change up"><i class="fa-solid fa-arrow-up" style="font-size:9px"></i> 24% vs last period</span>
       </div>
+      <div class="stat-card accent">
+        <div class="stat-label">Total Clicks</div>
+        <div class="stat-val">1,840</div>
+        <span class="stat-change up"><i class="fa-solid fa-arrow-up" style="font-size:9px"></i> 11%</span>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Avg. CTR</div>
+        <div class="stat-val">3.81%</div>
+        <span class="stat-change down"><i class="fa-solid fa-arrow-down" style="font-size:9px"></i> 0.3%</span>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">Total Spend</div>
+        <div class="stat-val">€342</div>
+        <span class="stat-change neutral"><i class="fa-solid fa-minus" style="font-size:9px"></i> On budget</span>
+      </div>
+    </div>
 
-      <!-- Two-column content -->
-      <div class="ads-two-col">
-
-        <!-- Left column -->
-        <div class="ads-col">
-          <!-- Active campaigns card -->
-          <div class="ads-card">
-            <div class="ads-card-title">
-              Active campaigns
-              <span class="card-title-right" onclick="showSection('campaigns', document.querySelector('[data-ads-section=campaigns]'))">View all</span>
-            </div>
-            <div id="campaignList">
-              <!-- Populated by JS -->
-            </div>
-          </div>
-
-          <!-- Impressions chart -->
-          <div class="ads-card">
-            <div class="ads-card-title">Impressions this month</div>
-            <div class="mini-chart" id="impressionsChart">
-              <!-- bars generated by JS -->
-            </div>
-            <div class="sparkline-labels">
-              <span>Apr 1</span><span>Apr 10</span><span>Apr 20</span><span>Apr 27</span>
-            </div>
+    <!-- Performance Chart + Audience -->
+    <div class="split-3-1">
+      <div class="section-card">
+        <div class="section-head">
+          <div class="section-title"><i class="fa-solid fa-chart-area"></i> Performance Over Time</div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Impressions</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Clicks</div>
           </div>
         </div>
-
-        <!-- Right column -->
-        <div class="ads-col">
-          <!-- Audience reach -->
-          <div class="ads-card">
-            <div class="ads-card-title">Audience reach</div>
-            <div class="mini-bar-wrap">
-              <div class="mini-bar-label"><span>Athletes</span><span class="pct">62%</span></div>
-              <div class="mini-bar-track"><div class="mini-bar-fill" style="width:62%;background:var(--accent)"></div></div>
-            </div>
-            <div class="mini-bar-wrap">
-              <div class="mini-bar-label"><span>Coaches</span><span class="pct">21%</span></div>
-              <div class="mini-bar-track"><div class="mini-bar-fill" style="width:21%;background:#378ADD"></div></div>
-            </div>
-            <div class="mini-bar-wrap">
-              <div class="mini-bar-label"><span>Clubs</span><span class="pct">12%</span></div>
-              <div class="mini-bar-track"><div class="mini-bar-fill" style="width:12%;background:#85B7EB"></div></div>
-            </div>
-            <div class="mini-bar-wrap">
-              <div class="mini-bar-label"><span>Support pros</span><span class="pct">5%</span></div>
-              <div class="mini-bar-track"><div class="mini-bar-fill" style="width:5%;background:#B5D4F4"></div></div>
-            </div>
-            <div class="audience-filters">
-              <div class="audience-filters-label">Active filters</div>
-              <span class="audience-pill"><i class="fa-solid fa-location-dot"></i> Greece</span>
-              <span class="audience-pill"><i class="fa-solid fa-futbol"></i> Rugby</span>
-              <span class="audience-pill"><i class="fa-solid fa-bullseye"></i> Archery</span>
-              <span class="audience-pill"><i class="fa-solid fa-users"></i> Ages 18–35</span>
-            </div>
-          </div>
-
-          <!-- Ad placements -->
-          <div class="ads-card">
-            <div class="ads-card-title">Ad placements</div>
-            <div class="placement-row">
-              <div class="placement-name"><i class="fa-regular fa-newspaper"></i> Feed (sponsored post)</div>
-              <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
-            </div>
-            <div class="placement-row">
-              <div class="placement-name"><i class="fa-solid fa-users"></i> Community page</div>
-              <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
-            </div>
-            <div class="placement-row">
-              <div class="placement-name"><i class="fa-solid fa-magnifying-glass"></i> Search results</div>
-              <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
-            </div>
-            <div class="placement-row">
-              <div class="placement-name"><i class="fa-solid fa-store"></i> Marketplace</div>
-              <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
-            </div>
-            <div class="placement-row">
-              <div class="placement-name"><i class="fa-solid fa-table-columns"></i> Right sidebar</div>
-              <div class="toggle off" role="switch" aria-checked="false" onclick="togglePlacement(this)"></div>
-            </div>
-            <div class="placement-row">
-              <div class="placement-name"><i class="fa-solid fa-film"></i> Reels / Stories</div>
-              <div class="toggle off" role="switch" aria-checked="false" onclick="togglePlacement(this)"></div>
-            </div>
-          </div>
-
-          <!-- Ad formats -->
-          <div class="ads-card">
-            <div class="ads-card-title">Ad formats</div>
-            <div class="format-grid">
-              <div class="format-card">
-                <div class="format-card-icon"><i class="fa-regular fa-image"></i></div>
-                <div class="format-card-name">Sponsored post</div>
-                <div class="format-card-desc">Image + text + CTA</div>
-              </div>
-              <div class="format-card">
-                <div class="format-card-icon"><i class="fa-solid fa-rectangle-ad"></i></div>
-                <div class="format-card-name">Banner ad</div>
-                <div class="format-card-desc">Sidebar display</div>
-              </div>
-              <div class="format-card">
-                <div class="format-card-icon"><i class="fa-solid fa-thumbtack"></i></div>
-                <div class="format-card-name">Community pin</div>
-                <div class="format-card-desc">Pinned group post</div>
-              </div>
-              <div class="format-card">
-                <div class="format-card-icon"><i class="fa-solid fa-arrow-up-right-dots"></i></div>
-                <div class="format-card-name">Search boost</div>
-                <div class="format-card-desc">Top of results</div>
-              </div>
-            </div>
+        <div class="chart-wrap" id="mainChart"></div>
+        <div class="chart-x-labels" id="chartLabels"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-head">
+          <div class="section-title"><i class="fa-solid fa-users"></i> Audience</div>
+        </div>
+        <div class="audience-bar-row">
+          <div class="audience-bar-label"><span>Athletes</span><span>62%</span></div>
+          <div class="audience-bar-track"><div class="audience-bar-fill" style="width:62%"></div></div>
+        </div>
+        <div class="audience-bar-row">
+          <div class="audience-bar-label"><span>Coaches</span><span>21%</span></div>
+          <div class="audience-bar-track"><div class="audience-bar-fill" style="width:21%"></div></div>
+        </div>
+        <div class="audience-bar-row">
+          <div class="audience-bar-label"><span>Clubs</span><span>12%</span></div>
+          <div class="audience-bar-track"><div class="audience-bar-fill" style="width:12%"></div></div>
+        </div>
+        <div class="audience-bar-row">
+          <div class="audience-bar-label"><span>Support Pros</span><span>5%</span></div>
+          <div class="audience-bar-track"><div class="audience-bar-fill" style="width:5%"></div></div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Active targeting</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;">
+            <span class="format-tag">Greece</span>
+            <span class="format-tag community">Rugby</span>
+            <span class="format-tag search">Archery</span>
+            <span class="format-tag sidebar">Ages 18–35</span>
           </div>
         </div>
-
-      </div>
-    </div><!-- /overview -->
-
-    <!-- Campaigns section -->
-    <div id="section-campaigns" class="ads-section" hidden>
-      <div class="ads-topbar">
-        <h1>Campaigns</h1>
-        <button class="btn-new-campaign" onclick="openModal()">
-          <i class="fa-solid fa-plus"></i> New Campaign
-        </button>
-      </div>
-      <div class="ads-card">
-        <div id="allCampaignList"></div>
       </div>
     </div>
 
-    <!-- Schedule section -->
-    <div id="section-schedule" class="ads-section" hidden>
-      <div class="ads-topbar"><h1>Ad Schedule</h1></div>
-      <div class="ads-card">
-        <div class="empty-state">
-          <i class="fa-regular fa-clock"></i>
-          <p>Ad scheduling will be available soon.</p>
+    <!-- Campaigns Table -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title"><i class="fa-solid fa-layer-group"></i> Your Campaigns</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="display:flex;gap:5px;">
+            <button class="date-pill active" style="font-size:10px;" onclick="filterCamps(this,'all')">All</button>
+            <button class="date-pill" style="font-size:10px;" onclick="filterCamps(this,'live')">Live</button>
+            <button class="date-pill" style="font-size:10px;" onclick="filterCamps(this,'paused')">Paused</button>
+            <button class="date-pill" style="font-size:10px;" onclick="filterCamps(this,'ended')">Ended</button>
+          </div>
+          <button class="btn-primary" style="font-size:11px;padding:7px 14px;" onclick="openModal()">
+            <i class="fa-solid fa-plus"></i> New
+          </button>
+        </div>
+      </div>
+      <table class="camp-table" id="campTable">
+        <thead>
+          <tr>
+            <th style="width:32%">Campaign</th>
+            <th>Status</th>
+            <th>Format</th>
+            <th class="camp-stat-cell">Impressions</th>
+            <th class="camp-stat-cell">Clicks / CTR</th>
+            <th class="camp-stat-cell">Spend</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="campTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Placements -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title"><i class="fa-solid fa-map-pin"></i> Ad Placements</div>
+        <button class="section-action">Manage all <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+      <div>
+        <div class="placement-row">
+          <div class="placement-info">
+            <div class="placement-name">Feed — Sponsored Post</div>
+            <div class="placement-desc">Appears between posts in the main feed. Highest visibility.</div>
+          </div>
+          <span class="placement-reach">~18k/day</span>
+          <label class="toggle-switch">
+            <input type="checkbox" checked onchange="togglePlacement(this)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <div class="placement-row">
+          <div class="placement-info">
+            <div class="placement-name">Community Hub Page</div>
+            <div class="placement-desc">Shown on community group pages — high intent audience.</div>
+          </div>
+          <span class="placement-reach">~9k/day</span>
+          <label class="toggle-switch">
+            <input type="checkbox" checked onchange="togglePlacement(this)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <div class="placement-row">
+          <div class="placement-info">
+            <div class="placement-name">Search Results</div>
+            <div class="placement-desc">Pinned to top of search results for targeted keywords.</div>
+          </div>
+          <span class="placement-reach">~6k/day</span>
+          <label class="toggle-switch">
+            <input type="checkbox" checked onchange="togglePlacement(this)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <div class="placement-row">
+          <div class="placement-info">
+            <div class="placement-name">Right Sidebar Banner</div>
+            <div class="placement-desc">Static display ad in the sidebar across all main pages.</div>
+          </div>
+          <span class="placement-reach">~12k/day</span>
+          <label class="toggle-switch">
+            <input type="checkbox" onchange="togglePlacement(this)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <div class="placement-row">
+          <div class="placement-info">
+            <div class="placement-name">Profile Pages</div>
+            <div class="placement-desc">Displayed on athlete, coach and club profiles.</div>
+          </div>
+          <span class="placement-reach">~5k/day</span>
+          <label class="toggle-switch">
+            <input type="checkbox" onchange="togglePlacement(this)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
         </div>
       </div>
     </div>
 
-    <!-- Audience section -->
-    <div id="section-audience" class="ads-section" hidden>
-      <div class="ads-topbar"><h1>Audience</h1></div>
-      <div class="ads-card">
-        <div class="mini-bar-wrap">
-          <div class="mini-bar-label"><span>Athletes</span><span class="pct">62%</span></div>
-          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:62%;background:var(--accent)"></div></div>
-        </div>
-        <div class="mini-bar-wrap">
-          <div class="mini-bar-label"><span>Coaches</span><span class="pct">21%</span></div>
-          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:21%;background:#378ADD"></div></div>
-        </div>
-        <div class="mini-bar-wrap">
-          <div class="mini-bar-label"><span>Clubs</span><span class="pct">12%</span></div>
-          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:12%;background:#85B7EB"></div></div>
-        </div>
-        <div class="mini-bar-wrap">
-          <div class="mini-bar-label"><span>Support pros</span><span class="pct">5%</span></div>
-          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:5%;background:#B5D4F4"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Placements section -->
-    <div id="section-placements" class="ads-section" hidden>
-      <div class="ads-topbar"><h1>Placements</h1></div>
-      <div class="ads-card">
-        <div class="placement-row">
-          <div class="placement-name"><i class="fa-regular fa-newspaper"></i> Feed (sponsored post)</div>
-          <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
-        </div>
-        <div class="placement-row">
-          <div class="placement-name"><i class="fa-solid fa-users"></i> Community page</div>
-          <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
-        </div>
-        <div class="placement-row">
-          <div class="placement-name"><i class="fa-solid fa-magnifying-glass"></i> Search results</div>
-          <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
-        </div>
-        <div class="placement-row">
-          <div class="placement-name"><i class="fa-solid fa-store"></i> Marketplace</div>
-          <div class="toggle" role="switch" aria-checked="true" onclick="togglePlacement(this)"></div>
-        </div>
-        <div class="placement-row">
-          <div class="placement-name"><i class="fa-solid fa-table-columns"></i> Right sidebar</div>
-          <div class="toggle off" role="switch" aria-checked="false" onclick="togglePlacement(this)"></div>
-        </div>
-        <div class="placement-row">
-          <div class="placement-name"><i class="fa-solid fa-film"></i> Reels / Stories</div>
-          <div class="toggle off" role="switch" aria-checked="false" onclick="togglePlacement(this)"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Billing section -->
-    <div id="section-billing" class="ads-section" hidden>
-      <div class="ads-topbar"><h1>Budget &amp; Billing</h1></div>
-      <div class="ads-card">
-        <div class="empty-state">
-          <i class="fa-regular fa-credit-card"></i>
-          <p>Billing and payment methods coming soon.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Invoices section -->
-    <div id="section-invoices" class="ads-section" hidden>
-      <div class="ads-topbar"><h1>Invoices</h1></div>
-      <div class="ads-card">
-        <div class="empty-state">
-          <i class="fa-regular fa-file-lines"></i>
-          <p>Your invoices will appear here.</p>
-        </div>
-      </div>
-    </div>
-
+    <div style="height:32px;"></div>
   </main>
-</div>
 
-<!-- New Campaign Modal -->
-<div class="modal-overlay" id="campaignModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modalTitle">New Campaign</div>
-      <button class="modal-close" onclick="closeModal()" aria-label="Close modal">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label" for="campName">Campaign name</label>
-      <input class="form-input" type="text" id="campName" placeholder="e.g. Tryouts 2025 — Athens" maxlength="100" autocomplete="off">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label" for="campType">Campaign type</label>
-      <select class="form-select" id="campType">
-        <option value="">Select type…</option>
-        <option value="sport-club">Sport Club promotion</option>
-        <option value="coach">Coach / Trainer promo</option>
-        <option value="event">Event / Tryout</option>
-        <option value="sponsor">Sponsorship outreach</option>
-        <option value="product">Product / Service</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label" for="campDescription">Ad description</label>
-      <textarea class="form-textarea" id="campDescription" placeholder="Write your ad copy here…" maxlength="280"></textarea>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Ad placements</label>
-      <div class="placement-checkboxes">
-        <label class="placement-checkbox">
-          <input type="checkbox" name="placement" value="feed" checked>
-          <i class="fa-regular fa-newspaper"></i> Feed
-        </label>
-        <label class="placement-checkbox">
-          <input type="checkbox" name="placement" value="marketplace" checked>
-          <i class="fa-solid fa-store"></i> Marketplace
-        </label>
-        <label class="placement-checkbox">
-          <input type="checkbox" name="placement" value="community">
-          <i class="fa-solid fa-users"></i> Community
-        </label>
-        <label class="placement-checkbox">
-          <input type="checkbox" name="placement" value="search">
-          <i class="fa-solid fa-magnifying-glass"></i> Search
-        </label>
+  <!-- RIGHT SIDEBAR -->
+  <aside class="sidebar-right">
+    <div class="budget-display">
+      <div class="budget-inner">
+        <div class="budget-label">Monthly Budget</div>
+        <div class="budget-amount">€750</div>
+        <div class="budget-sub">€342 spent · €408 remaining</div>
+        <div class="budget-bar-track">
+          <div class="budget-bar-fill" style="width:45.6%"></div>
+        </div>
+        <div class="budget-bar-labels">
+          <span>€0</span><span>45.6% used</span><span>€750</span>
+        </div>
       </div>
     </div>
 
-    <div class="form-group">
-      <label class="form-label" for="campFormat">Ad format</label>
-      <select class="form-select" id="campFormat">
-        <option value="sponsored-post">Sponsored post (Image + text + CTA)</option>
-        <option value="banner">Banner ad (Sidebar display)</option>
-        <option value="community-pin">Community pin (Pinned group post)</option>
-        <option value="search-boost">Search boost (Top of results)</option>
-      </select>
+    <div class="side-card">
+      <div class="side-card-title"><i class="fa-solid fa-bolt"></i> Quick Stats</div>
+      <div class="quick-stat"><span class="quick-stat-label">Active campaigns</span><span class="quick-stat-val">2</span></div>
+      <div class="quick-stat"><span class="quick-stat-label">Paused</span><span class="quick-stat-val">1</span></div>
+      <div class="quick-stat"><span class="quick-stat-label">In review</span><span class="quick-stat-val">1</span></div>
+      <div class="quick-stat"><span class="quick-stat-label">Best CTR campaign</span><span class="quick-stat-val" style="font-size:11px;">Tryouts 2025</span></div>
+      <div class="quick-stat"><span class="quick-stat-label">Top placement</span><span class="quick-stat-val" style="font-size:11px;">Feed</span></div>
+      <div class="quick-stat"><span class="quick-stat-label">Cost per click (avg)</span><span class="quick-stat-val">€0.19</span></div>
     </div>
 
-    <div class="budget-row">
-      <div class="form-group" style="margin-bottom:0">
-        <label class="form-label" for="campBudget">Daily budget (€)</label>
-        <input class="form-input" type="number" id="campBudget" placeholder="10" min="1" max="10000">
+    <div class="side-card">
+      <div class="side-card-title"><i class="fa-regular fa-lightbulb"></i> Performance Tips</div>
+      <div class="tip-item">
+        <i class="fa-solid fa-circle-info tip-icon"></i>
+        <div class="tip-text"><b>Add a location filter</b>Ads targeting a specific city get 2.3× higher CTR on Spopeer.</div>
       </div>
-      <div class="form-group" style="margin-bottom:0">
-        <label class="form-label" for="campDuration">Duration (days)</label>
-        <input class="form-input" type="number" id="campDuration" placeholder="7" min="1" max="90">
+      <div class="tip-item">
+        <i class="fa-solid fa-image tip-icon"></i>
+        <div class="tip-text"><b>Use sport-specific imagery</b>Creatives showing the actual sport convert 40% better than logo-only ads.</div>
+      </div>
+      <div class="tip-item">
+        <i class="fa-solid fa-calendar-check tip-icon"></i>
+        <div class="tip-text"><b>Schedule around events</b>Ads running 3 days before a community event see peak engagement.</div>
       </div>
     </div>
 
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn-primary" onclick="createCampaign()">Launch Campaign</button>
+    <div class="cta-banner">
+      <div style="font-size:28px;margin-bottom:10px;">🎯</div>
+      <h4>Need a Bigger Reach?</h4>
+      <p>Upgrade to a Business account to unlock retargeting, A/B testing, and priority placement across all Spopeer surfaces.</p>
+      <button class="btn-cta-small">Explore Business Plans</button>
     </div>
-  </div>
-</div>
+  </aside>
+
+</div><!-- /app-layout -->
+
+
+<!-- CREATE CAMPAIGN MODAL -->
+<div class="modal-overlay" id="createModal" onclick="handleOverlayClick(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+    <div class="modal-topbar">
+      <div>
+        <div class="modal-title" id="modalTitle">Create a Campaign</div>
+        <div class="modal-subtitle" id="modalSubtitle">Step 1 of 4 — Choose your objective</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="step-progress">
+      <div class="step-item active" id="stepItem1"><div class="step-num" id="stepNum1">1</div></div>
+      <div class="step-item" id="stepItem2"><div class="step-num" id="stepNum2">2</div></div>
+      <div class="step-item" id="stepItem3"><div class="step-num" id="stepNum3">3</div></div>
+      <div class="step-item" id="stepItem4"><div class="step-num" id="stepNum4">4</div></div>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- STEP 1: Objective -->
+      <div class="step-panel active" id="panel1">
+        <div class="form-group">
+          <label class="form-label">Campaign Name <span class="form-required">*</span></label>
+          <input type="text" class="form-input" id="campName" placeholder="e.g. Summer Tryouts 2025, Rugby Club Open Day…" maxlength="80">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Objective <span class="form-required">*</span></label>
+          <div class="obj-grid">
+            <div class="obj-card selected" onclick="selectObj(this)">
+              <div class="obj-icon">📢</div>
+              <div class="obj-name">Awareness</div>
+              <div class="obj-desc">Get your club or sport seen by more people</div>
+            </div>
+            <div class="obj-card" onclick="selectObj(this)">
+              <div class="obj-icon">👥</div>
+              <div class="obj-name">Reach</div>
+              <div class="obj-desc">Maximise the number of unique users who see your ad</div>
+            </div>
+            <div class="obj-card" onclick="selectObj(this)">
+              <div class="obj-icon">📅</div>
+              <div class="obj-name">Event Sign-ups</div>
+              <div class="obj-desc">Drive registrations to a tryout, event, or clinic</div>
+            </div>
+            <div class="obj-card" onclick="selectObj(this)">
+              <div class="obj-icon">👤</div>
+              <div class="obj-name">Profile Visits</div>
+              <div class="obj-desc">Send people directly to your Spopeer profile</div>
+            </div>
+            <div class="obj-card" onclick="selectObj(this)">
+              <div class="obj-icon">🛍️</div>
+              <div class="obj-name">Marketplace</div>
+              <div class="obj-desc">Boost a product listing and get more buyers</div>
+            </div>
+            <div class="obj-card" onclick="selectObj(this)">
+              <div class="obj-icon">🤝</div>
+              <div class="obj-name">Sponsorship</div>
+              <div class="obj-desc">Find sponsors or showcase your sponsorship offer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Audience + Format -->
+      <div class="step-panel" id="panel2">
+        <div class="form-group">
+          <label class="form-label">Ad Format <span class="form-required">*</span></label>
+          <div class="format-grid">
+            <div class="format-card selected" onclick="selectFormat(this)">
+              <div class="format-card-icon">📰</div>
+              <div>
+                <div class="format-card-name">Sponsored Feed Post</div>
+                <div class="format-card-desc">Image + headline + CTA button in the main feed</div>
+              </div>
+            </div>
+            <div class="format-card" onclick="selectFormat(this)">
+              <div class="format-card-icon">🏷️</div>
+              <div>
+                <div class="format-card-name">Sidebar Banner</div>
+                <div class="format-card-desc">Display ad in the right sidebar across pages</div>
+              </div>
+            </div>
+            <div class="format-card" onclick="selectFormat(this)">
+              <div class="format-card-icon">📌</div>
+              <div>
+                <div class="format-card-name">Community Pin</div>
+                <div class="format-card-desc">Pinned post inside a relevant community group</div>
+              </div>
+            </div>
+            <div class="format-card" onclick="selectFormat(this)">
+              <div class="format-card-icon">🔍</div>
+              <div>
+                <div class="format-card-name">Search Boost</div>
+                <div class="format-card-desc">Top result for keyword searches on Spopeer</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Audience — Profile Type</label>
+          <div class="tag-cloud">
+            <span class="tag-pill sel" onclick="this.classList.toggle('sel')">Athletes</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Coaches</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Clubs</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Support Professionals</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Sponsors</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Fans</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Sport Category</label>
+            <select class="form-select" id="targetSport">
+              <option value="">All sports</option>
+              <option>Archery</option><option>Rugby</option><option>Kabaddi</option>
+              <option>Sepak Takraw</option><option>Canoe Polo</option><option>Hurling</option>
+              <option>Lacrosse</option><option>Floorball</option><option>Netball</option>
+              <option>Wrestling</option><option>Field Hockey</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" class="form-input" id="targetLocation" placeholder="Country, city, or region…">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Age Range</label>
+            <select class="form-select">
+              <option>All ages</option><option>Under 18</option><option>18 – 24</option>
+              <option>25 – 34</option><option>35 – 44</option><option>45+</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Skill / Experience Level</label>
+            <select class="form-select">
+              <option>All levels</option><option>Beginner</option><option>Intermediate</option>
+              <option>Advanced</option><option>Elite / Professional</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Community Interest Tags</label>
+          <div class="tag-cloud">
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Club Formation</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Federation</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Tryouts</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Training &amp; Coaching</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Events</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Sponsorship</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Youth Development</span>
+            <span class="tag-pill" onclick="this.classList.toggle('sel')">Niche Sports</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Creative + Budget -->
+      <div class="step-panel" id="panel3">
+        <div class="form-group">
+          <label class="form-label">Ad Headline <span class="form-required">*</span></label>
+          <input type="text" class="form-input" id="adHeadline" placeholder="e.g. Join Athens Archery Club — Open Tryouts This June" maxlength="80">
+          <div class="form-hint">Max 80 characters. Keep it direct and action-oriented.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ad Body Text</label>
+          <textarea class="form-textarea" id="adBody" placeholder="Describe what you're offering, who it's for, and why they should click…" maxlength="280"></textarea>
+          <div class="form-hint">Max 280 characters.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Call-to-Action Button</label>
+          <div class="cta-btn-row">
+            <span class="cta-option selected" onclick="selectCTA(this)">Join Us</span>
+            <span class="cta-option" onclick="selectCTA(this)">Learn More</span>
+            <span class="cta-option" onclick="selectCTA(this)">Sign Up</span>
+            <span class="cta-option" onclick="selectCTA(this)">Register Now</span>
+            <span class="cta-option" onclick="selectCTA(this)">View Profile</span>
+            <span class="cta-option" onclick="selectCTA(this)">Shop Now</span>
+            <span class="cta-option" onclick="selectCTA(this)">Contact Us</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ad Creative</label>
+          <div class="creative-drop" id="creativeDrop" onclick="document.getElementById('creativeInput').click()">
+            <div class="creative-drop-icon"><i class="fa-regular fa-image"></i></div>
+            <h4>Upload your ad image</h4>
+            <p>JPG, PNG or GIF · Recommended 1200×628px · Max 5MB</p>
+            <input type="file" id="creativeInput" accept="image/*" style="display:none;" onchange="handleCreativeUpload(this)">
+          </div>
+          <div class="creative-preview" id="creativePreview">
+            <div class="creative-preview-thumb">🏹</div>
+            <div class="creative-preview-info">
+              <div class="creative-preview-name" id="creativeName">ad-image.jpg</div>
+              <div class="creative-preview-size" id="creativeSize">1200 × 628 · 340 KB</div>
+            </div>
+            <button class="icon-btn danger" onclick="removeCreative()"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
+        <div class="form-group">
+          <label class="form-label">Daily Budget (€)</label>
+          <input type="range" class="budget-slider" id="budgetSlider" min="5" max="200" value="25" step="5" oninput="updateBudget(this.value)">
+          <div class="budget-preview">
+            <span class="budget-preview-label">Daily budget</span>
+            <span class="budget-preview-val" id="budgetDisplay">€25 / day</span>
+          </div>
+          <div class="budget-est" id="budgetEst">Estimated 800–1,400 impressions per day</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-input" id="startDate">
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date</label>
+            <input type="date" class="form-input" id="endDate">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Billing Model</label>
+          <select class="form-select" id="billingModel">
+            <option value="cpm">CPM — Cost per 1,000 impressions (brand awareness)</option>
+            <option value="cpc">CPC — Cost per click (traffic / conversions)</option>
+            <option value="flat">Flat daily rate (predictable spend)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- STEP 4: Review -->
+      <div class="step-panel" id="panel4">
+        <div class="review-section">
+          <div class="review-section-title"><i class="fa-solid fa-bullseye"></i> Campaign Basics</div>
+          <div class="review-row"><span class="review-key">Name</span><span class="review-val" id="rv-name">—</span></div>
+          <div class="review-row"><span class="review-key">Objective</span><span class="review-val" id="rv-obj">—</span></div>
+          <div class="review-row"><span class="review-key">Ad Format</span><span class="review-val" id="rv-format">—</span></div>
+        </div>
+        <div class="review-section">
+          <div class="review-section-title"><i class="fa-solid fa-users"></i> Audience &amp; Targeting</div>
+          <div class="review-row"><span class="review-key">Sport</span><span class="review-val" id="rv-sport">All sports</span></div>
+          <div class="review-row"><span class="review-key">Location</span><span class="review-val" id="rv-location">All locations</span></div>
+          <div class="review-row"><span class="review-key">CTA Button</span><span class="review-val" id="rv-cta">Join Us</span></div>
+        </div>
+        <div class="review-section">
+          <div class="review-section-title"><i class="fa-solid fa-euro-sign"></i> Budget &amp; Schedule</div>
+          <div class="review-row"><span class="review-key">Daily Budget</span><span class="review-val" id="rv-budget">€25 / day</span></div>
+          <div class="review-row"><span class="review-key">Start Date</span><span class="review-val" id="rv-start">—</span></div>
+          <div class="review-row"><span class="review-key">End Date</span><span class="review-val" id="rv-end">—</span></div>
+          <div class="review-row"><span class="review-key">Billing Model</span><span class="review-val" id="rv-billing">CPM</span></div>
+          <div class="review-row"><span class="review-key">Est. Impressions</span><span class="review-val" id="rv-est">800–1,400 / day</span></div>
+        </div>
+        <div class="review-alert">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <div>Your campaign will enter <strong>review</strong> after submission. It typically goes live within 24 hours once approved by the Spopeer team.</div>
+        </div>
+      </div>
+
+      <!-- SUCCESS SCREEN -->
+      <div class="step-panel" id="panelSuccess">
+        <div class="success-screen">
+          <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+          <div class="success-title">Campaign Submitted!</div>
+          <div class="success-sub" id="successMsg">Your campaign is now under review. You will receive a notification once it goes live — usually within 24 hours.</div>
+          <button class="btn-primary" onclick="closeModal()" style="margin:0 auto;">
+            <i class="fa-solid fa-chart-bar"></i> Back to Dashboard
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <div class="modal-footer" id="modalFooter">
+      <div>
+        <span class="step-indicator-text" id="stepIndicatorText">Step 1 of 4</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-back" id="btnBack" style="display:none;" onclick="prevStep()">← Back</button>
+        <button class="btn-next" id="btnNext" onclick="nextStep()">Continue <i class="fa-solid fa-arrow-right"></i></button>
+        <button class="btn-launch" id="btnLaunch" style="display:none;" onclick="launchCampaign()">
+          <i class="fa-solid fa-rocket"></i> Launch Campaign
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /modal -->
+</div><!-- /modal-overlay -->
+
+
+<!-- FOOTER -->
+<footer style="border-top:1px solid var(--border);padding:24px;text-align:center;font-size:12px;color:var(--muted);margin-top:40px;">
+  <span style="font-family:var(--fD);font-weight:800;color:var(--ink);margin-right:12px;">Spopeer</span>
+  <a href="/pages/legal/about.html" style="color:var(--muted);margin-right:10px;">About</a>
+  <a href="/pages/legal/privacy.html" style="color:var(--muted);margin-right:10px;">Privacy</a>
+  <a href="/pages/legal/terms.html" style="color:var(--muted);margin-right:10px;">Terms</a>
+  <a href="/pages/company/help-center.html" style="color:var(--muted);">Help</a>
+  <span style="margin-left:16px;">© 2025 Spopeer Ads Manager</span>
+</footer>
+
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  // UserUI chip binding and shared runtime are handled by shared-ui.js autoInit.
-  // We only need to populate dynamic content here.
-  loadCampaigns();
-  renderChart();
-  updateMetrics();
-
-  // Attach modal event listeners after DOM is ready
-  var modal = document.getElementById('campaignModal');
-  if (modal) {
-    modal.addEventListener('click', function (e) {
-      if (e.target === modal) closeModal();
-    });
-  }
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeModal();
+/* ── CHART ── */
+(function() {
+  var impData = [28,32,29,35,42,38,44,50,46,52,48,55,60,58,62,65,70,68,72,75,80,82,85];
+  var clkData = [8,10,9,11,13,12,14,16,15,17,15,18,19,18,20,21,22,21,23,24,25,26,27];
+  var chart = document.getElementById('mainChart');
+  var labelsEl = document.getElementById('chartLabels');
+  var max = Math.max.apply(null, impData);
+  impData.forEach(function(imp, i) {
+    var grp = document.createElement('div');
+    grp.className = 'chart-bar-group';
+    var bImp = document.createElement('div');
+    bImp.className = 'chart-bar impressions';
+    bImp.style.height = (imp / max * 100) + '%';
+    bImp.title = 'Impressions: ' + (imp * 580).toLocaleString();
+    var bClk = document.createElement('div');
+    bClk.className = 'chart-bar clicks';
+    bClk.style.height = (clkData[i] / max * 100) + '%';
+    bClk.title = 'Clicks: ' + (clkData[i] * 22).toLocaleString();
+    grp.appendChild(bImp);
+    grp.appendChild(bClk);
+    chart.appendChild(grp);
   });
+  labelsEl.innerHTML = '<span>Apr 1</span><span>Apr 8</span><span>Apr 15</span><span>Apr 22</span><span>Apr 27</span>';
+})();
 
-  var btnNew = document.getElementById('btnNewCampaign');
-  if (btnNew) btnNew.addEventListener('click', openModal);
-});
-
-// ── Local campaign store ──────────────────────────────────────
-var STORE_KEY = 'spopeer_ad_campaigns';
-
-function getCampaigns() {
-  try {
-    return JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveCampaigns(list) {
-  localStorage.setItem(STORE_KEY, JSON.stringify(list));
-}
-
-// ── Section navigation ────────────────────────────────────────
-function showSection(sectionId, navBtn) {
-  document.querySelectorAll('.ads-section').forEach(function (s) { s.hidden = true; });
-  var target = document.getElementById('section-' + sectionId);
-  if (target) target.hidden = false;
-
-  document.querySelectorAll('.ads-nav-item').forEach(function (b) { b.classList.remove('active'); });
-  if (navBtn) navBtn.classList.add('active');
-
-  if (sectionId === 'campaigns') renderAllCampaigns();
-}
-
-// ── Campaign rendering ────────────────────────────────────────
-function statusClass(s) {
-  return { live: 'live', paused: 'paused', ended: 'ended' }[s] || 'ended';
-}
-
-function campaignRowHTML(c) {
-  var sc = statusClass(c.status);
-  return [
-    '<div class="campaign-row">',
-    '  <div class="status-dot ' + sc + '"></div>',
-    '  <div><div class="camp-name">' + escStr(c.name) + '</div>',
-    '       <div class="camp-type">' + escStr(c.type) + ' &middot; ' + escStr(c.placements) + '</div></div>',
-    '  <div><div class="camp-stat">' + escStr(c.impressions) + '</div><div class="camp-stat-lbl">impressions</div></div>',
-    '  <div><div class="camp-stat">€' + escStr(c.spend) + '</div><div class="camp-stat-lbl">spent</div></div>',
-    '  <span class="pill ' + sc + '">' + sc.charAt(0).toUpperCase() + sc.slice(1) + '</span>',
-    '</div>'
-  ].join('');
-}
+/* ── CAMPAIGN TABLE ── */
+var campaigns = [
+  { name: 'Tryouts 2025 — Athens',    type: 'Sport Club · Event Sign-ups', status: 'live',   format: 'feed',      impressions: 14200, clicks: 682, ctr: 4.8,  spend: 120, budget: 200 },
+  { name: 'Coaching Clinic — June',   type: 'Coach Promo · Profile Visits', status: 'live',   format: 'search',    impressions: 9800,  clicks: 391, ctr: 3.99, spend: 88,  budget: 150 },
+  { name: 'Kit Sponsor Outreach',     type: 'Sponsor · Awareness',          status: 'paused', format: 'community', impressions: 6100,  clicks: 198, ctr: 3.25, spend: 54,  budget: 100 },
+  { name: 'Spring Membership Drive',  type: 'Sport Club · Reach',           status: 'ended',  format: 'feed',      impressions: 18100, clicks: 569, ctr: 3.14, spend: 80,  budget: 80  },
+  { name: 'Youth Rugby Academy',      type: 'Club · Youth Dev',             status: 'review', format: 'sidebar',   impressions: 0,     clicks: 0,   ctr: 0,    spend: 0,   budget: 60  }
+];
 
 function escStr(v) {
-  if (v === null || v === undefined) return '';
-  return String(v)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;');
+  if (v == null) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 }
 
-function loadCampaigns() {
-  var campaigns = getCampaigns();
-
-  // Seed demo data on first load
-  if (campaigns.length === 0) {
-    campaigns = [
-      { id: 1, name: 'Tryouts 2025 — Athens', type: 'Sport Club', placements: 'Feed + Community', impressions: '14.2k', spend: '120', status: 'live' },
-      { id: 2, name: 'Coaching clinic — June', type: 'Coach promo', placements: 'Sidebar + Search', impressions: '9.8k', spend: '88', status: 'live' },
-      { id: 3, name: 'Kit sponsor outreach', type: 'Sponsor', placements: 'Community page', impressions: '6.1k', spend: '54', status: 'paused' },
-      { id: 4, name: 'Spring membership drive', type: 'Sport Club', placements: 'Feed', impressions: '18.1k', spend: '80', status: 'ended' }
-    ];
-    saveCampaigns(campaigns);
-  }
-
-  var list = document.getElementById('campaignList');
-  if (list) list.innerHTML = campaigns.map(campaignRowHTML).join('');
+function formatTag(f) {
+  var map = { feed: ['','Sponsored Post'], search: ['search','Search Boost'], community: ['community','Community Pin'], sidebar: ['sidebar','Sidebar Banner'] };
+  var pair = map[f] || ['','—'];
+  return '<span class="format-tag ' + pair[0] + '">' + pair[1] + '</span>';
 }
 
-function renderAllCampaigns() {
-  var campaigns = getCampaigns();
-  var list = document.getElementById('allCampaignList');
-  if (!list) return;
-  if (campaigns.length === 0) {
-    list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-bullhorn"></i><p>No campaigns yet. Create your first campaign!</p></div>';
-    return;
-  }
-  list.innerHTML = campaigns.map(campaignRowHTML).join('');
+function renderTable(filter) {
+  filter = filter || 'all';
+  var tbody = document.getElementById('campTableBody');
+  tbody.innerHTML = '';
+  campaigns.filter(function(c){ return filter === 'all' || c.status === filter; }).forEach(function(c) {
+    var pct = Math.round((c.spend / c.budget) * 100);
+    tbody.innerHTML += '<tr>' +
+      '<td><div class="camp-name">' + escStr(c.name) + '</div><div class="camp-type">' + escStr(c.type) + '</div></td>' +
+      '<td><span class="status-badge ' + c.status + '">' + c.status.charAt(0).toUpperCase() + c.status.slice(1) + '</span></td>' +
+      '<td>' + formatTag(c.format) + '</td>' +
+      '<td class="camp-stat-cell"><div class="camp-stat-num">' + c.impressions.toLocaleString() + '</div><div class="camp-progress"><div class="camp-progress-fill" style="width:' + Math.min(pct,100) + '%"></div></div></td>' +
+      '<td class="camp-stat-cell"><div class="camp-stat-num">' + c.clicks.toLocaleString() + '</div><div class="camp-stat-sub">' + c.ctr.toFixed(2) + '% CTR</div></td>' +
+      '<td class="camp-stat-cell"><div class="camp-stat-num">€' + c.spend + '</div><div class="camp-stat-sub">of €' + c.budget + '</div></td>' +
+      '<td><div class="camp-actions">' +
+        '<button class="icon-btn" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>' +
+        '<button class="icon-btn" title="' + (c.status === 'live' ? 'Pause' : 'Resume') + '"><i class="fa-solid fa-' + (c.status === 'live' ? 'pause' : 'play') + '"></i></button>' +
+        '<button class="icon-btn danger" title="Delete"><i class="fa-regular fa-trash-can"></i></button>' +
+      '</div></td>' +
+    '</tr>';
+  });
+}
+renderTable('all');
+
+function filterCamps(el, filter) {
+  document.querySelectorAll('.section-card .date-pill').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active');
+  renderTable(filter);
 }
 
-// ── Metrics ───────────────────────────────────────────────────
-function updateMetrics() {
-  var campaigns = getCampaigns();
-  var totalSpend = campaigns.reduce(function (acc, c) { return acc + (parseFloat(c.spend) || 0); }, 0);
-  var el = function (id) { return document.getElementById(id); };
-  if (el('metricSpend')) el('metricSpend').textContent = '€' + totalSpend;
-  if (el('metricSpendChange')) el('metricSpendChange').textContent = '+18% vs last month';
-  if (el('metricImpressions')) el('metricImpressions').textContent = '48.2k';
-  if (el('metricImpChange')) el('metricImpChange').textContent = '+24%';
-  if (el('metricClicks')) el('metricClicks').textContent = '1,840';
-  if (el('metricClickChange')) el('metricClickChange').textContent = '+11%';
-  if (el('metricCtr')) el('metricCtr').textContent = '3.8%';
-  var ctrEl = el('metricCtrChange');
-  if (ctrEl) { ctrEl.textContent = '-0.3%'; ctrEl.className = 'metric-change dn'; }
-}
+/* ── MODAL ── */
+var currentStep = 1;
+var TOTAL_STEPS = 4;
 
-// ── Chart ─────────────────────────────────────────────────────
-function renderChart() {
-  var container = document.getElementById('impressionsChart');
-  if (!container) return;
-  var heights = [35, 45, 40, 60, 50, 70, 65, 80, 75, 90, 85, 100];
-  container.innerHTML = heights.map(function (h, i) {
-    var cls = i >= 9 ? 'chart-bar current' : 'chart-bar';
-    return '<div class="' + cls + '" style="height:' + h + '%"></div>';
-  }).join('');
-}
-
-// ── Placement toggle ──────────────────────────────────────────
-function togglePlacement(el) {
-  el.classList.toggle('off');
-  var checked = !el.classList.contains('off');
-  el.setAttribute('aria-checked', String(checked));
-}
-
-// ── Modal ─────────────────────────────────────────────────────
 function openModal() {
-  document.getElementById('campaignModal').classList.add('open');
-  document.getElementById('campName').focus();
+  document.getElementById('createModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  currentStep = 1;
+  renderStep();
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('startDate').value = today;
+  var end = new Date(); end.setDate(end.getDate() + 14);
+  document.getElementById('endDate').value = end.toISOString().split('T')[0];
 }
 
 function closeModal() {
-  document.getElementById('campaignModal').classList.remove('open');
+  document.getElementById('createModal').classList.remove('open');
+  document.body.style.overflow = '';
+  currentStep = 1;
+  renderStep();
+  document.getElementById('panelSuccess').classList.remove('active');
+  document.getElementById('panel1').classList.add('active');
+  document.getElementById('modalFooter').style.display = 'flex';
 }
 
-function createCampaign() {
-  var name = document.getElementById('campName').value.trim();
-  var type = document.getElementById('campType').value;
-  var description = document.getElementById('campDescription').value.trim();
-  var budget = document.getElementById('campBudget').value;
-  var duration = document.getElementById('campDuration').value;
-  var format = document.getElementById('campFormat').value;
-
-  if (!name) {
-    document.getElementById('campName').focus();
-    return;
-  }
-
-  var checkedPlacements = Array.from(document.querySelectorAll('input[name="placement"]:checked'))
-    .map(function (cb) { return cb.value; });
-
-  if (checkedPlacements.length === 0) {
-    alert('Please select at least one ad placement.');
-    return;
-  }
-
-  var typeLabels = {
-    'sport-club': 'Sport Club',
-    'coach': 'Coach promo',
-    'event': 'Event / Tryout',
-    'sponsor': 'Sponsor',
-    'product': 'Product'
-  };
-
-  var campaigns = getCampaigns();
-  var newId = campaigns.length > 0 ? Math.max.apply(null, campaigns.map(function (c) { return c.id; })) + 1 : 1;
-
-  campaigns.push({
-    id: newId,
-    name: name,
-    type: typeLabels[type] || type,
-    placements: checkedPlacements.join(' + '),
-    format: format,
-    description: description,
-    budget: budget,
-    duration: duration,
-    impressions: '0',
-    spend: '0',
-    status: 'live'
-  });
-
-  saveCampaigns(campaigns);
-  loadCampaigns();
-  updateMetrics();
-  renderAllCampaigns();
-  closeModal();
-
-  // Reset form
-  document.getElementById('campName').value = '';
-  document.getElementById('campType').value = '';
-  document.getElementById('campDescription').value = '';
-  document.getElementById('campBudget').value = '';
-  document.getElementById('campDuration').value = '';
-  document.querySelectorAll('input[name="placement"]').forEach(function (cb) {
-    cb.checked = (cb.value === 'feed' || cb.value === 'marketplace');
-  });
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('createModal')) closeModal();
 }
+
+function renderStep() {
+  for (var i = 1; i <= TOTAL_STEPS; i++) {
+    var panel = document.getElementById('panel' + i);
+    panel.classList.toggle('active', i === currentStep);
+  }
+  for (var j = 1; j <= TOTAL_STEPS; j++) {
+    var item = document.getElementById('stepItem' + j);
+    var num = document.getElementById('stepNum' + j);
+    item.classList.remove('active', 'done');
+    if (j < currentStep) {
+      item.classList.add('done');
+      num.innerHTML = '<i class="fa-solid fa-check" style="font-size:10px"></i>';
+    } else if (j === currentStep) {
+      item.classList.add('active');
+      num.textContent = j;
+    } else {
+      num.textContent = j;
+    }
+  }
+  var subtitles = ['', 'Choose your objective', 'Set audience &amp; format', 'Add creative &amp; budget', 'Review &amp; launch'];
+  document.getElementById('modalSubtitle').innerHTML = 'Step ' + currentStep + ' of ' + TOTAL_STEPS + ' — ' + subtitles[currentStep];
+  document.getElementById('stepIndicatorText').textContent = 'Step ' + currentStep + ' of ' + TOTAL_STEPS;
+  document.getElementById('btnBack').style.display = currentStep > 1 ? 'inline-flex' : 'none';
+  document.getElementById('btnNext').style.display = currentStep < TOTAL_STEPS ? 'inline-flex' : 'none';
+  document.getElementById('btnLaunch').style.display = currentStep === TOTAL_STEPS ? 'inline-flex' : 'none';
+}
+
+function nextStep() {
+  if (currentStep < TOTAL_STEPS) {
+    if (currentStep === TOTAL_STEPS - 1) buildReview();
+    currentStep++;
+    renderStep();
+  }
+}
+
+function prevStep() {
+  if (currentStep > 1) { currentStep--; renderStep(); }
+}
+
+function buildReview() {
+  document.getElementById('rv-name').textContent = document.getElementById('campName').value || '(no name)';
+  var selObj = document.querySelector('.obj-card.selected .obj-name');
+  document.getElementById('rv-obj').textContent = selObj ? selObj.textContent : '—';
+  var selFmt = document.querySelector('.format-card.selected .format-card-name');
+  document.getElementById('rv-format').textContent = selFmt ? selFmt.textContent : '—';
+  document.getElementById('rv-sport').textContent = document.getElementById('targetSport').value || 'All sports';
+  document.getElementById('rv-location').textContent = document.getElementById('targetLocation').value || 'All locations';
+  var selCta = document.querySelector('.cta-option.selected');
+  document.getElementById('rv-cta').textContent = selCta ? selCta.textContent : '—';
+  document.getElementById('rv-budget').textContent = document.getElementById('budgetDisplay').textContent;
+  document.getElementById('rv-start').textContent = document.getElementById('startDate').value || '—';
+  document.getElementById('rv-end').textContent = document.getElementById('endDate').value || '—';
+  var billingMap = { cpm: 'CPM (per 1,000 impressions)', cpc: 'CPC (per click)', flat: 'Flat daily rate' };
+  document.getElementById('rv-billing').textContent = billingMap[document.getElementById('billingModel').value] || '—';
+  document.getElementById('rv-est').textContent = document.getElementById('budgetEst').textContent;
+}
+
+function launchCampaign() {
+  for (var i = 1; i <= TOTAL_STEPS; i++) document.getElementById('panel' + i).classList.remove('active');
+  document.getElementById('panelSuccess').classList.add('active');
+  document.getElementById('modalFooter').style.display = 'none';
+  var name = document.getElementById('campName').value || 'your campaign';
+  document.getElementById('successMsg').textContent = '"' + name + '" is now under review. You will get a notification once it goes live — usually within 24 hours.';
+  for (var j = 1; j <= TOTAL_STEPS; j++) {
+    document.getElementById('stepItem' + j).classList.add('done');
+    document.getElementById('stepNum' + j).innerHTML = '<i class="fa-solid fa-check" style="font-size:10px"></i>';
+  }
+}
+
+/* ── FORM INTERACTIONS ── */
+function selectObj(el) {
+  document.querySelectorAll('.obj-card').forEach(function(c){ c.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+function selectFormat(el) {
+  document.querySelectorAll('.format-card').forEach(function(c){ c.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+function selectCTA(el) {
+  document.querySelectorAll('.cta-option').forEach(function(c){ c.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+function updateBudget(val) {
+  var v = parseInt(val);
+  document.getElementById('budgetDisplay').textContent = '€' + v + ' / day';
+  var low = Math.round(v * 32), high = Math.round(v * 56);
+  document.getElementById('budgetEst').textContent = 'Estimated ' + low.toLocaleString() + '–' + high.toLocaleString() + ' impressions per day';
+  var slider = document.getElementById('budgetSlider');
+  var pct = ((v - 5) / (200 - 5)) * 100;
+  slider.style.setProperty('--pct', pct + '%');
+}
+updateBudget(25);
+
+function handleCreativeUpload(input) {
+  if (input.files && input.files[0]) {
+    var file = input.files[0];
+    document.getElementById('creativeDrop').style.display = 'none';
+    var preview = document.getElementById('creativePreview');
+    preview.classList.add('show');
+    document.getElementById('creativeName').textContent = file.name;
+    document.getElementById('creativeSize').textContent = (file.size / 1024).toFixed(0) + ' KB';
+  }
+}
+function removeCreative() {
+  document.getElementById('creativePreview').classList.remove('show');
+  document.getElementById('creativeDrop').style.display = 'block';
+  document.getElementById('creativeInput').value = '';
+}
+
+/* ── UI HELPERS ── */
+function setDatePill(el) {
+  document.querySelectorAll('.date-range-row .date-pill').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active');
+}
+function switchTab(tab, el) {
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  el.classList.add('active');
+}
+function togglePlacement(input) {
+  // visual feedback — production would call API
+}
+
+/* ── USER DATA ── */
+document.addEventListener('DOMContentLoaded', async function() {
+  if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
+  if (window.UserUI) window.UserUI.bindAllChips();
+});
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('profileMenu');
+  var chip = document.getElementById('userChip');
+  if (menu && chip && !chip.contains(e.target) && !menu.contains(e.target)) {
+    menu.classList.remove('visible');
+  }
+});
 </script>
 </body>
 </html>
