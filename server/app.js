@@ -179,6 +179,7 @@ app.use('/api/media', uploadLimiter, mediaRoutes);
 app.use('/api/sponsorships', apiLimiter, sponsorshipRoutes);
 app.use('/api/moderation', apiLimiter, moderationRoutes);
 app.use('/api/contact',    apiLimiter, require('./routes/contact'));
+app.use('/api/reports',    apiLimiter, require('./routes/reports'));
 
 // ─── PROFILE ROUTES (frontend compatibility) ───
 app.use('/api/profiles', apiLimiter, require('./routes/users'));

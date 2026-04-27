@@ -6,7 +6,7 @@ const { sendEmail } = require('../services/email');
 const CONTACT_RECIPIENT = 'erditgr@yahoo.gr';
 
 router.post('/', async (req, res) => {
-  const { firstName, lastName, email, subject, message } = req.body || {};
+  const { firstName, lastName, email, subject, message, type } = req.body || {};
 
   if (!firstName || !lastName || !email || !subject || !message) {
     return res.status(400).json({ success: false, error: 'All fields are required.' });
@@ -20,6 +20,7 @@ router.post('/', async (req, res) => {
     <table style="width:100%;border-collapse:collapse;font-size:14px;">
       <tr><td style="padding:8px 0;font-weight:600;color:#555;width:120px;">From</td><td style="color:#222;">${firstName} ${lastName}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600;color:#555;">Email</td><td><a href="mailto:${email}" style="color:#001f3f;">${email}</a></td></tr>
+      ${type ? `<tr><td style="padding:8px 0;font-weight:600;color:#555;">Type</td><td style="color:#222;">${type}</td></tr>` : ''}
       <tr><td style="padding:8px 0;font-weight:600;color:#555;">Subject</td><td style="color:#222;">${subject}</td></tr>
     </table>
     <hr style="margin:20px 0;border:none;border-top:1px solid #eee;">
