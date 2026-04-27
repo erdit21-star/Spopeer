@@ -33,6 +33,7 @@ require('./models');
 // Import routes
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/users');
+const profileRoutes = require('./routes/profile');
 const postRoutes = require('./routes/posts');
 const connectionRoutes = require('./routes/connections');
 const messageRoutes = require('./routes/messages');
@@ -162,6 +163,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // ─── API ROUTES ───
 app.use('/api/auth', authRoutes);
 app.use('/api/users', apiLimiter, userRoutes);
+app.use('/api/profile', apiLimiter, profileRoutes);
 app.use('/api/posts', apiLimiter, perUserWriteLimiter, postRoutes);
 app.use('/api/connections', apiLimiter, connectionRoutes);
 app.use('/api/messages', apiLimiter, perUserWriteLimiter, messageRoutes);

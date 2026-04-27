@@ -83,7 +83,7 @@ class ProfileService {
 
       this.isLoading = true;
 
-      const response = await fetch('/api/profiles/me', { headers, credentials: 'include' });
+      const response = await fetch('/api/profile/me', { headers, credentials: 'include' });
       if (!response.ok) {
         throw new Error('Failed to load persisted profile');
       }

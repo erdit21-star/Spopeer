@@ -25,12 +25,12 @@
   function getUser() {
     try {
       if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
-        return window.CurrentUserStore.getCurrentUser() || parseStoredJson("spopeer_user") || parseStoredJson("user") || null;
+        return window.CurrentUserStore.getCurrentUser() || parseStoredJson("spopeer_user") || parseStoredJson("spopeerUser") || parseStoredJson("user") || null;
       }
     } catch (err) {
       console.debug("CurrentUserStore.getCurrentUser failed in api.js", err);
     }
-    return parseStoredJson("spopeer_user") || parseStoredJson("user") || null;
+    return parseStoredJson("spopeer_user") || parseStoredJson("spopeerUser") || parseStoredJson("user") || null;
   }
 
   function dispatchProfileUpdated(profile, source) {
@@ -45,6 +45,7 @@
 
   function setUser(user, source) {
     localStorage.setItem("spopeer_user", JSON.stringify(user));
+    localStorage.setItem("spopeerUser", JSON.stringify(user));
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("spopeer_loggedIn", "true");
     localStorage.setItem("_profileLastUpdated_", Date.now().toString());
@@ -55,6 +56,7 @@
   function clearAuthStorage() {
     [
       "spopeer_user",
+      "spopeerUser",
       "spopeer_loggedIn",
       "user",
       "_profileLastUpdated_"
@@ -267,11 +269,11 @@
   }
 
   async function updateProfile(payload) {
-    const data = await request("/api/profiles", {
-      method: "POST",
+    const data = await request("/api/profile/me", {
+      method: "PATCH",
       body: JSON.stringify(payload)
     });
-    const savedUser = data.payload || data.user;
+    const savedUser = (data.data && (data.data.user || data.data.payload)) || data.payload || data.user;
     if (savedUser) {
       setUser(savedUser, "api-profile-update");
     }
@@ -301,7 +303,7 @@
     updateProfile,
     saveProfile: updateProfile,
     getPublicProfile: function (identifier) {
-      return request("/api/profiles/" + encodeURIComponent(identifier));
+      return request("/api/profile/" + encodeURIComponent(identifier));
     },
     getPublicProfileByEmail: function (email) {
       return request("/api/profiles/profile/" + encodeURIComponent(email));

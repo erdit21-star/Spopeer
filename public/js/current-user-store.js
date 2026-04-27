@@ -52,6 +52,7 @@
     try {
       const raw =
         localStorage.getItem('spopeer_user') ||
+        localStorage.getItem('spopeerUser') ||
         localStorage.getItem('user') ||
         'null';
       return normalizeUser(JSON.parse(raw));
@@ -64,11 +65,13 @@
   function persistUser(user) {
     if (user) {
       localStorage.setItem('spopeer_user', JSON.stringify(user));
+      localStorage.setItem('spopeerUser', JSON.stringify(user));
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('spopeer_loggedIn', 'true');
       localStorage.setItem('_profileLastUpdated_', Date.now().toString());
     } else {
       localStorage.removeItem('spopeer_user');
+      localStorage.removeItem('spopeerUser');
       localStorage.removeItem('user');
       localStorage.removeItem('spopeer_loggedIn');
       localStorage.removeItem('_profileLastUpdated_');

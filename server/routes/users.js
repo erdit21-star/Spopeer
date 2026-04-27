@@ -167,7 +167,8 @@ router.get('/me', authenticate, async (req, res) => {
     if (!freshUser || !freshUser.isActive) {
       return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
-    ok(res, { payload: flattenUserPayload(freshUser) });
+    const normalized = flattenUserPayload(freshUser);
+    ok(res, { user: normalized, payload: normalized });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');
   }
@@ -192,9 +193,36 @@ router.put('/me', authenticate, validate(profileUpdateSchema), async (req, res) 
 
     await applyExtendedMerge(user, updates);
     await user.update(updates);
-    ok(res, { payload: flattenUserPayload(user) }, { message: 'Profile updated.' });
+    const normalized = flattenUserPayload(user);
+    ok(res, { user: normalized, payload: normalized }, { message: 'Profile updated.' });
   } catch (error) {
     logger.error({ event: 'update_my_profile_error', message: error.message });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
+  }
+});
+
+router.patch('/me', authenticate, validate(profileUpdateSchema), async (req, res) => {
+  try {
+    const updates = pickProfileUpdates(req.body.payload || req.body);
+
+    if (updates.username) {
+      const existing = await User.findOne({ where: { username: updates.username } });
+      if (existing && existing.id !== req.userId) {
+        return fail(res, 409, 'CONFLICT', 'Username is already taken.');
+      }
+    }
+
+    const user = await User.findByPk(req.userId);
+    if (!user) {
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
+    }
+
+    await applyExtendedMerge(user, updates);
+    await user.update(updates);
+    const normalized = flattenUserPayload(user);
+    ok(res, { user: normalized, payload: normalized }, { message: 'Profile updated.' });
+  } catch (error) {
+    logger.error({ event: 'patch_my_profile_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
   }
 });

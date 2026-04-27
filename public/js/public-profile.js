@@ -168,13 +168,18 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   // Build headers — include auth cookie so server can identify the viewer
   const _headers = authToken ? { Authorization: 'Bearer ' + authToken } : {};
 
-  // Try /api/users/:id (handles both numeric id and email)
+  // Try /api/profile/:id (handles numeric id and username)
   if(userId){
     try{
-      const r=await fetch(`/api/users/${encodeURIComponent(userId)}`, { headers: _headers, credentials: 'include' });
+      const r=await fetch(`/api/profile/${encodeURIComponent(userId)}`, { headers: _headers, credentials: 'include' });
       if(r.ok){
         const d=await r.json();
-        payload=d.data||d.user||d.payload||{};
+        payload=(d.data && d.data.user) || d.data || d.user || d.payload || {};
+        if (payload && payload.message === 'This profile is private.') {
+          var headName = document.getElementById('ppName');
+          if (headName) headName.textContent = 'This profile is private.';
+          return;
+        }
         profileFound=true;
       } else {
         console.warn('Profile fetch returned', r.status, await r.text().catch(()=>''));
@@ -199,13 +204,13 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     }
   }
 
-  // Last resort for own profile: use /api/profiles/me
+  // Last resort for own profile: use /api/profile/me
   if(!profileFound && isOwnProfile){
     try {
-      const r = await fetch('/api/profiles/me', { headers: _headers, credentials: 'include' });
+      const r = await fetch('/api/profile/me', { headers: _headers, credentials: 'include' });
       if (r.ok) {
         const d = await r.json();
-        payload = (d.data && d.data.payload) || d.payload || d.user || {};
+        payload = (d.data && (d.data.user || d.data.payload)) || d.payload || d.user || {};
         profileFound = true;
       }
     } catch (_e) {

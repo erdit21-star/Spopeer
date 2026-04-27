@@ -3117,6 +3117,30 @@
   }
   window.getCurrentUserData = getCurrentUserData;
 
+  async function refreshCurrentUserFromBackend() {
+    try {
+      var token = localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
+      var headers = token ? { Authorization: 'Bearer ' + token } : {};
+      var res = await fetch('/api/profile/me', { headers: headers, credentials: 'include' });
+      if (!res.ok) return null;
+      var data = await res.json().catch(function () { return {}; });
+      var user = (data.data && (data.data.user || data.data.payload)) || data.user || data.payload || null;
+      if (!user) return null;
+
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+        window.CurrentUserStore.setCurrentUser(user);
+      } else {
+        localStorage.setItem('spopeer_user', JSON.stringify(user));
+        localStorage.setItem('spopeer_loggedIn', 'true');
+      }
+
+      return user;
+    } catch (err) {
+      console.debug('feed profile refresh failed', err);
+      return null;
+    }
+  }
+
   function normalizeFeedProfile(user) {
     if (!user) return {};
     if (window.ProfileNormalizer && typeof window.ProfileNormalizer.normalizeProfile === 'function') {
@@ -3277,14 +3301,17 @@
     const followersCountEl = document.getElementById('followersCount');
     const followingCountEl = document.getElementById('followingCount');
     const postsCountEl = document.getElementById('postsCount');
-    if (followersCountEl && profile.followers !== undefined) {
-      followersCountEl.textContent = formatCount(profile.followers);
+    const followersValue = profile.followersCount ?? profile.followers;
+    const followingValue = profile.followingCount ?? profile.following;
+    const postsValue = profile.postsCount ?? profile.mediaCount;
+    if (followersCountEl && followersValue !== undefined) {
+      followersCountEl.textContent = formatCount(followersValue);
     }
-    if (followingCountEl && profile.following !== undefined) {
-      followingCountEl.textContent = formatCount(profile.following);
+    if (followingCountEl && followingValue !== undefined) {
+      followingCountEl.textContent = formatCount(followingValue);
     }
-    if (postsCountEl && profile.postsCount !== undefined) {
-      postsCountEl.textContent = formatCount(profile.postsCount);
+    if (postsCountEl && postsValue !== undefined) {
+      postsCountEl.textContent = formatCount(postsValue);
     }
 
     // Update followers/following popover breakdowns if available
@@ -3369,8 +3396,12 @@
     })();
     */
     
-    // If profile service is available, it will update the sidebar when profile loads
-    // The profile-sync.js will handle updating the sidebar with full profile data
+    refreshCurrentUserFromBackend().then(function (freshUser) {
+      if (freshUser) {
+        updateSidebarFromProfile(freshUser);
+        hydrateSidebarProfile(freshUser);
+      }
+    });
     
     // Set edit profile button URL based on user type
     const editBtn = document.getElementById('editProfileBtn');
@@ -3397,7 +3428,7 @@
 
     const locationEl = document.getElementById('spLocation');
     if (locationEl) {
-      const locationText = profile.location || [profile.city, profile.country].filter(Boolean).join(', ') || 'Location';
+      const locationText = profile.location || [profile.city, profile.country].filter(Boolean).join(', ') || 'Add your location';
       locationEl.innerHTML = '<i class="fa-solid fa-location-dot"></i> ' + locationText;
     }
     
@@ -3480,7 +3511,7 @@
       const icon = sportIcons[sport] || 'fa-shoe-prints';
       sportBadge.innerHTML = `<i class="fa-solid ${icon}" style="font-size:8px"></i> ${sport}`;
     } else if (sportBadge) {
-      sportBadge.innerHTML = '<i class="fa-solid fa-shoe-prints" style="font-size:8px"></i> Sport';
+      sportBadge.innerHTML = '<i class="fa-solid fa-shoe-prints" style="font-size:8px"></i> Add your sport';
     }
 
     // Update plan pill
@@ -3499,12 +3530,8 @@
     // Show/hide bio based on whether it exists
     const bio = document.getElementById('spBio');
     if (bio) {
-      if (profile.bio) {
-        bio.textContent = profile.bio;
-        bio.style.display = 'block';
-      } else {
-        bio.style.display = 'none';
-      }
+      bio.textContent = profile.bio || 'Complete your profile';
+      bio.style.display = 'block';
     }
 
     // Show/hide info strip based on user type and available data
