@@ -63,7 +63,8 @@
       "spopeerUser",
       "spopeer_loggedIn",
       "user",
-      "_profileLastUpdated_"
+      "_profileLastUpdated_",
+      "spopeerToken"
     ].forEach((key) => localStorage.removeItem(key));
   }
 
@@ -231,7 +232,11 @@
       method: "POST",
       body: JSON.stringify(payload)
     });
-    // Store user profile (not token) for UI — auth is cookie-based now
+    // Store token for Bearer auth (used by upload requests)
+    if (data && data.token) {
+      localStorage.setItem("spopeerToken", data.token);
+    }
+    // Store user profile for UI — auth is cookie-based
     const user = unwrapUser(data);
     if (user) {
       setUser(user, "api-login");
@@ -244,6 +249,10 @@
       method: "POST",
       body: JSON.stringify(payload)
     });
+    // Store token for Bearer auth (used by upload requests)
+    if (data && data.token) {
+      localStorage.setItem("spopeerToken", data.token);
+    }
     const user = unwrapUser(data);
     if (user) {
       setUser(user, "api-signup");
@@ -261,7 +270,7 @@
   }
 
   async function getProfile() {
-    const data = await request("/api/profile/me");
+    const data = await request("/api/users/me");
     const user = unwrapUser(data);
     if (user) {
       setUser(user, "api-profile");
@@ -269,8 +278,12 @@
     return data;
   }
 
+  async function getCurrentProfile() {
+    return getProfile();
+  }
+
   async function updateProfile(payload) {
-    const data = await request("/api/profile/me", {
+    const data = await request("/api/users/me", {
       method: "PATCH",
       body: JSON.stringify(payload)
     });
@@ -281,21 +294,31 @@
     return data;
   }
 
+  async function updateCurrentProfile(payload) {
+    return updateProfile(payload);
+  }
+
   async function uploadAvatar(file) {
     const formData = new FormData();
     formData.append("avatar", file);
+    const token = localStorage.getItem("spopeerToken");
+    const extraHeaders = token ? { "Authorization": "Bearer " + token } : {};
     return request("/api/users/avatar", {
       method: "POST",
-      body: formData
+      body: formData,
+      headers: extraHeaders
     });
   }
 
   async function uploadCover(file) {
     const formData = new FormData();
     formData.append("cover", file);
+    const token = localStorage.getItem("spopeerToken");
+    const extraHeaders = token ? { "Authorization": "Bearer " + token } : {};
     return request("/api/users/cover", {
       method: "POST",
-      body: formData
+      body: formData,
+      headers: extraHeaders
     });
   }
 
@@ -319,7 +342,9 @@
     login,
     me,
     getProfile,
+    getCurrentProfile,
     updateProfile,
+    updateCurrentProfile,
     uploadAvatar,
     uploadCover,
     saveProfile: updateProfile,

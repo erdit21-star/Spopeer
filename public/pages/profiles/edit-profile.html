@@ -2204,163 +2204,180 @@ if (window.profileRuntime) {
   });
 
   // ── Pre-fill ──
-  setVal('displayNameInput', ud.displayName);
-  setVal('fullNameInput', ud.name || ((ud.firstName||'') + ' ' + (ud.lastName||'')).trim());
-  setVal('usernameInput', ud.username || '');
-  setVal('dobInput', ud.dateOfBirth);
-  setSel('genderInput', ud.gender);
-  setVal('nationalityInput', ud.nationality);
-  setVal('locationInput', ud.location);
-  setVal('bioInput', ud.bio);
-  setVal('contactEmailInput', ud.contactEmail);
-  setVal('contactPhoneInput', ud.contactPhone);
-  setVal('contactAddressInput', ud.contactAddress);
+  function hydrateFormFields(p) {
+    if (!p) return;
+    setVal('displayNameInput', p.displayName);
+    setVal('fullNameInput', p.name || ((p.firstName||'') + ' ' + (p.lastName||'')).trim());
+    setVal('usernameInput', p.username || '');
+    setVal('dobInput', p.dateOfBirth);
+    setSel('genderInput', p.gender);
+    setVal('nationalityInput', p.nationality);
+    setVal('locationInput', p.location);
+    setVal('bioInput', p.bio);
+    setVal('contactEmailInput', p.contactEmail);
+    setVal('contactPhoneInput', p.contactPhone);
+    setVal('contactAddressInput', p.contactAddress);
 
-  // Athlete fields
-  setSel('primarySportInput', ud.primarySport || ud.sport);
-  setSel('playingLevelInput', ud.playingLevel || ud.sportsLevel);
-  setVal('positionInput', ud.position);
-  setVal('currentTeamInput', ud.currentTeam);
-  setVal('sportsYearsInput', ud.sportsYears);
-  setVal('achievementsInput', ud.achievements);
-  setSel('highestLevelInput', ud.highestLevelAchieved);
-  var stats = ud.stats || {};
-  setVal('statGoals', stats.goalsOrPoints);
-  setVal('statAssists', stats.assists);
-  setVal('statApps', stats.appearances);
-  setSel('trainingDaysInput', ud.trainingDays);
-  setVal('trainingHoursInput', ud.trainingHours);
-  setVal('trainingLocationInput', ud.trainingLocation);
-  setVal('trainingInput', ud.trainingRoutine);
-  setSel('availabilityInput', ud.availability);
-  setVal('coachesTrainersInput', ud.coachesTrainers);
-  if (ud.trainingFocus && Array.isArray(ud.trainingFocus)) {
-    ud.trainingFocus.forEach(function(f) { var c = document.getElementById('focus_' + f); if (c) c.checked = true; });
-  }
-  if (ud.goals && Array.isArray(ud.goals)) {
-    ud.goals.forEach(function(g) { var c = document.getElementById('goal_' + g); if (c) c.checked = true; });
-  }
-  // Physical
-  setVal('heightInput', ud.height);
-  setVal('weightInput', ud.weight);
-  setVal('chestInput', ud.chest);
-  setVal('waistInput', ud.waist);
-  setVal('hipsInput', ud.hips);
-  setSel('eyeColorInput', ud.eyeColor);
-  setSel('hairColorInput', ud.hairColor);
-  // Competition
-  setVal('upcomingEventsInput', ud.upcomingEvents);
-  setVal('competitionHistoryInput', ud.competitionHistory);
-  setVal('teamInfoInput', ud.teamInfo);
-  // Health
-  setVal('injuryHistoryInput', ud.injuryHistory);
-  setVal('currentInjuriesInput', ud.currentInjuries);
-  setVal('medicalHistoryInput', ud.medicalHistory);
-  setVal('nutritionDietInput', ud.nutritionDiet);
+    // Athlete fields
+    setSel('primarySportInput', p.primarySport || p.sport);
+    setSel('playingLevelInput', p.playingLevel || p.sportsLevel);
+    setVal('positionInput', p.position);
+    setVal('currentTeamInput', p.currentTeam);
+    setVal('sportsYearsInput', p.sportsYears);
+    setVal('achievementsInput', p.achievements);
+    setSel('highestLevelInput', p.highestLevelAchieved);
+    var stats = p.stats || {};
+    setVal('statGoals', stats.goalsOrPoints);
+    setVal('statAssists', stats.assists);
+    setVal('statApps', stats.appearances);
+    setSel('trainingDaysInput', p.trainingDays);
+    setVal('trainingHoursInput', p.trainingHours);
+    setVal('trainingLocationInput', p.trainingLocation);
+    setVal('trainingInput', p.trainingRoutine);
+    setSel('availabilityInput', p.availability);
+    setVal('coachesTrainersInput', p.coachesTrainers);
+    if (p.trainingFocus && Array.isArray(p.trainingFocus)) {
+      p.trainingFocus.forEach(function(f) { var c = document.getElementById('focus_' + f); if (c) c.checked = true; });
+    }
+    if (p.goals && Array.isArray(p.goals)) {
+      p.goals.forEach(function(g) { var c = document.getElementById('goal_' + g); if (c) c.checked = true; });
+    }
+    // Physical
+    setVal('heightInput', p.height);
+    setVal('weightInput', p.weight);
+    setVal('chestInput', p.chest);
+    setVal('waistInput', p.waist);
+    setVal('hipsInput', p.hips);
+    setSel('eyeColorInput', p.eyeColor);
+    setSel('hairColorInput', p.hairColor);
+    // Competition
+    setVal('upcomingEventsInput', p.upcomingEvents);
+    setVal('competitionHistoryInput', p.competitionHistory);
+    setVal('teamInfoInput', p.teamInfo);
+    // Health
+    setVal('injuryHistoryInput', p.injuryHistory);
+    setVal('currentInjuriesInput', p.currentInjuries);
+    setVal('medicalHistoryInput', p.medicalHistory);
+    setVal('nutritionDietInput', p.nutritionDiet);
 
-  // Coach fields
-  setSel('coachSportInput', ud.primarySport || ud.sport);
-  setVal('specializationInput', ud.specialization);
-  setVal('experienceInput', ud.experience);
-  setVal('coachTeamInput', ud.currentTeam);
-  setVal('coachEducationInput', ud.coachEducation);
-  setSel('coachingStyleInput', ud.coachingStyle);
-  setVal('philosophyInput', ud.coachingPhilosophy);
-  setVal('teamsCoached', ud.teamsCoached);
-  setVal('coachAchievementsInput', ud.coachAchievements);
-  setVal('certificationsInput', ud.certifications);
-  setVal('trainingPlansInput', ud.trainingPlans);
-  setVal('playerDevelopmentInput', ud.playerDevelopment);
-  setVal('techniquesMethodsInput', ud.techniquesMethods);
-  setVal('teamManagementInput', ud.teamManagement);
-  setVal('rosterManagementInput', ud.rosterManagement);
-  setVal('playerSelectionInput', ud.playerSelection);
+    // Coach fields
+    setSel('coachSportInput', p.primarySport || p.sport);
+    setVal('specializationInput', p.specialization);
+    setVal('experienceInput', p.experience);
+    setVal('coachTeamInput', p.currentTeam);
+    setVal('coachEducationInput', p.coachEducation);
+    setSel('coachingStyleInput', p.coachingStyle);
+    setVal('philosophyInput', p.coachingPhilosophy);
+    setVal('teamsCoached', p.teamsCoached);
+    setVal('coachAchievementsInput', p.coachAchievements);
+    setVal('certificationsInput', p.certifications);
+    setVal('trainingPlansInput', p.trainingPlans);
+    setVal('playerDevelopmentInput', p.playerDevelopment);
+    setVal('techniquesMethodsInput', p.techniquesMethods);
+    setVal('teamManagementInput', p.teamManagement);
+    setVal('rosterManagementInput', p.rosterManagement);
+    setVal('playerSelectionInput', p.playerSelection);
 
-  // Club fields
-  setVal('clubNameInput', ud.clubName || ud.name);
-  setSel('clubSportInput', ud.primarySport || ud.sport);
-  setVal('foundedYearInput', ud.foundedYear);
-  setVal('teamsAndDivisionsInput', ud.teamsAndDivisions);
-  setVal('facilitiesInput', ud.facilities);
-  setVal('clubEmailInput', ud.contactEmail);
-  setVal('clubPhoneInput', ud.clubPhone);
-  setVal('clubAddressInput', ud.clubAddress);
-  setVal('clubWebsiteInput', ud.website);
-  setVal('coachingStaffInput', ud.coachingStaff);
-  setVal('managementStaffInput', ud.managementStaff);
-  setVal('clubPhilosophyInput', ud.clubPhilosophy);
-  setVal('clubBudgetInput', ud.clubBudget);
-  setVal('sponsorshipInput', ud.sponsorship);
-  setVal('revenueStreamsInput', ud.revenueStreams);
-  setVal('youthProgramsInput', ud.youthPrograms);
-  setVal('talentRecruitmentInput', ud.talentRecruitment);
-  setVal('scholarshipsInput', ud.scholarships);
-  setVal('communityOutreachInput', ud.communityOutreach);
-  setVal('socialResponsibilityInput', ud.socialResponsibility);
-  setVal('charitablePartnershipsInput', ud.charitablePartnerships);
-  setVal('trainingFieldsInput', ud.trainingFields);
-  setVal('gymFacilitiesInput', ud.gymFacilities);
-  setVal('lockerRoomsInput', ud.lockerRooms);
-  setVal('otherFacilitiesInput', ud.otherFacilities);
-  setVal('equipmentListInput', ud.equipmentList);
-  setVal('maintenanceScheduleInput', ud.maintenanceSchedule);
-  setVal('clubLicensingInput', ud.clubLicensing);
-  setVal('clubComplianceInput', ud.clubCompliance);
+    // Club fields
+    setVal('clubNameInput', p.clubName || p.name);
+    setSel('clubSportInput', p.primarySport || p.sport);
+    setVal('foundedYearInput', p.foundedYear);
+    setVal('teamsAndDivisionsInput', p.teamsAndDivisions);
+    setVal('facilitiesInput', p.facilities);
+    setVal('clubEmailInput', p.contactEmail);
+    setVal('clubPhoneInput', p.clubPhone);
+    setVal('clubAddressInput', p.clubAddress);
+    setVal('clubWebsiteInput', p.website);
+    setVal('coachingStaffInput', p.coachingStaff);
+    setVal('managementStaffInput', p.managementStaff);
+    setVal('clubPhilosophyInput', p.clubPhilosophy);
+    setVal('clubBudgetInput', p.clubBudget);
+    setVal('sponsorshipInput', p.sponsorship);
+    setVal('revenueStreamsInput', p.revenueStreams);
+    setVal('youthProgramsInput', p.youthPrograms);
+    setVal('talentRecruitmentInput', p.talentRecruitment);
+    setVal('scholarshipsInput', p.scholarships);
+    setVal('communityOutreachInput', p.communityOutreach);
+    setVal('socialResponsibilityInput', p.socialResponsibility);
+    setVal('charitablePartnershipsInput', p.charitablePartnerships);
+    setVal('trainingFieldsInput', p.trainingFields);
+    setVal('gymFacilitiesInput', p.gymFacilities);
+    setVal('lockerRoomsInput', p.lockerRooms);
+    setVal('otherFacilitiesInput', p.otherFacilities);
+    setVal('equipmentListInput', p.equipmentList);
+    setVal('maintenanceScheduleInput', p.maintenanceSchedule);
+    setVal('clubLicensingInput', p.clubLicensing);
+    setVal('clubComplianceInput', p.clubCompliance);
 
-  // Supportive fields
-  setVal('profTitleInput', ud.professionalTitle || ud.specialization);
-  setVal('companyNameInput', ud.companyName);
-  setSel('specializationFieldInput', ud.specializationField);
-  setVal('profExperienceInput', ud.profExperience);
-  setVal('profEducationInput', ud.profEducation);
-  setVal('servicesInput', ud.services);
-  setVal('clienteleInput', ud.clientele);
-  setVal('credentialsInput', ud.credentials || ud.certifications);
-  setVal('profEmailInput', ud.contactEmail);
-  setSel('preferredContactInput', ud.preferredContact);
-  setVal('availabilityHoursInput', ud.availabilityHours);
-  setVal('communicationToolsInput', ud.communicationTools);
-  setVal('clientReviewsInput', ud.clientReviews);
-  setVal('professionalRefsInput', ud.professionalRefs);
-  setVal('feeStructureInput', ud.feeStructure);
-  setVal('paymentMethodsInput', ud.paymentMethods);
-  setVal('billingInfoInput', ud.billingInfo);
-  setVal('profLicensingInput', ud.profLicensing);
-  setVal('profComplianceInput', ud.profCompliance);
+    // Supportive fields
+    setVal('profTitleInput', p.professionalTitle || p.specialization);
+    setVal('companyNameInput', p.companyName);
+    setSel('specializationFieldInput', p.specializationField);
+    setVal('profExperienceInput', p.profExperience);
+    setVal('profEducationInput', p.profEducation);
+    setVal('servicesInput', p.services);
+    setVal('clienteleInput', p.clientele);
+    setVal('credentialsInput', p.credentials || p.certifications);
+    setVal('profEmailInput', p.contactEmail);
+    setSel('preferredContactInput', p.preferredContact);
+    setVal('availabilityHoursInput', p.availabilityHours);
+    setVal('communicationToolsInput', p.communicationTools);
+    setVal('clientReviewsInput', p.clientReviews);
+    setVal('professionalRefsInput', p.professionalRefs);
+    setVal('feeStructureInput', p.feeStructure);
+    setVal('paymentMethodsInput', p.paymentMethods);
+    setVal('billingInfoInput', p.billingInfo);
+    setVal('profLicensingInput', p.profLicensing);
+    setVal('profComplianceInput', p.profCompliance);
 
-  // Media
-  var ml = ud.mediaLinks || {};
-  setVal('highlightInput', ml.highlightVideo || ud.highlightVideo);
-  setVal('instagramInput', ml.instagram || ud.instagram);
-  setVal('youtubeInput', ml.youtubeChannel || ud.youtube);
-  setVal('linkedinInput', ml.linkedIn || ud.linkedin);
-  setVal('websiteInput', ml.website || ud.website);
+    // Media
+    var ml = p.mediaLinks || {};
+    setVal('highlightInput', ml.highlightVideo || p.highlightVideo);
+    setVal('instagramInput', ml.instagram || p.instagram);
+    setVal('youtubeInput', ml.youtubeChannel || p.youtube);
+    setVal('linkedinInput', ml.linkedIn || p.linkedin);
+    setVal('websiteInput', ml.website || p.website);
 
-  // Privacy
-  setSel('profileVisibilityInput', ud.profileVisibility);
-  var sp = ud.sharingPreferences || {};
-  if (sp.contact === false) { var sc = document.getElementById('share_contact'); if(sc) sc.checked = false; }
-  if (sp.stats === false) { var ss = document.getElementById('share_stats'); if(ss) ss.checked = false; }
-  if (sp.media === false) { var sm = document.getElementById('share_media'); if(sm) sm.checked = false; }
-  if (sp.searchable === false) { var sx = document.getElementById('share_searchable'); if(sx) sx.checked = false; }
-  if (sp.messaging === true) { var sg = document.getElementById('share_messaging'); if(sg) sg.checked = true; }
+    // Privacy
+    setSel('profileVisibilityInput', p.profileVisibility);
+    var sp = p.sharingPreferences || {};
+    if (sp.contact === false) { var sc = document.getElementById('share_contact'); if(sc) sc.checked = false; }
+    if (sp.stats === false) { var ss = document.getElementById('share_stats'); if(ss) ss.checked = false; }
+    if (sp.media === false) { var sm = document.getElementById('share_media'); if(sm) sm.checked = false; }
+    if (sp.searchable === false) { var sx = document.getElementById('share_searchable'); if(sx) sx.checked = false; }
+    if (sp.messaging === true) { var sg = document.getElementById('share_messaging'); if(sg) sg.checked = true; }
 
-  // Load saved card style
-  (function() {
-    var saved = ud.profileCardStyle || 'card-stack';
-    var opts = document.querySelectorAll('.card-style-option');
-    opts.forEach(function(opt) {
+    // Card style
+    var cardSaved = p.profileCardStyle || 'card-stack';
+    document.querySelectorAll('.card-style-option').forEach(function(opt) {
       var radio = opt.querySelector('input[type="radio"]');
-      if (opt.dataset.value === saved) {
+      if (opt.dataset.value === cardSaved) {
         opt.classList.add('selected');
         if (radio) radio.checked = true;
       } else {
         opt.classList.remove('selected');
       }
     });
-  })();
 
-  // Card style picker — visual selection
+    // Avatar preview
+    if (p.avatarUrl) {
+      var avEl = document.getElementById('avatarPreviewEl');
+      if (avEl) avEl.innerHTML = '<img src="'+p.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    }
+
+    // Cover strip
+    if (p.coverPhotoUrl || p.coverUrl) {
+      var csEl = document.getElementById('coverStrip');
+      var coverSrc = p.coverPhotoUrl || p.coverUrl;
+      if (csEl) csEl.style.backgroundImage = 'url('+coverSrc+')';
+    }
+  }
+  // Expose for re-hydration after backend fetch
+  window._hydrateEditProfileFormFields = hydrateFormFields;
+
+  hydrateFormFields(ud);
+
+  // Card style picker — visual selection (click interaction)
   document.addEventListener('click', function(e) {
     var opt = e.target.closest('.card-style-option');
     if (!opt) return;
@@ -2373,19 +2390,6 @@ if (window.profileRuntime) {
     var radio = opt.querySelector('input[type="radio"]');
     if (radio) radio.checked = true;
   });
-
-  // ── Avatar preview ──
-  if (ud.avatarUrl) {
-    var av = document.getElementById('avatarPreviewEl');
-    if (av) av.innerHTML = '<img src="'+ud.avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-  }
-
-  // ── Cover strip ──
-  if (ud.coverPhotoUrl || ud.coverUrl) {
-    var cs = document.getElementById('coverStrip');
-    var coverUrl = ud.coverPhotoUrl || ud.coverUrl;
-    if (cs) cs.style.backgroundImage = 'url('+coverUrl+')';
-  }
 
   // ── Bio char counter ──
   var bioInput = document.getElementById('bioInput');
@@ -2475,12 +2479,11 @@ if (window.profileRuntime) {
         if (!window.SpopeerAPI || typeof window.SpopeerAPI.uploadAvatar !== 'function') {
           throw new Error('Avatar upload API unavailable.');
         }
+        console.log('Uploading avatar', file.name, file.type, file.size);
         var uploadResult = await window.SpopeerAPI.uploadAvatar(file);
+        console.log('Avatar upload response', uploadResult);
         var avatarUrl = (uploadResult.data && uploadResult.data.avatarUrl) || uploadResult.avatarUrl;
         if (!avatarUrl) throw new Error('Avatar upload returned no URL.');
-
-        // Persist via canonical profile endpoint when upload response has no full user payload.
-        await window.SpopeerAPI.updateProfile({ payload: { avatarUrl: avatarUrl } });
 
         var savedUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) || JSON.parse(localStorage.getItem('spopeer_user') || '{}');
         var mergedUser = Object.assign({}, savedUser, { avatarUrl: avatarUrl });
@@ -2551,8 +2554,6 @@ if (window.profileRuntime) {
         var uploadResult = await window.SpopeerAPI.uploadCover(file);
         var coverUrl = (uploadResult.data && uploadResult.data.coverPhotoUrl) || uploadResult.coverPhotoUrl;
         if (!coverUrl) throw new Error('Cover upload returned no URL.');
-
-        await window.SpopeerAPI.updateProfile({ payload: { coverPhotoUrl: coverUrl } });
 
         var savedUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) || JSON.parse(localStorage.getItem('spopeer_user') || '{}');
         var mergedUser = Object.assign({}, savedUser, { coverPhotoUrl: coverUrl, coverUrl: coverUrl });
@@ -2976,12 +2977,14 @@ if (window.profileRuntime) {
 
     try {
       var combined = buildCombinedProfileFromForm();
+      console.log('Save All payload', combined);
       var merged = await saveSection(combined);
       ud = merged;
       recalcCompletion();
       showToast('All sections saved!', 'success');
       if(window.clearProfileDirty) window.clearProfileDirty();
     } catch (_error) {
+      console.error('Save All failed:', _error);
       showToast('Could not save all sections. Please review the highlighted section.', 'error');
     } finally {
       saveAllInFlight = false;
@@ -3150,13 +3153,15 @@ if (window.profileRuntime) {
     if (!window.SpopeerAPI || typeof window.SpopeerAPI.updateProfile !== 'function') {
       throw new Error('Profile API is unavailable.');
     }
+    console.log('Saving profile payload', sanitizedOutgoing);
     try {
       var result = await window.SpopeerAPI.updateProfile({ payload: sanitizedOutgoing });
+      console.log('Save profile response', result);
       var returnedUser = normalizeSavedUserFromResponse(result);
       var saved = normalizeProfileForSave(returnedUser, Date.now());
       var existing = readStoredUserSafe();
       var merged = normalizeProfileForSave(Object.assign({}, existing, saved), saved._profileUpdatedAt || Date.now());
-      localStorage.setItem('_profileLastUpdated_', String(merged._profileUpdatedAt));
+      safeSave(merged);
       return merged;
     } catch (saveErr) {
       console.log('Edit profile save failure details', {
@@ -3302,7 +3307,21 @@ if (window.profileRuntime) {
       return;
     }
 
-    // 2. Refresh current signed-in user and bind chips
+    // 2. Fetch full profile from backend (source of truth) and re-hydrate form
+    try {
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.getCurrentProfile === 'function') {
+        await window.SpopeerAPI.getCurrentProfile();
+        var freshUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) ||
+          JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+        if (freshUser && window._hydrateEditProfileFormFields) {
+          window._hydrateEditProfileFormFields(freshUser);
+        }
+      }
+    } catch (profileErr) {
+      console.warn('Backend profile refresh failed on page load', profileErr);
+    }
+
+    // 3. Refresh current signed-in user and bind chips
     try {
       if (window.CurrentUserStore) {
         await window.CurrentUserStore.refreshCurrentUser();

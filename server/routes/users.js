@@ -330,7 +330,7 @@ router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res)
 });
 
 // ─── UPLOAD AVATAR ───
-router.post('/avatar', authenticate, requireCsrf, handleUploadMiddleware(uploadAvatar.single('avatar')), async (req, res) => {
+router.post('/avatar', authenticate, handleUploadMiddleware(uploadAvatar.single('avatar')), async (req, res) => {
   try {
     if (!req.file) {
       return fail(res, 400, 'VALIDATION', 'No file uploaded.');
@@ -355,7 +355,7 @@ router.post('/avatar', authenticate, requireCsrf, handleUploadMiddleware(uploadA
 });
 
 // ─── UPLOAD COVER PHOTO ───
-router.post('/cover', authenticate, requireCsrf, handleUploadMiddleware(uploadCover.single('cover')), async (req, res) => {
+router.post('/cover', authenticate, handleUploadMiddleware(uploadCover.single('cover')), async (req, res) => {
   try {
     if (!req.file) {
       return fail(res, 400, 'VALIDATION', 'No file uploaded.');
