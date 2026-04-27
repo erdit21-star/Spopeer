@@ -33,10 +33,13 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: 'Request body is missing. Set Content-Type: application/json header.' });
     }
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email: email.toLowerCase() }, attributes: ['id', 'email', 'password', 'role', 'firstName', 'lastName'] });
+    const user = await User.findOne({ where: { email: email.toLowerCase() }, attributes: ['id', 'email', 'password', 'role', 'firstName', 'lastName', 'emailVerified'] });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ error: 'Invalid credentials' });
+    // For MVP, do not require emailVerified. If you want to enforce, uncomment below:
+    // if (!user.emailVerified) return res.status(403).json({ error: 'Please verify your email before logging in.' });
+    await User.update({ lastLogin: new Date() }, { where: { id: user.id } });
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role } });
   } catch (err) {

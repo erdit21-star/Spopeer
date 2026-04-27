@@ -6,7 +6,7 @@
     if (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') {
       return window.CurrentUserStore.isLoggedIn();
     }
-    return localStorage.getItem('spopeer_loggedIn') === 'true' && !!localStorage.getItem('spopeer_user');
+    return !!localStorage.getItem('spopeer_token');
   }
 
   function clearLocalAuth() {
