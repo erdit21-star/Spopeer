@@ -5,7 +5,7 @@ const { OAuth2Client } = require('google-auth-library');
 const { User } = require('../models');
 const { sequelize } = require('../config/database');
 const { sendPasswordResetEmail } = require('../services/email');
-const { extractToken, getCookieOptions } = require('../middleware/auth');
+const { extractToken, getCookieOptions, clearAuthCookies } = require('../middleware/auth');
 const { JWT_SECRET } = process.env;
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -113,6 +113,16 @@ exports.googleAuth = async (req, res) => {
   } catch (err) {
     console.error('[Google Auth]', err.message);
     res.status(401).json({ error: 'Google sign-in failed. Please try again.' });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    clearAuthCookies(res);
+    return res.json({ success: true, message: 'Logged out successfully.' });
+  } catch (err) {
+    console.error('[Logout]', err.message);
+    return res.status(500).json({ success: false, error: 'Logout failed.' });
   }
 };
 
