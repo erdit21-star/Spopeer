@@ -827,7 +827,7 @@
     showToast('Data downloaded!');
   });
 
-  /* ── Delete account (demo) ── */
+  /* ── Delete account ── */
   document.getElementById('deleteAccount')?.addEventListener('click', () => {
     if (confirm('Are you sure you want to permanently delete your account? This action cannot be undone.')) {
       ['spopeer_token','spopeer_user','spopeer_loggedIn','authToken','token','user','userToken','userData'].forEach(k => localStorage.removeItem(k));

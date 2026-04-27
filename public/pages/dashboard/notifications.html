@@ -475,7 +475,7 @@
     renderNotifications(document.querySelector('.ftab.active')?.dataset.filter || 'all');
   });
 
-  // Never seed demo notifications in production.
+  // Never seed notifications locally in production.
 
   // Mark as seen when visiting notifications page
   setLastSeen(Date.now());

@@ -427,59 +427,24 @@
     let allNotifications = [];
     let currentFilter = 'all';
 
-    // Mock notification data - in production, these would come from the server
+    // Build notifications from real marketplace activity only.
     async function generateNotifications() {
       const receivedInquiries = await MarketplaceService.getReceivedInquiries().catch(() => []);
-      const sentInquiries = await MarketplaceService.getSentInquiries().catch(() => []);
 
       const notifications = [];
 
       // Add inquiry notifications
       for (const inquiry of receivedInquiries.slice(0, 5)) {
-        const dayAgo = Math.floor(Math.random() * 7) + 1;
         notifications.push({
           id: `inquiry-${inquiry.id}`,
           type: 'inquiries',
           title: 'New Inquiry Received',
-          description: 'Someone is interested in your listing',
-          time: `${dayAgo} day${dayAgo > 1 ? 's' : ''} ago`,
+          description: inquiry.message ? inquiry.message.substring(0, 80) : 'Someone is interested in your listing',
+          time: 'Recently',
           unread: inquiry.status === 'open',
           action: { text: 'View Inquiry', link: '/pages/marketplace/messages.html' }
         });
       }
-
-      // Add activity notifications (views, inquiries, etc)
-      const activityNotifications = [
-        {
-          id: 'activity-1',
-          type: 'activity',
-          title: 'Listing Views Updated',
-          description: 'Your "Sports Equipment" listing has been viewed 12 times in the last 24 hours',
-          time: '2 hours ago',
-          unread: true,
-          action: { text: 'View Details', link: '/pages/marketplace/my-listings.html' }
-        },
-        {
-          id: 'activity-2',
-          type: 'activity',
-          title: 'Popular Listing',
-          description: 'Your listing is trending! It\'s in the top 10 most viewed items',
-          time: '5 hours ago',
-          unread: false,
-          action: { text: 'View Marketplace', link: '/pages/marketplace/marketplace.html' }
-        },
-        {
-          id: 'activity-3',
-          type: 'activity',
-          title: 'New Saved Listing',
-          description: 'A buyer has saved your "Training Package" listing',
-          time: '1 day ago',
-          unread: false,
-          action: null
-        }
-      ];
-
-      notifications.push(...activityNotifications);
 
       // Add message notifications (for unread messages)
       const conversations = await MarketplaceService.getConversations().catch(() => []);

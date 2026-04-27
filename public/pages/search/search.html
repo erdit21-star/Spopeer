@@ -1199,7 +1199,7 @@
       });
 
       /* connect toggle — wire to FollowManager (uses numeric ids)
-         Replaced fake toggle with real API calls. */
+        Uses real API calls. */
       list.querySelectorAll('.btn-connect').forEach(btn => {
         btn.addEventListener('click', async function () {
           const userId = this.dataset.id;

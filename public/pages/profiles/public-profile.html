@@ -692,7 +692,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     console.log('Loaded own profile from localStorage');
   }
 
-  // No demo/sample fallback in production.
+  // No sample fallback in production.
   if(!payload||!Object.keys(payload).length){
     payload={};
     profileFound=false;

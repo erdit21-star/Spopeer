@@ -640,24 +640,17 @@
     let currentFilter = 'all';
     let selectedFlagId = null;
 
-    // Mock flagged listings data
+    // Build moderation list from listings with real report metadata.
     async function generateFlaggedListings() {
       try {
         const response = await fetch('/api/marketplace/listings?limit=100');
         const data = await response.json();
         const listings = data.listings || [];
 
-        // Generate mock flags
-        const reasons = [
-          'Prohibited content',
-          'Misleading pricing',
-          'Fake reviews',
-          'Copyright violation',
-          'Inappropriate images',
-          'Spam listing'
-        ];
-
-        const flags = listings.slice(0, 15).map((listing, i) => ({
+        const flags = listings
+          .filter((listing) => Number(listing.flagCount || listing.reportCount || 0) > 0 || !!listing.moderationStatus)
+          .slice(0, 50)
+          .map((listing) => ({
           id: listing.id,
           listingId: listing.id,
           title: listing.title,
@@ -665,17 +658,17 @@
           seller: listing.seller,
           price: listing.price,
           currency: listing.currency,
-          reason: reasons[i % reasons.length],
-          reportedBy: `User ${Math.floor(Math.random() * 10000)}`,
-          reportedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-          status: Math.random() > 0.6 ? 'reviewed' : (Math.random() > 0.5 ? 'pending' : 'approved'),
-          flagCount: Math.floor(Math.random() * 5) + 1,
+          reason: listing.flagReason || listing.reportReason || 'User report',
+          reportedBy: listing.reportedBy || 'Marketplace user',
+          reportedAt: listing.flaggedAt || listing.updatedAt || listing.createdAt || new Date().toISOString(),
+          status: (listing.moderationStatus || (Number(listing.flagCount || listing.reportCount || 0) > 0 ? 'pending' : 'reviewed')).toLowerCase(),
+          flagCount: Number(listing.flagCount || listing.reportCount || 0) || 1,
           category: 'suspected-violation'
         }));
 
         return flags;
       } catch (error) {
-        console.error('Error generating flags:', error);
+        console.error('Error loading flagged listings:', error);
         return [];
       }
     }
@@ -693,7 +686,7 @@
     function updateStats() {
       document.getElementById('totalFlagged').textContent = allFlags.length;
       document.getElementById('pendingReview').textContent = allFlags.filter(f => f.status === 'pending').length;
-      document.getElementById('suspendedSellers').textContent = Math.floor(allFlags.length * 0.15);
+      document.getElementById('suspendedSellers').textContent = allFlags.filter(f => f.status === 'removed').length;
     }
 
     function renderTable() {
@@ -703,7 +696,7 @@
         : allFlags.filter(f => {
             if (currentFilter === 'pending') return f.status === 'pending';
             if (currentFilter === 'reviewed') return f.status !== 'pending';
-            if (currentFilter === 'suspicious-seller') return Math.random() > 0.7;
+            if (currentFilter === 'suspicious-seller') return Number(f.flagCount || 0) >= 3;
             return true;
           });
 

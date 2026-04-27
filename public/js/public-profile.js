@@ -197,7 +197,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     }
   }
 
-  // Compatibility fallback for older frontend mocks/handlers: /api/users/:id
+  // Compatibility fallback for older frontend handlers: /api/users/:id
   if(!profileFound && userId){
     try {
       const r = await fetch(`/api/users/${encodeURIComponent(userId)}`, { headers: _headers, credentials: 'include' });
@@ -240,7 +240,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     }
   }
 
-  // No demo/sample fallback in production.
+  // No sample fallback in production.
   if(!payload||!Object.keys(payload).length){
     payload={};
     profileFound=false;

@@ -388,10 +388,11 @@
       const memberSince = new Date(sellerData.seller.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
       document.getElementById('sellerSince').textContent = `Member since ${memberSince}`;
 
-      // Calculate rating from inquiries (simplified)
-      const avgRating = 4.8 + Math.random() * 0.2;
-      document.getElementById('sellerRating').textContent = avgRating.toFixed(1);
-      document.getElementById('sellerSold').textContent = Math.floor(Math.random() * 150 + 50);
+      // Use seller metrics from API when available.
+      const avgRating = Number(sellerData.seller?.averageRating || sellerData.seller?.rating || 0);
+      const totalSold = Number(sellerData.seller?.soldCount || sellerData.seller?.totalSales || sellerData.seller?.completedSales || 0);
+      document.getElementById('sellerRating').textContent = avgRating > 0 ? avgRating.toFixed(1) : 'N/A';
+      document.getElementById('sellerSold').textContent = totalSold > 0 ? String(totalSold) : '0';
 
       // Render active listings grid
       const grid = document.getElementById('sellerListingsGrid');
@@ -415,7 +416,7 @@
         grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--muted); font-size: 12px;">No active listings</p>';
       }
 
-      // Do not render mock reviews in production.
+      // Reviews endpoint is not available yet.
       const reviewsList = document.getElementById('sellerReviewsList');
       reviewsList.innerHTML = '';
       reviewsList.innerHTML = '<div class="no-reviews">No reviews available</div>';
