@@ -5,6 +5,9 @@ const { JWT_SECRET } = process.env;
 
 exports.register = async (req, res) => {
   try {
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Request body is missing. Set Content-Type: application/json header.' });
+    }
     const { firstName, lastName, email, password, role } = req.body;
     const hash = await bcrypt.hash(password, 12);
     const user = await User.create({ firstName, lastName, email: email.toLowerCase(), password: hash, role });
@@ -20,6 +23,9 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Request body is missing. Set Content-Type: application/json header.' });
+    }
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email: email.toLowerCase() }, attributes: ['id', 'email', 'password', 'role', 'firstName', 'lastName'] });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
