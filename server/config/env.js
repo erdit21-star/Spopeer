@@ -6,7 +6,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const REQUIRED = ['JWT_SECRET'];
-const REQUIRED_IN_PRODUCTION = ['APP_URL', 'FRONTEND_URL', 'RESEND_API_KEY'];
+const REQUIRED_IN_PRODUCTION = ['APP_URL', 'FRONTEND_URL']; // RESEND_API_KEY is Phase 2 (email)
 
 // Used in validate() below
 const _RECOMMENDED = [

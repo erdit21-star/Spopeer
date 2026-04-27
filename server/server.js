@@ -21,8 +21,8 @@ initSocket(server);
 // ─── START SERVER ───
 async function startServer() {
   try {
-    // Validate email config (throws in production if RESEND_API_KEY missing)
-    assertEmailReady();
+    // Validate email config — non-blocking for Phase 1 (email is Phase 2)
+    try { assertEmailReady(); } catch (e) { console.warn('⚠️  Email not configured:', e.message); }
 
     // Test database connection
     await testConnection();
