@@ -327,8 +327,15 @@
         if (data.token) localStorage.setItem('token', data.token);
         window.location.href = '/feed.html';
       } catch (err) {
+        console.error('[Google Auth]', err);
         const errorBox = document.getElementById('signupError');
-        if (errorBox) { errorBox.textContent = err.message; errorBox.style.display = 'block'; }
+        if (errorBox) {
+          errorBox.textContent = err.message || 'Google sign-in failed. Please try email/password.';
+          errorBox.style.display = 'block';
+          errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          alert('Google sign-in error: ' + (err.message || 'Unknown error'));
+        }
       }
     }
   </script>
