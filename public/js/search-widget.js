@@ -144,7 +144,7 @@ async function fetchSuggestions(query, suggestionsBox) {
       searchRequestState.controller.abort();
     }
     searchRequestState.controller = new AbortController();
-    console.log('Fetching suggestions from:', url);
+    // ...existing code...
     const res = await fetch(url, { signal: searchRequestState.controller.signal });
     
     if (!res.ok) {
@@ -156,7 +156,7 @@ async function fetchSuggestions(query, suggestionsBox) {
     
     const data = await res.json();
     setCachedSearchResult(url, data);
-    console.log('Search results:', data);
+    // ...existing code...
     displaySuggestions(data.results || [], suggestionsBox, query);
   } catch (err) {
     if (err.name === 'AbortError') return;

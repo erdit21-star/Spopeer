@@ -37,7 +37,7 @@ const ProfileSyncService = {
    * Call this on every page that displays profile info
    */
   init() {
-    console.log('ProfileSyncService: Initializing...');
+    // ...existing code...
     
     // Listen for storage changes from other tabs/windows
     window.addEventListener('storage', this.onStorageChange.bind(this));
@@ -52,7 +52,7 @@ const ProfileSyncService = {
     this.wireCoverUpload();
     this.syncShareButton();
     
-    console.log('ProfileSyncService: Initialized successfully');
+    // ...existing code...
   },
   
   /**
@@ -67,7 +67,7 @@ const ProfileSyncService = {
       if (event.key === this.PROFILE_UPDATE_KEY) {
         this.lastUpdateToken = event.newValue;
       }
-      console.log('ProfileSyncService: Detected profile change from storage event');
+      // ...existing code...
       this.broadcastProfileUpdate();
     }
   },
@@ -79,7 +79,7 @@ const ProfileSyncService = {
     if (event?.detail?.source === 'ProfileSyncService') {
       return;
     }
-    console.log('ProfileSyncService: Detected profile updated event', event.detail);
+    // ...existing code...
     this.broadcastProfileUpdate();
   },
 
@@ -134,7 +134,7 @@ const ProfileSyncService = {
    * Save profile to localStorage and broadcast update
    */
   async saveProfile(profileData) {
-    console.log('ProfileSyncService: Saving profile', profileData);
+    // ...existing code...
 
     const currentProfile = this.getProfile() || {};
     let mergedProfile = this.normalizeProfile({ ...currentProfile, ...(profileData || {}) }, Date.now());
@@ -185,7 +185,7 @@ const ProfileSyncService = {
    * Update all profile-related elements on the page
    */
   updatePageElements(profile) {
-    console.log('ProfileSyncService: Updating page elements with profile:', profile);
+    // ...existing code...
     
     if (!profile) return;
     
@@ -247,7 +247,7 @@ const ProfileSyncService = {
       }
     });
     
-    console.log('ProfileSyncService: Page elements updated successfully');
+    // ...existing code...
   },
 
   /**

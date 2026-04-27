@@ -178,7 +178,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         console.warn('Profile fetch returned', r.status, await r.text().catch(()=>''));
       }
     }catch(e){
-      console.log('API users fetch failed:', e.message);
+      // ...existing code...
     }
   }
 
@@ -190,10 +190,10 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         const d=await r.json();
         payload=(d.data && d.data.user) || d.data || d.user || d.payload || {};
         profileFound=true;
-        console.log('Loaded own profile via /api/auth/me');
+        // ...existing code...
       }
     }catch(e){
-      console.log('/api/auth/me fallback failed:', e.message);
+      // ...existing code...
     }
   }
 
@@ -201,7 +201,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   if(!profileFound && isOwnProfile && currentUser && currentUser.email){
     payload={...currentUser};
     profileFound=true;
-    console.log('Loaded own profile from localStorage');
+    // ...existing code...
   }
 
   // No demo/sample fallback in production.

@@ -29,7 +29,7 @@ const CRITICAL_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Caching critical assets');
+      // ...existing code...
       return cache.addAll(CRITICAL_ASSETS);
     })
   );
@@ -50,7 +50,7 @@ self.addEventListener('activate', (event) => {
                    cacheName !== API_CACHE;
           })
           .map((cacheName) => {
-            console.log('Deleting old cache:', cacheName);
+            // ...existing code...
             return caches.delete(cacheName);
           })
       );
