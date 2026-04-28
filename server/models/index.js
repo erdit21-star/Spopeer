@@ -29,6 +29,10 @@ const Report = require('./Report')(sequelize);
 const Block = require('./Block')(sequelize);
 const AdminAuditLog = require('./AdminAuditLog')(sequelize);
 const RefreshSession = require('./RefreshSession')(sequelize);
+const Event = require('./Event')(sequelize);
+const EventResponse = require('./EventResponse')(sequelize);
+const SavedListing = require('./SavedListing')(sequelize);
+const Inquiry = require('./Inquiry')(sequelize);
 
 // ─── ASSOCIATIONS ───
 
@@ -176,6 +180,10 @@ module.exports = {
   Report,
   Block,
   AdminAuditLog,
-  RefreshSession
+  RefreshSession,
+  Event,
+  EventResponse,
+  SavedListing,
+  Inquiry
 };
 

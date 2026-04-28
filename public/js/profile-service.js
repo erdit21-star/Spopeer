@@ -11,7 +11,7 @@ class ProfileService {
     this.isLoading = false;
     this.observers = [];
     this.cacheKey = 'spopeer_profile_cache';
-    this.cacheTTL = 60000; // 1 minute cache
+    this.cacheTTL = 10000; // 10 second cache
     this.lastFetch = 0;
 
     // Listen for profile updates

@@ -8,28 +8,9 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
-const { sequelize } = require('../models');
-const { DataTypes } = require('sequelize');
+const { Event, EventResponse } = require('../models');
 const { createEventSchema, validate } = require('../utils/schemas');
 const logger = require('../utils/logger');
-
-// Define Event model inline (lightweight — can be moved to models/ later)
-const Event = sequelize.define('Event', {
-  title: { type: DataTypes.STRING, allowNull: false },
-  description: { type: DataTypes.TEXT },
-  sport: { type: DataTypes.STRING },
-  location: { type: DataTypes.STRING },
-  startDate: { type: DataTypes.DATE, allowNull: false },
-  endDate: { type: DataTypes.DATE },
-  createdBy: { type: DataTypes.INTEGER, allowNull: false },
-  status: { type: DataTypes.STRING, defaultValue: 'upcoming' }
-}, { tableName: 'events', timestamps: true });
-
-const EventResponse = sequelize.define('EventResponse', {
-  eventId: { type: DataTypes.INTEGER, allowNull: false },
-  userId: { type: DataTypes.INTEGER, allowNull: false },
-  status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'pending' }
-}, { tableName: 'event_responses', timestamps: true });
 
 // ─── LIST EVENTS ───
 const { ok, created, fail } = require('../utils/response');

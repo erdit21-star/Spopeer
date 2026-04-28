@@ -21,26 +21,10 @@
  */
 const express = require('express');
 const router = express.Router();
-const { Listing, User } = require('../models');
+const { Listing, User, SavedListing, Inquiry } = require('../models');
 const { authenticate } = require('../middleware/auth');
 const { Op } = require('sequelize');
-const { sequelize } = require('../models');
-const { DataTypes } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
-
-// ─── Lightweight models for sub-features (move to models/ later) ───
-const SavedListing = sequelize.define('SavedListing', {
-  userId: { type: DataTypes.INTEGER, allowNull: false },
-  listingId: { type: DataTypes.INTEGER, allowNull: false }
-}, { tableName: 'saved_listings', timestamps: true });
-
-const Inquiry = sequelize.define('Inquiry', {
-  buyerId: { type: DataTypes.INTEGER, allowNull: false },
-  sellerId: { type: DataTypes.INTEGER, allowNull: false },
-  listingId: { type: DataTypes.INTEGER, allowNull: false },
-  message: { type: DataTypes.TEXT },
-  status: { type: DataTypes.STRING, defaultValue: 'pending' }
-}, { tableName: 'marketplace_inquiries', timestamps: true });
 
 // ─── SEARCH LISTINGS ───
 const { ok, created, fail } = require('../utils/response');

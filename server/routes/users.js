@@ -19,56 +19,17 @@ const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
 const { profileUpdateSchema, validate } = require('../utils/schemas');
 const logger = require('../utils/logger');
+const { pickAllowedUpdates, normalizeUser: normalizeUserUtil, PROFILE_STRING_FIELDS, SYSTEM_FIELDS } = require('../utils/profileUtils');
 
-// Full profile field allowlist — matches the fields the frontend collects.
-// Login / /me / logout are NOT rate-limited so normal usage is never blocked.
-const PROFILE_STRING_FIELDS = {
-  firstName: 100, lastName: 100, displayName: 150, username: 100,
-  sport: 100, primarySport: 100, profession: 200, bio: 2000, location: 200,
-  gender: 50, nationality: 100, contactEmail: 255, contactPhone: 100,
-  contactAddress: 500, playingLevel: 100, position: 100, currentTeam: 150,
-  achievements: 2000, profileVisibility: 50, avatarUrl: 500, coverPhotoUrl: 500,
-  role: 50
-};
 const PROFILE_JSON_FIELDS = ['stats', 'mediaLinks', 'sharingPreferences', 'visibility'];
 const PROFILE_DATE_FIELDS = ['dateOfBirth'];
 const PROFILE_BOOL_FIELDS = ['privacyPublic'];
-
-// Known columns that are NOT profile-editable — skip these in extendedProfile
-const SYSTEM_FIELDS = new Set([
-  'id','email','password','followersCount','followingCount','postsCount',
-  'verified','subscription','isActive','lastLogin','createdAt','updatedAt',
-  'extendedProfile','coverUrl','name'
-]);
 
 const { ok, fail } = require('../utils/response');
 const { sanitizePublicProfile, sanitizeUserList } = require('../utils/privacy');
 const requireCsrf = csrfProtection();
 
 function handleUploadMiddleware(uploadMiddleware) {
-  return (req, res, next) => {
-    uploadMiddleware(req, res, (error) => {
-      if (!error) {
-        return next();
-      }
-
-      if (error.code === 'LIMIT_FILE_SIZE') {
-        return fail(res, 413, 'FILE_TOO_LARGE', 'File is too large. Maximum allowed size is 10MB.');
-      }
-
-      if (error.code === 'UNSUPPORTED_FILE_TYPE') {
-        return fail(res, 400, 'UNSUPPORTED_FILE_TYPE', 'Unsupported file type. Please upload a valid image file.');
-      }
-
-      if (error.name === 'MulterError') {
-        return fail(res, 400, 'UPLOAD_ERROR', `Upload failed: ${error.message}`);
-      }
-
-      return fail(res, 400, 'UPLOAD_ERROR', error.message || 'Upload failed.');
-    });
-  };
-}
-function pickProfileUpdates(body) {
   const updates = {};
   const knownFields = new Set();
   for (const [field, maxLen] of Object.entries(PROFILE_STRING_FIELDS)) {
@@ -118,24 +79,6 @@ function pickProfileUpdates(body) {
       }
     }
   }
-  if (Object.keys(extended).length > 0) {
-    // Merge with any existing extendedProfile (partial update, not overwrite)
-    updates._extendedProfilePatch = extended;
-  }
-  return updates;
-}
-
-// Flatten extendedProfile into top-level for frontend compatibility
-function flattenUserPayload(user) {
-  const json = typeof user.toJSON === 'function' ? user.toJSON() : { ...user };
-  if (json.extendedProfile && typeof json.extendedProfile === 'object') {
-    const ext = json.extendedProfile;
-    delete json.extendedProfile;
-    return { ...ext, ...json };
-  }
-  return json;
-}
-
 // Apply extended-profile merge before saving
 async function applyExtendedMerge(user, updates) {
   if (updates._extendedProfilePatch) {
@@ -193,7 +136,7 @@ router.get('/me', authenticate, async (req, res) => {
     if (!freshUser || !freshUser.isActive) {
       return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
-    const normalized = flattenUserPayload(freshUser);
+    const normalized = normalizeUserUtil(freshUser);
     ok(res, { user: normalized, payload: normalized });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');
@@ -203,7 +146,7 @@ router.get('/me', authenticate, async (req, res) => {
 // ─── UPDATE MY PROFILE (authenticated) ───
 router.put('/me', authenticate, validate(profileUpdateSchema), async (req, res) => {
   try {
-    const updates = pickProfileUpdates(req.body.payload || req.body);
+    const updates = pickAllowedUpdates(req.body.payload || req.body);
 
     if (updates.username) {
       const existing = await User.findOne({ where: { username: updates.username } });
@@ -219,7 +162,7 @@ router.put('/me', authenticate, validate(profileUpdateSchema), async (req, res) 
 
     await applyExtendedMerge(user, updates);
     await user.update(updates);
-    const normalized = flattenUserPayload(user);
+    const normalized = normalizeUserUtil(user);
     ok(res, { user: normalized, payload: normalized }, { message: 'Profile updated.' });
   } catch (error) {
     logger.error({ event: 'update_my_profile_error', message: error.message });
@@ -229,7 +172,7 @@ router.put('/me', authenticate, validate(profileUpdateSchema), async (req, res) 
 
 router.patch('/me', authenticate, validate(profileUpdateSchema), async (req, res) => {
   try {
-    const updates = pickProfileUpdates(req.body.payload || req.body);
+    const updates = pickAllowedUpdates(req.body.payload || req.body);
 
     if (updates.username) {
       const existing = await User.findOne({ where: { username: updates.username } });
@@ -245,7 +188,7 @@ router.patch('/me', authenticate, validate(profileUpdateSchema), async (req, res
 
     await applyExtendedMerge(user, updates);
     await user.update(updates);
-    const normalized = flattenUserPayload(user);
+    const normalized = normalizeUserUtil(user);
     ok(res, { user: normalized, payload: normalized }, { message: 'Profile updated.' });
   } catch (error) {
     logger.error({ event: 'patch_my_profile_error', message: error.message });
@@ -306,7 +249,7 @@ router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res)
       return fail(res, 403, 'FORBIDDEN', 'You can only update your own profile.');
     }
 
-    const updates = pickProfileUpdates(req.body);
+    const updates = pickAllowedUpdates(req.body);
 
     // Username uniqueness check
     if (updates.username) {
@@ -322,7 +265,7 @@ router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res)
     await applyExtendedMerge(user, updates);
     await user.update(updates);
 
-    ok(res, { payload: flattenUserPayload(user) }, { message: 'Profile updated.' });
+    ok(res, { payload: normalizeUserUtil(user) }, { message: 'Profile updated.' });
   } catch (error) {
     logger.error({ event: 'update_profile_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
@@ -377,7 +320,7 @@ router.post('/cover', authenticate, handleUploadMiddleware(uploadCover.single('c
 async function saveProfileHandler(req, res) {
   try {
     const profileData = req.body.payload || req.body;
-    const updates = pickProfileUpdates(profileData);
+    const updates = pickAllowedUpdates(profileData);
 
     // Username uniqueness check
     if (updates.username) {
@@ -390,7 +333,7 @@ async function saveProfileHandler(req, res) {
     await applyExtendedMerge(req.user, updates);
     await req.user.update(updates);
 
-    ok(res, { payload: flattenUserPayload(req.user) }, { message: 'Profile saved.' });
+    ok(res, { payload: normalizeUserUtil(req.user) }, { message: 'Profile saved.' });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to save profile.');
   }
