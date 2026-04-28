@@ -28,8 +28,7 @@ module.exports = (sequelize) => {
     },
     body: {
       type: DataTypes.TEXT,
-      allowNull: true,
-      validate: { len: [1, 5000] }
+      allowNull: true
     },
     content: {
       type: DataTypes.TEXT,

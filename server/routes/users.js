@@ -28,7 +28,7 @@ const PROFILE_STRING_FIELDS = {
   gender: 50, nationality: 100, contactEmail: 255, contactPhone: 100,
   contactAddress: 500, playingLevel: 100, position: 100, currentTeam: 150,
   achievements: 2000, profileVisibility: 50, avatarUrl: 500, coverPhotoUrl: 500,
-  profileCardStyle: 30, role: 50
+  role: 50
 };
 const PROFILE_JSON_FIELDS = ['stats', 'mediaLinks', 'sharingPreferences', 'visibility'];
 const PROFILE_DATE_FIELDS = ['dateOfBirth'];

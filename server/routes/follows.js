@@ -113,12 +113,7 @@ router.get('/status/:userId', authenticate, async (req, res) => {
     if (connectionStatus === 'active') relation = 'accepted';
     else if (connectionStatus === 'pending') relation = 'pending';
 
-    res.json({
-      status: 'ok',
-      isFollowing: !!conn,
-      connectionStatus: connectionStatus,
-      relation
-    });
+    ok(res, { isFollowing: !!conn, connectionStatus, relation });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to check follow status.');
   }
@@ -173,13 +168,10 @@ router.get('/stats/:userId', optionalAuth, async (req, res) => {
       return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
 
-    res.json({
-      status: 'ok',
-      payload: {
-        followersCount: user.followersCount || 0,
-        followingCount: user.followingCount || 0,
-        postsCount: user.postsCount || 0
-      }
+    ok(res, {
+      followersCount: user.followersCount || 0,
+      followingCount: user.followingCount || 0,
+      postsCount: user.postsCount || 0
     });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch stats.');

@@ -30,8 +30,8 @@ function formatMessage(message) {
     senderId: message.senderId,
     fromId: message.senderId,
     receiverId: message.receiverId,
-    body: message.body || message.content,
-    text: message.body || message.content,
+    body: message.content || message.body,
+    text: message.content || message.body,
     readAt: message.readAt,
     createdAt: message.createdAt,
     updatedAt: message.updatedAt
@@ -363,12 +363,8 @@ router.post('/mark-read', async (req, res) => {
   }
 });
 
-router.get('/unread/:userId', async (req, res) => {
+router.get('/unread-count', async (req, res) => {
   try {
-    if (Number(req.params.userId) !== req.userId) {
-      return fail(res, 403, 'FORBIDDEN', 'You can only check your own unread count.');
-    }
-
     const unread = await Message.count({
       where: {
         receiverId: req.userId,

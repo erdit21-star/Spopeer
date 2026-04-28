@@ -33,9 +33,7 @@ router.get('/', async (req, res) => {
       where: { recipientId: req.userId, isRead: false }
     });
 
-    res.json({
-      status: 'ok',
-      payload: notifications,
+    ok(res, notifications, {
       unreadCount,
       pagination: { total: count, page: parseInt(page), pages: Math.ceil(count / parseInt(limit)) }
     });
