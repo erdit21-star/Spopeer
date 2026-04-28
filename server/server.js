@@ -33,8 +33,8 @@ async function startServer() {
       console.log('ℹ️  Production mode: use migrations only (npm run migrate).');
     }
 
-    server.listen(PORT, () => {
-      console.log(`\n🚀 Spopeer Server running on http://localhost:${PORT}`);
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`\n🚀 Spopeer Server running on http://0.0.0.0:${PORT}`);
       console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
       console.log(`🔌 API Base: http://localhost:${PORT}/api`);
       console.log(`💬 Socket.io: ws://localhost:${PORT}`);
