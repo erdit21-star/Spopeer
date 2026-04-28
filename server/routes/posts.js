@@ -172,7 +172,7 @@ router.get('/', optionalAuth, async (req, res) => {
 });
 
 // ─── CREATE POST ───
-router.post('/', authenticate, validate(createPostSchema), uploadPost.single('image'), async (req, res) => {
+router.post('/', authenticate, uploadPost.single('image'), validate(createPostSchema), async (req, res) => {
   try {
     const { content, sport } = req.body;
 
