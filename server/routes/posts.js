@@ -365,7 +365,7 @@ router.post('/:id/repost', authenticate, async (req, res) => {
 
     const repost = await Post.create({
       userId: req.userId,
-      content: `ðŸ” Reposted from ${original.author.firstName} ${original.author.lastName}:\n\n${original.content}`,
+      content: `🔁 Reposted from ${original.author.firstName} ${original.author.lastName}:\n\n${original.content}`,
       sport: original.sport,
       image: original.image
     });
