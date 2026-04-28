@@ -360,9 +360,22 @@ router.post('/me/export', authenticate, async (req, res) => {
       SavedPost.findAll({ where: { userId }, raw: true })
     ]);
 
+    // Curate user account fields for GDPR export
     const exportData = {
       exportedAt: new Date().toISOString(),
-      account: user.toJSON(),
+      account: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        sport: user.sport,
+        bio: user.bio,
+        location: user.location,
+        createdAt: user.createdAt,
+        emailVerified: user.emailVerified,
+        avatarUrl: user.avatarUrl
+      },
       posts,
       connections,
       comments,

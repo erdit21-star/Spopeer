@@ -14,6 +14,8 @@ const express = require('express');
 const router = express.Router();
 const { Connection, User, Notification } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
+const { Op } = require('sequelize');
+const { getBlockedUserIds } = require('../utils/blocks');
 
 // ─── FOLLOW ───
 const { ok, created, fail } = require('../utils/response');
@@ -122,8 +124,18 @@ router.get('/status/:userId', authenticate, async (req, res) => {
 // ─── GET FOLLOWERS ───
 router.get('/followers/:userId', optionalAuth, async (req, res) => {
   try {
+    let where = { followingId: req.params.userId, status: 'active' };
+    
+    // Filter out blocked users if authenticated
+    if (req.userId) {
+      const blockedIds = await getBlockedUserIds(req.userId);
+      if (blockedIds.length > 0) {
+        where.followerId = { [Op.notIn]: blockedIds };
+      }
+    }
+
     const connections = await Connection.findAll({
-      where: { followingId: req.params.userId, status: 'active' },
+      where,
       include: [{
         model: User,
         as: 'follower',
@@ -141,8 +153,18 @@ router.get('/followers/:userId', optionalAuth, async (req, res) => {
 // ─── GET FOLLOWING ───
 router.get('/following/:userId', optionalAuth, async (req, res) => {
   try {
+    let where = { followerId: req.params.userId, status: 'active' };
+    
+    // Filter out blocked users if authenticated
+    if (req.userId) {
+      const blockedIds = await getBlockedUserIds(req.userId);
+      if (blockedIds.length > 0) {
+        where.followingId = { [Op.notIn]: blockedIds };
+      }
+    }
+
     const connections = await Connection.findAll({
-      where: { followerId: req.params.userId, status: 'active' },
+      where,
       include: [{
         model: User,
         as: 'followedUser',

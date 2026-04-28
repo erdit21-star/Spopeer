@@ -26,7 +26,7 @@ const FULL_PROFILE_FIELDS = [
   'gender', 'dateOfBirth',
   'contactEmail', 'contactPhone', 'contactAddress',
   'coverPhotoUrl', 'coverUrl',
-  'profileVisibility', 'profileCardStyle',
+  'profileVisibility',
   'mediaLinks', 'stats',
   'userType', 'subscription', 'lastLogin',
   'height', 'weight', 'eyeColor', 'hairColor',

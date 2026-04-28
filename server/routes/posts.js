@@ -26,6 +26,7 @@ const { sanitizeString, parsePagination } = require('../utils/validation');
 const { createPostSchema, validate } = require('../utils/schemas');
 const { cache } = require('../services/cache');
 const logger = require('../utils/logger');
+const { getBlockedUserIds } = require('../utils/blocks');
 
 // ─── FEED HELPER ───
 const { ok, created, fail } = require('../utils/response');
@@ -34,6 +35,16 @@ async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
     const { page, limit } = parsePagination(req.query);
     const where = { isActive: true, ...whereExtra };
     const offset = (page - 1) * limit;
+
+    // Filter out blocked users if authenticated
+    if (req.userId) {
+      const blockedIds = await getBlockedUserIds(req.userId);
+      if (blockedIds.length > 0) {
+        where.userId = where.userId
+          ? { [Op.and]: [where.userId, { [Op.notIn]: blockedIds }] }
+          : { [Op.notIn]: blockedIds };
+      }
+    }
 
     const cacheKey = `feed:${JSON.stringify({ where, orderBy: orderBy || [['createdAt', 'DESC']], page, limit, userId: req.userId || null })}`;
     const cached = await cache.get(cacheKey);
@@ -114,7 +125,8 @@ router.post('/:id/view', optionalAuth, async (req, res) => {
       return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
     await post.increment('viewCount');
-    ok(res, { viewCount: (post.viewCount || 0) + 1 });
+    await post.reload();
+    ok(res, { viewCount: post.viewCount });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to register view.');
   }
@@ -138,6 +150,16 @@ router.get('/', optionalAuth, async (req, res) => {
       });
       const followedIds = connections.map(c => c.followingId);
       where.userId = { [Op.in]: followedIds };
+    }
+
+    // Filter out blocked users if authenticated
+    if (req.userId) {
+      const blockedIds = await getBlockedUserIds(req.userId);
+      if (blockedIds.length > 0) {
+        where.userId = where.userId
+          ? { [Op.and]: [where.userId, { [Op.notIn]: blockedIds }] }
+          : { [Op.notIn]: blockedIds };
+      }
     }
 
     const offset = (page - 1) * limit;

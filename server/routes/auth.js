@@ -15,6 +15,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const { User, PasswordResetToken, RefreshSession } = require('../models');
 const { authenticate, clearAuthCookies, generateAccessToken, generateRefreshToken, getCookieOptions } = require('../middleware/auth');
 const { ok, fail } = require('../utils/response');
@@ -87,6 +88,19 @@ const resetLimiter = createLimiter({
   skip: () => isTest,
   message: { success: false, error: { code: 'RATE_LIMIT_RESET', message: 'Too many reset attempts. Please try again later.' } }
 });
+
+// Google OAuth limiter — 20 attempts per 15 min per IP
+const googleLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isTest,
+  message: { success: false, error: { code: 'RATE_LIMIT_GOOGLE', message: 'Too many Google sign-in attempts. Please try again later.' } }
+});
+
+// Initialize Google OAuth client
+const googleClient = process.env.GOOGLE_CLIENT_ID ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID) : null;
 
 // Temporary request logger for auth routes — masks sensitive fields.
 router.use((req, res, next) => {
@@ -751,6 +765,102 @@ router.post('/refresh', requireCsrf, async (req, res) => {
     console.error('Refresh token error:', error);
     clearAuthCookies(res);
     fail(res, 500, 'SERVER_ERROR', 'Failed to refresh token.');
+  }
+});
+
+// ─── GOOGLE OAUTH ───
+router.post('/google', googleLimiter, async (req, res) => {
+  try {
+    if (!googleClient) {
+      return fail(res, 503, 'NOT_CONFIGURED', 'Google authentication is not configured.');
+    }
+
+    const { credential } = req.body;
+    if (!credential) {
+      return fail(res, 400, 'VALIDATION', 'Google credential token is required.');
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, given_name: firstName, family_name: lastName, picture: avatarUrl } = payload;
+
+    if (!email) {
+      return fail(res, 400, 'VALIDATION', 'Google account has no email.');
+    }
+
+    let user = await User.findOne({ where: { email: email.toLowerCase() } });
+
+    // Create new user or link Google ID
+    if (!user) {
+      user = await User.create({
+        firstName: firstName || 'User',
+        lastName: lastName || '',
+        email: email.toLowerCase(),
+        googleId,
+        avatarUrl: avatarUrl || null,
+        role: 'athlete',
+        emailVerified: true,
+        isActive: true,
+        password: null
+      });
+    } else if (!user.googleId) {
+      // Link Google ID to existing account
+      await user.update({
+        googleId,
+        avatarUrl: user.avatarUrl || avatarUrl || null,
+        emailVerified: true
+      });
+    }
+
+    if (!user.isActive) {
+      return fail(res, 403, 'ACCOUNT_INACTIVE', 'This account has been deactivated.');
+    }
+
+    // Create RefreshSession
+    const refreshToken = generateRefreshToken(user);
+    const refreshTokenHash = sha256(refreshToken);
+    await RefreshSession.create({
+      userId: user.id,
+      token: refreshTokenHash,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
+
+    // Generate access token
+    const accessToken = generateAccessToken(user);
+
+    // Set cookies
+    res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
+    res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+
+    // Issue CSRF token
+    issueCsrfToken(req, res);
+
+    // Send curated user object (no passwords, tokens, or internal fields)
+    const curatedUser = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+      emailVerified: user.emailVerified
+    };
+
+    return ok(res, {
+      message: 'Signed in with Google',
+      user: curatedUser,
+      accessToken,
+      refreshToken
+    });
+  } catch (error) {
+    console.error('[GOOGLE_AUTH]', error && error.message);
+    if (error.message && error.message.includes('Invalid token')) {
+      return fail(res, 401, 'INVALID_TOKEN', 'Google token is invalid or expired.');
+    }
+    return fail(res, 400, 'GOOGLE_AUTH_ERROR', 'Google sign-in failed.');
   }
 });
 

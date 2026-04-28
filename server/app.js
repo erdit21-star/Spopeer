@@ -31,7 +31,7 @@ const { createLimiter } = require('./services/rateLimiter');
 require('./models');
 
 // Import routes
-const authRoutes = require('./routes/auth.routes');
+const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const profileRoutes = require('./routes/profile');
 const postRoutes = require('./routes/posts');
@@ -188,9 +188,6 @@ app.use('/api/sponsorships', apiLimiter, sponsorshipRoutes);
 app.use('/api/moderation', apiLimiter, moderationRoutes);
 app.use('/api/contact',    apiLimiter, require('./routes/contact'));
 app.use('/api/reports',    apiLimiter, require('./routes/reports'));
-
-// ─── PROFILE ROUTES (frontend compatibility) ───
-app.use('/api/profiles', apiLimiter, require('./routes/users'));
 
 // ─── SENTRY DEBUG (non-production only) ───
 if (process.env.NODE_ENV !== 'production') {

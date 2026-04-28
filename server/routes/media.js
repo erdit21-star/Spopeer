@@ -43,7 +43,7 @@ router.post('/upload', authenticate, uploadPost.single('file'), async (req, res)
 });
 
 // ─── GET USER MEDIA ───
-router.get('/user/:userId', async (req, res) => {
+router.get('/user/:userId', optionalAuth, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     const userMedia = await Media.findAll({

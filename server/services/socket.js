@@ -95,7 +95,10 @@ function initSocket(httpServer) {
         }
 
         const { Message } = require('../models');
+        const { findOrCreateDirectConversation } = require('../utils/conversations');
+        const conversation = await findOrCreateDirectConversation(userId, receiverId);
         const msg = await Message.create({
+          conversationId: conversation.id,
           senderId: userId,
           receiverId,
           content: trimmedContent

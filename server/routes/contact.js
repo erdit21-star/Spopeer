@@ -2,10 +2,18 @@
 const express = require('express');
 const router  = express.Router();
 const { sendEmail } = require('../services/email');
+const { createLimiter } = require('../services/rateLimiter');
 
 const CONTACT_RECIPIENT = process.env.CONTACT_TO_EMAIL || 'erditgr@yahoo.gr';
 
-router.post('/', async (req, res) => {
+// Rate limit contact form: 5 per hour per IP
+const contactLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { success: false, error: 'Too many contact form submissions. Please try again later.' }
+});
+
+router.post('/', contactLimiter, async (req, res) => {
   const { firstName, lastName, email, subject, message, type } = req.body || {};
 
   if (!firstName || !lastName || !email || !subject || !message) {

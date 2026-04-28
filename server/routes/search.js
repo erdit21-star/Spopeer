@@ -10,9 +10,10 @@ const { optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { cache } = require('../services/cache');
 const logger = require('../utils/logger');
+const { ok, fail } = require('../utils/response');
+const { getBlockedUserIds } = require('../utils/blocks');
 
 // ─── SEARCH ───
-const { fail } = require('../utils/response');
 const { sanitizeUserList } = require('../utils/privacy');
 router.get('/', optionalAuth, async (req, res) => {
   try {
@@ -32,6 +33,14 @@ router.get('/', optionalAuth, async (req, res) => {
     if (userType) where.role = userType;
     if (location) where.location = { [Op.iLike]: `%${location}%` };
 
+    // Filter out blocked users if authenticated
+    if (req.userId) {
+      const blockedIds = await getBlockedUserIds(req.userId);
+      if (blockedIds.length > 0) {
+        where.id = { [Op.notIn]: blockedIds };
+      }
+    }
+
     const limit = Math.min(parseInt(pageSize) || 20, 100);
     const offset = (Math.max(parseInt(page) || 1, 1) - 1) * limit;
 
@@ -49,17 +58,16 @@ router.get('/', optionalAuth, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    const payload = {
-      status: 'ok',
-      results: sanitizeUserList(req.user || null, users),
+    const { ok } = require('../utils/response');
+    const payload = sanitizeUserList(req.user || null, users);
+    await cache.set(cacheKey, payload, 30 * 1000);
+    ok(res, payload, {
       pagination: {
         total: count,
         page: parseInt(page) || 1,
         pages: Math.ceil(count / limit)
       }
-    };
-    await cache.set(cacheKey, payload, 30 * 1000);
-    res.json(payload);
+    });
   } catch (error) {
     logger.error({ event: 'search_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Search failed.');

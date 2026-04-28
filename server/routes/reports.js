@@ -2,11 +2,19 @@
 const express = require('express');
 const router  = express.Router();
 const { sendEmail } = require('../services/email');
+const { createLimiter } = require('../services/rateLimiter');
 
 const CONTACT_RECIPIENT = process.env.CONTACT_TO_EMAIL || 'erditgr@yahoo.gr';
 
+// Rate limit abuse report: 5 per hour per IP
+const reportLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { success: false, error: 'Too many report submissions. Please try again later.' }
+});
+
 // POST /api/reports/abuse
-router.post('/abuse', async (req, res) => {
+router.post('/abuse', reportLimiter, async (req, res) => {
   const {
     reporterName,
     reporterEmail,

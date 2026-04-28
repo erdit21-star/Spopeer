@@ -6,8 +6,10 @@ const {
   User,
   Conversation,
   ConversationParticipant,
+  Block,
   sequelize
 } = require('../models');
+const { findOrCreateDirectConversation } = require('../utils/conversations');
 const { authenticate } = require('../middleware/auth');
 const { sanitizeString } = require('../utils/validation');
 const { ok, created, fail } = require('../utils/response');
@@ -53,38 +55,6 @@ async function isConversationParticipant(conversationId, userId) {
     where: { conversationId, userId }
   });
   return !!row;
-}
-
-async function findOrCreateDirectConversation(userIdA, userIdB, transaction) {
-  const [rows] = await sequelize.query(
-    `
-      SELECT cp."conversationId"
-      FROM conversation_participants cp
-      INNER JOIN conversation_participants cp2
-        ON cp."conversationId" = cp2."conversationId"
-      WHERE cp."userId" = :userIdA
-        AND cp2."userId" = :userIdB
-      LIMIT 1
-    `,
-    {
-      replacements: { userIdA, userIdB },
-      transaction
-    }
-  );
-
-  if (rows && rows.length) {
-    return Conversation.findByPk(rows[0].conversationId, { transaction });
-  }
-
-  const conversation = await Conversation.create({}, { transaction });
-  await ConversationParticipant.bulkCreate(
-    [
-      { conversationId: conversation.id, userId: userIdA },
-      { conversationId: conversation.id, userId: userIdB }
-    ],
-    { transaction }
-  );
-  return conversation;
 }
 
 router.use(authenticate);
@@ -285,6 +255,21 @@ router.post('/send', async (req, res) => {
     if (!receiver || !receiver.isActive) {
       await transaction.rollback();
       return fail(res, 404, 'NOT_FOUND', 'Recipient not found.');
+    }
+
+    // Check if either party has blocked the other
+    const blockExists = await Block.findOne({
+      where: {
+        [Op.or]: [
+          { blockerId: req.userId, blockedId: receiver.id },
+          { blockerId: receiver.id, blockedId: req.userId }
+        ]
+      },
+      transaction
+    });
+    if (blockExists) {
+      await transaction.rollback();
+      return fail(res, 403, 'BLOCKED', 'You cannot message this user.');
     }
 
     const conversation = await findOrCreateDirectConversation(req.userId, receiver.id, transaction);

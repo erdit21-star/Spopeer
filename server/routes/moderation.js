@@ -11,6 +11,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/admin');
 const { Report, Block, User, AdminAuditLog } = require('../models');
 const { validate, createReportSchema } = require('../utils/schemas');
 const { ok, created, fail } = require('../utils/response');
@@ -100,12 +101,7 @@ router.get('/blocks', authenticate, async (req, res) => {
 });
 
 // ─── ADMIN: LIST REPORTS ───
-router.get('/reports', authenticate, async (req, res) => {
-  try {
-    // Check admin role
-    if (req.user.role !== 'admin') {
-      return fail(res, 403, 'FORBIDDEN', 'Admin access required.');
-    }
+router.get('/reports', authenticate, requireAdmin, async (req, res) => {
 
     const status = req.query.status || 'pending';
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -128,11 +124,8 @@ router.get('/reports', authenticate, async (req, res) => {
 });
 
 // ─── ADMIN: REVIEW REPORT ───
-router.put('/reports/:id', authenticate, async (req, res) => {
+router.put('/reports/:id', authenticate, requireAdmin, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return fail(res, 403, 'FORBIDDEN', 'Admin access required.');
-    }
 
     const report = await Report.findByPk(req.params.id);
     if (!report) {
