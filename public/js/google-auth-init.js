@@ -1,31 +1,32 @@
 // google-auth-init.js
 // Centralizes Google button event binding for CSP compliance
 
+function _attachGoogleBtns() {
+  var ids = ['signupGoogleBtn', 'loginGoogleBtn', 'loginModernGoogleBtn'];
+  ids.forEach(function (id) {
+    var btn = document.getElementById(id);
+    if (btn && !btn.dataset.googleBound) {
+      btn.dataset.googleBound = '1';
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.google.accounts.id.prompt();
+      });
+    }
+  });
+}
+
+// Called by the GSI library when it has fully loaded (async-safe)
+window.onGoogleLibraryLoad = function () {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _attachGoogleBtns);
+  } else {
+    _attachGoogleBtns();
+  }
+};
+
+// Fallback: if GSI loaded before this script ran (e.g. cached), bind on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function () {
-  // Signup page
-  var signupGoogleBtn = document.getElementById('signupGoogleBtn');
-  if (signupGoogleBtn && window.google && window.google.accounts && window.google.accounts.id) {
-    signupGoogleBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      window.google.accounts.id.prompt();
-    });
-  }
-
-  // Login page
-  var loginGoogleBtn = document.getElementById('loginGoogleBtn');
-  if (loginGoogleBtn && window.google && window.google.accounts && window.google.accounts.id) {
-    loginGoogleBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      window.google.accounts.id.prompt();
-    });
-  }
-
-  // Login-modern page
-  var loginModernGoogleBtn = document.getElementById('loginModernGoogleBtn');
-  if (loginModernGoogleBtn && window.google && window.google.accounts && window.google.accounts.id) {
-    loginModernGoogleBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      window.google.accounts.id.prompt();
-    });
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    _attachGoogleBtns();
   }
 });
