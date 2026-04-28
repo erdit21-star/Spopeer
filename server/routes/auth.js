@@ -534,7 +534,7 @@ router.post('/forgot-password', forgotLimiter, verifyCaptchaMiddleware, validate
     await PasswordResetToken.create({
       userId: user.id,
       token: tokenHash,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
     });
 
     // Send the raw token in the email (user clicks it, server hashes to compare)
@@ -824,7 +824,7 @@ router.post('/google', googleLimiter, async (req, res) => {
     const refreshTokenHash = sha256(refreshToken);
     await RefreshSession.create({
       userId: user.id,
-      token: refreshTokenHash,
+      tokenHash: refreshTokenHash,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
 

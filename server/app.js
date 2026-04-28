@@ -102,12 +102,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://apis.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://accounts.google.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.cloudinary.com", "https://lh3.googleusercontent.com"],
-      connectSrc: ["'self'", "ws:", "wss:", "https://accounts.google.com"],
-      frameSrc: ["https://accounts.google.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https:"],
+      connectSrc: ["'self'", "ws:", "wss:", "https://accounts.google.com", "https://www.googleapis.com", "https://oauth2.googleapis.com"],
+      frameSrc: ["'self'", "https://accounts.google.com"],
       mediaSrc: ["'self'", "blob:", "https://res.cloudinary.com", "https://*.cloudinary.com"],
       objectSrc: ["'none'"],
       frameAncestors: ["'none'"],
@@ -188,6 +188,7 @@ app.use('/api/sponsorships', apiLimiter, sponsorshipRoutes);
 app.use('/api/moderation', apiLimiter, moderationRoutes);
 app.use('/api/contact',    apiLimiter, require('./routes/contact'));
 app.use('/api/reports',    apiLimiter, require('./routes/reports'));
+app.use('/api/careers',    apiLimiter, require('./routes/careers'));
 
 // ─── SENTRY DEBUG (non-production only) ───
 if (process.env.NODE_ENV !== 'production') {
