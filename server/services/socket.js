@@ -101,6 +101,7 @@ function initSocket(httpServer) {
           conversationId: conversation.id,
           senderId: userId,
           receiverId,
+          body: trimmedContent,
           content: trimmedContent
         });
 
