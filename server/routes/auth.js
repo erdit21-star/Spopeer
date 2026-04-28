@@ -223,7 +223,16 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
       success: true,
       data: {
         message: 'Account created successfully. A verification email has been sent.',
-        user: user.toJSON(),
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          firstName: user.firstName ?? null,
+          lastName: user.lastName ?? null,
+          displayName: user.displayName || null,
+          avatarUrl: user.avatarUrl ?? null,
+          sport: user.sport ?? null
+        },
         emailSent: emailSent === null ? null : !!emailSent
       }
     });

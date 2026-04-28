@@ -87,13 +87,13 @@ async function optionalAuth(req, res, next) {
 }
 
 /**
- * Generate MVP access token (7 days)
+ * Generate access token (15 minutes — matches cookie maxAge)
  */
 function generateAccessToken(user) {
   return jwt.sign(
     { userId: user.id, email: user.email, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: '15m' }
   );
 }
 

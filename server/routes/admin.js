@@ -21,9 +21,8 @@ const { sequelize } = require('../models');
 const ADMIN_METRICS_TTL_MS = 15 * 1000;
 const adminMetricsCache = new Map();
 
-// All admin routes require auth + admin role
+// All admin routes require auth + admin role (enforced in app.js before this router)
 const { ok, fail } = require('../utils/response');
-router.use(authenticate, requireAdmin);
 
 function getCachedAdminMetrics(key) {
   const cached = adminMetricsCache.get(key);
