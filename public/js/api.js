@@ -49,7 +49,11 @@
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("spopeer_loggedIn", "true");
     localStorage.setItem("_profileLastUpdated_", Date.now().toString());
-    dispatchProfileUpdated(user, source || "api-set-user");
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+      window.CurrentUserStore.setCurrentUser(user);
+    } else {
+      dispatchProfileUpdated(user, source || "api-set-user");
+    }
     return user;
   }
 

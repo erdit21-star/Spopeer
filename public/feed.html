@@ -3351,7 +3351,8 @@
   }
   
   // Initialize sidebar with current profile
-  if (ud) {
+  var ud = getCurrentUserData();
+  if (ud && (ud.email || ud.id)) {
     updateSidebarFromProfile(ud);
     
     // Hydrate sidebar profile based on user type
@@ -3426,6 +3427,13 @@
     const handleEl = document.getElementById('sidebarHandle');
     if (handleEl) handleEl.textContent = '@' + (profile.username || (profile.email ? profile.email.split('@')[0] : 'user'));
 
+    // Update display name
+    const nameEl = document.getElementById('sidebarName');
+    if (nameEl) {
+      const displayName = profile.displayName || [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'User';
+      nameEl.textContent = displayName;
+    }
+
     const locationEl = document.getElementById('spLocation');
     if (locationEl) {
       const locationText = profile.location || [profile.city, profile.country].filter(Boolean).join(', ') || 'Add your location';
@@ -3444,7 +3452,7 @@
       cover.style.background = coverGradients[type] || coverGradients.athlete;
     }
 
-    // Update avatar gradient based on user type
+    // Update avatar — show uploaded photo if available, else role gradient
     const avatar = document.getElementById('sidebarAvatar');
     if (avatar) {
       const avatarGradients = {
@@ -3453,7 +3461,13 @@
         club: 'linear-gradient(135deg, #064e3b, #16a34a)',
         supportive_professional: 'linear-gradient(135deg, #3b0764, #7c3aed)'
       };
-      avatar.style.background = avatarGradients[type] || avatarGradients.athlete;
+      if (profile.avatarUrl || profile.avatar) {
+        avatar.style.background = '';
+        avatar.innerHTML = '<img src="' + (profile.avatarUrl || profile.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      } else {
+        avatar.innerHTML = '';
+        avatar.style.background = avatarGradients[type] || avatarGradients.athlete;
+      }
     }
 
     // Update online dot color based on user type (coaches are amber)
