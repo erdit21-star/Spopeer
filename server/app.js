@@ -120,11 +120,17 @@ app.use(helmet({
 }));
 
 // CORS
-const frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:5000';
-logger.info({ event: 'cors_allowed_origin', frontendOrigin });
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5000')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+logger.info({ event: 'cors_allowed_origins', allowedOrigins });
 
 app.use(cors({
-  origin: frontendOrigin,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']

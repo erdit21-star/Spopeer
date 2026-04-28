@@ -393,7 +393,13 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
 // ─── GET CURRENT USER ───
 router.get('/me', authenticate, async (req, res) => {
   try {
-    return ok(res, { user: req.user.toJSON() });
+    const u = req.user;
+    return ok(res, { user: {
+      id: u.id, email: u.email, role: u.role,
+      firstName: u.firstName ?? null, lastName: u.lastName ?? null,
+      displayName: u.displayName ?? null, avatarUrl: u.avatarUrl ?? null,
+      sport: u.sport ?? null, username: u.username ?? null
+    } });
   } catch (error) {
     console.error('[GET-USER-BY-EMAIL] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
     return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
@@ -402,7 +408,13 @@ router.get('/me', authenticate, async (req, res) => {
 
 router.get('/profile', authenticate, async (req, res) => {
   try {
-    return ok(res, { user: req.user.toJSON() });
+    const u = req.user;
+    return ok(res, { user: {
+      id: u.id, email: u.email, role: u.role,
+      firstName: u.firstName ?? null, lastName: u.lastName ?? null,
+      displayName: u.displayName ?? null, avatarUrl: u.avatarUrl ?? null,
+      sport: u.sport ?? null, username: u.username ?? null
+    } });
   } catch (error) {
     console.error('[GET-PROFILE] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
     return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');

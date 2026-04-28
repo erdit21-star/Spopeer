@@ -262,8 +262,12 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 
     const { content, sport } = req.body;
-    if (content) post.content = content.trim();
-    if (sport) post.sport = sport;
+    if (content) {
+      const safe = sanitizeString(content, 5000);
+      if (!safe) return fail(res, 400, 'VALIDATION', 'Post content is required.');
+      post.content = safe;
+    }
+    if (sport) post.sport = sanitizeString(sport, 100);
 
     await post.save();
     ok(res, post);
@@ -311,12 +315,14 @@ router.post('/:id/like', authenticate, async (req, res) => {
     if (existingLike) {
       await existingLike.destroy();
       await post.decrement('likesCount');
-      return ok(res, { liked: false, likesCount: post.likesCount - 1 });
+      await post.reload();
+      return ok(res, { liked: false, likesCount: post.likesCount });
     }
 
     await Like.create({ userId: req.userId, postId: post.id });
     await post.increment('likesCount');
-    ok(res, { liked: true, likesCount: post.likesCount + 1 });
+    await post.reload();
+    ok(res, { liked: true, likesCount: post.likesCount });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to toggle like.');
   }
