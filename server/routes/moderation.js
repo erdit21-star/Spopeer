@@ -102,7 +102,7 @@ router.get('/blocks', authenticate, async (req, res) => {
 
 // ─── ADMIN: LIST REPORTS ───
 router.get('/reports', authenticate, requireAdmin, async (req, res) => {
-
+  try {
     const status = req.query.status || 'pending';
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
