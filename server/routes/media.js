@@ -8,7 +8,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/auth');
+const { authenticate, optionalAuth } = require('../middleware/auth');
 const { uploadPost, persistFile } = require('../middleware/upload');
 const { Media } = require('../models');
 const path = require('path');
