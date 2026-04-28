@@ -50,12 +50,18 @@ router.post('/abuse', reportLimiter, async (req, res) => {
   `;
 
   try {
-    await sendEmail({
+    const result = await sendEmail({
       to:      CONTACT_RECIPIENT,
       replyTo: reporterEmail,
       subject: '[Spopeer Abuse Report] New report submitted',
       html
     });
+    if (!result.success) {
+      console.error('[AbuseReport] Email send failed:', result.error);
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(500).json({ success: false, error: 'Failed to submit report. Please try again.' });
+      }
+    }
     res.json({ success: true, message: 'Your report has been submitted. Thank you for helping keep Spopeer safe.' });
   } catch (err) {
     console.error('[AbuseReport]', err.message);

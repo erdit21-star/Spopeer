@@ -333,9 +333,16 @@
           body: JSON.stringify({ credential: response.credential })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Google sign-in failed.');
-        if (data.user && window.Auth) window.Auth.login(data.user);
-        if (data.token) localStorage.setItem('spopeer_token', data.token);
+        if (!res.ok) {
+          const errMsg = (data.error && data.error.message) || 'Google sign-in failed.';
+          console.error('[Google Auth] Error:', data);
+          throw new Error(errMsg);
+        }
+        // Response is wrapped: { success: true, data: { user, accessToken, ... } }
+        const userData = (data.data && data.data.user) || data.user;
+        const accessToken = data.data && data.data.accessToken;
+        if (userData && window.Auth) window.Auth.login(userData);
+        if (accessToken) localStorage.setItem('spopeerToken', accessToken);
         window.location.href = '/feed.html';
       } catch (err) {
         console.error('[Google Auth]', err);

@@ -4,8 +4,15 @@
  * Import this once instead of duplicating inline <style> blocks.
  */
 
-/* Auth-specific token overrides */
-:root { --accent-2: #1a6bff; --accent-2-light: #eef3ff; }
+/* Auth-specific token overrides — align with index page brand colours */
+:root {
+  --accent-2: #1a6bff;
+  --accent-2-light: #eef3ff;
+  /* Match index page exact values */
+  --accent:       #001233;
+  --accent-hover: #002060;
+  --bg:           #f6f5f0;
+}
 
 /* ─── NAVBAR ─── */
 header {
@@ -68,7 +75,7 @@ header {
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
   box-shadow: 0 4px 14px rgba(0,31,63,0.25);
 }
-.btn-fill:hover { background: #001a33; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,31,63,0.35); }
+.btn-fill:hover { background: var(--accent-hover, #002060); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,18,51,.3); }
 
 /* ─── AUTH LAYOUT (login/signup/forgot shared grid) ─── */
 .login-wrap, .signup-wrap, .forgot-wrap, .auth-wrap {
@@ -80,21 +87,21 @@ header {
   min-height: calc(100vh - 66px - 200px);
   align-items: start;
 }
-.login-left, .signup-left, .forgot-left, .auth-left { padding-top: 40px; }
+.login-left, .signup-left, .forgot-left, .reset-left, .auth-left { padding-top: 40px; }
 .login-left h1, .signup-left h1, .forgot-left h1, .auth-left h1 {
   font-family: var(--font-display);
   font-size: 48px; font-weight: 800;
   letter-spacing: -0.03em; color: var(--ink);
   margin-bottom: 24px;
 }
-.login-left p, .signup-left p, .forgot-left p, .auth-left p {
+.login-left p, .signup-left p, .forgot-left p, .reset-left p, .auth-left p {
   font-size: 17px; font-weight: 300;
   color: var(--muted); line-height: 1.75;
   max-width: 500px;
 }
 
 /* ─── AUTH CARD ─── */
-.login-card, .signup-card, .forgot-card, .auth-card {
+.login-card, .signup-card, .forgot-card, .reset-card, .auth-card {
   background: var(--white);
   border-radius: var(--r-lg);
   border: 1.5px solid var(--border);
@@ -102,11 +109,11 @@ header {
   box-shadow: 0 24px 64px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
   position: relative; overflow: hidden;
 }
-.login-card::before, .signup-card::before, .forgot-card::before, .auth-card::before {
+.login-card::before, .signup-card::before, .forgot-card::before, .reset-card::before, .auth-card::before {
   content: '';
   position: absolute; top: -60px; right: -60px;
   width: 180px; height: 180px;
-  background: radial-gradient(circle, rgba(0,31,63,0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(0,18,51,0.08) 0%, transparent 70%);
   border-radius: 50%; pointer-events: none;
 }
 .card-heading { margin-bottom: 24px; }
@@ -207,7 +214,7 @@ header {
   transition: background 0.2s, transform 0.15s;
 }
 .login-btn:hover, .signup-btn:hover, .forgot-btn:hover, .auth-btn:hover {
-  background: #001a33; transform: translateY(-1px);
+  background: var(--accent-hover, #002060); transform: translateY(-1px);
 }
 .forgot-btn:active { transform: translateY(0); }
 
@@ -285,17 +292,17 @@ footer, .site-footer { background: var(--white); border-top: 1px solid var(--bor
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 1024px) {
-  .login-wrap, .signup-wrap, .forgot-wrap, .auth-wrap { grid-template-columns: 1fr; min-height: auto; }
-  .login-left, .signup-left, .forgot-left, .auth-left { padding-top: 0; text-align: center; }
-  .login-left h1, .signup-left h1, .forgot-left h1, .auth-left h1 { font-size: 36px; }
+  .login-wrap, .signup-wrap, .forgot-wrap, .reset-wrap, .auth-wrap { grid-template-columns: 1fr; min-height: auto; }
+  .login-left, .signup-left, .forgot-left, .reset-left, .auth-left { padding-top: 0; text-align: center; }
+  .login-left h1, .signup-left h1, .forgot-left h1, .reset-left h1, .auth-left h1 { font-size: 36px; }
   .footer-inner, .footer-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 640px) {
   .navbar { padding: 0 16px; }
   .nav-links { display: none; }
-  .login-wrap, .signup-wrap, .forgot-wrap, .auth-wrap { padding: 40px 16px; }
-  .login-left h1, .signup-left h1, .forgot-left h1, .auth-left h1 { font-size: 28px; }
-  .login-card, .signup-card, .forgot-card, .auth-card { padding: 28px 20px; }
+  .login-wrap, .signup-wrap, .forgot-wrap, .reset-wrap, .auth-wrap { padding: 40px 16px; }
+  .login-left h1, .signup-left h1, .forgot-left h1, .reset-left h1, .auth-left h1 { font-size: 28px; }
+  .login-card, .signup-card, .forgot-card, .reset-card, .auth-card { padding: 28px 20px; }
   .footer-inner, .footer-grid { padding: 40px 16px 0; grid-template-columns: 1fr 1fr; }
   .footer-bottom, .footer-btm { padding: 16px; flex-direction: column; text-align: center; }
 }
