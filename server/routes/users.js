@@ -30,55 +30,9 @@ const { sanitizePublicProfile, sanitizeUserList } = require('../utils/privacy');
 const requireCsrf = csrfProtection();
 
 function handleUploadMiddleware(uploadMiddleware) {
-  const updates = {};
-  const knownFields = new Set();
-  for (const [field, maxLen] of Object.entries(PROFILE_STRING_FIELDS)) {
-    knownFields.add(field);
-    if (body[field] !== undefined) {
-      updates[field] = sanitizeString(String(body[field]), maxLen);
-    }
-  }
-  for (const field of PROFILE_JSON_FIELDS) {
-    knownFields.add(field);
-    if (body[field] !== undefined && typeof body[field] === 'object') {
-      updates[field] = body[field];
-    }
-  }
-  for (const field of PROFILE_DATE_FIELDS) {
-    knownFields.add(field);
-    if (body[field] !== undefined) {
-      updates[field] = body[field] || null;
-    }
-  }
-  for (const field of PROFILE_BOOL_FIELDS) {
-    knownFields.add(field);
-    if (body[field] !== undefined) {
-      updates[field] = !!body[field];
-    }
-  }
-  // Normalize coverUrl alias
-  knownFields.add('coverUrl');
-  if (body.coverUrl !== undefined && updates.coverPhotoUrl === undefined) {
-    updates.coverPhotoUrl = sanitizeString(String(body.coverUrl), 500);
-  }
-  // Derive privacyPublic from profileVisibility
-  if (updates.profileVisibility !== undefined) {
-    updates.privacyPublic = updates.profileVisibility !== 'private';
-  }
-  // Collect all remaining role-specific fields into extendedProfile JSONB
-  const extended = {};
-  for (const key of Object.keys(body)) {
-    if (!knownFields.has(key) && !SYSTEM_FIELDS.has(key)) {
-      const val = body[key];
-      if (val !== undefined && val !== null) {
-        if (typeof val === 'string') {
-          extended[key] = sanitizeString(val, 5000);
-        } else {
-          extended[key] = val;
-        }
-      }
-    }
-  }
+  return uploadMiddleware;
+}
+
 // Apply extended-profile merge before saving
 async function applyExtendedMerge(user, updates) {
   if (updates._extendedProfilePatch) {
