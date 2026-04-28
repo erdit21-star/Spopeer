@@ -538,7 +538,13 @@ router.post('/forgot-password', forgotLimiter, verifyCaptchaMiddleware, validate
     });
 
     // Send the raw token in the email (user clicks it, server hashes to compare)
-    await sendPasswordResetEmail(user.email, token);
+    const emailResult = await sendPasswordResetEmail(user.email, token);
+    if (!emailResult || emailResult.success === false) {
+      console.error('[FORGOT-PASSWORD] Email send failed:', { to: user.email, error: emailResult && emailResult.error, requestId: req.requestId });
+      // Return 500 — the token was saved so a retry will work
+      return fail(res, 500, 'EMAIL_SEND_FAILED', 'Failed to send reset email. Please try again in a few minutes.');
+    }
+    console.log('[FORGOT-PASSWORD] Reset email sent to:', user.email, '| Resend ID:', emailResult.id);
 
     return ok(res, { message: 'If that email exists, a reset link has been sent.' });
   } catch (error) {
