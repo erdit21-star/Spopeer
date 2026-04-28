@@ -70,8 +70,6 @@ We're always open to collaborations — whether you're a developer, designer, sp
 
 If you'd like to contribute, partner, or just say hello, reach out:
 
-**Email**: erditgr@yahoo.gr  
-**Phone**: +30 6936471452 (Athens, Greece)  
 **Website**: [www.spopeer.com](https://www.spopeer.com)
 
 ---
