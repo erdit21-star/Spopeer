@@ -493,135 +493,156 @@ footer{
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
   /* ── AUTH MODAL ── */
-  .auth-overlay{
-    display:none;position:fixed;inset:0;z-index:1000;
-    background:rgba(12,12,12,.55);
-    backdrop-filter:blur(6px);
-    align-items:center;justify-content:center;
+  .auth-modal{
+    display:none;position:fixed;inset:0;z-index:9999;
+    background:rgba(0,0,0,.72);
+    backdrop-filter:blur(4px);
+    justify-content:center;align-items:center;
     padding:20px;
   }
-  .auth-overlay.open{display:flex}
-  .auth-modal{
-    background:var(--white);border-radius:var(--rXL);
-    overflow:hidden;
-    display:grid;grid-template-columns:1fr 1.15fr;
-    width:100%;max-width:860px;
-    box-shadow:0 32px 80px rgba(0,18,51,.22),0 8px 24px rgba(0,0,0,.1);
-    position:relative;
-    max-height:92vh;overflow-y:auto;
+  .auth-modal.open{display:flex}
+  .auth-box{
+    width:940px;max-width:95%;
+    display:flex;
+    border-radius:22px;overflow:hidden;
+    background:#fff;
+    box-shadow:0 40px 100px rgba(0,0,0,.35);
+    max-height:92vh;
   }
-  .auth-modal-left{
-    background:linear-gradient(145deg,var(--navy) 0%,#0d3a8e 60%,#1a5cff 100%);
-    padding:48px 36px;
+  /* ── LEFT BRAND PANEL ── */
+  .auth-left{
+    flex:1;
+    background:linear-gradient(145deg,#001233 0%,#0d3a8e 55%,#1a5cff 100%);
+    color:#fff;padding:70px 50px;
     display:flex;flex-direction:column;justify-content:center;
-    color:#fff;
-    position:relative;overflow:hidden;
+    position:relative;overflow:hidden;flex-shrink:0;
   }
-  .auth-modal-left::before{
+  .auth-left::before{
     content:'';position:absolute;inset:0;
-    background:radial-gradient(ellipse 80% 60% at 20% 80%,rgba(255,255,255,.07),transparent);
+    background:radial-gradient(ellipse 70% 60% at 15% 85%,rgba(255,255,255,.08),transparent),
+               radial-gradient(ellipse 50% 40% at 80% 15%,rgba(255,255,255,.05),transparent);
     pointer-events:none;
   }
-  .auth-modal-left h2{
-    font-family:var(--fd);font-size:clamp(24px,3vw,34px);
-    line-height:1.1;letter-spacing:-.03em;color:#fff;
-    margin-bottom:16px;position:relative;
+  .auth-left-logo{
+    display:flex;align-items:center;gap:10px;margin-bottom:48px;
+    position:relative;
   }
-  .auth-modal-left p{
-    font-size:15px;color:rgba(255,255,255,.72);
-    line-height:1.65;position:relative;
+  .auth-left-logo img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+  .auth-left-logo span{
+    font-family:var(--fd);font-size:22px;font-weight:800;color:#fff;letter-spacing:-.03em;
   }
-  .auth-modal-right{
-    padding:40px 36px;overflow-y:auto;
+  .auth-left h2{
+    font-family:var(--fd);font-size:clamp(26px,3vw,38px);
+    line-height:1.08;letter-spacing:-.03em;color:#fff;
+    margin-bottom:18px;position:relative;
   }
+  .auth-left p{
+    font-size:16px;color:rgba(255,255,255,.68);
+    line-height:1.7;position:relative;max-width:340px;
+  }
+  .auth-left-pills{
+    display:flex;flex-wrap:wrap;gap:8px;margin-top:40px;position:relative;
+  }
+  .auth-left-pill{
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+    border-radius:999px;padding:6px 14px;
+    font-size:12px;font-weight:600;color:rgba(255,255,255,.85);
+    backdrop-filter:blur(4px);
+  }
+  /* ── RIGHT FORM PANEL ── */
+  .auth-right{
+    flex:1;padding:48px 44px;overflow-y:auto;position:relative;min-width:0;
+  }
+  .auth-close-btn{
+    position:absolute;right:20px;top:18px;
+    width:36px;height:36px;border-radius:50%;
+    background:#f4f4f4;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    color:#555;font-size:16px;transition:.15s;
+  }
+  .auth-close-btn:hover{background:#e8e8e8;color:#000}
+  /* Form panels */
   .auth-panel{display:none}
   .auth-panel.active{display:block}
-  .auth-close{
-    position:sticky;top:0;float:right;
-    width:34px;height:34px;border-radius:50%;
-    background:var(--surface);border:none;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    color:var(--ink2);font-size:15px;transition:.15s;
-    margin-bottom:16px;z-index:10;
-    margin-left:auto;
+  .auth-panel-title{
+    font-family:var(--fd);font-size:24px;font-weight:800;
+    color:var(--ink);letter-spacing:-.03em;margin-bottom:4px;
   }
-  .auth-close:hover{background:var(--border);color:var(--ink)}
-  .auth-card-heading h3{
-    font-family:var(--fd);font-size:22px;font-weight:800;
-    color:var(--ink);margin-bottom:4px;
-  }
-  .auth-card-heading p{font-size:14px;color:var(--muted);margin-bottom:22px}
+  .auth-panel-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+  /* Google button */
   .auth-google-btn{
     width:100%;display:flex;align-items:center;justify-content:center;
-    gap:10px;padding:11px 18px;border-radius:var(--pill);
-    border:1.5px solid var(--border);background:var(--white);
+    gap:10px;padding:12px 18px;border-radius:12px;
+    border:1.5px solid #e2e0d8;background:#fff;
     cursor:pointer;font-family:var(--fb);font-size:14px;font-weight:600;
-    color:var(--ink);transition:.15s;margin-bottom:16px;
+    color:#0c0c0c;transition:.15s;margin-bottom:20px;
   }
-  .auth-google-btn:hover{border-color:var(--ink);background:var(--bg)}
+  .auth-google-btn:hover{border-color:#0c0c0c;background:#f9f9f9}
+  /* Divider */
   .auth-divider{
-    display:flex;align-items:center;gap:10px;margin-bottom:18px;
+    display:flex;align-items:center;gap:12px;margin-bottom:20px;
   }
-  .auth-divider::before,.auth-divider::after{
-    content:'';flex:1;height:1px;background:var(--border);
-  }
-  .auth-divider span{font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap}
+  .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e8e8e8}
+  .auth-divider span{font-size:12px;color:#999;font-weight:500;white-space:nowrap}
+  /* Form fields */
   .auth-form .form-grp{margin-bottom:14px}
   .auth-form .form-grp label{
-    display:block;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:5px;
+    display:block;font-size:13px;font-weight:600;color:#3a3a3a;margin-bottom:5px;
   }
   .auth-form .form-grp input,
   .auth-form .form-grp select{
-    width:100%;padding:10px 14px;border-radius:10px;
-    border:1.5px solid var(--border);
-    font-family:var(--fb);font-size:14px;color:var(--ink);
-    background:var(--white);outline:none;transition:border .15s;
+    width:100%;padding:11px 14px;border-radius:10px;
+    border:1.5px solid #e2e0d8;
+    font-family:var(--fb);font-size:14px;color:#0c0c0c;
+    background:#fff;outline:none;transition:border .15s;
   }
   .auth-form .form-grp input:focus,
-  .auth-form .form-grp select:focus{border-color:var(--blue)}
+  .auth-form .form-grp select:focus{border-color:#1a5cff;box-shadow:0 0 0 3px rgba(26,92,255,.08)}
   .auth-form .pw-wrap{position:relative}
-  .auth-form .pw-wrap input{padding-right:42px}
+  .auth-form .pw-wrap input{padding-right:44px}
   .auth-form .pw-toggle{
     position:absolute;right:12px;top:50%;transform:translateY(-50%);
-    background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;
-    padding:0;line-height:1;
+    background:none;border:none;cursor:pointer;color:#999;font-size:15px;padding:0;line-height:1;
   }
-  .auth-form .pw-toggle:hover{color:var(--ink)}
+  .auth-form .pw-toggle:hover{color:#333}
   .auth-form .remember-row{
     display:flex;align-items:center;justify-content:space-between;
-    margin-bottom:16px;font-size:13px;
+    margin-bottom:18px;font-size:13px;
   }
-  .auth-form .remember-row label{display:flex;align-items:center;gap:6px;color:var(--ink2);cursor:pointer}
-  .auth-form .forgot-link{color:var(--blue);text-decoration:none;font-weight:600}
+  .auth-form .remember-row label{display:flex;align-items:center;gap:6px;color:#3a3a3a;cursor:pointer}
+  .auth-form .forgot-link{color:#1a5cff;text-decoration:none;font-weight:600}
   .auth-form .forgot-link:hover{text-decoration:underline}
   .auth-submit-btn{
-    width:100%;padding:12px;border-radius:var(--pill);
-    background:var(--navy);color:#fff;border:none;cursor:pointer;
-    font-family:var(--fb);font-size:15px;font-weight:700;transition:.2s;
-    margin-bottom:14px;
+    width:100%;padding:13px;border-radius:12px;
+    background:#001233;color:#fff;border:none;cursor:pointer;
+    font-family:var(--fb);font-size:15px;font-weight:700;
+    transition:.2s;margin-bottom:16px;letter-spacing:.01em;
   }
-  .auth-submit-btn:hover{background:#002060}
-  .auth-submit-btn:disabled{opacity:.6;cursor:not-allowed}
-  .auth-switch-row{
-    font-size:13px;color:var(--muted);text-align:center;
-  }
-  .auth-switch-row a{color:var(--blue);text-decoration:none;font-weight:700}
+  .auth-submit-btn:hover{background:#002060;transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,18,51,.22)}
+  .auth-submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+  .auth-switch-row{font-size:13px;color:#888;text-align:center}
+  .auth-switch-row a{color:#1a5cff;text-decoration:none;font-weight:700}
   .auth-switch-row a:hover{text-decoration:underline}
+  /* Alerts */
   .auth-error{
-    display:none;margin-bottom:14px;padding:10px 12px;
-    border-radius:8px;background:#fee2e2;color:#991b1b;
-    font-size:13px;font-weight:600;
+    display:none;margin-bottom:14px;padding:10px 14px;
+    border-radius:10px;background:#fee2e2;color:#991b1b;
+    font-size:13px;font-weight:600;border:1px solid #fecaca;
   }
   .auth-success{
-    display:none;margin-bottom:14px;padding:10px 12px;
-    border-radius:8px;background:#ecfdf5;color:#047857;
-    font-size:13px;font-weight:600;
+    display:none;margin-bottom:14px;padding:10px 14px;
+    border-radius:10px;background:#ecfdf5;color:#047857;
+    font-size:13px;font-weight:600;border:1px solid #a7f3d0;
   }
   .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media(max-width:680px){
-    .auth-modal{grid-template-columns:1fr}
-    .auth-modal-left{display:none}
-    .auth-modal-right{padding:28px 22px}
+  /* Responsive */
+  @media(max-width:720px){
+    .auth-box{flex-direction:column;max-height:none;border-radius:18px}
+    .auth-left{padding:36px 28px 28px;flex-direction:row;align-items:center;gap:16px}
+    .auth-left h2{font-size:20px;margin-bottom:0}
+    .auth-left p,.auth-left-pills,.auth-left-logo{display:none}
+    .auth-right{padding:28px 24px}
+    .form-row-2{grid-template-columns:1fr}
   }
   </style>
 </head>
@@ -644,8 +665,8 @@ footer{
     </nav>
 
     <div class="nav-ctas">
-      <a class="btn btn-ghost" href="#" onclick="openAuthModal('login'); return false;">Log in</a>
-      <a class="btn btn-solid" href="#" onclick="openAuthModal('signup'); return false;">Sign up free</a>
+      <a class="btn btn-ghost" href="#" onclick="openAuth('login'); return false;">Log in</a>
+      <a class="btn btn-solid" href="#" onclick="openAuth('signup'); return false;">Sign up free</a>
     </div>
 
     <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
@@ -657,8 +678,8 @@ footer{
     <a class="nav-link" href="#how-it-works">How It Works</a>
     <a class="nav-link" href="#features">Features</a>
     <div style="height:8px"></div>
-    <a class="btn btn-ghost" href="#" onclick="openAuthModal('login'); return false;">Log in</a>
-    <a class="btn btn-solid" href="#" onclick="openAuthModal('signup'); return false;">Sign up free</a>
+    <a class="btn btn-ghost" href="#" onclick="openAuth('login'); return false;">Log in</a>
+    <a class="btn btn-solid" href="#" onclick="openAuth('signup'); return false;">Sign up free</a>
   </div>
 </nav>
 
@@ -669,10 +690,10 @@ footer{
     <h1>Where sports people <em>connect</em> and grow.</h1>
     <p class="hero-sub">Spopeer is the dedicated network for athletes, coaches, clubs, and sports professionals. Build your identity, share your story, and find the right connections.</p>
     <div class="hero-actions">
-      <a class="btn-hero" href="#" onclick="openAuthModal('signup'); return false;">
+      <a class="btn-hero" href="#" onclick="openAuth('signup'); return false;">
         <i class="fa-solid fa-user-plus"></i> Create free account
       </a>
-      <a class="btn-hero-out" href="#" onclick="openAuthModal('login'); return false;">
+      <a class="btn-hero-out" href="#" onclick="openAuth('login'); return false;">
         <i class="fa-solid fa-arrow-right-to-bracket"></i> Log in
       </a>
     </div>
@@ -865,10 +886,10 @@ footer{
     <h2>Your sports network starts here.</h2>
     <p>Join athletes, coaches, clubs, and professionals who are already building their presence on Spopeer.</p>
     <div class="cta-btns">
-      <a class="btn-cta-white" href="#" onclick="openAuthModal('signup'); return false;">
+      <a class="btn-cta-white" href="#" onclick="openAuth('signup'); return false;">
         <i class="fa-solid fa-user-plus"></i> Create free account
       </a>
-      <a class="btn-cta-ghost" href="#" onclick="openAuthModal('login'); return false;">
+      <a class="btn-cta-ghost" href="#" onclick="openAuth('login'); return false;">
         <i class="fa-solid fa-arrow-right-to-bracket"></i> Already have an account
       </a>
     </div>
@@ -889,8 +910,8 @@ footer{
     <div class="footer-links">
       <div class="footer-col">
         <h4>Platform</h4>
-        <a href="#" onclick="openAuthModal('signup'); return false;">Sign up</a>
-        <a href="#" onclick="openAuthModal('login'); return false;">Log in</a>
+        <a href="#" onclick="openAuth('signup'); return false;">Sign up</a>
+        <a href="#" onclick="openAuth('login'); return false;">Log in</a>
         <a href="pages/search/search.html">Search</a>
         <a href="#features">Features</a>
         <a href="#how-it-works">How It Works</a>
@@ -941,34 +962,40 @@ function toggleMenu(){
 </script>
 
 <!-- ── AUTH MODAL ── -->
-<div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-label="Sign in or Sign up">
-  <div class="auth-modal" id="authModal">
+<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in or Sign up">
+  <div class="auth-box">
 
-    <!-- LEFT PANEL -->
-    <div class="auth-modal-left" id="authModalLeft">
-      <!-- Login left text -->
-      <div id="loginLeftContent">
-        <h2>Welcome Back to<br>Your Sports Network</h2>
-        <p>Continue building connections, accessing opportunities, and growing your sports career with Spopeer.</p>
+    <!-- LEFT BRAND PANEL -->
+    <div class="auth-left">
+      <div class="auth-left-logo">
+        <img src="assets/images/logo-s.jpg" alt="Spopeer">
+        <span>Spopeer</span>
       </div>
-      <!-- Signup left text -->
-      <div id="signupLeftContent" style="display:none">
-        <h2>Spopeer, your passport to the world of sports.</h2>
-        <p>Create your profile, connect with athletes, coaches, clubs and sports professionals, and start building your sports journey.</p>
+      <div id="authLeftLogin">
+        <h2>Welcome back to your sports network.</h2>
+        <p>Continue building connections, accessing opportunities, and growing your sports career.</p>
+      </div>
+      <div id="authLeftSignup" style="display:none">
+        <h2>Your passport to the world of sports.</h2>
+        <p>Create your profile, connect with athletes, coaches, clubs and sports professionals around the world.</p>
+      </div>
+      <div class="auth-left-pills">
+        <span class="auth-left-pill">Athletes</span>
+        <span class="auth-left-pill">Coaches</span>
+        <span class="auth-left-pill">Clubs</span>
+        <span class="auth-left-pill">Professionals</span>
       </div>
     </div>
 
-    <!-- RIGHT PANEL -->
-    <div class="auth-modal-right">
-      <button class="auth-close" onclick="closeAuthModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    <!-- RIGHT FORM PANEL -->
+    <div class="auth-right">
+      <button class="auth-close-btn" onclick="closeAuth()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
 
       <!-- LOGIN PANEL -->
       <div class="auth-panel active" id="loginPanel">
-        <div class="auth-card-heading">
-          <h3>Welcome back</h3>
-          <p>Log in to your sports network</p>
-        </div>
-        <div id="authLoginSuccess" class="auth-success"><i class="fa-solid fa-check-circle" style="margin-right:6px"></i><span id="authLoginSuccessMsg"></span></div>
+        <p class="auth-panel-title">Sign In</p>
+        <p class="auth-panel-sub">Log in to your sports network</p>
+        <div id="authLoginSuccess" class="auth-success"><i class="fa-solid fa-check-circle" style="margin-right:6px"></i>Email verified! You can now log in.</div>
         <button type="button" id="modalLoginGoogleBtn" class="auth-google-btn">
           <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
             <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
@@ -997,16 +1024,14 @@ function toggleMenu(){
             <a href="/pages/auth/forgot-password.html" class="forgot-link">Forgot password?</a>
           </div>
           <button type="submit" class="auth-submit-btn" id="modalLoginBtn">Log In</button>
-          <p class="auth-switch-row">Don't have an account? <a href="#" onclick="switchAuthPanel('signup'); return false;">Create one</a></p>
+          <p class="auth-switch-row">Don't have an account? <a href="#" onclick="switchForm('signup'); return false;">Sign up free</a></p>
         </form>
       </div>
 
       <!-- SIGNUP PANEL -->
       <div class="auth-panel" id="signupPanel">
-        <div class="auth-card-heading">
-          <h3>Create your account</h3>
-          <p>Join the global sports community — free</p>
-        </div>
+        <p class="auth-panel-title">Create Account</p>
+        <p class="auth-panel-sub">Join the global sports community — free</p>
         <button type="button" id="modalSignupGoogleBtn" class="auth-google-btn">
           <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
             <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
@@ -1036,7 +1061,7 @@ function toggleMenu(){
           <div class="form-grp">
             <label for="modalSignupPassword">Password</label>
             <div class="pw-wrap">
-              <input id="modalSignupPassword" type="password" placeholder="Create a password" required />
+              <input id="modalSignupPassword" type="password" placeholder="Create a password (10+ chars)" required />
               <button type="button" class="pw-toggle" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
             </div>
           </div>
@@ -1067,17 +1092,17 @@ function toggleMenu(){
             </div>
           </div>
           <div class="form-grp">
-            <label for="modalSecondarySports">Secondary Sports</label>
+            <label for="modalSecondarySports">Secondary Sports <span style="font-weight:400;color:#aaa">(optional)</span></label>
             <input id="modalSecondarySports" type="text" placeholder="e.g. Tennis, Swimming" />
           </div>
           <button type="submit" class="auth-submit-btn" id="modalSignupBtn">Create Account</button>
-          <p class="auth-switch-row">Already have an account? <a href="#" onclick="switchAuthPanel('login'); return false;">Log in</a></p>
+          <p class="auth-switch-row">Already have an account? <a href="#" onclick="switchForm('login'); return false;">Sign in</a></p>
         </form>
       </div>
 
-    </div><!-- /auth-modal-right -->
-  </div><!-- /auth-modal -->
-</div><!-- /auth-overlay -->
+    </div><!-- /auth-right -->
+  </div><!-- /auth-box -->
+</div><!-- /auth-modal -->
 
 <script>
 async function loadSportsStrip() {
@@ -1215,23 +1240,25 @@ loadSportsStrip();
 <script>
 // ── AUTH MODAL LOGIC ──
 
-function openAuthModal(panel) {
-  document.getElementById('authOverlay').classList.add('open');
+function openAuth(panel) {
+  document.getElementById('authModal').classList.add('open');
   document.body.style.overflow = 'hidden';
-  switchAuthPanel(panel || 'login');
+  switchForm(panel || 'login');
 }
 
-function closeAuthModal() {
-  document.getElementById('authOverlay').classList.remove('open');
+function closeAuth() {
+  document.getElementById('authModal').classList.remove('open');
   document.body.style.overflow = '';
 }
 
-function switchAuthPanel(panel) {
+function switchForm(panel) {
   var isLogin = (panel === 'login');
   document.getElementById('loginPanel').classList.toggle('active', isLogin);
   document.getElementById('signupPanel').classList.toggle('active', !isLogin);
-  document.getElementById('loginLeftContent').style.display = isLogin ? 'block' : 'none';
-  document.getElementById('signupLeftContent').style.display = isLogin ? 'none' : 'block';
+  var leftLogin  = document.getElementById('authLeftLogin');
+  var leftSignup = document.getElementById('authLeftSignup');
+  if (leftLogin)  leftLogin.style.display  = isLogin ? 'block' : 'none';
+  if (leftSignup) leftSignup.style.display = isLogin ? 'none'  : 'block';
   ['modalLoginError','modalSignupError'].forEach(function(id){
     var el = document.getElementById(id);
     if (el) { el.textContent = ''; el.style.display = 'none'; el.style.background = ''; el.style.color = ''; }
@@ -1239,13 +1266,13 @@ function switchAuthPanel(panel) {
 }
 
 // Close when clicking the overlay backdrop
-document.getElementById('authOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeAuthModal();
+document.getElementById('authModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAuth();
 });
 
 // Close on Escape key
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeAuthModal();
+  if (e.key === 'Escape') closeAuth();
 });
 
 // ── GOOGLE SIGN-IN ──
@@ -1256,7 +1283,7 @@ function _showModalAuthError(msg) {
   var boxId = loginActive ? 'modalLoginError' : 'modalSignupError';
   var box = document.getElementById(boxId);
   if (box) { box.textContent = msg; box.style.display = 'block'; }
-  document.getElementById('authOverlay').classList.add('open');
+  document.getElementById('authModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
@@ -1431,7 +1458,7 @@ document.getElementById('modalLoginForm').addEventListener('submit', async funct
 (function() {
   var h = window.location.hash;
   if (h === '#login' || h === '#signup') {
-    openAuthModal(h.slice(1));
+    openAuth(h.slice(1));
   }
 })();
 </script>
