@@ -485,7 +485,6 @@ footer{
 }
 </style>
   <link rel="stylesheet" href="/css/fonts.css">
-
   <link rel="stylesheet" href="css/mobile-responsive.css">
   <script src="js/mobile-enhancements.js" defer></script>
   <script src="/js/auth.js"></script>
@@ -651,28 +650,6 @@ footer{
     font-family:var(--fb);
   }
   .footer-col button:hover{color:rgba(255,255,255,.85)}
-
-  .auth-modal .auth-card{
-    max-width:980px;
-    width:100%;
-    max-height:92vh;
-    overflow-y:auto;
-  }
-  .auth-close{
-    position:absolute;
-    top:24px;
-    right:28px;
-    z-index:10000;
-    border:0;
-    background:white;
-    color:#0f172a;
-    width:40px;
-    height:40px;
-    border-radius:999px;
-    font-size:24px;
-    font-weight:900;
-    cursor:pointer;
-  }
   /* Responsive */
   @media(max-width:720px){
     .auth-box{flex-direction:column;max-height:none;border-radius:18px}
@@ -1158,7 +1135,6 @@ async function loadSportsStrip() {
 
     const text = await res.text();
 
-    // Reject accidental HTML fallback
     if (
       /<!DOCTYPE html/i.test(text) ||
       /<html/i.test(text) ||
@@ -1206,45 +1182,23 @@ async function loadSportsStrip() {
     function createChip(sport) {
       const chip = document.createElement("div");
       chip.className = "sport-chip";
-
       const icon = document.createElement("i");
       icon.className = `fa-solid ${iconForSport(sport)}`;
-
       chip.appendChild(icon);
       chip.appendChild(document.createTextNode(sport));
-
       return chip;
     }
 
     track.innerHTML = "";
-
     const fragment = document.createDocumentFragment();
-    const doubledSports = [...sports, ...sports];
-
-    doubledSports.forEach((sport) => {
-      fragment.appendChild(createChip(sport));
-    });
-
+    [...sports, ...sports].forEach((sport) => { fragment.appendChild(createChip(sport)); });
     track.appendChild(fragment);
   } catch (err) {
     console.error("Failed to load sports list:", err);
-
-    const fallbackSports = [
-      "Football",
-      "Basketball",
-      "Tennis",
-      "Running",
-      "Swimming",
-      "Cycling",
-      "Volleyball",
-      "Boxing"
-    ];
-
+    const fallbackSports = ["Football","Basketball","Tennis","Running","Swimming","Cycling","Volleyball","Boxing"];
     track.innerHTML = "";
-
     const fragment = document.createDocumentFragment();
-
-    function fallbackIconForSport(name) {
+    function fallbackIcon(name) {
       if (/football|soccer|rugby/i.test(name)) return "fa-futbol";
       if (/basketball/i.test(name)) return "fa-basketball";
       if (/tennis/i.test(name)) return "fa-table-tennis-paddle-ball";
@@ -1255,23 +1209,18 @@ async function loadSportsStrip() {
       if (/boxing/i.test(name)) return "fa-hand-fist";
       return "fa-medal";
     }
-
     [...fallbackSports, ...fallbackSports].forEach((sport) => {
       const chip = document.createElement("div");
       chip.className = "sport-chip";
-
       const icon = document.createElement("i");
-      icon.className = `fa-solid ${fallbackIconForSport(sport)}`;
-
+      icon.className = `fa-solid ${fallbackIcon(sport)}`;
       chip.appendChild(icon);
       chip.appendChild(document.createTextNode(sport));
       fragment.appendChild(chip);
     });
-
     track.appendChild(fragment);
   }
 }
-
 loadSportsStrip();
 </script>
 
@@ -1349,9 +1298,9 @@ function _initGoogleBtns() {
 /* ── DOM READY ───────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
 
+  /* Backdrop click */
   var modal = document.getElementById('authModal');
   if (modal) {
-    /* Backdrop click */
     modal.addEventListener('click', function(e) { if (e.target === this) closeAuth(); });
   }
 
@@ -1388,7 +1337,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var btn      = document.getElementById('modalLoginBtn');
       errorBox.textContent = ''; errorBox.style.display = 'none';
       if (!email || !password) { errorBox.textContent = 'Please fill in both fields.'; errorBox.style.display = 'block'; return; }
-      btn.disabled = true; btn.textContent = 'Signing in\u2026';
+      btn.disabled = true; btn.textContent = 'Signing in…';
       if (!window.SpopeerAPI) {
         errorBox.textContent = 'App not loaded correctly. Please refresh the page.';
         errorBox.style.display = 'block';
@@ -1412,7 +1361,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /* ── Signup form ── */
   (function() {
-    /* Load sports list */
     fetch('/data/list-of-sports.txt').then(function(r) { return r.text(); }).then(function(text) {
       var sel = document.getElementById('modalPrimarySport');
       if (!sel) return;
@@ -1457,7 +1405,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (pass.length < 10) { errorBox.textContent = 'Password must be at least 10 characters.'; errorBox.style.display = 'block'; return; }
         if (pass !== confirm) { errorBox.textContent = 'Passwords do not match.'; errorBox.style.display = 'block'; return; }
 
-        btn.disabled = true; btn.textContent = 'Creating Account\u2026';
+        btn.disabled = true; btn.textContent = 'Creating Account…';
         if (!window.SpopeerAPI) {
           errorBox.textContent = 'App not loaded correctly. Please refresh the page.';
           errorBox.style.display = 'block';
