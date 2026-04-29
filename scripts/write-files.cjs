@@ -1,4 +1,81 @@
-<!-- Updated  -->
+const fs = require('fs');
+const path = require('path');
+
+/* ── navigation.js ── */
+const navContent = `// Updated
+(function () {
+  function isLoggedIn() {
+    return localStorage.getItem("spopeer_loggedIn") === "true" && !!localStorage.getItem("spopeer_user");
+  }
+
+  function getHomeUrl() {
+    return isLoggedIn() ? "/feed.html" : "/index.html";
+  }
+
+  function goHome() {
+    window.location.href = getHomeUrl();
+  }
+
+  function protectSignedInLinks() {
+    const links = document.querySelectorAll(
+      'a[href="/index.html"], a[href="index.html"], a[data-home-link]'
+    );
+
+    links.forEach(function (link) {
+      link.setAttribute("href", getHomeUrl());
+    });
+  }
+
+  async function protectGuestOnlyPages() {
+    var guestOnlyPaths = [
+      "/",
+      "/index.html",
+      "/pages/auth/login.html",
+      "/pages/auth/login-modern.html",
+      "/pages/auth/signup.html",
+      "/pages/auth/forgot-password.html"
+    ];
+
+    var current = window.location.pathname;
+    if (!guestOnlyPaths.includes(current)) return;
+
+    if (!window.SpopeerAPI) {
+      if (isLoggedIn()) {
+        window.location.href = "/feed.html";
+      }
+      return;
+    }
+
+    try {
+      await window.SpopeerAPI.me();
+      window.location.href = "/feed.html";
+    } catch (err) {
+      console.debug('navigation: guest page auth check failed', err);
+      // Not authenticated: stay on guest page.
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    protectSignedInLinks();
+    protectGuestOnlyPages();
+  });
+
+  window.SpopeerNavigation = {
+    isLoggedIn: isLoggedIn,
+    getHomeUrl: getHomeUrl,
+    goHome: goHome
+  };
+})();
+`;
+
+fs.writeFileSync(
+  path.join(__dirname, '..', 'public', 'js', 'navigation.js'),
+  navContent, 'utf8'
+);
+console.log('navigation.js written:', fs.statSync(path.join(__dirname, '..', 'public', 'js', 'navigation.js')).size, 'bytes');
+
+/* ── index.html ── */
+const indexContent = `<!-- Updated  -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -485,12 +562,11 @@ footer{
 }
 </style>
   <link rel="stylesheet" href="/css/fonts.css">
-
   <link rel="stylesheet" href="css/mobile-responsive.css">
-  <script src="js/mobile-enhancements.js" defer></script>
-  <script src="/js/auth.js"></script>
-  <script src="/js/api.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="js/mobile-enhancements.js" defer><\/script>
+  <script src="/js/auth.js"><\/script>
+  <script src="/js/api.js"><\/script>
+  <script src="https://accounts.google.com/gsi/client" async defer><\/script>
   <style>
   /* ── AUTH MODAL ── */
   .auth-modal{
@@ -743,7 +819,7 @@ footer{
             </div>
           </div>
           <div class="mp-tag"><i class="fa-solid fa-running" style="font-size:9px"></i> Training</div>
-          <div class="mp-body">5K personal best today — 18:42. The hill work is finally paying off. 🏃‍♂️</div>
+          <div class="mp-body">5K personal best today — 18:42. The hill work is finally paying off. \uD83C\uDFC3\u200D\u2642\uFE0F</div>
           <div class="mp-actions">
             <div class="mp-action liked"><i class="fa-solid fa-heart"></i> 48</div>
             <div class="mp-action"><i class="fa-regular fa-comment"></i> 12</div>
@@ -959,7 +1035,7 @@ footer{
   </div>
 
   <div class="footer-bottom">
-    <p>© 2026 Sports For All. Spopeer — All rights reserved.</p>
+    <p>\u00A9 2026 Sports For All. Spopeer \u2014 All rights reserved.</p>
     <div class="footer-social">
       <a class="social-btn" href="/pages/community/community.html" aria-label="Community"><i class="fa-solid fa-people-group"></i></a>
       <a class="social-btn" href="/pages/community/reels.html" aria-label="Reels"><i class="fa-solid fa-circle-play"></i></a>
@@ -975,7 +1051,7 @@ function toggleMenu(){
   const open=m.classList.toggle('open');
   i.className=open?'fa-solid fa-xmark':'fa-solid fa-bars';
 }
-</script>
+<\/script>
 
 <!-- ── AUTH MODAL ── -->
 <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in or Sign up" aria-hidden="true">
@@ -1047,7 +1123,7 @@ function toggleMenu(){
       <!-- SIGNUP PANEL -->
       <div class="auth-panel" id="signupPanel" style="display:none">
         <p class="auth-panel-title">Create Account</p>
-        <p class="auth-panel-sub">Join the global sports community — free</p>
+        <p class="auth-panel-sub">Join the global sports community \u2014 free</p>
         <button type="button" id="modalSignupGoogleBtn" class="auth-google-btn">
           <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
             <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
@@ -1089,7 +1165,7 @@ function toggleMenu(){
             </div>
           </div>
           <div class="form-grp">
-            <label for="modalRoleSelect">I am a…</label>
+            <label for="modalRoleSelect">I am a\u2026</label>
             <select id="modalRoleSelect" required>
               <option value="">Select your role</option>
               <option value="athlete">Athlete</option>
@@ -1131,12 +1207,11 @@ async function loadSportsStrip() {
     });
 
     if (!res.ok) {
-      throw new Error(`Sports list request failed with ${res.status}`);
+      throw new Error(\`Sports list request failed with \${res.status}\`);
     }
 
     const text = await res.text();
 
-    // Reject accidental HTML fallback
     if (
       /<!DOCTYPE html/i.test(text) ||
       /<html/i.test(text) ||
@@ -1147,7 +1222,7 @@ async function loadSportsStrip() {
     }
 
     const sports = text
-      .split(/\r?\n/)
+      .split(/\\r?\\n/)
       .map(s => s.trim())
       .filter(Boolean)
       .filter(s => !/[<>]/.test(s))
@@ -1184,45 +1259,23 @@ async function loadSportsStrip() {
     function createChip(sport) {
       const chip = document.createElement("div");
       chip.className = "sport-chip";
-
       const icon = document.createElement("i");
-      icon.className = `fa-solid ${iconForSport(sport)}`;
-
+      icon.className = \`fa-solid \${iconForSport(sport)}\`;
       chip.appendChild(icon);
       chip.appendChild(document.createTextNode(sport));
-
       return chip;
     }
 
     track.innerHTML = "";
-
     const fragment = document.createDocumentFragment();
-    const doubledSports = [...sports, ...sports];
-
-    doubledSports.forEach((sport) => {
-      fragment.appendChild(createChip(sport));
-    });
-
+    [...sports, ...sports].forEach((sport) => { fragment.appendChild(createChip(sport)); });
     track.appendChild(fragment);
   } catch (err) {
     console.error("Failed to load sports list:", err);
-
-    const fallbackSports = [
-      "Football",
-      "Basketball",
-      "Tennis",
-      "Running",
-      "Swimming",
-      "Cycling",
-      "Volleyball",
-      "Boxing"
-    ];
-
+    const fallbackSports = ["Football","Basketball","Tennis","Running","Swimming","Cycling","Volleyball","Boxing"];
     track.innerHTML = "";
-
     const fragment = document.createDocumentFragment();
-
-    function fallbackIconForSport(name) {
+    function fallbackIcon(name) {
       if (/football|soccer|rugby/i.test(name)) return "fa-futbol";
       if (/basketball/i.test(name)) return "fa-basketball";
       if (/tennis/i.test(name)) return "fa-table-tennis-paddle-ball";
@@ -1233,32 +1286,27 @@ async function loadSportsStrip() {
       if (/boxing/i.test(name)) return "fa-hand-fist";
       return "fa-medal";
     }
-
     [...fallbackSports, ...fallbackSports].forEach((sport) => {
       const chip = document.createElement("div");
       chip.className = "sport-chip";
-
       const icon = document.createElement("i");
-      icon.className = `fa-solid ${fallbackIconForSport(sport)}`;
-
+      icon.className = \`fa-solid \${fallbackIcon(sport)}\`;
       chip.appendChild(icon);
       chip.appendChild(document.createTextNode(sport));
       fragment.appendChild(chip);
     });
-
     track.appendChild(fragment);
   }
 }
-
 loadSportsStrip();
-</script>
+<\/script>
 
 <script>
 /* ── AUTH MODAL ──────────────────────────────────────────── */
 function openAuth(type) {
   var modal = document.getElementById('authModal');
   if (!modal) return;
-  modal.style.display = 'flex';
+  modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
   switchAuth(type || 'login');
@@ -1267,7 +1315,7 @@ function openAuth(type) {
 function closeAuth() {
   var modal = document.getElementById('authModal');
   if (!modal) return;
-  modal.style.display = 'none';
+  modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
 }
@@ -1327,11 +1375,9 @@ function _initGoogleBtns() {
 /* ── DOM READY ───────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
 
-  /* Ensure modal is hidden (belt-and-suspenders) */
+  /* Backdrop click */
   var modal = document.getElementById('authModal');
   if (modal) {
-    modal.style.display = 'none';
-    /* Backdrop click */
     modal.addEventListener('click', function(e) { if (e.target === this) closeAuth(); });
   }
 
@@ -1369,6 +1415,12 @@ document.addEventListener('DOMContentLoaded', function() {
       errorBox.textContent = ''; errorBox.style.display = 'none';
       if (!email || !password) { errorBox.textContent = 'Please fill in both fields.'; errorBox.style.display = 'block'; return; }
       btn.disabled = true; btn.textContent = 'Signing in\u2026';
+      if (!window.SpopeerAPI) {
+        errorBox.textContent = 'App not loaded correctly. Please refresh the page.';
+        errorBox.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Log In';
+        return;
+      }
       try {
         var result = await window.SpopeerAPI.login({ email: email, password: password });
         var user  = (result.data && result.data.user)  || result.user;
@@ -1386,11 +1438,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /* ── Signup form ── */
   (function() {
-    /* Load sports list */
     fetch('/data/list-of-sports.txt').then(function(r) { return r.text(); }).then(function(text) {
       var sel = document.getElementById('modalPrimarySport');
       if (!sel) return;
-      var sports = text.split(/\r?\n/).map(function(s) { return s.trim(); }).filter(Boolean);
+      var sports = text.split(/\\r?\\n/).map(function(s) { return s.trim(); }).filter(Boolean);
       sel.innerHTML = '<option value="">Select your sport</option>';
       sports.forEach(function(s) { var o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
       var o = document.createElement('option'); o.value = 'other'; o.textContent = 'Other'; sel.appendChild(o);
@@ -1432,6 +1483,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (pass !== confirm) { errorBox.textContent = 'Passwords do not match.'; errorBox.style.display = 'block'; return; }
 
         btn.disabled = true; btn.textContent = 'Creating Account\u2026';
+        if (!window.SpopeerAPI) {
+          errorBox.textContent = 'App not loaded correctly. Please refresh the page.';
+          errorBox.style.display = 'block';
+          btn.disabled = false; btn.textContent = 'Create Account';
+          return;
+        }
         try {
           var result = await window.SpopeerAPI.signup({ email, password: pass, firstName, lastName, role: roleVal, sport: sport || '', profession: secondary });
           var user  = (result.data && result.data.user)  || result.user;
@@ -1457,7 +1514,13 @@ document.addEventListener('DOMContentLoaded', function() {
   var h = window.location.hash;
   if (h === '#login' || h === '#signup') openAuth(h.slice(1));
 });
-</script>
-<script src="/js/navigation.js"></script>
+<\/script>
+<script src="/js/navigation.js"><\/script>
 </body>
-</html>
+</html>`;
+
+fs.writeFileSync(
+  path.join(__dirname, '..', 'public', 'index.html'),
+  indexContent, 'utf8'
+);
+console.log('index.html written:', fs.statSync(path.join(__dirname, '..', 'public', 'index.html')).size, 'bytes');
