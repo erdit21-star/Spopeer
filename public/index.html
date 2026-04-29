@@ -978,7 +978,7 @@ function toggleMenu(){
 </script>
 
 <!-- ── AUTH MODAL ── -->
-<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in or Sign up" aria-hidden="true">
+<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in or Sign up" aria-hidden="true" style="display:none">
   <div class="auth-box">
 
     <!-- LEFT BRAND PANEL -->
@@ -1045,7 +1045,7 @@ function toggleMenu(){
       </div>
 
       <!-- SIGNUP PANEL -->
-      <div class="auth-panel" id="signupPanel">
+      <div class="auth-panel" id="signupPanel" style="display:none">
         <p class="auth-panel-title">Create Account</p>
         <p class="auth-panel-sub">Join the global sports community — free</p>
         <button type="button" id="modalSignupGoogleBtn" class="auth-google-btn">
@@ -1513,31 +1513,44 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script>
 function openAuth(type) {
-  const modal = document.getElementById('authModal');
+  var modal = document.getElementById('authModal');
   if (!modal) return;
-
-  modal.classList.add('open');
+  modal.style.display = 'flex';
   modal.setAttribute('aria-hidden', 'false');
-  switchAuth(type);
+  document.body.style.overflow = 'hidden';
+  switchAuth(type || 'login');
 }
 
 function closeAuth() {
-  const modal = document.getElementById('authModal');
+  var modal = document.getElementById('authModal');
   if (!modal) return;
-
-  modal.classList.remove('open');
+  modal.style.display = 'none';
   modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
 }
 
 function switchAuth(type) {
-  const loginPanel = document.getElementById('loginPanel');
-  const signupPanel = document.getElementById('signupPanel');
-
-  if (!loginPanel || !signupPanel) return;
-
-  loginPanel.style.display = type === 'login' ? 'block' : 'none';
-  signupPanel.style.display = type === 'signup' ? 'block' : 'none';
+  var lp = document.getElementById('loginPanel');
+  var sp = document.getElementById('signupPanel');
+  var ll = document.getElementById('authLeftLogin');
+  var ls = document.getElementById('authLeftSignup');
+  if (lp) lp.style.display = (type === 'signup') ? 'none'  : 'block';
+  if (sp) sp.style.display = (type === 'signup') ? 'block' : 'none';
+  if (ll) ll.style.display = (type === 'signup') ? 'none'  : 'block';
+  if (ls) ls.style.display = (type === 'signup') ? 'block' : 'none';
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  var modal = document.getElementById('authModal');
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === this) closeAuth();
+    });
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeAuth();
+  });
+});
 </script>
 <script src="/js/navigation.js"></script>
 </body>
