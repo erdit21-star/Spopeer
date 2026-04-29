@@ -1239,22 +1239,29 @@ loadSportsStrip();
 
 <script>
 // ── AUTH MODAL LOGIC ──
+// Defined before DOMContentLoaded so onclick="openAuth(...)" can call them immediately.
 
-function openAuth(panel) {
-  document.getElementById('authModal').classList.add('open');
+window.openAuth = function openAuth(panel) {
+  var modal = document.getElementById('authModal');
+  if (!modal) return;
+  modal.classList.add('open');
   document.body.style.overflow = 'hidden';
-  switchForm(panel || 'login');
-}
+  window.switchForm(panel || 'login');
+};
 
-function closeAuth() {
-  document.getElementById('authModal').classList.remove('open');
+window.closeAuth = function closeAuth() {
+  var modal = document.getElementById('authModal');
+  if (!modal) return;
+  modal.classList.remove('open');
   document.body.style.overflow = '';
-}
+};
 
-function switchForm(panel) {
+window.switchForm = function switchForm(panel) {
   var isLogin = (panel === 'login');
-  document.getElementById('loginPanel').classList.toggle('active', isLogin);
-  document.getElementById('signupPanel').classList.toggle('active', !isLogin);
+  var lp = document.getElementById('loginPanel');
+  var sp = document.getElementById('signupPanel');
+  if (lp) lp.classList.toggle('active', isLogin);
+  if (sp) sp.classList.toggle('active', !isLogin);
   var leftLogin  = document.getElementById('authLeftLogin');
   var leftSignup = document.getElementById('authLeftSignup');
   if (leftLogin)  leftLogin.style.display  = isLogin ? 'block' : 'none';
@@ -1263,28 +1270,17 @@ function switchForm(panel) {
     var el = document.getElementById(id);
     if (el) { el.textContent = ''; el.style.display = 'none'; el.style.background = ''; el.style.color = ''; }
   });
-}
-
-// Close when clicking the overlay backdrop
-document.getElementById('authModal').addEventListener('click', function(e) {
-  if (e.target === this) closeAuth();
-});
-
-// Close on Escape key
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeAuth();
-});
+};
 
 // ── GOOGLE SIGN-IN ──
 var GOOGLE_CLIENT_ID = '527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com';
 
 function _showModalAuthError(msg) {
-  var loginActive = document.getElementById('loginPanel').classList.contains('active');
+  var loginActive = document.getElementById('loginPanel') && document.getElementById('loginPanel').classList.contains('active');
   var boxId = loginActive ? 'modalLoginError' : 'modalSignupError';
   var box = document.getElementById(boxId);
   if (box) { box.textContent = msg; box.style.display = 'block'; }
-  document.getElementById('authModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  window.openAuth(loginActive ? 'login' : 'signup');
 }
 
 function handleGoogleCredential(response) {
@@ -1330,137 +1326,180 @@ function _initModalGoogleSignIn() {
   });
 }
 
-// Mirror google-auth-init.js: bind after DOMContentLoaded so handleGoogleCredential is on window
 document.addEventListener('DOMContentLoaded', function() {
+  // ── Backdrop close ──
+  var modal = document.getElementById('authModal');
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === this) window.closeAuth();
+    });
+  }
+
+  // ── Escape key ──
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') window.closeAuth();
+  });
+
+  // ── Password toggle buttons ──
+  document.querySelectorAll('.pw-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var input = this.closest('.pw-wrap') && this.closest('.pw-wrap').querySelector('input');
+      if (!input) return;
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      this.querySelector('i').className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+    });
+  });
+
+  // ── Google init ──
   if (window.google && window.google.accounts && window.google.accounts.id) {
     _initModalGoogleSignIn();
   } else {
     window.onGoogleLibraryLoad = _initModalGoogleSignIn;
   }
-});
 
-// ── LOGIN FORM ──
-document.getElementById('modalLoginForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  var email    = (document.getElementById('modalLoginEmail').value || '').trim();
-  var password = document.getElementById('modalLoginPassword').value || '';
-  var errorBox = document.getElementById('modalLoginError');
-  var btn      = document.getElementById('modalLoginBtn');
+  // ── Login form ──
+  var loginForm = document.getElementById('modalLoginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var email    = (document.getElementById('modalLoginEmail').value || '').trim();
+      var password = document.getElementById('modalLoginPassword').value || '';
+      var errorBox = document.getElementById('modalLoginError');
+      var btn      = document.getElementById('modalLoginBtn');
 
-  errorBox.textContent = ''; errorBox.style.display = 'none';
-  if (!email || !password) {
-    errorBox.textContent = 'Please fill in both email and password.';
-    errorBox.style.display = 'block';
-    return;
-  }
-  btn.disabled = true; btn.textContent = 'Signing in\u2026';
-  try {
-    var result = await window.SpopeerAPI.login({ email: email, password: password });
-    var user  = (result.data && result.data.user)  || result.user;
-    var token = (result.data && result.data.token) || result.token;
-    if (token) localStorage.setItem('token', token);
-    if (user) window.Auth.login(user);
-    window.location.href = '/feed.html';
-  } catch (err) {
-    errorBox.textContent = err.message || 'Login failed.';
-    errorBox.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Log In';
-  }
-});
-
-// ── SIGNUP FORM ──
-(function() {
-  function loadModalSports() {
-    fetch('/data/list-of-sports.txt')
-      .then(function(r) { return r.text(); })
-      .then(function(text) {
-        var sports = text.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
-        var sel = document.getElementById('modalPrimarySport');
-        sel.innerHTML = '<option value="">Select your sport</option>';
-        sports.forEach(function(s) {
-          var opt = document.createElement('option');
-          opt.value = s; opt.textContent = s;
-          sel.appendChild(opt);
-        });
-        var other = document.createElement('option');
-        other.value = 'other'; other.textContent = 'Other';
-        sel.appendChild(other);
-      })
-      .catch(function(){});
-  }
-
-  document.getElementById('modalRoleSelect').addEventListener('change', function() {
-    document.getElementById('modalSportGroup').style.display = this.value ? 'block' : 'none';
-  });
-  document.getElementById('modalPrimarySport').addEventListener('change', function() {
-    document.getElementById('modalCustomSportWrap').style.display = this.value === 'other' ? 'block' : 'none';
-  });
-
-  loadModalSports();
-
-  document.getElementById('modalSignupForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    var firstName = (document.getElementById('modalFirstName').value || '').trim();
-    var lastName  = (document.getElementById('modalLastName').value  || '').trim();
-    var email     = (document.getElementById('modalSignupEmail').value || '').trim();
-    var pass      = document.getElementById('modalSignupPassword').value || '';
-    var confirm   = document.getElementById('modalConfirmPassword').value || '';
-    var roleVal   = document.getElementById('modalRoleSelect').value;
-    var sport     = document.getElementById('modalPrimarySport').value;
-    if (sport === 'other') sport = (document.getElementById('modalCustomSportInput').value || '').trim();
-    var secondary = (document.getElementById('modalSecondarySports').value || '').trim();
-    var errorBox  = document.getElementById('modalSignupError');
-    var btn       = document.getElementById('modalSignupBtn');
-
-    errorBox.textContent = ''; errorBox.style.display = 'none';
-    errorBox.style.background = ''; errorBox.style.color = '';
-
-    if (!firstName || !lastName || !email || !pass || !roleVal) {
-      errorBox.textContent = 'Please fill all required fields.';
-      errorBox.style.display = 'block'; return;
-    }
-    if (pass.length < 10) {
-      errorBox.textContent = 'Password must be at least 10 characters.';
-      errorBox.style.display = 'block'; return;
-    }
-    if (pass !== confirm) {
-      errorBox.textContent = 'Passwords do not match.';
-      errorBox.style.display = 'block'; return;
-    }
-
-    btn.disabled = true; btn.textContent = 'Creating Account\u2026';
-    try {
-      var result = await window.SpopeerAPI.signup({
-        email: email, password: pass,
-        firstName: firstName, lastName: lastName,
-        role: roleVal, sport: sport || '', profession: secondary
-      });
-      var user  = (result.data && result.data.user)  || result.user;
-      var token = (result.data && result.data.token) || result.token;
-      if (token) localStorage.setItem('token', token);
-      if (user) { window.Auth.login(user); window.location.href = '/feed.html'; }
-      else {
-        errorBox.style.background = '#dcfce7'; errorBox.style.color = '#166534';
-        errorBox.textContent = 'Account created! Please verify your email, then sign in.';
+      errorBox.textContent = ''; errorBox.style.display = 'none';
+      if (!email || !password) {
+        errorBox.textContent = 'Please fill in both email and password.';
         errorBox.style.display = 'block';
-        document.getElementById('modalSignupForm').reset();
+        return;
       }
-    } catch (err) {
-      errorBox.textContent = err.message || 'Signup failed. Please try again.';
-      errorBox.style.display = 'block';
-    } finally {
-      btn.disabled = false; btn.textContent = 'Create Account';
-    }
-  });
-})();
+      btn.disabled = true; btn.textContent = 'Signing in\u2026';
+      try {
+        var result = await window.SpopeerAPI.login({ email: email, password: password });
+        var user  = (result.data && result.data.user)  || result.user;
+        var token = (result.data && result.data.token) || result.token;
+        if (token) localStorage.setItem('token', token);
+        if (user && window.Auth) window.Auth.login(user);
+        window.location.href = '/feed.html';
+      } catch (err) {
+        errorBox.textContent = err.message || 'Login failed.';
+        errorBox.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Log In';
+      }
+    });
+  }
 
-// Auto-open modal if URL hash is #login or #signup
-(function() {
+  // ── Signup form ──
+  (function() {
+    function loadModalSports() {
+      fetch('/data/list-of-sports.txt')
+        .then(function(r) { return r.text(); })
+        .then(function(text) {
+          var sports = text.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
+          var sel = document.getElementById('modalPrimarySport');
+          if (!sel) return;
+          sel.innerHTML = '<option value="">Select your sport</option>';
+          sports.forEach(function(s) {
+            var opt = document.createElement('option');
+            opt.value = s; opt.textContent = s;
+            sel.appendChild(opt);
+          });
+          var other = document.createElement('option');
+          other.value = 'other'; other.textContent = 'Other';
+          sel.appendChild(other);
+        })
+        .catch(function(){});
+    }
+
+    var roleSelect = document.getElementById('modalRoleSelect');
+    if (roleSelect) {
+      roleSelect.addEventListener('change', function() {
+        var grp = document.getElementById('modalSportGroup');
+        if (grp) grp.style.display = this.value ? 'block' : 'none';
+      });
+    }
+
+    var sportSelect = document.getElementById('modalPrimarySport');
+    if (sportSelect) {
+      sportSelect.addEventListener('change', function() {
+        var wrap = document.getElementById('modalCustomSportWrap');
+        if (wrap) wrap.style.display = this.value === 'other' ? 'block' : 'none';
+      });
+    }
+
+    loadModalSports();
+
+    var signupForm = document.getElementById('modalSignupForm');
+    if (signupForm) {
+      signupForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var firstName = (document.getElementById('modalFirstName').value || '').trim();
+        var lastName  = (document.getElementById('modalLastName').value  || '').trim();
+        var email     = (document.getElementById('modalSignupEmail').value || '').trim();
+        var pass      = document.getElementById('modalSignupPassword').value || '';
+        var confirm   = document.getElementById('modalConfirmPassword').value || '';
+        var roleVal   = document.getElementById('modalRoleSelect').value;
+        var sportEl   = document.getElementById('modalPrimarySport');
+        var sport     = sportEl ? sportEl.value : '';
+        if (sport === 'other') {
+          var customEl = document.getElementById('modalCustomSportInput');
+          sport = customEl ? (customEl.value || '').trim() : '';
+        }
+        var secondaryEl = document.getElementById('modalSecondarySports');
+        var secondary   = secondaryEl ? (secondaryEl.value || '').trim() : '';
+        var errorBox  = document.getElementById('modalSignupError');
+        var btn       = document.getElementById('modalSignupBtn');
+
+        errorBox.textContent = ''; errorBox.style.display = 'none';
+        errorBox.style.background = ''; errorBox.style.color = '';
+
+        if (!firstName || !lastName || !email || !pass || !roleVal) {
+          errorBox.textContent = 'Please fill all required fields.';
+          errorBox.style.display = 'block'; return;
+        }
+        if (pass.length < 10) {
+          errorBox.textContent = 'Password must be at least 10 characters.';
+          errorBox.style.display = 'block'; return;
+        }
+        if (pass !== confirm) {
+          errorBox.textContent = 'Passwords do not match.';
+          errorBox.style.display = 'block'; return;
+        }
+
+        btn.disabled = true; btn.textContent = 'Creating Account\u2026';
+        try {
+          var result = await window.SpopeerAPI.signup({
+            email: email, password: pass,
+            firstName: firstName, lastName: lastName,
+            role: roleVal, sport: sport || '', profession: secondary
+          });
+          var user  = (result.data && result.data.user)  || result.user;
+          var token = (result.data && result.data.token) || result.token;
+          if (token) localStorage.setItem('token', token);
+          if (user && window.Auth) { window.Auth.login(user); window.location.href = '/feed.html'; }
+          else {
+            errorBox.style.background = '#dcfce7'; errorBox.style.color = '#166534';
+            errorBox.textContent = 'Account created! Please verify your email, then sign in.';
+            errorBox.style.display = 'block';
+            signupForm.reset();
+          }
+        } catch (err) {
+          errorBox.textContent = err.message || 'Signup failed. Please try again.';
+          errorBox.style.display = 'block';
+        } finally {
+          btn.disabled = false; btn.textContent = 'Create Account';
+        }
+      });
+    }
+  })();
+
+  // ── Auto-open on hash ──
   var h = window.location.hash;
   if (h === '#login' || h === '#signup') {
-    openAuth(h.slice(1));
+    window.openAuth(h.slice(1));
   }
-})();
+});
 </script>
 <script src="/js/navigation.js"></script>
 </body>
