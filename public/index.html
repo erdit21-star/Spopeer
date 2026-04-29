@@ -488,6 +488,142 @@ footer{
 
   <link rel="stylesheet" href="css/mobile-responsive.css">
   <script src="js/mobile-enhancements.js" defer></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+  /* ── AUTH MODAL ── */
+  .auth-overlay{
+    display:none;position:fixed;inset:0;z-index:1000;
+    background:rgba(12,12,12,.55);
+    backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .auth-overlay.open{display:flex}
+  .auth-modal{
+    background:var(--white);border-radius:var(--rXL);
+    overflow:hidden;
+    display:grid;grid-template-columns:1fr 1.15fr;
+    width:100%;max-width:860px;
+    box-shadow:0 32px 80px rgba(0,18,51,.22),0 8px 24px rgba(0,0,0,.1);
+    position:relative;
+    max-height:92vh;overflow-y:auto;
+  }
+  .auth-modal-left{
+    background:linear-gradient(145deg,var(--navy) 0%,#0d3a8e 60%,#1a5cff 100%);
+    padding:48px 36px;
+    display:flex;flex-direction:column;justify-content:center;
+    color:#fff;
+    position:relative;overflow:hidden;
+  }
+  .auth-modal-left::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse 80% 60% at 20% 80%,rgba(255,255,255,.07),transparent);
+    pointer-events:none;
+  }
+  .auth-modal-left h2{
+    font-family:var(--fd);font-size:clamp(24px,3vw,34px);
+    line-height:1.1;letter-spacing:-.03em;color:#fff;
+    margin-bottom:16px;position:relative;
+  }
+  .auth-modal-left p{
+    font-size:15px;color:rgba(255,255,255,.72);
+    line-height:1.65;position:relative;
+  }
+  .auth-modal-right{
+    padding:40px 36px;overflow-y:auto;
+  }
+  .auth-panel{display:none}
+  .auth-panel.active{display:block}
+  .auth-close{
+    position:sticky;top:0;float:right;
+    width:34px;height:34px;border-radius:50%;
+    background:var(--surface);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink2);font-size:15px;transition:.15s;
+    margin-bottom:16px;z-index:10;
+    margin-left:auto;
+  }
+  .auth-close:hover{background:var(--border);color:var(--ink)}
+  .auth-card-heading h3{
+    font-family:var(--fd);font-size:22px;font-weight:800;
+    color:var(--ink);margin-bottom:4px;
+  }
+  .auth-card-heading p{font-size:14px;color:var(--muted);margin-bottom:22px}
+  .auth-google-btn{
+    width:100%;display:flex;align-items:center;justify-content:center;
+    gap:10px;padding:11px 18px;border-radius:var(--pill);
+    border:1.5px solid var(--border);background:var(--white);
+    cursor:pointer;font-family:var(--fb);font-size:14px;font-weight:600;
+    color:var(--ink);transition:.15s;margin-bottom:16px;
+  }
+  .auth-google-btn:hover{border-color:var(--ink);background:var(--bg)}
+  .auth-divider{
+    display:flex;align-items:center;gap:10px;margin-bottom:18px;
+  }
+  .auth-divider::before,.auth-divider::after{
+    content:'';flex:1;height:1px;background:var(--border);
+  }
+  .auth-divider span{font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap}
+  .auth-form .form-grp{margin-bottom:14px}
+  .auth-form .form-grp label{
+    display:block;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:5px;
+  }
+  .auth-form .form-grp input,
+  .auth-form .form-grp select{
+    width:100%;padding:10px 14px;border-radius:10px;
+    border:1.5px solid var(--border);
+    font-family:var(--fb);font-size:14px;color:var(--ink);
+    background:var(--white);outline:none;transition:border .15s;
+  }
+  .auth-form .form-grp input:focus,
+  .auth-form .form-grp select:focus{border-color:var(--blue)}
+  .auth-form .pw-wrap{position:relative}
+  .auth-form .pw-wrap input{padding-right:42px}
+  .auth-form .pw-toggle{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;
+    padding:0;line-height:1;
+  }
+  .auth-form .pw-toggle:hover{color:var(--ink)}
+  .auth-form .remember-row{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:16px;font-size:13px;
+  }
+  .auth-form .remember-row label{display:flex;align-items:center;gap:6px;color:var(--ink2);cursor:pointer}
+  .auth-form .forgot-link{color:var(--blue);text-decoration:none;font-weight:600}
+  .auth-form .forgot-link:hover{text-decoration:underline}
+  .auth-submit-btn{
+    width:100%;padding:12px;border-radius:var(--pill);
+    background:var(--navy);color:#fff;border:none;cursor:pointer;
+    font-family:var(--fb);font-size:15px;font-weight:700;transition:.2s;
+    margin-bottom:14px;
+  }
+  .auth-submit-btn:hover{background:#002060}
+  .auth-submit-btn:disabled{opacity:.6;cursor:not-allowed}
+  .auth-switch-row{
+    font-size:13px;color:var(--muted);text-align:center;
+  }
+  .auth-switch-row a{color:var(--blue);text-decoration:none;font-weight:700}
+  .auth-switch-row a:hover{text-decoration:underline}
+  .auth-error{
+    display:none;margin-bottom:14px;padding:10px 12px;
+    border-radius:8px;background:#fee2e2;color:#991b1b;
+    font-size:13px;font-weight:600;
+  }
+  .auth-success{
+    display:none;margin-bottom:14px;padding:10px 12px;
+    border-radius:8px;background:#ecfdf5;color:#047857;
+    font-size:13px;font-weight:600;
+  }
+  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:680px){
+    .auth-modal{grid-template-columns:1fr}
+    .auth-modal-left{display:none}
+    .auth-modal-right{padding:28px 22px}
+  }
+  </style>
 </head>
 <body>
 
@@ -508,8 +644,8 @@ footer{
     </nav>
 
     <div class="nav-ctas">
-      <a class="btn btn-ghost" href="pages/auth/login.html">Log in</a>
-      <a class="btn btn-solid" href="pages/auth/signup.html">Sign up free</a>
+      <a class="btn btn-ghost" href="#" onclick="openAuthModal('login'); return false;">Log in</a>
+      <a class="btn btn-solid" href="#" onclick="openAuthModal('signup'); return false;">Sign up free</a>
     </div>
 
     <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
@@ -521,8 +657,8 @@ footer{
     <a class="nav-link" href="#how-it-works">How It Works</a>
     <a class="nav-link" href="#features">Features</a>
     <div style="height:8px"></div>
-    <a class="btn btn-ghost" href="pages/auth/login.html">Log in</a>
-    <a class="btn btn-solid" href="pages/auth/signup.html">Sign up free</a>
+    <a class="btn btn-ghost" href="#" onclick="openAuthModal('login'); return false;">Log in</a>
+    <a class="btn btn-solid" href="#" onclick="openAuthModal('signup'); return false;">Sign up free</a>
   </div>
 </nav>
 
@@ -533,10 +669,10 @@ footer{
     <h1>Where sports people <em>connect</em> and grow.</h1>
     <p class="hero-sub">Spopeer is the dedicated network for athletes, coaches, clubs, and sports professionals. Build your identity, share your story, and find the right connections.</p>
     <div class="hero-actions">
-      <a class="btn-hero" href="pages/auth/signup.html">
+      <a class="btn-hero" href="#" onclick="openAuthModal('signup'); return false;">
         <i class="fa-solid fa-user-plus"></i> Create free account
       </a>
-      <a class="btn-hero-out" href="pages/auth/login.html">
+      <a class="btn-hero-out" href="#" onclick="openAuthModal('login'); return false;">
         <i class="fa-solid fa-arrow-right-to-bracket"></i> Log in
       </a>
     </div>
@@ -729,10 +865,10 @@ footer{
     <h2>Your sports network starts here.</h2>
     <p>Join athletes, coaches, clubs, and professionals who are already building their presence on Spopeer.</p>
     <div class="cta-btns">
-      <a class="btn-cta-white" href="pages/auth/signup.html">
+      <a class="btn-cta-white" href="#" onclick="openAuthModal('signup'); return false;">
         <i class="fa-solid fa-user-plus"></i> Create free account
       </a>
-      <a class="btn-cta-ghost" href="pages/auth/login.html">
+      <a class="btn-cta-ghost" href="#" onclick="openAuthModal('login'); return false;">
         <i class="fa-solid fa-arrow-right-to-bracket"></i> Already have an account
       </a>
     </div>
@@ -753,8 +889,8 @@ footer{
     <div class="footer-links">
       <div class="footer-col">
         <h4>Platform</h4>
-        <a href="pages/auth/signup.html">Sign up</a>
-        <a href="pages/auth/login.html">Log in</a>
+        <a href="#" onclick="openAuthModal('signup'); return false;">Sign up</a>
+        <a href="#" onclick="openAuthModal('login'); return false;">Log in</a>
         <a href="pages/search/search.html">Search</a>
         <a href="#features">Features</a>
         <a href="#how-it-works">How It Works</a>
@@ -803,6 +939,150 @@ function toggleMenu(){
   i.className=open?'fa-solid fa-xmark':'fa-solid fa-bars';
 }
 </script>
+
+<!-- ── AUTH MODAL ── -->
+<div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-label="Sign in or Sign up">
+  <div class="auth-modal" id="authModal">
+
+    <!-- LEFT PANEL -->
+    <div class="auth-modal-left" id="authModalLeft">
+      <!-- Login left text -->
+      <div id="loginLeftContent">
+        <h2>Welcome Back to<br>Your Sports Network</h2>
+        <p>Continue building connections, accessing opportunities, and growing your sports career with Spopeer.</p>
+      </div>
+      <!-- Signup left text -->
+      <div id="signupLeftContent" style="display:none">
+        <h2>Spopeer, your passport to the world of sports.</h2>
+        <p>Create your profile, connect with athletes, coaches, clubs and sports professionals, and start building your sports journey.</p>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="auth-modal-right">
+      <button class="auth-close" onclick="closeAuthModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+
+      <!-- LOGIN PANEL -->
+      <div class="auth-panel active" id="loginPanel">
+        <div class="auth-card-heading">
+          <h3>Welcome back</h3>
+          <p>Log in to your sports network</p>
+        </div>
+        <div id="authLoginSuccess" class="auth-success"><i class="fa-solid fa-check-circle" style="margin-right:6px"></i><span id="authLoginSuccessMsg"></span></div>
+        <div id="g_id_onload"
+          data-client_id="527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com"
+          data-callback="handleGoogleCredential"
+          data-auto_prompt="false">
+        </div>
+        <button type="button" id="modalLoginGoogleBtn" class="auth-google-btn">
+          <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/>
+            <path fill="#FBBC05" d="M10.6 28.1A14.7 14.7 0 0 1 9.5 24c0-1.4.2-2.8.6-4.1l-6.9-5.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l8-6.6z"/>
+            <path fill="#34A853" d="M24 47c5.4 0 9.9-1.8 13.2-4.8l-7.5-5.8c-1.8 1.2-4.2 2-5.7 2-6.4 0-11.8-4.3-13.7-10.1l-8 6.6C7 41.3 14.8 47 24 47z"/>
+          </svg>
+          Continue with Google
+        </button>
+        <div class="auth-divider"><span>Or continue with email</span></div>
+        <form class="auth-form" id="modalLoginForm" novalidate>
+          <div id="modalLoginError" class="auth-error"></div>
+          <div class="form-grp">
+            <label for="modalLoginEmail">Email Address</label>
+            <input id="modalLoginEmail" type="email" placeholder="you@email.com" required autocomplete="email" />
+          </div>
+          <div class="form-grp">
+            <label for="modalLoginPassword">Password</label>
+            <div class="pw-wrap">
+              <input id="modalLoginPassword" type="password" placeholder="Enter your password" required autocomplete="current-password" />
+              <button type="button" class="pw-toggle" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="remember-row">
+            <label><input type="checkbox" id="modalRemember" /> Remember me</label>
+            <a href="/pages/auth/forgot-password.html" class="forgot-link">Forgot password?</a>
+          </div>
+          <button type="submit" class="auth-submit-btn" id="modalLoginBtn">Log In</button>
+          <p class="auth-switch-row">Don't have an account? <a href="#" onclick="switchAuthPanel('signup'); return false;">Create one</a></p>
+        </form>
+      </div>
+
+      <!-- SIGNUP PANEL -->
+      <div class="auth-panel" id="signupPanel">
+        <div class="auth-card-heading">
+          <h3>Create your account</h3>
+          <p>Join the global sports community — free</p>
+        </div>
+        <button type="button" id="modalSignupGoogleBtn" class="auth-google-btn">
+          <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/>
+            <path fill="#FBBC05" d="M10.6 28.1A14.7 14.7 0 0 1 9.5 24c0-1.4.2-2.8.6-4.1l-6.9-5.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l8-6.6z"/>
+            <path fill="#34A853" d="M24 47c5.4 0 9.9-1.8 13.2-4.8l-7.5-5.8c-1.8 1.2-4.2 2-5.7 2-6.4 0-11.8-4.3-13.7-10.1l-8 6.6C7 41.3 14.8 47 24 47z"/>
+          </svg>
+          Sign up with Google
+        </button>
+        <div class="auth-divider"><span>or sign up with email</span></div>
+        <form class="auth-form" id="modalSignupForm" novalidate>
+          <div id="modalSignupError" class="auth-error"></div>
+          <div class="form-row-2">
+            <div class="form-grp">
+              <label for="modalFirstName">First Name</label>
+              <input id="modalFirstName" type="text" placeholder="First name" required />
+            </div>
+            <div class="form-grp">
+              <label for="modalLastName">Last Name</label>
+              <input id="modalLastName" type="text" placeholder="Last name" required />
+            </div>
+          </div>
+          <div class="form-grp">
+            <label for="modalSignupEmail">Email Address</label>
+            <input id="modalSignupEmail" type="email" placeholder="you@email.com" required autocomplete="email" />
+          </div>
+          <div class="form-grp">
+            <label for="modalSignupPassword">Password</label>
+            <div class="pw-wrap">
+              <input id="modalSignupPassword" type="password" placeholder="Create a password" required />
+              <button type="button" class="pw-toggle" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="form-grp">
+            <label for="modalConfirmPassword">Confirm Password</label>
+            <div class="pw-wrap">
+              <input id="modalConfirmPassword" type="password" placeholder="Confirm password" required />
+              <button type="button" class="pw-toggle" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="form-grp">
+            <label for="modalRoleSelect">I am a…</label>
+            <select id="modalRoleSelect" required>
+              <option value="">Select your role</option>
+              <option value="athlete">Athlete</option>
+              <option value="coach">Coach / Manager</option>
+              <option value="club">Sports Club</option>
+              <option value="supportive_professional">Supportive Professional</option>
+            </select>
+          </div>
+          <div class="form-grp" id="modalSportGroup" style="display:none">
+            <label for="modalPrimarySport">Primary Sport</label>
+            <select id="modalPrimarySport">
+              <option value="">Select your sport</option>
+            </select>
+            <div id="modalCustomSportWrap" style="display:none;margin-top:8px">
+              <input type="text" id="modalCustomSportInput" placeholder="Enter your sport" />
+            </div>
+          </div>
+          <div class="form-grp">
+            <label for="modalSecondarySports">Secondary Sports</label>
+            <input id="modalSecondarySports" type="text" placeholder="e.g. Tennis, Swimming" />
+          </div>
+          <button type="submit" class="auth-submit-btn" id="modalSignupBtn">Create Account</button>
+          <p class="auth-switch-row">Already have an account? <a href="#" onclick="switchAuthPanel('login'); return false;">Log in</a></p>
+        </form>
+      </div>
+
+    </div><!-- /auth-modal-right -->
+  </div><!-- /auth-modal -->
+</div><!-- /auth-overlay -->
 
 <script>
 async function loadSportsStrip() {
@@ -935,6 +1215,217 @@ async function loadSportsStrip() {
 }
 
 loadSportsStrip();
+</script>
+
+<script>
+// ── AUTH MODAL LOGIC ──
+
+function openAuthModal(panel) {
+  document.getElementById('authOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  switchAuthPanel(panel || 'login');
+}
+
+function closeAuthModal() {
+  document.getElementById('authOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function switchAuthPanel(panel) {
+  var isLogin = (panel === 'login');
+  document.getElementById('loginPanel').classList.toggle('active', isLogin);
+  document.getElementById('signupPanel').classList.toggle('active', !isLogin);
+  document.getElementById('loginLeftContent').style.display = isLogin ? 'block' : 'none';
+  document.getElementById('signupLeftContent').style.display = isLogin ? 'none' : 'block';
+  // clear errors
+  ['modalLoginError','modalSignupError'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) { el.textContent = ''; el.style.display = 'none'; }
+  });
+}
+
+// Close when clicking the overlay backdrop
+document.getElementById('authOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeAuthModal();
+});
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeAuthModal();
+});
+
+// ── GOOGLE SIGN-IN ──
+function handleGoogleCredential(response) {
+  fetch('/api/auth/google', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential: response.credential })
+  })
+  .then(function(res) { return res.json().then(function(d){ return { ok: res.ok, data: d }; }); })
+  .then(function(r) {
+    if (!r.ok) throw new Error((r.data.error && r.data.error.message) || 'Google sign-in failed.');
+    var userData = (r.data.data && r.data.data.user) || r.data.user;
+    var token = r.data.data && r.data.data.accessToken;
+    if (userData && window.Auth) window.Auth.login(userData);
+    if (token) localStorage.setItem('spopeerToken', token);
+    window.location.href = '/feed.html';
+  })
+  .catch(function(err) {
+    var box = document.getElementById('modalLoginError');
+    if (box) {
+      box.textContent = err.message || 'Google sign-in failed. Please try email/password.';
+      box.style.display = 'block';
+    }
+  });
+}
+
+// Bind Google buttons once GSI loads
+function _initModalGoogleSignIn() {
+  var onloadDiv = document.getElementById('g_id_onload');
+  if (!onloadDiv) return;
+  var clientId = onloadDiv.getAttribute('data-client_id');
+  if (!clientId) return;
+  window.google.accounts.id.initialize({ client_id: clientId, callback: handleGoogleCredential });
+  ['modalLoginGoogleBtn','modalSignupGoogleBtn'].forEach(function(id) {
+    var btn = document.getElementById(id);
+    if (btn) btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      window.google.accounts.id.prompt();
+    });
+  });
+}
+if (window.google && window.google.accounts && window.google.accounts.id) {
+  _initModalGoogleSignIn();
+} else {
+  window.onGoogleLibraryLoad = _initModalGoogleSignIn;
+}
+
+// ── LOGIN FORM ──
+document.getElementById('modalLoginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var email    = (document.getElementById('modalLoginEmail').value || '').trim();
+  var password = document.getElementById('modalLoginPassword').value || '';
+  var errorBox = document.getElementById('modalLoginError');
+  var btn      = document.getElementById('modalLoginBtn');
+
+  errorBox.textContent = ''; errorBox.style.display = 'none';
+  if (!email || !password) {
+    errorBox.textContent = 'Please fill in both email and password.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    var result = await window.SpopeerAPI.login({ email: email, password: password });
+    var user  = (result.data && result.data.user)  || result.user;
+    var token = (result.data && result.data.token) || result.token;
+    if (token) localStorage.setItem('token', token);
+    if (user) window.Auth.login(user);
+    window.location.href = '/feed.html';
+  } catch (err) {
+    errorBox.textContent = err.message || 'Login failed.';
+    errorBox.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Log In';
+  }
+});
+
+// ── SIGNUP FORM ──
+(function() {
+  var sportsList = [];
+
+  async function loadModalSports() {
+    try {
+      var res  = await fetch('/data/list-of-sports.txt');
+      var text = await res.text();
+      sportsList = text.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
+    } catch(_) { sportsList = []; }
+    var sel = document.getElementById('modalPrimarySport');
+    sel.innerHTML = '<option value="">Select your sport</option>';
+    sportsList.forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      sel.appendChild(opt);
+    });
+    var other = document.createElement('option');
+    other.value = 'other'; other.textContent = 'Other';
+    sel.appendChild(other);
+  }
+
+  document.getElementById('modalRoleSelect').addEventListener('change', function() {
+    document.getElementById('modalSportGroup').style.display = this.value ? 'block' : 'none';
+  });
+  document.getElementById('modalPrimarySport').addEventListener('change', function() {
+    document.getElementById('modalCustomSportWrap').style.display = this.value === 'other' ? 'block' : 'none';
+  });
+
+  // Load sports when modal opens for the first time
+  var sportsLoaded = false;
+  document.getElementById('authOverlay').addEventListener('click', function() {
+    if (!sportsLoaded) { sportsLoaded = true; loadModalSports(); }
+  }, { once: true });
+  // Also load immediately in background
+  loadModalSports();
+
+  document.getElementById('modalSignupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var firstName = (document.getElementById('modalFirstName').value || '').trim();
+    var lastName  = (document.getElementById('modalLastName').value  || '').trim();
+    var email     = (document.getElementById('modalSignupEmail').value || '').trim();
+    var pass      = document.getElementById('modalSignupPassword').value || '';
+    var confirm   = document.getElementById('modalConfirmPassword').value || '';
+    var roleVal   = document.getElementById('modalRoleSelect').value;
+    var sport     = document.getElementById('modalPrimarySport').value;
+    if (sport === 'other') sport = (document.getElementById('modalCustomSportInput').value || '').trim();
+    var secondary = (document.getElementById('modalSecondarySports').value || '').trim();
+    var errorBox  = document.getElementById('modalSignupError');
+    var btn       = document.getElementById('modalSignupBtn');
+
+    errorBox.textContent = ''; errorBox.style.display = 'none';
+
+    if (!firstName || !lastName || !email || !pass || !roleVal) {
+      errorBox.textContent = 'Please fill all required fields.';
+      errorBox.style.display = 'block'; return;
+    }
+    if (pass.length < 10) {
+      errorBox.textContent = 'Password must be at least 10 characters.';
+      errorBox.style.display = 'block'; return;
+    }
+    if (pass !== confirm) {
+      errorBox.textContent = 'Passwords do not match.';
+      errorBox.style.display = 'block'; return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Creating Account…';
+    try {
+      var result = await window.SpopeerAPI.signup({
+        email: email, password: pass,
+        firstName: firstName, lastName: lastName,
+        role: roleVal, sport: sport || '', profession: secondary
+      });
+      var user  = (result.data && result.data.user)  || result.user;
+      var token = (result.data && result.data.token) || result.token;
+      if (token) localStorage.setItem('token', token);
+      if (user) { window.Auth.login(user); window.location.href = '/feed.html'; }
+      else {
+        errorBox.style.background = '#dcfce7'; errorBox.style.color = '#166534';
+        errorBox.textContent = 'Account created! Please verify your email, then sign in.';
+        errorBox.style.display = 'block';
+        document.getElementById('modalSignupForm').reset();
+      }
+    } catch (err) {
+      errorBox.textContent = err.message || 'Signup failed. Please try again.';
+      errorBox.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Create Account';
+    }
+  });
+// Auto-open modal if URL hash is #login or #signup
+(function() {
+  var h = window.location.hash;
+  if (h === '#login' || h === '#signup') {
+    openAuthModal(h.slice(1));
+  }
+})();
 </script>
 <script src="/js/navigation.js"></script>
 </body>
