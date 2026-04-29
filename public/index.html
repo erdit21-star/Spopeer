@@ -634,6 +634,19 @@ footer{
     font-size:13px;font-weight:600;border:1px solid #a7f3d0;
   }
   .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  /* Button element resets so <button onclick="openAuth(...)"> look identical to the old <a> elements */
+  button.btn-hero,button.btn-cta-white{border:none}
+  button.btn-hero,button.btn-hero-out,button.btn-cta-white,button.btn-cta-ghost{
+    cursor:pointer;font-family:var(--fb);
+  }
+  /* Footer auth buttons inherit link appearance */
+  .footer-col button{
+    background:none;border:none;cursor:pointer;padding:0;
+    font-size:13px;color:rgba(255,255,255,.5);
+    display:block;margin-bottom:9px;transition:color .15s;
+    font-family:var(--fb);
+  }
+  .footer-col button:hover{color:rgba(255,255,255,.85)}
   /* Responsive */
   @media(max-width:720px){
     .auth-box{flex-direction:column;max-height:none;border-radius:18px}
@@ -664,8 +677,8 @@ footer{
     </nav>
 
     <div class="nav-ctas">
-      <a class="btn btn-ghost" href="#" onclick="openAuth('login'); return false;">Log in</a>
-      <a class="btn btn-solid" href="#" onclick="openAuth('signup'); return false;">Sign up free</a>
+      <button type="button" class="btn btn-ghost" onclick="openAuth('login')">Log in</button>
+      <button type="button" class="btn btn-solid" onclick="openAuth('signup')">Sign up free</button>
     </div>
 
     <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
@@ -677,8 +690,8 @@ footer{
     <a class="nav-link" href="#how-it-works">How It Works</a>
     <a class="nav-link" href="#features">Features</a>
     <div style="height:8px"></div>
-    <a class="btn btn-ghost" href="#" onclick="openAuth('login'); return false;">Log in</a>
-    <a class="btn btn-solid" href="#" onclick="openAuth('signup'); return false;">Sign up free</a>
+    <button type="button" class="btn btn-ghost" onclick="openAuth('login')">Log in</button>
+    <button type="button" class="btn btn-solid" onclick="openAuth('signup')">Sign up free</button>
   </div>
 </nav>
 
@@ -689,12 +702,12 @@ footer{
     <h1>Where sports people <em>connect</em> and grow.</h1>
     <p class="hero-sub">Spopeer is the dedicated network for athletes, coaches, clubs, and sports professionals. Build your identity, share your story, and find the right connections.</p>
     <div class="hero-actions">
-      <a class="btn-hero" href="#" onclick="openAuth('signup'); return false;">
+      <button type="button" class="btn-hero" onclick="openAuth('signup')">
         <i class="fa-solid fa-user-plus"></i> Create free account
-      </a>
-      <a class="btn-hero-out" href="#" onclick="openAuth('login'); return false;">
+      </button>
+      <button type="button" class="btn-hero-out" onclick="openAuth('login')">
         <i class="fa-solid fa-arrow-right-to-bracket"></i> Log in
-      </a>
+      </button>
     </div>
     <div class="hero-stats">
       <div class="hero-stat"><strong>1,000+</strong><span>Sports covered</span></div>
@@ -885,12 +898,12 @@ footer{
     <h2>Your sports network starts here.</h2>
     <p>Join athletes, coaches, clubs, and professionals who are already building their presence on Spopeer.</p>
     <div class="cta-btns">
-      <a class="btn-cta-white" href="#" onclick="openAuth('signup'); return false;">
+      <button type="button" class="btn-cta-white" onclick="openAuth('signup')">
         <i class="fa-solid fa-user-plus"></i> Create free account
-      </a>
-      <a class="btn-cta-ghost" href="#" onclick="openAuth('login'); return false;">
+      </button>
+      <button type="button" class="btn-cta-ghost" onclick="openAuth('login')">
         <i class="fa-solid fa-arrow-right-to-bracket"></i> Already have an account
-      </a>
+      </button>
     </div>
   </div>
 </section>
@@ -909,8 +922,8 @@ footer{
     <div class="footer-links">
       <div class="footer-col">
         <h4>Platform</h4>
-        <a href="#" onclick="openAuth('signup'); return false;">Sign up</a>
-        <a href="#" onclick="openAuth('login'); return false;">Log in</a>
+        <button type="button" onclick="openAuth('signup')">Sign up</button>
+        <button type="button" onclick="openAuth('login')">Log in</button>
         <a href="pages/search/search.html">Search</a>
         <a href="#features">Features</a>
         <a href="#how-it-works">How It Works</a>
@@ -961,7 +974,7 @@ function toggleMenu(){
 </script>
 
 <!-- ── AUTH MODAL ── -->
-<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in or Sign up" style="display:none">
+<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in or Sign up" aria-hidden="true">
   <div class="auth-box">
 
     <!-- LEFT BRAND PANEL -->
@@ -1238,38 +1251,54 @@ loadSportsStrip();
 
 <script>
 // ── AUTH MODAL ──
-// openAuth / closeAuth / switchAuth are on window so onclick="..." attributes work at any time.
-
-window.openAuth = function(panel) {
-  var modal = document.getElementById('authModal');
-  if (!modal) { console.error('[Auth] #authModal not found'); return; }
-  modal.style.display = 'flex';
+function openAuth(type) {
+  const modal = document.getElementById('authModal');
+  if (!modal) {
+    console.error('authModal not found');
+    return;
+  }
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
-  window.switchAuth(panel || 'login');
-};
+  switchAuth(type || 'login');
+}
 
-window.closeAuth = function() {
-  var modal = document.getElementById('authModal');
+function closeAuth() {
+  const modal = document.getElementById('authModal');
   if (!modal) return;
-  modal.style.display = 'none';
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
-};
+}
 
-window.switchAuth = function(panel) {
-  var isLogin = (panel === 'login');
-  var lp = document.getElementById('loginPanel');
-  var sp = document.getElementById('signupPanel');
-  if (lp) { lp.style.display = isLogin ? 'block' : 'none'; }
-  if (sp) { sp.style.display = isLogin ? 'none'  : 'block'; }
+function switchAuth(type) {
+  const loginPanel  = document.getElementById('loginPanel');
+  const signupPanel = document.getElementById('signupPanel');
+  if (!loginPanel || !signupPanel) {
+    console.error('loginPanel or signupPanel missing');
+    return;
+  }
+  if (type === 'signup') {
+    loginPanel.style.display  = 'none';
+    signupPanel.style.display = 'block';
+  } else {
+    loginPanel.style.display  = 'block';
+    signupPanel.style.display = 'none';
+  }
   var leftLogin  = document.getElementById('authLeftLogin');
   var leftSignup = document.getElementById('authLeftSignup');
-  if (leftLogin)  leftLogin.style.display  = isLogin ? 'block' : 'none';
-  if (leftSignup) leftSignup.style.display = isLogin ? 'none'  : 'block';
-  ['modalLoginError','modalSignupError'].forEach(function(id){
+  if (leftLogin)  leftLogin.style.display  = (type !== 'signup') ? 'block' : 'none';
+  if (leftSignup) leftSignup.style.display = (type === 'signup') ? 'block' : 'none';
+  ['modalLoginError','modalSignupError'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) { el.textContent = ''; el.style.display = 'none'; }
   });
-};
+}
+
+// (window aliases kept for any third-party callers)
+window.openAuth   = openAuth;
+window.closeAuth  = closeAuth;
+window.switchAuth = switchAuth;
 
 // ── GOOGLE SIGN-IN ──
 var _GCID = '527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com';
@@ -1328,13 +1357,13 @@ document.addEventListener('DOMContentLoaded', function() {
   var modal = document.getElementById('authModal');
   if (modal) {
     modal.addEventListener('click', function(e) {
-      if (e.target === this) window.closeAuth();
+      if (e.target === this) closeAuth();
     });
   }
 
   // Escape key closes
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') window.closeAuth();
+    if (e.key === 'Escape') closeAuth();
   });
 
   // Password toggles
@@ -1475,42 +1504,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Auto-open on #login / #signup hash
   var h = window.location.hash;
-  if (h === '#login' || h === '#signup') window.openAuth(h.slice(1));
+  if (h === '#login' || h === '#signup') openAuth(h.slice(1));
 });
-</script>
-<script>
-function openAuth(type) {
-  var modal = document.getElementById('authModal');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  modal.classList.add('open');
-  switchAuth(type);
-}
-
-function closeAuth() {
-  var modal = document.getElementById('authModal');
-  if (!modal) return;
-  modal.style.display = 'none';
-  modal.classList.remove('open');
-}
-
-function switchAuth(type) {
-  var loginPanel  = document.getElementById('loginPanel');
-  var signupPanel = document.getElementById('signupPanel');
-  var loginLeft   = document.getElementById('authLeftLogin');
-  var signupLeft  = document.getElementById('authLeftSignup');
-  if (type === 'signup') {
-    if (loginPanel)  loginPanel.style.display  = 'none';
-    if (signupPanel) signupPanel.style.display  = 'block';
-    if (loginLeft)   loginLeft.style.display    = 'none';
-    if (signupLeft)  signupLeft.style.display   = 'block';
-  } else {
-    if (loginPanel)  loginPanel.style.display   = 'block';
-    if (signupPanel) signupPanel.style.display  = 'none';
-    if (loginLeft)   loginLeft.style.display    = 'block';
-    if (signupLeft)  signupLeft.style.display   = 'none';
-  }
-}
 </script>
 <script src="/js/navigation.js"></script>
 </body>
