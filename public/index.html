@@ -995,6 +995,10 @@ function toggleMenu(){
         <h2>Your passport to the world of sports.</h2>
         <p>Create your profile, connect with athletes, coaches, clubs and sports professionals around the world.</p>
       </div>
+      <div id="authLeftForgot" style="display:none">
+        <h2>No worries, it happens.</h2>
+        <p>Enter your email and we'll send you a secure link to get back into your account in minutes.</p>
+      </div>
       <div class="auth-left-pills">
         <span class="auth-left-pill">Athletes</span>
         <span class="auth-left-pill">Coaches</span>
@@ -1037,7 +1041,7 @@ function toggleMenu(){
           </div>
           <div class="remember-row">
             <label><input type="checkbox" id="modalRemember" /> Remember me</label>
-            <a href="/pages/auth/forgot-password.html" class="forgot-link">Forgot password?</a>
+            <a href="#" class="forgot-link" onclick="switchAuth('forgot'); return false;">Forgot password?</a>
           </div>
           <button type="submit" class="auth-submit-btn" id="modalLoginBtn">Log In</button>
           <p class="auth-switch-row">Don't have an account? <a href="#" onclick="switchAuth('signup'); return false;">Sign up free</a></p>
@@ -1113,6 +1117,22 @@ function toggleMenu(){
           </div>
           <button type="submit" class="auth-submit-btn" id="modalSignupBtn">Create Account</button>
           <p class="auth-switch-row">Already have an account? <a href="#" onclick="switchAuth('login'); return false;">Sign in</a></p>
+        </form>
+      </div>
+
+      <!-- FORGOT PASSWORD PANEL -->
+      <div class="auth-panel" id="forgotPanel" style="display:none">
+        <p class="auth-panel-title">Reset Password</p>
+        <p class="auth-panel-sub">Enter your email and we'll send you a reset link</p>
+        <form class="auth-form" id="modalForgotForm" novalidate>
+          <div id="modalForgotError" class="auth-error"></div>
+          <div id="modalForgotSuccess" class="auth-success"></div>
+          <div class="form-grp" id="modalForgotEmailGroup">
+            <label for="modalForgotEmail">Email Address</label>
+            <input id="modalForgotEmail" type="email" placeholder="you@email.com" required autocomplete="email" />
+          </div>
+          <button type="submit" class="auth-submit-btn" id="modalForgotBtn">Send Reset Link</button>
+          <p class="auth-switch-row"><a href="#" onclick="switchAuth('login'); return false;"><i class="fa-solid fa-arrow-left" style="font-size:11px;margin-right:4px"></i>Back to Sign In</a></p>
         </form>
       </div>
 
@@ -1275,16 +1295,29 @@ function closeAuth() {
 function switchAuth(type) {
   var lp = document.getElementById('loginPanel');
   var sp = document.getElementById('signupPanel');
+  var fp = document.getElementById('forgotPanel');
   var ll = document.getElementById('authLeftLogin');
   var ls = document.getElementById('authLeftSignup');
-  if (lp) lp.style.display = (type === 'signup') ? 'none'  : 'block';
+  var lf = document.getElementById('authLeftForgot');
+  if (lp) lp.style.display = (type === 'login')  ? 'block' : 'none';
   if (sp) sp.style.display = (type === 'signup') ? 'block' : 'none';
-  if (ll) ll.style.display = (type === 'signup') ? 'none'  : 'block';
+  if (fp) fp.style.display = (type === 'forgot') ? 'block' : 'none';
+  if (ll) ll.style.display = (type === 'login')  ? 'block' : 'none';
   if (ls) ls.style.display = (type === 'signup') ? 'block' : 'none';
-  ['modalLoginError','modalSignupError'].forEach(function(id) {
+  if (lf) lf.style.display = (type === 'forgot') ? 'block' : 'none';
+  ['modalLoginError','modalSignupError','modalForgotError','modalForgotSuccess'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) { el.textContent = ''; el.style.display = 'none'; }
   });
+  // Reset forgot form fields/state when switching away
+  if (type !== 'forgot') {
+    var ff = document.getElementById('modalForgotForm');
+    if (ff) ff.reset();
+    var fe = document.getElementById('modalForgotEmailGroup');
+    if (fe) fe.style.display = 'block';
+    var fb = document.getElementById('modalForgotBtn');
+    if (fb) { fb.disabled = false; fb.textContent = 'Send Reset Link'; fb.style.display = ''; }
+  }
 }
 
 /* ── GOOGLE SIGN-IN ──────────────────────────────────────── */
@@ -1451,6 +1484,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
     }
+  })();
+
+  /* ── Forgot password form ── */
+  (function() {
+    var forgotForm = document.getElementById('modalForgotForm');
+    if (!forgotForm) return;
+    forgotForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var email    = (document.getElementById('modalForgotEmail').value || '').trim();
+      var errorBox = document.getElementById('modalForgotError');
+      var successBox = document.getElementById('modalForgotSuccess');
+      var btn      = document.getElementById('modalForgotBtn');
+      var emailGrp = document.getElementById('modalForgotEmailGroup');
+      errorBox.textContent = ''; errorBox.style.display = 'none';
+      successBox.textContent = ''; successBox.style.display = 'none';
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errorBox.textContent = 'Please enter a valid email address.';
+        errorBox.style.display = 'block';
+        return;
+      }
+      btn.disabled = true; btn.textContent = 'Sending…';
+      try {
+        var res = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        });
+        var data = await res.json();
+        if (!res.ok) {
+          var msg = (data.error && data.error.message) || data.message || 'Something went wrong. Please try again.';
+          errorBox.textContent = msg; errorBox.style.display = 'block';
+          btn.disabled = false; btn.textContent = 'Send Reset Link';
+          return;
+        }
+        /* Always show success — never reveal if email exists */
+        if (emailGrp) emailGrp.style.display = 'none';
+        btn.style.display = 'none';
+        successBox.innerHTML = '<i class="fa-solid fa-circle-check" style="margin-right:6px"></i>If an account exists for <strong>' + email + '</strong>, we\'ve sent reset instructions. Check your inbox (and spam folder). The link expires in 30 minutes.';
+        successBox.style.display = 'block';
+      } catch (err) {
+        errorBox.textContent = 'Network error. Please check your connection and try again.';
+        errorBox.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Send Reset Link';
+      }
+    });
   })();
 
   /* Hash auto-open */
