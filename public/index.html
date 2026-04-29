@@ -1478,6 +1478,40 @@ document.addEventListener('DOMContentLoaded', function() {
   if (h === '#login' || h === '#signup') window.openAuth(h.slice(1));
 });
 </script>
+<script>
+function openAuth(type) {
+  var modal = document.getElementById('authModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+  switchAuth(type);
+}
+
+function closeAuth() {
+  var modal = document.getElementById('authModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  modal.classList.remove('open');
+}
+
+function switchAuth(type) {
+  var loginPanel  = document.getElementById('loginPanel');
+  var signupPanel = document.getElementById('signupPanel');
+  var loginLeft   = document.getElementById('authLeftLogin');
+  var signupLeft  = document.getElementById('authLeftSignup');
+  if (type === 'signup') {
+    if (loginPanel)  loginPanel.style.display  = 'none';
+    if (signupPanel) signupPanel.style.display  = 'block';
+    if (loginLeft)   loginLeft.style.display    = 'none';
+    if (signupLeft)  signupLeft.style.display   = 'block';
+  } else {
+    if (loginPanel)  loginPanel.style.display   = 'block';
+    if (signupPanel) signupPanel.style.display  = 'none';
+    if (loginLeft)   loginLeft.style.display    = 'block';
+    if (signupLeft)  signupLeft.style.display   = 'none';
+  }
+}
+</script>
 <script src="/js/navigation.js"></script>
 </body>
 </html>
