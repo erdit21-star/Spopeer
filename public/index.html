@@ -969,11 +969,6 @@ function toggleMenu(){
           <p>Log in to your sports network</p>
         </div>
         <div id="authLoginSuccess" class="auth-success"><i class="fa-solid fa-check-circle" style="margin-right:6px"></i><span id="authLoginSuccessMsg"></span></div>
-        <div id="g_id_onload"
-          data-client_id="527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com"
-          data-callback="handleGoogleCredential"
-          data-auto_prompt="false">
-        </div>
         <button type="button" id="modalLoginGoogleBtn" class="auth-google-btn">
           <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
             <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
@@ -1237,10 +1232,9 @@ function switchAuthPanel(panel) {
   document.getElementById('signupPanel').classList.toggle('active', !isLogin);
   document.getElementById('loginLeftContent').style.display = isLogin ? 'block' : 'none';
   document.getElementById('signupLeftContent').style.display = isLogin ? 'none' : 'block';
-  // clear errors
   ['modalLoginError','modalSignupError'].forEach(function(id){
     var el = document.getElementById(id);
-    if (el) { el.textContent = ''; el.style.display = 'none'; }
+    if (el) { el.textContent = ''; el.style.display = 'none'; el.style.background = ''; el.style.color = ''; }
   });
 }
 
@@ -1255,6 +1249,17 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ── GOOGLE SIGN-IN ──
+var GOOGLE_CLIENT_ID = '527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com';
+
+function _showModalAuthError(msg) {
+  var loginActive = document.getElementById('loginPanel').classList.contains('active');
+  var boxId = loginActive ? 'modalLoginError' : 'modalSignupError';
+  var box = document.getElementById(boxId);
+  if (box) { box.textContent = msg; box.style.display = 'block'; }
+  document.getElementById('authOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
 function handleGoogleCredential(response) {
   fetch('/api/auth/google', {
     method: 'POST',
@@ -1263,42 +1268,49 @@ function handleGoogleCredential(response) {
   })
   .then(function(res) { return res.json().then(function(d){ return { ok: res.ok, data: d }; }); })
   .then(function(r) {
-    if (!r.ok) throw new Error((r.data.error && r.data.error.message) || 'Google sign-in failed.');
+    if (!r.ok) {
+      var msg = (r.data && r.data.error && r.data.error.message)
+             || (r.data && r.data.message)
+             || 'Google sign-in failed.';
+      throw new Error(msg);
+    }
     var userData = (r.data.data && r.data.data.user) || r.data.user;
-    var token = r.data.data && r.data.data.accessToken;
+    var token = (r.data.data && r.data.data.accessToken) || r.data.accessToken;
     if (userData && window.Auth) window.Auth.login(userData);
     if (token) localStorage.setItem('spopeerToken', token);
     window.location.href = '/feed.html';
   })
   .catch(function(err) {
-    var box = document.getElementById('modalLoginError');
-    if (box) {
-      box.textContent = err.message || 'Google sign-in failed. Please try email/password.';
-      box.style.display = 'block';
+    _showModalAuthError(err.message || 'Google sign-in failed. Please try email/password.');
+  });
+}
+
+function _initModalGoogleSignIn() {
+  if (!window.google || !window.google.accounts || !window.google.accounts.id) return;
+  window.google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential
+  });
+  ['modalLoginGoogleBtn', 'modalSignupGoogleBtn'].forEach(function(id) {
+    var btn = document.getElementById(id);
+    if (btn && !btn._googleBound) {
+      btn._googleBound = true;
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.google.accounts.id.prompt();
+      });
     }
   });
 }
 
-// Bind Google buttons once GSI loads
-function _initModalGoogleSignIn() {
-  var onloadDiv = document.getElementById('g_id_onload');
-  if (!onloadDiv) return;
-  var clientId = onloadDiv.getAttribute('data-client_id');
-  if (!clientId) return;
-  window.google.accounts.id.initialize({ client_id: clientId, callback: handleGoogleCredential });
-  ['modalLoginGoogleBtn','modalSignupGoogleBtn'].forEach(function(id) {
-    var btn = document.getElementById(id);
-    if (btn) btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      window.google.accounts.id.prompt();
-    });
-  });
-}
-if (window.google && window.google.accounts && window.google.accounts.id) {
-  _initModalGoogleSignIn();
-} else {
-  window.onGoogleLibraryLoad = _initModalGoogleSignIn;
-}
+// Mirror google-auth-init.js: bind after DOMContentLoaded so handleGoogleCredential is on window
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    _initModalGoogleSignIn();
+  } else {
+    window.onGoogleLibraryLoad = _initModalGoogleSignIn;
+  }
+});
 
 // ── LOGIN FORM ──
 document.getElementById('modalLoginForm').addEventListener('submit', async function(e) {
@@ -1314,7 +1326,7 @@ document.getElementById('modalLoginForm').addEventListener('submit', async funct
     errorBox.style.display = 'block';
     return;
   }
-  btn.disabled = true; btn.textContent = 'Signing in…';
+  btn.disabled = true; btn.textContent = 'Signing in\u2026';
   try {
     var result = await window.SpopeerAPI.login({ email: email, password: password });
     var user  = (result.data && result.data.user)  || result.user;
@@ -1331,24 +1343,23 @@ document.getElementById('modalLoginForm').addEventListener('submit', async funct
 
 // ── SIGNUP FORM ──
 (function() {
-  var sportsList = [];
-
-  async function loadModalSports() {
-    try {
-      var res  = await fetch('/data/list-of-sports.txt');
-      var text = await res.text();
-      sportsList = text.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
-    } catch(_) { sportsList = []; }
-    var sel = document.getElementById('modalPrimarySport');
-    sel.innerHTML = '<option value="">Select your sport</option>';
-    sportsList.forEach(function(s) {
-      var opt = document.createElement('option');
-      opt.value = s; opt.textContent = s;
-      sel.appendChild(opt);
-    });
-    var other = document.createElement('option');
-    other.value = 'other'; other.textContent = 'Other';
-    sel.appendChild(other);
+  function loadModalSports() {
+    fetch('/data/list-of-sports.txt')
+      .then(function(r) { return r.text(); })
+      .then(function(text) {
+        var sports = text.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
+        var sel = document.getElementById('modalPrimarySport');
+        sel.innerHTML = '<option value="">Select your sport</option>';
+        sports.forEach(function(s) {
+          var opt = document.createElement('option');
+          opt.value = s; opt.textContent = s;
+          sel.appendChild(opt);
+        });
+        var other = document.createElement('option');
+        other.value = 'other'; other.textContent = 'Other';
+        sel.appendChild(other);
+      })
+      .catch(function(){});
   }
 
   document.getElementById('modalRoleSelect').addEventListener('change', function() {
@@ -1358,12 +1369,6 @@ document.getElementById('modalLoginForm').addEventListener('submit', async funct
     document.getElementById('modalCustomSportWrap').style.display = this.value === 'other' ? 'block' : 'none';
   });
 
-  // Load sports when modal opens for the first time
-  var sportsLoaded = false;
-  document.getElementById('authOverlay').addEventListener('click', function() {
-    if (!sportsLoaded) { sportsLoaded = true; loadModalSports(); }
-  }, { once: true });
-  // Also load immediately in background
   loadModalSports();
 
   document.getElementById('modalSignupForm').addEventListener('submit', async function(e) {
@@ -1381,6 +1386,7 @@ document.getElementById('modalLoginForm').addEventListener('submit', async funct
     var btn       = document.getElementById('modalSignupBtn');
 
     errorBox.textContent = ''; errorBox.style.display = 'none';
+    errorBox.style.background = ''; errorBox.style.color = '';
 
     if (!firstName || !lastName || !email || !pass || !roleVal) {
       errorBox.textContent = 'Please fill all required fields.';
@@ -1395,7 +1401,7 @@ document.getElementById('modalLoginForm').addEventListener('submit', async funct
       errorBox.style.display = 'block'; return;
     }
 
-    btn.disabled = true; btn.textContent = 'Creating Account…';
+    btn.disabled = true; btn.textContent = 'Creating Account\u2026';
     try {
       var result = await window.SpopeerAPI.signup({
         email: email, password: pass,
@@ -1419,6 +1425,8 @@ document.getElementById('modalLoginForm').addEventListener('submit', async funct
       btn.disabled = false; btn.textContent = 'Create Account';
     }
   });
+})();
+
 // Auto-open modal if URL hash is #login or #signup
 (function() {
   var h = window.location.hash;
