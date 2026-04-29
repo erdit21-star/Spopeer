@@ -207,3 +207,112 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 });
+
+/* HOMEPAGE AUTH MODAL FIX */
+(function(){
+
+function findModal(){
+  return document.getElementById('authModal')
+    || document.querySelector('.auth-modal')
+    || document.querySelector('.auth-shell');
+}
+
+window.switchAuth=function(type){
+  const login=document.getElementById('loginPanel');
+  const signup=document.getElementById('signupPanel');
+
+  if(login && signup){
+    if(type==='signup'){
+      login.style.display='none';
+      signup.style.display='block';
+    }else{
+      login.style.display='block';
+      signup.style.display='none';
+    }
+  }
+};
+
+window.openAuth=function(type){
+  const modal=findModal();
+
+  if(!modal){
+    console.error('Auth modal not found');
+    return false;
+  }
+
+  modal.style.display='flex';
+  modal.classList.add('open');
+
+  document.body.style.overflow='hidden';
+
+  switchAuth(type || 'login');
+
+  return false;
+};
+
+window.closeAuth=function(){
+  const modal=findModal();
+  if(!modal) return;
+
+  modal.style.display='none';
+  modal.classList.remove('open');
+
+  document.body.style.overflow='';
+};
+
+document.addEventListener('DOMContentLoaded', function(){
+
+  /* hide auth section initially */
+  const modal=findModal();
+  if(modal){
+    modal.style.display='none';
+  }
+
+  /* wire ALL login buttons */
+  document.querySelectorAll('a,button').forEach(el=>{
+    const t=(el.textContent||'').trim().toLowerCase();
+    const href=(el.getAttribute('href')||'').toLowerCase();
+
+    if(
+      t==='log in' ||
+      t==='sign in' ||
+      href.includes('login')
+    ){
+      el.addEventListener('click', function(e){
+        e.preventDefault();
+        openAuth('login');
+      });
+    }
+
+    if(
+      t==='sign up free' ||
+      t==='sign up' ||
+      t==='create free account' ||
+      href.includes('signup')
+    ){
+      el.addEventListener('click', function(e){
+        e.preventDefault();
+        openAuth('signup');
+      });
+    }
+
+  });
+
+  /* click outside closes */
+  document.addEventListener('click', function(e){
+    const modal=findModal();
+    if(modal && e.target===modal){
+      closeAuth();
+    }
+  });
+
+  /* esc closes */
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      closeAuth();
+    }
+  });
+
+});
+
+})();
