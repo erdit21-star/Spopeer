@@ -651,6 +651,28 @@ footer{
     font-family:var(--fb);
   }
   .footer-col button:hover{color:rgba(255,255,255,.85)}
+
+  .auth-modal .auth-card{
+    max-width:980px;
+    width:100%;
+    max-height:92vh;
+    overflow-y:auto;
+  }
+  .auth-close{
+    position:absolute;
+    top:24px;
+    right:28px;
+    z-index:10000;
+    border:0;
+    background:white;
+    color:#0f172a;
+    width:40px;
+    height:40px;
+    border-radius:999px;
+    font-size:24px;
+    font-weight:900;
+    cursor:pointer;
+  }
   /* Responsive */
   @media(max-width:720px){
     .auth-box{flex-direction:column;max-height:none;border-radius:18px}
@@ -978,7 +1000,7 @@ function toggleMenu(){
 </script>
 
 <!-- ── AUTH MODAL ── -->
-<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in or Sign up" aria-hidden="true" style="display:none">
+<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in or Sign up" aria-hidden="true">
   <div class="auth-box">
 
     <!-- LEFT BRAND PANEL -->
@@ -1258,7 +1280,7 @@ loadSportsStrip();
 function openAuth(type) {
   var modal = document.getElementById('authModal');
   if (!modal) return;
-  modal.style.display = 'flex';
+  modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
   switchAuth(type || 'login');
@@ -1267,7 +1289,7 @@ function openAuth(type) {
 function closeAuth() {
   var modal = document.getElementById('authModal');
   if (!modal) return;
-  modal.style.display = 'none';
+  modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
 }
@@ -1327,10 +1349,8 @@ function _initGoogleBtns() {
 /* ── DOM READY ───────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
 
-  /* Ensure modal is hidden (belt-and-suspenders) */
   var modal = document.getElementById('authModal');
   if (modal) {
-    modal.style.display = 'none';
     /* Backdrop click */
     modal.addEventListener('click', function(e) { if (e.target === this) closeAuth(); });
   }
