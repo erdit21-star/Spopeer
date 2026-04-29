@@ -27,7 +27,6 @@
       "/",
       "/index.html",
       "/pages/auth/login.html",
-      "/pages/auth/login-modern.html",
       "/pages/auth/signup.html",
       "/pages/auth/forgot-password.html"
     ];

@@ -558,13 +558,17 @@ footer{
     flex:1;padding:48px 44px;overflow-y:auto;position:relative;min-width:0;
   }
   .auth-close-btn{
-    position:absolute;right:20px;top:18px;
-    width:36px;height:36px;border-radius:50%;
-    background:#f4f4f4;border:none;cursor:pointer;
+    position:fixed;right:24px;top:24px;
+    width:40px;height:40px;border-radius:50%;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(6px);
+    border:1.5px solid rgba(255,255,255,0.25);
+    cursor:pointer;
     display:flex;align-items:center;justify-content:center;
-    color:#555;font-size:16px;transition:.15s;
+    color:#fff;font-size:18px;transition:.15s;
+    z-index:10000;
   }
-  .auth-close-btn:hover{background:#e8e8e8;color:#000}
+  .auth-close-btn:hover{background:rgba(255,255,255,0.28);color:#fff}
   /* Form panels — visibility driven by JS inline styles */
   .auth-panel{}
   .auth-panel-title{
@@ -979,6 +983,7 @@ function toggleMenu(){
 
 <!-- ── AUTH MODAL ── -->
 <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in or Sign up" aria-hidden="true">
+  <button class="auth-close-btn" onclick="closeAuth()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
   <div class="auth-box">
 
     <!-- LEFT BRAND PANEL -->
@@ -1009,8 +1014,6 @@ function toggleMenu(){
 
     <!-- RIGHT FORM PANEL -->
     <div class="auth-right">
-      <button class="auth-close-btn" onclick="closeAuth()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-
       <!-- LOGIN PANEL -->
       <div class="auth-panel active" id="loginPanel">
         <p class="auth-panel-title">Sign In</p>
@@ -1278,7 +1281,7 @@ loadSportsStrip();
 function openAuth(type) {
   var modal = document.getElementById('authModal');
   if (!modal) return;
-  modal.style.display = 'flex';
+  modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
   switchAuth(type || 'login');
@@ -1287,7 +1290,7 @@ function openAuth(type) {
 function closeAuth() {
   var modal = document.getElementById('authModal');
   if (!modal) return;
-  modal.style.display = 'none';
+  modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
 }
@@ -1360,11 +1363,9 @@ function _initGoogleBtns() {
 /* ── DOM READY ───────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
 
-  /* Ensure modal is hidden (belt-and-suspenders) */
+  /* Backdrop click to close */
   var modal = document.getElementById('authModal');
   if (modal) {
-    modal.style.display = 'none';
-    /* Backdrop click */
     modal.addEventListener('click', function(e) { if (e.target === this) closeAuth(); });
   }
 
@@ -1536,8 +1537,9 @@ document.addEventListener('DOMContentLoaded', function() {
   if (h === '#login' || h === '#signup') openAuth(h.slice(1));
 });
 
-/* Guarantee inline versions win over any earlier definitions in auth.js */
-window.openAuth = openAuth;
+/* Guarantee these are always the active definitions on window,
+   overriding anything auth.js or navigation.js might set */
+window.openAuth  = openAuth;
 window.closeAuth = closeAuth;
 window.switchAuth = switchAuth;
 </script>
