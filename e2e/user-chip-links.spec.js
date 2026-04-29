@@ -18,7 +18,7 @@ const startPages = [
   '/pages/dashboard/settings.html',
   '/pages/dashboard/notifications.html',
   '/pages/messaging/inbox.html',
-  '/pages/features/library.html',
+  '/pages/library/index.html',
   '/pages/sponsorship/sponsor.html'
 ];
 
