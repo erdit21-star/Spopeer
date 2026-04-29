@@ -494,10 +494,14 @@ footer{
   <style>
   /* ── AUTH MODAL ── */
   .auth-modal{
-    display:none;position:fixed;inset:0;z-index:9999;
-    background:rgba(0,0,0,.72);
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    background:rgba(15,23,42,0.78);
     backdrop-filter:blur(4px);
-    justify-content:center;align-items:center;
+    align-items:center;
+    justify-content:center;
     padding:20px;
   }
   .auth-modal.open{display:flex}
@@ -1510,55 +1514,30 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 function openAuth(type) {
   const modal = document.getElementById('authModal');
-  if (!modal) {
-    console.error('authModal not found');
-    return false;
-  }
+  if (!modal) return;
 
-  modal.style.display = 'flex';
-
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
   switchAuth(type);
-  return false;
 }
 
 function closeAuth() {
   const modal = document.getElementById('authModal');
   if (!modal) return;
 
-  modal.style.display = 'none';
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
 }
 
 function switchAuth(type) {
   const loginPanel = document.getElementById('loginPanel');
   const signupPanel = document.getElementById('signupPanel');
-  const loginText = document.getElementById('authLeftLogin');
-  const signupText = document.getElementById('authLeftSignup');
 
-  if (!loginPanel || !signupPanel) {
-    console.error('loginPanel or signupPanel not found');
-    return;
-  }
+  if (!loginPanel || !signupPanel) return;
 
-  if (type === 'signup') {
-    loginPanel.style.display = 'none';
-    signupPanel.style.display = 'block';
-
-    if (loginText) loginText.style.display = 'none';
-    if (signupText) signupText.style.display = 'block';
-  } else {
-    loginPanel.style.display = 'block';
-    signupPanel.style.display = 'none';
-
-    if (loginText) loginText.style.display = 'block';
-    if (signupText) signupText.style.display = 'none';
-  }
+  loginPanel.style.display = type === 'login' ? 'block' : 'none';
+  signupPanel.style.display = type === 'signup' ? 'block' : 'none';
 }
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    closeAuth();
-  }
-});
 </script>
 <script src="/js/navigation.js"></script>
 </body>
