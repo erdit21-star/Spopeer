@@ -1507,6 +1507,59 @@ document.addEventListener('DOMContentLoaded', function() {
   if (h === '#login' || h === '#signup') openAuth(h.slice(1));
 });
 </script>
+<script>
+function openAuth(type) {
+  const modal = document.getElementById('authModal');
+  if (!modal) {
+    console.error('authModal not found');
+    return false;
+  }
+
+  modal.style.display = 'flex';
+
+  switchAuth(type);
+  return false;
+}
+
+function closeAuth() {
+  const modal = document.getElementById('authModal');
+  if (!modal) return;
+
+  modal.style.display = 'none';
+}
+
+function switchAuth(type) {
+  const loginPanel = document.getElementById('loginPanel');
+  const signupPanel = document.getElementById('signupPanel');
+  const loginText = document.getElementById('authLeftLogin');
+  const signupText = document.getElementById('authLeftSignup');
+
+  if (!loginPanel || !signupPanel) {
+    console.error('loginPanel or signupPanel not found');
+    return;
+  }
+
+  if (type === 'signup') {
+    loginPanel.style.display = 'none';
+    signupPanel.style.display = 'block';
+
+    if (loginText) loginText.style.display = 'none';
+    if (signupText) signupText.style.display = 'block';
+  } else {
+    loginPanel.style.display = 'block';
+    signupPanel.style.display = 'none';
+
+    if (loginText) loginText.style.display = 'block';
+    if (signupText) signupText.style.display = 'none';
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeAuth();
+  }
+});
+</script>
 <script src="/js/navigation.js"></script>
 </body>
 </html>
