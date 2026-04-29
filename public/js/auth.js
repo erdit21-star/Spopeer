@@ -220,15 +220,26 @@ function findModal(){
 window.switchAuth=function(type){
   const login=document.getElementById('loginPanel');
   const signup=document.getElementById('signupPanel');
+  const forgot=document.getElementById('forgotPanel');
+  const ll=document.getElementById('authLeftLogin');
+  const ls=document.getElementById('authLeftSignup');
+  const lf=document.getElementById('authLeftForgot');
 
-  if(login && signup){
-    if(type==='signup'){
-      login.style.display='none';
-      signup.style.display='block';
-    }else{
-      login.style.display='block';
-      signup.style.display='none';
-    }
+  if(login)  login.style.display  =(type==='login')  ?'block':'none';
+  if(signup) signup.style.display =(type==='signup') ?'block':'none';
+  if(forgot) forgot.style.display =(type==='forgot') ?'block':'none';
+  if(ll) ll.style.display=(type==='login')  ?'block':'none';
+  if(ls) ls.style.display=(type==='signup') ?'block':'none';
+  if(lf) lf.style.display=(type==='forgot') ?'block':'none';
+
+  // Reset forgot form when switching away
+  if(type!=='forgot'){
+    var ff=document.getElementById('modalForgotForm');
+    if(ff) ff.reset();
+    var fe=document.getElementById('modalForgotEmailGroup');
+    if(fe) fe.style.display='block';
+    var fb=document.getElementById('modalForgotBtn');
+    if(fb){fb.disabled=false;fb.textContent='Send Reset Link';fb.style.display='';}
   }
 };
 

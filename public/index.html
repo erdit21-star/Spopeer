@@ -1535,6 +1535,11 @@ document.addEventListener('DOMContentLoaded', function() {
   var h = window.location.hash;
   if (h === '#login' || h === '#signup') openAuth(h.slice(1));
 });
+
+/* Guarantee inline versions win over any earlier definitions in auth.js */
+window.openAuth = openAuth;
+window.closeAuth = closeAuth;
+window.switchAuth = switchAuth;
 </script>
 <script src="/js/navigation.js"></script>
 </body>
