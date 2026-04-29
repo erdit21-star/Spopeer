@@ -24,6 +24,7 @@
 
   async function protectGuestOnlyPages() {
     var guestOnlyPaths = [
+      "/",
       "/index.html",
       "/pages/auth/login.html",
       "/pages/auth/login-modern.html",

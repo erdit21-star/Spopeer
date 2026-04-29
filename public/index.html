@@ -1389,6 +1389,12 @@ document.addEventListener('DOMContentLoaded', function() {
       errorBox.textContent = ''; errorBox.style.display = 'none';
       if (!email || !password) { errorBox.textContent = 'Please fill in both fields.'; errorBox.style.display = 'block'; return; }
       btn.disabled = true; btn.textContent = 'Signing in\u2026';
+      if (!window.SpopeerAPI) {
+        errorBox.textContent = 'App not loaded correctly. Please refresh the page.';
+        errorBox.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Log In';
+        return;
+      }
       try {
         var result = await window.SpopeerAPI.login({ email: email, password: password });
         var user  = (result.data && result.data.user)  || result.user;
@@ -1452,6 +1458,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (pass !== confirm) { errorBox.textContent = 'Passwords do not match.'; errorBox.style.display = 'block'; return; }
 
         btn.disabled = true; btn.textContent = 'Creating Account\u2026';
+        if (!window.SpopeerAPI) {
+          errorBox.textContent = 'App not loaded correctly. Please refresh the page.';
+          errorBox.style.display = 'block';
+          btn.disabled = false; btn.textContent = 'Create Account';
+          return;
+        }
         try {
           var result = await window.SpopeerAPI.signup({ email, password: pass, firstName, lastName, role: roleVal, sport: sport || '', profession: secondary });
           var user  = (result.data && result.data.user)  || result.user;
