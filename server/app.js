@@ -121,16 +121,37 @@ app.use(helmet({
 }));
 
 // CORS
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5000')
-  .split(',')
-  .map(o => o.trim())
+function normalizeOrigin(value) {
+  return String(value || '').trim().replace(/\/+$/, '').toLowerCase();
+}
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.APP_URL,
+  process.env.RENDER_EXTERNAL_URL,
+  'http://localhost:5000',
+  'http://127.0.0.1:5000',
+  'http://localhost:3000'
+]
+  .filter(Boolean)
+  .flatMap((v) => String(v).split(','))
+  .map((o) => normalizeOrigin(o))
   .filter(Boolean);
+
+const allowedOriginSet = new Set(allowedOrigins);
 logger.info({ event: 'cors_allowed_origins', allowedOrigins });
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
+    if (!origin) return callback(null, true);
+
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (allowedOriginSet.has(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    logger.warn({ event: 'cors_rejected_origin', origin, normalizedOrigin });
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
