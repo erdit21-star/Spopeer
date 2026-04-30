@@ -141,7 +141,9 @@ test('role-aware labels render in minimal-list and sports-card variants', async 
       }
     });
 
-    await page.goto('/pages/profiles/public-profile.html?userId=coach-1');
+    await page.goto('/pages/profiles/public-profile.html?userId=coach-1', {
+      waitUntil: 'domcontentloaded'
+    });
 
     if (style === 'minimal-list') {
       await expect(page.locator('#ml-fields')).toContainText('Specialty');
