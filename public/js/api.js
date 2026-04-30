@@ -67,8 +67,7 @@
       "spopeerUser",
       "spopeer_loggedIn",
       "user",
-      "_profileLastUpdated_",
-      "spopeerToken"
+      "_profileLastUpdated_"
     ].forEach((key) => localStorage.removeItem(key));
   }
 
@@ -236,10 +235,6 @@
       method: "POST",
       body: JSON.stringify(payload)
     });
-    // Store token for Bearer auth (used by upload requests)
-    if (data && data.token) {
-      localStorage.setItem("spopeerToken", data.token);
-    }
     // Store user profile for UI — auth is cookie-based
     const user = unwrapUser(data);
     if (user) {
@@ -253,10 +248,6 @@
       method: "POST",
       body: JSON.stringify(payload)
     });
-    // Store token for Bearer auth (used by upload requests)
-    if (data && data.token) {
-      localStorage.setItem("spopeerToken", data.token);
-    }
     const user = unwrapUser(data);
     if (user) {
       setUser(user, "api-signup");
@@ -305,24 +296,18 @@
   async function uploadAvatar(file) {
     const formData = new FormData();
     formData.append("avatar", file);
-    const token = localStorage.getItem("spopeerToken");
-    const extraHeaders = token ? { "Authorization": "Bearer " + token } : {};
     return request("/api/users/avatar", {
       method: "POST",
-      body: formData,
-      headers: extraHeaders
+      body: formData
     });
   }
 
   async function uploadCover(file) {
     const formData = new FormData();
     formData.append("cover", file);
-    const token = localStorage.getItem("spopeerToken");
-    const extraHeaders = token ? { "Authorization": "Bearer " + token } : {};
     return request("/api/users/cover", {
       method: "POST",
-      body: formData,
-      headers: extraHeaders
+      body: formData
     });
   }
 

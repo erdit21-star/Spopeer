@@ -1,6 +1,6 @@
 // Updated
 const Auth = {
-  tokenKey: "spopeer_token",
+  tokenKey: "spopeer_loggedIn",
   userKey: "spopeer_user",
 
   isLoggedIn() {
