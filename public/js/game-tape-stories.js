@@ -250,6 +250,23 @@
     }
   }
 
+  async function createStory(mediaFile, sport, caption, isLive, metricValue) {
+    const formData = new FormData();
+    formData.append('media', mediaFile);
+    formData.append('sport', sport || 'General');
+    formData.append('caption', caption || '');
+    formData.append('isLive', String(!!isLive));
+    formData.append('metrics', JSON.stringify({
+      primary: { value: metricValue }
+    }));
+
+    await fetch('/api/stories', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    });
+  }
+
   function openViewer(index) {
     const story = stories[index];
     if (!story) return;
@@ -458,20 +475,33 @@
     });
   }
 
-  function loadStories() {
-    // Frontend prototype: static data.
-    // Later replace this with real API call using cookie auth:
-    // fetch('/api/stories/feed', { credentials: 'include' })
-    stories = demoStories.map(normalizeStory);
-    renderStrip();
+  async function loadStories() {
+    try {
+      const res = await fetch('/api/stories', { credentials: 'include' });
+      const json = await res.json();
+      if (!res.ok || !json || !Array.isArray(json.data)) {
+        throw new Error('Invalid stories response');
+      }
+      stories = json.data.map(normalizeStory);
+      renderStrip();
+    } catch (_err) {
+      // Keep the feed usable if backend stories are unavailable.
+      stories = demoStories.map(normalizeStory);
+      renderStrip();
+    }
   }
 
   window.GameTapeStories = {
     loadStories,
+    createStory,
     renderStories: function (items) {
       stories = (items || []).map(normalizeStory);
       renderStrip();
     }
+  };
+
+  window.GameTapeStoriesManager = {
+    createStory
   };
 
   document.addEventListener('DOMContentLoaded', function () {

@@ -50,6 +50,7 @@ const eventRoutes = require('./routes/events');
 const mediaRoutes = require('./routes/media');
 const sponsorshipRoutes = require('./routes/sponsorships');
 const moderationRoutes = require('./routes/moderation');
+const storyRoutes = require('./routes/stories');
 
 const errorHandler = require('./middleware/errorHandler');
 const { sentryErrorHandler } = require('./services/sentry');
@@ -227,6 +228,7 @@ app.use('/api/events', apiLimiter, perUserWriteLimiter, eventRoutes);
 app.use('/api/media', uploadLimiter, mediaRoutes);
 app.use('/api/sponsorships', apiLimiter, sponsorshipRoutes);
 app.use('/api/moderation', apiLimiter, moderationRoutes);
+app.use('/api/stories', apiLimiter, storyRoutes);
 app.use('/api/contact',    apiLimiter, require('./routes/contact'));
 app.use('/api/reports',    apiLimiter, require('./routes/reports'));
 app.use('/api/careers',    apiLimiter, require('./routes/careers'));

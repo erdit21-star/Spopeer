@@ -33,6 +33,7 @@ const Event = require('./Event')(sequelize);
 const EventResponse = require('./EventResponse')(sequelize);
 const SavedListing = require('./SavedListing')(sequelize);
 const Inquiry = require('./Inquiry')(sequelize);
+const Story = require('./Story')(sequelize);
 
 // ─── ASSOCIATIONS ───
 
@@ -119,6 +120,10 @@ Reply.belongsTo(User, { foreignKey: 'userId', as: 'author' });
 User.hasMany(Reel, { foreignKey: 'userId', as: 'reels' });
 Reel.belongsTo(User, { foreignKey: 'userId', as: 'creator' });
 
+// User <-> Story
+User.hasMany(Story, { foreignKey: 'userId', as: 'stories' });
+Story.belongsTo(User, { foreignKey: 'userId', as: 'author' });
+
 // User <-> SavedPost <-> Post
 User.hasMany(SavedPost, { foreignKey: 'userId', as: 'saved' });
 SavedPost.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -184,6 +189,7 @@ module.exports = {
   Event,
   EventResponse,
   SavedListing,
-  Inquiry
+  Inquiry,
+  Story
 };
 
