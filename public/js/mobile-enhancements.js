@@ -137,9 +137,128 @@
         hamburger.innerHTML = '<i class="fa-solid fa-bars"></i>';
       }
     });
+
+    // Expose close function for inline onclick handlers
+    window.closeMobileMenu = function () {
+      panelOpen = false;
+      panel.classList.remove('open');
+      hamburger.innerHTML = '<i class="fa-solid fa-bars"></i>';
+    };
   }
 
-  /* ── 5. Messaging mobile back button ── */
+  /* ── 5. Bottom navigation bar (logged-in pages) ── */
+  function setupBottomNav() {
+    // Only inject on app pages (has topnav with nav-icons)
+    var topnav = document.querySelector('.topnav');
+    if (!topnav) return;
+
+    // Don't double-inject
+    if (document.querySelector('.sp-bottom-nav')) return;
+
+    var path = window.location.pathname;
+
+    // Determine active tab
+    function isActive(href) {
+      return path === href || path.startsWith(href.replace(/\.html$/, ''));
+    }
+
+    var items = [
+      { href: '/feed.html', icon: 'fa-solid fa-house', label: 'Home' },
+      { href: '/pages/search/search.html', icon: 'fa-regular fa-compass', label: 'Explore' },
+      { href: null, icon: 'fa-solid fa-plus', label: '', post: true },
+      { href: '/pages/messaging/inbox.html', icon: 'fa-regular fa-paper-plane', label: 'Messages' },
+      { href: '/pages/profiles/edit-profile.html', icon: 'fa-regular fa-user', label: 'Profile' },
+    ];
+
+    var nav = document.createElement('nav');
+    nav.className = 'sp-bottom-nav';
+    nav.setAttribute('aria-label', 'Main navigation');
+
+    var inner = document.createElement('div');
+    inner.className = 'sp-bottom-nav-inner';
+
+    items.forEach(function (item) {
+      var el;
+
+      if (item.post) {
+        // Post button — opens post composer or scrolls to feed composer
+        el = document.createElement('button');
+        el.className = 'sp-bottom-nav-item sp-bottom-nav-post';
+        el.setAttribute('aria-label', 'Create post');
+        el.innerHTML = '<i class="' + item.icon + '"></i>';
+        el.addEventListener('click', function () {
+          // Try to find and focus the post composer on feed page
+          var composer = document.querySelector('.composer-input, .post-input, [placeholder*="mind"], [placeholder*="share"], [placeholder*="post"]');
+          if (composer) {
+            composer.focus();
+            composer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else {
+            window.location.href = '/feed.html#compose';
+          }
+        });
+      } else {
+        el = document.createElement('a');
+        el.className = 'sp-bottom-nav-item';
+        el.href = item.href;
+        el.setAttribute('aria-label', item.label);
+        if (isActive(item.href)) el.classList.add('active');
+        el.innerHTML = '<i class="' + item.icon + '"></i><span class="sp-nav-label">' + item.label + '</span>';
+
+        // Badge for messages
+        if (item.href && item.href.includes('messaging')) {
+          el.dataset.badgeTarget = 'messages';
+        }
+      }
+
+      inner.appendChild(el);
+    });
+
+    nav.appendChild(inner);
+    document.body.appendChild(nav);
+
+    // Pull unread count from notification badge in topnav if available
+    setTimeout(function () {
+      var msgBadge = document.querySelector('#messagesBtn .notif-badge, #messagesBtn [class*="badge"]');
+      if (msgBadge && msgBadge.textContent.trim()) {
+        var mobileMsg = nav.querySelector('[data-badge-target="messages"]');
+        if (mobileMsg) {
+          var badge = document.createElement('span');
+          badge.className = 'sp-nav-badge';
+          badge.textContent = msgBadge.textContent.trim();
+          mobileMsg.appendChild(badge);
+        }
+      }
+    }, 1500);
+  }
+
+  /* ── 6. Feed tabs horizontal scroll on mobile ── */
+  function setupFeedTabs() {
+    var tabBar = document.querySelector('.feed-tabs');
+    if (!tabBar) return;
+
+    // Scroll active tab into view
+    var activeTab = tabBar.querySelector('.feed-tab.active, .feed-tab[data-active]');
+    if (activeTab && isMobileWidth()) {
+      setTimeout(function () {
+        activeTab.scrollIntoView({ block: 'nearest', inline: 'center' });
+      }, 100);
+    }
+  }
+
+  /* ── 7. Smooth scroll to composer on #compose hash ── */
+  function handleComposeHash() {
+    if (window.location.hash === '#compose') {
+      setTimeout(function () {
+        var composer = document.querySelector('.composer-input, .post-input, [placeholder*="mind"], [placeholder*="share"]');
+        if (composer) {
+          composer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          composer.focus();
+        }
+      }, 300);
+    }
+  }
+
+  /* ── 8. Messaging mobile back button ── */
   function setupMessagingMobile() {
     var layout = document.querySelector('.messaging-layout');
     if (!layout) return;
@@ -198,7 +317,10 @@
     wrapTables();
     makeEmbedsResponsive();
     setupPublicNavMobileMenu();
+    setupBottomNav();
     setupMessagingMobile();
+    setupFeedTabs();
+    handleComposeHash();
   }
 
   if (document.readyState === 'loading') {

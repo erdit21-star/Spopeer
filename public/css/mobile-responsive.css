@@ -331,7 +331,114 @@ iframe { border: 0; }
   .sp-public-mobile-panel { display: none !important; }
 }
 
-/* ── 5. Messaging mobile chat back button ── */
+/* ── 5. BOTTOM NAVIGATION BAR
+      Shows on mobile for logged-in pages (feed, search, etc.) ── */
+.sp-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  background: var(--white, #ffffff);
+  border-top: 1px solid var(--border, #e2e0d8);
+  padding: 8px 0 env(safe-area-inset-bottom, 8px);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.sp-bottom-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.sp-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 12px;
+  text-decoration: none;
+  color: var(--muted, #888);
+  font-size: 10px;
+  font-weight: 600;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: color 0.15s, background 0.15s;
+  min-width: 52px;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  font-family: inherit;
+}
+
+.sp-bottom-nav-item i {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sp-bottom-nav-item.active {
+  color: var(--navy, #001233);
+}
+
+.sp-bottom-nav-item:active {
+  background: var(--surface, #eeecea);
+}
+
+/* Badge on bottom nav icon */
+.sp-bottom-nav-item .sp-nav-badge {
+  position: absolute;
+  top: 0;
+  right: 8px;
+  background: #e84b4b;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+/* Center post button */
+.sp-bottom-nav-post {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--navy, #001233);
+  color: #fff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 18, 51, 0.3);
+  margin-top: -10px;
+  flex-direction: row !important;
+  gap: 0 !important;
+  font-size: 10px !important;
+  padding: 0 !important;
+  min-width: unset !important;
+}
+
+.sp-bottom-nav-post i {
+  font-size: 18px !important;
+}
+
+.sp-bottom-nav-post .sp-nav-label {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sp-bottom-nav { display: block; }
+}
+
+/* ── 6. Messaging mobile chat back button ── */
 .sp-msg-back-btn {
   display: none;
   width: 36px;
