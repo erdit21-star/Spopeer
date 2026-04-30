@@ -285,7 +285,8 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
     stage = 'user_lookup';
     const user = await User.findOne({
       where: { email: email.toLowerCase() },
-      attributes: ['id', 'email', 'password', 'role', 'isActive', 'firstName', 'lastName', 'emailVerified', 'avatarUrl', 'sport', 'lastLogin']
+      // Keep login compatible with older DB schemas that may not yet have optional profile columns.
+      attributes: ['id', 'email', 'password', 'role', 'isActive', 'firstName', 'lastName']
     });
 
     if (!user) {
@@ -313,10 +314,10 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
 
     const firstName = user.firstName ?? null;
     const lastName = user.lastName ?? null;
-    const emailVerified = user.emailVerified ?? true;
-    const avatarUrl = user.avatarUrl ?? null;
-    const sport = user.sport ?? null;
-    const lastLogin = user.lastLogin ?? null;
+    const emailVerified = (typeof user.getDataValue === 'function' ? user.getDataValue('emailVerified') : user.emailVerified) ?? true;
+    const avatarUrl = (typeof user.getDataValue === 'function' ? user.getDataValue('avatarUrl') : user.avatarUrl) ?? null;
+    const sport = (typeof user.getDataValue === 'function' ? user.getDataValue('sport') : user.sport) ?? null;
+    const lastLogin = (typeof user.getDataValue === 'function' ? user.getDataValue('lastLogin') : user.lastLogin) ?? null;
 
     // Update last login (guarded — column may not yet exist in legacy DBs)
     try {
