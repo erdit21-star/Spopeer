@@ -532,16 +532,19 @@ router.post('/forgot-password', forgotLimiter, verifyCaptchaMiddleware, validate
       expiresAt: new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
     });
 
-    // Send the raw token in the email (user clicks it, server hashes to compare)
-    const emailResult = await sendPasswordResetEmail(user.email, token);
-    if (!emailResult || emailResult.success === false) {
-      console.error('[FORGOT-PASSWORD] Email send failed:', { to: user.email, error: emailResult && emailResult.error, requestId: req.requestId });
-      // Return 500 — the token was saved so a retry will work
-      return fail(res, 500, 'EMAIL_SEND_FAILED', 'Failed to send reset email. Please try again in a few minutes.');
-    }
-    console.log('[FORGOT-PASSWORD] Reset email sent to:', user.email, '| Resend ID:', emailResult.id);
+    // Respond immediately — don't make the client wait for SMTP
+    ok(res, { message: 'If that email exists, a reset link has been sent.' });
 
-    return ok(res, { message: 'If that email exists, a reset link has been sent.' });
+    // Send email in background (fire-and-forget)
+    sendPasswordResetEmail(user.email, token).then(emailResult => {
+      if (!emailResult || emailResult.success === false) {
+        console.error('[FORGOT-PASSWORD] Email send failed:', { to: user.email, error: emailResult && emailResult.error, requestId: req.requestId });
+      } else {
+        console.log('[FORGOT-PASSWORD] Reset email sent to:', user.email, '| Message ID:', emailResult.id);
+      }
+    }).catch(err => {
+      console.error('[FORGOT-PASSWORD] Email send threw:', { to: user.email, message: err && err.message, requestId: req.requestId });
+    });
   } catch (error) {
     console.error('[FORGOT-PASSWORD] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
     return fail(res, 500, 'SERVER_ERROR', 'Server error.');
