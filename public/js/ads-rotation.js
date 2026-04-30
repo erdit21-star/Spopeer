@@ -135,6 +135,11 @@
   function renderSlot(slot, creative) {
     if (!slot || !creative) return;
 
+    var currentCreativeId = slot.getAttribute('data-creative-id');
+    if (currentCreativeId === creative.id && slot.innerHTML.trim()) {
+      return;
+    }
+
     slot.innerHTML =
       '<div class="ad-slot-body">' +
         '<div class="ad-slot-media" style="background-image:url(\'' + escapeHtml(creative.media) + '\')"></div>' +
@@ -146,6 +151,8 @@
         '</div>' +
       '</div>' +
       '<div class="ad-slot-footer"><span>Ad placement</span><span>Rotates on activity</span></div>';
+
+    slot.setAttribute('data-creative-id', creative.id);
   }
 
   function renderAllSlots() {
