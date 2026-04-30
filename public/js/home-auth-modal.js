@@ -136,6 +136,8 @@
   function bindLoginForm() {
     var loginForm = document.getElementById('modalLoginForm');
     if (!loginForm) return;
+    if (loginForm.dataset.bound === 'true') return;
+    loginForm.dataset.bound = 'true';
 
     loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -207,6 +209,8 @@
 
     var signupForm = document.getElementById('modalSignupForm');
     if (!signupForm) return;
+    if (signupForm.dataset.bound === 'true') return;
+    signupForm.dataset.bound = 'true';
 
     signupForm.addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -283,6 +287,8 @@
   function bindForgotPasswordForm() {
     var forgotForm = document.getElementById('modalForgotForm');
     if (!forgotForm) return;
+    if (forgotForm.dataset.bound === 'true') return;
+    forgotForm.dataset.bound = 'true';
 
     forgotForm.addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -305,18 +311,29 @@
 
       btn.disabled = true;
       btn.textContent = 'Sending...';
+      successBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>Sending reset email...';
+      successBox.style.display = 'block';
+
+      var timeoutId = null;
       try {
-        var res = await csrfFetch('/api/auth/forgot-password', {
+        var requestPromise = csrfFetch('/api/auth/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: email })
         });
+        var timeoutPromise = new Promise(function (_, reject) {
+          timeoutId = window.setTimeout(function () {
+            reject(new Error('Request timed out. Please try again.'));
+          }, 20000);
+        });
+        var res = await Promise.race([requestPromise, timeoutPromise]);
         var data = await res.json();
 
         if (!res.ok) {
           var msg = (data.error && data.error.message) || data.message || 'Something went wrong. Please try again.';
           errorBox.textContent = msg;
           errorBox.style.display = 'block';
+          successBox.style.display = 'none';
           btn.disabled = false;
           btn.textContent = 'Send Reset Link';
           return;
@@ -327,10 +344,13 @@
         successBox.innerHTML = '<i class="fa-solid fa-circle-check" style="margin-right:6px"></i>If an account exists for <strong>' + email + '</strong>, we\'ve sent reset instructions. Check your inbox (and spam folder). The link expires in 30 minutes.';
         successBox.style.display = 'block';
       } catch (err) {
-        errorBox.textContent = 'Network error. Please check your connection and try again.';
+        errorBox.textContent = err.message || 'Network error. Please check your connection and try again.';
         errorBox.style.display = 'block';
+        successBox.style.display = 'none';
         btn.disabled = false;
         btn.textContent = 'Send Reset Link';
+      } finally {
+        if (timeoutId) window.clearTimeout(timeoutId);
       }
     });
   }

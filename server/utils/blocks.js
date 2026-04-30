@@ -1,7 +1,8 @@
 /**
  * Block list utilities
  */
-const { Block, Op } = require('../models');
+const { Op } = require('sequelize');
+const { Block } = require('../models');
 
 /**
  * Get all user IDs that are blocked by or have blocked the given user
