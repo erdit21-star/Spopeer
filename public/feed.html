@@ -38,6 +38,7 @@
   <script src="js/admin-access.js"></script>
   <script src="js/profile-sync-service.js"></script>
   <script src="js/shared-ui.js"></script>
+  <script src="/js/ads-rotation.js" defer></script>
   <script src="/js/game-tape-stories.js" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', async function () {
@@ -65,6 +66,7 @@
   <link rel="stylesheet" href="/css/shared-tokens.css" />
   <link rel="stylesheet" href="/css/shared-nav.css" />
   <link rel="stylesheet" href="/css/components/toast.css" />
+  <link rel="stylesheet" href="/css/components/ads-rotation.css" />
   <link rel="stylesheet" href="/css/components/game-tape-stories.css" />
   <style>
 
@@ -2780,6 +2782,10 @@
   <!-- RIGHT SIDEBAR -->
   <aside class="sidebar-right">
 
+    <h4 class="ad-slot-rail-heading">Sponsored</h4>
+    <section class="right-rail-ad-slot" data-ad-slot="right-rail-1"></section>
+    <section class="right-rail-ad-slot" data-ad-slot="right-rail-2"></section>
+
     <!-- Spopeer Agent Hub -->
     <section class="spopeer-agent-card" id="spopeerAgentCard">
       <div class="agent-top">
@@ -4457,7 +4463,14 @@
         </div>
       `;
     } else {
-      container.innerHTML = visiblePosts.map(post => renderPostCard(post)).join("");
+      var parts = [];
+      visiblePosts.forEach(function (post, index) {
+        parts.push(renderPostCard(post));
+        if ((index + 1) % 4 === 0) {
+          parts.push('<section class="feed-ad-slot" data-ad-slot="feed-inline-' + (Math.floor(index / 4) + 1) + '"></section>');
+        }
+      });
+      container.innerHTML = parts.join('');
     }
 
     const insertAfter = document.querySelector(".create-card") || document.querySelector(".game-tape-container");
@@ -4469,6 +4482,10 @@
 
     if (window.SpopeerFeedEngine) {
       visiblePosts.forEach(post => window.SpopeerFeedEngine.markViewed(post.id));
+    }
+
+    if (window.SpopeerAds && typeof window.SpopeerAds.refreshSlots === 'function') {
+      window.SpopeerAds.refreshSlots();
     }
   }
 
