@@ -120,15 +120,36 @@ async function sendPasswordResetEmail(email, token) {
   const resetUrl = `${process.env.APP_URL || 'http://localhost:5000'}/pages/auth/reset-password.html?token=${token}`;
 
   const html = wrapTemplate(`
-    <h2 style="margin:0 0 16px;color:#333;">Reset your password</h2>
-    <p style="color:#555;line-height:1.6;">We received a request to reset your Spopeer password.</p>
-    <div style="text-align:center;margin:28px 0;">${buttonHtml(resetUrl, 'Reset Password')}</div>
-    <p style="color:#999;font-size:13px;">This link expires in 30 minutes. If you didn't request this, ignore this email.</p>
+    <h2 style="margin:0 0 12px;color:#001233;font-size:26px;">Reset your Spopeer password</h2>
+
+    <p style="color:#444;line-height:1.7;font-size:15px;">
+      We received a request to reset the password for your Spopeer account.
+    </p>
+
+    <p style="color:#444;line-height:1.7;font-size:15px;">
+      Click the button below to create a new password. This link will expire in <strong>30 minutes</strong>.
+    </p>
+
+    <div style="text-align:center;margin:32px 0;">
+      ${buttonHtml(resetUrl, 'Create New Password')}
+    </div>
+
+    <p style="color:#777;line-height:1.7;font-size:13px;">
+      If the button does not work, copy and paste this link into your browser:
+    </p>
+
+    <p style="word-break:break-all;background:#f4f6f8;padding:12px;border-radius:8px;color:#001233;font-size:13px;">
+      ${resetUrl}
+    </p>
+
+    <p style="color:#999;font-size:13px;line-height:1.6;margin-top:24px;">
+      If you did not request a password reset, you can safely ignore this email.
+    </p>
   `);
 
   return sendEmail({
     to: email,
-    subject: `Reset your ${APP_NAME} password`,
+    subject: `Reset your Spopeer password`,
     html
   });
 }
