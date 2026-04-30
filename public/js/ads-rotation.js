@@ -14,6 +14,7 @@
       text: 'Personalized plans for athletes, teams, and high-performance programs.',
       cta: 'Learn More',
       media: 'https://placehold.co/240x240/001f3f/ffffff?text=Fuel+Plan',
+      href: 'https://example.com/fuel-plan',
       weight: 5
     },
     {
@@ -23,6 +24,7 @@
       text: 'Monitor pace, heart rate, load, and recovery in one dashboard.',
       cta: 'View Devices',
       media: 'https://placehold.co/240x240/1a6bff/ffffff?text=Wearables',
+      href: 'https://example.com/wearables',
       weight: 4
     },
     {
@@ -32,6 +34,7 @@
       text: 'Limited spots for youth, academy, and elite prep sessions.',
       cta: 'Reserve Spot',
       media: 'https://placehold.co/240x240/0f8f5f/ffffff?text=Skills+Camp',
+      href: 'https://example.com/skills-camp',
       weight: 3
     },
     {
@@ -41,6 +44,7 @@
       text: 'Book assessment and recovery sessions with certified specialists.',
       cta: 'Book Session',
       media: 'https://placehold.co/240x240/7c3aed/ffffff?text=Recovery',
+      href: 'https://example.com/physio',
       weight: 2
     },
     {
@@ -50,6 +54,7 @@
       text: 'Group booking offers tailored for clubs and event organizers.',
       cta: 'Explore Offers',
       media: 'https://placehold.co/240x240/c2410c/ffffff?text=Team+Travel',
+      href: 'https://example.com/team-travel',
       weight: 2
     }
   ];
@@ -142,12 +147,14 @@
 
     slot.innerHTML =
       '<div class="ad-slot-body">' +
-        '<div class="ad-slot-media" style="background-image:url(\'' + escapeHtml(creative.media) + '\')"></div>' +
+        '<a class="ad-slot-media-link" href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer" aria-label="Open sponsored content">' +
+          '<div class="ad-slot-media" style="background-image:url(\'' + escapeHtml(creative.media) + '\')"></div>' +
+        '</a>' +
         '<div class="ad-slot-copy">' +
           '<span class="ad-slot-kicker"><span class="ad-slot-dot"></span>' + escapeHtml(creative.kicker) + '</span>' +
-          '<h4 class="ad-slot-title">' + escapeHtml(creative.title) + '</h4>' +
+          '<h4 class="ad-slot-title"><a href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(creative.title) + '</a></h4>' +
           '<p class="ad-slot-text">' + escapeHtml(creative.text) + '</p>' +
-          '<button class="ad-slot-cta" type="button">' + escapeHtml(creative.cta) + '</button>' +
+          '<a class="ad-slot-cta" href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(creative.cta) + '</a>' +
         '</div>' +
       '</div>' +
       '<div class="ad-slot-footer"><span>Ad placement</span><span>Rotates on activity</span></div>';
