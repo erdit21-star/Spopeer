@@ -2782,13 +2782,30 @@
   <!-- MAIN FEED -->
   <main class="feed-col">
 
-    <!-- GAME TAPE STORIES -->
-    <section class="game-tape-container" aria-label="Game Tape stories">
+    <!-- tabs -->
+    <div class="feed-tabs">
+      <button class="feed-tab active" data-tab="for-you">For You</button>
+      <button class="feed-tab" data-tab="following">Following</button>
+      <div class="sport-tab-wrap" id="sportTabWrap">
+        <button class="feed-tab" data-tab="sport" id="sportTabButton">Sport</button>
+        <div class="sports-dropdown" id="sportsDropdown" style="display:none;">
+          <div class="sports-dropdown-header">
+            <h4>My Sports <span class="sports-dropdown-indicator" id="sportIndicator"></span></h4>
+            <button class="close-dropdown" id="closeSportsDropdown" type="button"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="sports-dropdown-list" id="sportsDropdownList"></div>
+        </div>
+      </div>
+      <button class="feed-tab" data-tab="trending">Trending</button>
+    </div>
+
+    <!-- STORIES HIGHLIGHTS -->
+    <section class="game-tape-container" aria-label="Stories highlights">
       <div class="game-tape-wrapper">
         <div class="game-tape-header">
           <div class="game-tape-title">
             <span class="game-tape-title-icon">🎥</span>
-            <span>Game Tape · Stories</span>
+            <span>Stories · Highlights</span>
             <span class="game-tape-badge" id="gameTapeNewBadge">0 new</span>
           </div>
           <div class="game-tape-scroll-hint">
@@ -2803,7 +2820,7 @@
       </div>
     </section>
 
-    <!-- GAME TAPE FULLSCREEN VIEWER -->
+    <!-- STORIES HIGHLIGHTS FULLSCREEN VIEWER -->
     <div class="game-story-viewer" id="gameStoryViewer" aria-hidden="true">
       <div class="game-viewer-container">
         <div class="game-viewer-progress-bar">
@@ -2836,69 +2853,6 @@
           <input type="text" class="game-reply-input" id="replyInput" placeholder="Reply to this story...">
           <button type="button" class="game-reply-send" id="replySendBtn">Send</button>
         </div>
-      </div>
-    </div>
-
-    <!-- tabs -->
-    <div class="feed-tabs">
-      <button class="feed-tab active" data-tab="for-you">For You</button>
-      <button class="feed-tab" data-tab="following">Following</button>
-      <div class="sport-tab-wrap" id="sportTabWrap">
-        <button class="feed-tab" data-tab="sport" id="sportTabButton">Sport</button>
-        <div class="sports-dropdown" id="sportsDropdown" style="display:none;">
-          <div class="sports-dropdown-header">
-            <h4>My Sports <span class="sports-dropdown-indicator" id="sportIndicator"></span></h4>
-            <button class="close-dropdown" id="closeSportsDropdown" type="button"><i class="fa-solid fa-xmark"></i></button>
-          </div>
-          <div class="sports-dropdown-list" id="sportsDropdownList"></div>
-        </div>
-      </div>
-      <button class="feed-tab" data-tab="trending">Trending</button>
-    </div>
-
-    <!-- stories -->
-    <div class="stories-strip">
-      <div class="story-item">
-        <div class="story-ring add-ring">
-          <div class="story-inner"><i class="fa-solid fa-plus"></i></div>
-        </div>
-        <span class="story-name">Your story</span>
-      </div>
-      <div class="story-item">
-        <div class="story-ring">
-          <div class="story-inner">AN</div>
-        </div>
-        <span class="story-name">Alex</span>
-      </div>
-      <div class="story-item">
-        <div class="story-ring">
-          <div class="story-inner">SR</div>
-        </div>
-        <span class="story-name">Sarah</span>
-      </div>
-      <div class="story-item">
-        <div class="story-ring">
-          <div class="story-inner">MC</div>
-        </div>
-        <span class="story-name">Michael</span>
-      </div>
-      <div class="story-item">
-        <div class="story-ring">
-          <div class="story-inner">EL</div>
-        </div>
-        <span class="story-name">Elena</span>
-      </div>
-      <div class="story-item">
-        <div class="story-ring">
-          <div class="story-inner">JT</div>
-        </div>
-        <span class="story-name">James</span>
-      </div>
-      <div class="story-item">
-        <div class="story-ring">
-          <div class="story-inner">PK</div>
-        </div>
-        <span class="story-name">Priya</span>
       </div>
     </div>
 
@@ -5211,7 +5165,7 @@
       container.innerHTML = visiblePosts.map(post => renderPostCard(post)).join("");
     }
 
-    const insertAfter = document.querySelector(".create-card") || document.querySelector(".stories-strip");
+    const insertAfter = document.querySelector(".create-card") || document.querySelector(".game-tape-container");
     if (insertAfter && insertAfter.parentNode) {
       insertAfter.parentNode.insertBefore(container, insertAfter.nextSibling);
     } else if (feedMount) {
