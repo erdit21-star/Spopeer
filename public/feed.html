@@ -1262,6 +1262,60 @@
     }
     .feed-empty-btn-secondary:hover { border-color: var(--accent); color: var(--accent); background: var(--blue-lt); }
 
+    .first-post-prompt,
+    .onboarding-checklist-card { margin-bottom: 12px; }
+    .onboarding-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .onboarding-card-head h3 { margin:0; font-size:18px; font-family:var(--fD); }
+    .onboarding-card-sub { margin:0 0 12px; color:var(--muted); font-size:14px; line-height:1.55; }
+    .onboarding-dismiss {
+      width:30px; height:30px; border-radius:50%; border:1px solid var(--border);
+      background:var(--white); color:var(--muted); cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .onboarding-progress-pill {
+      font-size:11px; font-weight:700; color:var(--accent);
+      background:var(--blue-lt); border-radius:999px; padding:4px 10px;
+    }
+    .onboarding-progress-track {
+      height:8px; background:var(--surface); border-radius:999px;
+      overflow:hidden; margin-bottom:12px;
+    }
+    .onboarding-progress-fill {
+      height:100%; background:linear-gradient(90deg, var(--accent), var(--blue));
+      transition: width .2s ease;
+    }
+    .onboarding-checklist { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+    .onboarding-checklist li {
+      display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-2);
+      background:var(--surface); border-radius:10px; padding:8px 10px;
+    }
+    .onboarding-checklist li.done { color:var(--ink); }
+    .onboarding-check-icon {
+      width:20px; height:20px; border-radius:50%; border:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0;
+      background:var(--white); color:var(--muted);
+    }
+    .onboarding-checklist li.done .onboarding-check-icon {
+      background:var(--green-lt); border-color:rgba(22,163,74,.24); color:var(--green);
+    }
+    .onboarding-card-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+
+    .onboarding-flow-dialog { max-width:640px; width:95%; }
+    .onboarding-flow-progress { margin-bottom:14px; }
+    .onboarding-flow-step { font-size:12px; font-weight:700; color:var(--accent); margin-bottom:8px; }
+    .onboarding-step-panel h4 { margin:0 0 6px; font-size:18px; font-family:var(--fD); }
+    .onboarding-step-panel p { margin:0 0 14px; color:var(--muted); font-size:14px; }
+    .onboarding-step-panel textarea,
+    .onboarding-step-panel select,
+    .onboarding-step-panel input[type="file"] {
+      width:100%; padding:11px 12px; border-radius:10px; border:1.5px solid var(--border);
+      font-family:var(--fB); font-size:14px; background:var(--white);
+    }
+    .onboarding-follow-count {
+      font-weight:700; color:var(--accent); background:var(--blue-lt);
+      border-radius:10px; padding:10px 12px; display:inline-block;
+    }
+
     .post-body { padding: 18px 18px 0; }
 
     .post-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
@@ -2859,6 +2913,38 @@
       </div>
     </div>
 
+    <section class="post-card first-post-prompt" id="firstPostPrompt" style="display:none;">
+      <div class="post-body">
+        <div class="onboarding-card-head">
+          <h3>Introduce yourself to the Spopeer community</h3>
+          <button type="button" class="onboarding-dismiss" id="dismissFirstPostPrompt" aria-label="Dismiss">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <p class="onboarding-card-sub">Tell people your sport, your goal, and what you are working on this season.</p>
+        <div class="onboarding-card-actions">
+          <button class="feed-empty-btn-primary" type="button" id="openComposerFromPrompt"><i class="fa-regular fa-pen-to-square"></i> Write first post</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="post-card onboarding-checklist-card" id="onboardingChecklistCard" style="display:none;">
+      <div class="post-body">
+        <div class="onboarding-card-head">
+          <h3>Welcome to Spopeer</h3>
+          <span class="onboarding-progress-pill" id="onboardingProgressText">0/4</span>
+        </div>
+        <p class="onboarding-card-sub">Complete these steps to unlock a better feed and profile visibility.</p>
+        <div class="onboarding-progress-track">
+          <div class="onboarding-progress-fill" id="onboardingProgressFill" style="width:0%"></div>
+        </div>
+        <ul class="onboarding-checklist" id="onboardingChecklist"></ul>
+        <div class="onboarding-card-actions">
+          <button class="feed-empty-btn-secondary" type="button" id="openOnboardingFlowBtn"><i class="fa-solid fa-bolt"></i> Complete profile</button>
+        </div>
+      </div>
+    </section>
+
     <!-- create post -->
     <div class="create-card">
       <div class="create-top" data-user-chip>
@@ -2949,6 +3035,58 @@
       </div>
     </div>
 
+    <div class="post-composer-modal" id="onboardingFlowModal" aria-hidden="true">
+      <div class="post-composer-backdrop" id="onboardingBackdrop"></div>
+      <div class="post-composer-dialog onboarding-flow-dialog">
+        <div class="post-composer-header">
+          <h3>Complete your profile</h3>
+          <button class="close-composer" id="closeOnboardingFlow"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="post-composer-body">
+          <div class="onboarding-flow-progress">
+            <div class="onboarding-flow-step" id="onboardingStepLabel">Step 1 of 3</div>
+            <div class="onboarding-progress-track">
+              <div class="onboarding-progress-fill" id="onboardingFlowProgress" style="width:33%"></div>
+            </div>
+          </div>
+
+          <div class="onboarding-step-panel" id="onboardingStep1">
+            <h4>Profile photo + one-line bio</h4>
+            <p>Add a profile photo and a short bio so people know who you are.</p>
+            <div class="form-grp" style="margin-bottom:10px;">
+              <label for="onboardingAvatarInput">Profile photo</label>
+              <input id="onboardingAvatarInput" type="file" accept="image/*" />
+            </div>
+            <div class="form-grp">
+              <label for="onboardingBioInput">One-line bio</label>
+              <textarea id="onboardingBioInput" rows="3" placeholder="Example: U20 football midfielder focused on speed and first touch."></textarea>
+            </div>
+          </div>
+
+          <div class="onboarding-step-panel" id="onboardingStep2" style="display:none;">
+            <h4>Confirm your primary sport</h4>
+            <p>This helps us personalize your feed and follow suggestions.</p>
+            <div class="form-grp">
+              <label for="onboardingPrimarySport">Primary sport</label>
+              <select id="onboardingPrimarySport">
+                <option value="">Select your primary sport</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="onboarding-step-panel" id="onboardingStep3" style="display:none;">
+            <h4>Follow 3 people</h4>
+            <p>Follow at least 3 people from your suggestions list to personalize your Following tab.</p>
+            <div class="onboarding-follow-count" id="onboardingFollowCount">0 / 3 followed</div>
+          </div>
+        </div>
+        <div class="post-composer-footer">
+          <button class="composer-cancel-btn" id="onboardingBackBtn" style="display:none;">Back</button>
+          <button class="composer-post-btn" id="onboardingNextBtn">Save &amp; Continue</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Posts loaded dynamically from backend -->
 
   </main><!-- /feed-col -->
@@ -3027,29 +3165,8 @@
     <!-- who to follow -->
     <div class="side-card">
       <div class="side-card-title"><i class="fa-regular fa-user-plus"></i> Who to Follow</div>
-      <div class="suggest-item">
-        <div class="suggest-av av-blue">PK</div>
-        <div class="suggest-info">
-          <div class="suggest-name">Priya Kumar</div>
-          <div class="suggest-role">Sprinter &middot; India</div>
-        </div>
-        <button class="follow-btn">Follow</button>
-      </div>
-      <div class="suggest-item">
-        <div class="suggest-av av-blue">TW</div>
-        <div class="suggest-info">
-          <div class="suggest-name">Tom Walsh</div>
-          <div class="suggest-role">Football Coach &middot; UK</div>
-        </div>
-        <button class="follow-btn">Follow</button>
-      </div>
-      <div class="suggest-item">
-        <div class="suggest-av av-blue">FC</div>
-        <div class="suggest-info">
-          <div class="suggest-name">FC Barcelona</div>
-          <div class="suggest-role">Club &middot; Spain</div>
-        </div>
-        <button class="follow-btn">Follow</button>
+      <div id="whoToFollowList">
+        <div style="font-size:12px;color:var(--muted);padding:6px 2px;">Loading suggestions...</div>
       </div>
     </div>
 
@@ -3958,6 +4075,9 @@
           n.read = true;
           saveNotifications(notifs);
           renderNotifications();
+          if (window.SpopeerAPI && typeof window.SpopeerAPI.request === 'function' && n.id) {
+            window.SpopeerAPI.request('/api/notifications/' + encodeURIComponent(n.id) + '/read', { method: 'PATCH' }).catch(function(){});
+          }
         }
         if (n.href) {
           window.location.href = n.href;
@@ -3967,8 +4087,37 @@
     });
   };
 
-  const openNotifPopover = () => {
+  const syncNotificationsFromApi = async () => {
+    try {
+      if (!window.SpopeerAPI || typeof window.SpopeerAPI.request !== 'function') return;
+      const result = await window.SpopeerAPI.request('/api/notifications?limit=20');
+      const payload = (result && (result.payload || (result.data && result.data.payload) || result.data)) || [];
+      if (!Array.isArray(payload)) return;
+
+      const mapped = payload.map((n) => ({
+        id: String(n.id),
+        createdAt: n.createdAt || new Date().toISOString(),
+        read: !!n.isRead,
+        type: n.type || 'event',
+        text: n.text || 'You have a new notification.',
+        href: n.href || '/pages/dashboard/notifications.html',
+        sender: n.sender ? {
+          name: [n.sender.firstName, n.sender.lastName].filter(Boolean).join(' '),
+          initials: ((n.sender.firstName || '').charAt(0) + (n.sender.lastName || '').charAt(0)).toUpperCase()
+        } : null
+      }));
+
+      saveNotifications(mapped);
+      const unread = Number(result?.meta?.unreadCount ?? result?.unreadCount ?? mapped.filter((x) => !x.read).length);
+      updateBadge(unread);
+    } catch (err) {
+      console.debug('Notification API sync failed, using local cache:', err && err.message);
+    }
+  };
+
+  const openNotifPopover = async () => {
     if (!notifPopover) return;
+    await syncNotificationsFromApi();
     setLastSeen(Date.now());
     notifPopover.classList.add('visible');
     notifPopover.setAttribute('aria-hidden', 'false');
@@ -4004,6 +4153,9 @@
     saveNotifications(notifs);
     setLastSeen(Date.now());
     renderNotifications();
+    if (window.SpopeerAPI && typeof window.SpopeerAPI.request === 'function') {
+      window.SpopeerAPI.request('/api/notifications/read', { method: 'PATCH' }).catch(function(){});
+    }
   });
 
   viewAllNotif?.addEventListener('click', () => {
@@ -4016,7 +4168,7 @@
     saveNotifications([]);
   }
 
-  renderNotifications();
+  syncNotificationsFromApi().finally(renderNotifications);
 
   const scrollToHash = () => {
     const { hash } = window.location;
@@ -4553,6 +4705,10 @@
     postContent.focus();
   }
 
+  window.focusFeedComposer = function() {
+    openComposer();
+  };
+
   // Close composer modal
   function closeComposerModal() {
     postComposerModal.classList.remove('visible');
@@ -4719,7 +4875,7 @@
       submitComposer.textContent = 'Posting...';
 
       const postPayload = {
-        text: content,
+        content: content,
         visibility: visibility,
         sport: userData.primarySport || userData.sport || 'General',
         media: composerState.media.length > 0
@@ -4751,6 +4907,10 @@
       // Refresh sidebar stats from backend
       if (window.SpopeerStatsManager) {
         window.SpopeerStatsManager.syncSidebarStats();
+      }
+
+      if (typeof window.refreshFeedOnboarding === 'function') {
+        window.refreshFeedOnboarding();
       }
       
       // Reattach listeners to newly loaded posts
@@ -5887,6 +6047,363 @@ function escapeHtml(text) {
   });
 </script>
 
+
+<script>
+(function () {
+  const SUGGESTIONS_TARGET = 8;
+
+  function getCurrentUser() {
+    if (window.getCurrentUserData) return window.getCurrentUserData() || {};
+    try { return JSON.parse(localStorage.getItem('spopeer_user') || '{}'); } catch (e) { return {}; }
+  }
+
+  function getUserKey(user) {
+    return String(user && (user.id || user.userId || user.email || 'anon'));
+  }
+
+  function roleLabel(role) {
+    const map = {
+      athlete: 'Athlete',
+      coach: 'Coach',
+      club: 'Club',
+      supportive_professional: 'Sports Pro'
+    };
+    return map[role] || 'Member';
+  }
+
+  function initialsFor(user) {
+    const first = (user.firstName || '').charAt(0);
+    const last = (user.lastName || '').charAt(0);
+    const fallback = (user.displayName || user.email || 'U').charAt(0);
+    return (first + last || fallback).toUpperCase();
+  }
+
+  function openComposerFromAnyButton() {
+    if (typeof window.focusFeedComposer === 'function') {
+      window.focusFeedComposer();
+      return;
+    }
+    const createInput = document.querySelector('.create-input');
+    if (createInput) {
+      createInput.click();
+      createInput.focus();
+    }
+  }
+
+  async function getFollowingCount(user) {
+    try {
+      if (!window.SpopeerAPI || !window.SpopeerAPI.getProfileStats) return Number(user.followingCount || user.following || 0);
+      const userId = user.id || user.userId;
+      if (!userId) return Number(user.followingCount || user.following || 0);
+      const stats = await window.SpopeerAPI.getProfileStats(userId);
+      const count = Number(stats?.payload?.followingCount ?? stats?.followingCount ?? user.followingCount ?? user.following ?? 0);
+      return Number.isFinite(count) ? count : 0;
+    } catch (e) {
+      return Number(user.followingCount || user.following || 0);
+    }
+  }
+
+  async function loadSuggestedUsers() {
+    const listEl = document.getElementById('whoToFollowList');
+    const user = getCurrentUser();
+    if (!listEl || !window.SpopeerAPI || typeof window.SpopeerAPI.request !== 'function') return [];
+
+    const sport = (user.primarySport || user.sport || '').trim();
+    const role = (user.role || user.userType || '').trim();
+    const params = new URLSearchParams();
+    if (sport) params.set('sport', sport);
+    if (role) params.set('role', role);
+    params.set('limit', '20');
+
+    let users = [];
+    try {
+      const data = await window.SpopeerAPI.request('/api/users?' + params.toString());
+      users = data?.payload || data?.data?.payload || data?.data || [];
+      if (!Array.isArray(users)) users = [];
+      if (users.length < SUGGESTIONS_TARGET && sport) {
+        const fallbackData = await window.SpopeerAPI.request('/api/users?sport=' + encodeURIComponent(sport) + '&limit=20');
+        const fallbackUsers = fallbackData?.payload || fallbackData?.data?.payload || fallbackData?.data || [];
+        if (Array.isArray(fallbackUsers)) users = users.concat(fallbackUsers);
+      }
+    } catch (e) {
+      listEl.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:6px 2px;">Could not load suggestions right now.</div>';
+      return [];
+    }
+
+    const currentId = String(user.id || user.userId || '');
+    const currentEmail = String(user.email || '').toLowerCase();
+    const dedup = new Map();
+    users.forEach((u) => {
+      const key = String(u.id || u.email || Math.random());
+      if (!dedup.has(key)) dedup.set(key, u);
+    });
+
+    let filtered = Array.from(dedup.values()).filter((u) => {
+      const uid = String(u.id || '');
+      const uemail = String(u.email || '').toLowerCase();
+      return uid !== currentId && (!currentEmail || uemail !== currentEmail);
+    });
+
+    try {
+      if (window.SpopeerAPI.getFollowing && (user.id || user.userId)) {
+        const followingRes = await window.SpopeerAPI.getFollowing(user.id || user.userId);
+        const following = followingRes?.payload || followingRes?.data?.payload || followingRes?.data || [];
+        if (Array.isArray(following) && following.length) {
+          const followedIds = new Set(following.map((f) => String(f.id || f.userId || f.followingId)));
+          filtered = filtered.filter((u) => !followedIds.has(String(u.id || u.userId)));
+        }
+      }
+    } catch (e) {
+      // Keep suggestions if following lookup fails
+    }
+
+    filtered = filtered.slice(0, SUGGESTIONS_TARGET);
+    if (!filtered.length) {
+      listEl.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:6px 2px;">No suggestions yet. Check back soon.</div>';
+      return [];
+    }
+
+    listEl.innerHTML = filtered.map((u) => {
+      const name = [u.firstName, u.lastName].filter(Boolean).join(' ') || u.displayName || 'User';
+      const sportText = u.sport || sport || 'General';
+      return '<div class="suggest-item" data-user-id="' + String(u.id || '') + '">' +
+        '<div class="suggest-av av-blue">' + initialsFor(u) + '</div>' +
+        '<div class="suggest-info">' +
+        '<div class="suggest-name">' + name + '</div>' +
+        '<div class="suggest-role">' + roleLabel(u.role) + ' · ' + sportText + '</div>' +
+        '</div>' +
+        '<button class="follow-btn" type="button">Follow</button>' +
+      '</div>';
+    }).join('');
+
+    listEl.querySelectorAll('.follow-btn').forEach((btn) => {
+      btn.addEventListener('click', async function () {
+        const item = this.closest('.suggest-item');
+        const userId = item && item.getAttribute('data-user-id');
+        if (!userId || !window.SpopeerAPI || !window.SpopeerAPI.followUser) return;
+        this.disabled = true;
+        try {
+          await window.SpopeerAPI.followUser(userId);
+          this.textContent = 'Following';
+          this.style.background = 'var(--surface-2)';
+          this.style.color = 'var(--muted)';
+          this.style.borderColor = 'var(--border)';
+          refreshOnboardingCards();
+        } catch (e) {
+          this.disabled = false;
+          this.textContent = 'Follow';
+        }
+      });
+    });
+
+    return filtered;
+  }
+
+  async function refreshOnboardingCards() {
+    const user = getCurrentUser();
+    const firstPostPrompt = document.getElementById('firstPostPrompt');
+    const checklistCard = document.getElementById('onboardingChecklistCard');
+    const checklist = document.getElementById('onboardingChecklist');
+    const fill = document.getElementById('onboardingProgressFill');
+    const text = document.getElementById('onboardingProgressText');
+    if (!checklistCard || !checklist || !fill || !text) return;
+
+    const userKey = getUserKey(user);
+    const dismissKey = 'spopeer_first_post_prompt_dismissed_' + userKey;
+
+    const hasPhoto = !!(user.avatarUrl || user.avatar);
+    const hasBio = !!(user.bio && String(user.bio).trim().length >= 8);
+    const hasPosted = Number(user.postsCount || 0) > 0 || !!document.querySelector('.post-card[data-post-id]');
+    const followingCount = await getFollowingCount(user);
+    const hasFollowed3 = followingCount >= 3;
+
+    const checks = [
+      { label: 'Add a profile photo', done: hasPhoto },
+      { label: 'Write a short bio', done: hasBio },
+      { label: 'Make your first post', done: hasPosted },
+      { label: 'Follow 3 people', done: hasFollowed3 }
+    ];
+
+    const doneCount = checks.filter((x) => x.done).length;
+    checklist.innerHTML = checks.map((c) => {
+      return '<li class="' + (c.done ? 'done' : '') + '">' +
+        '<span class="onboarding-check-icon"><i class="fa-solid ' + (c.done ? 'fa-check' : 'fa-circle') + '"></i></span>' +
+        '<span>' + c.label + '</span>' +
+      '</li>';
+    }).join('');
+
+    fill.style.width = String((doneCount / checks.length) * 100) + '%';
+    text.textContent = doneCount + '/' + checks.length;
+    checklistCard.style.display = doneCount === checks.length ? 'none' : 'block';
+
+    if (firstPostPrompt) {
+      const dismissed = localStorage.getItem(dismissKey) === '1';
+      firstPostPrompt.style.display = (!hasPosted && !dismissed) ? 'block' : 'none';
+    }
+
+    const onboardingFollowCount = document.getElementById('onboardingFollowCount');
+    if (onboardingFollowCount) {
+      onboardingFollowCount.textContent = Math.min(followingCount, 3) + ' / 3 followed';
+    }
+
+    return { hasPhoto, hasBio, hasFollowed3, followingCount };
+  }
+
+  window.refreshFeedOnboarding = refreshOnboardingCards;
+
+  async function initOnboardingFlow() {
+    const modal = document.getElementById('onboardingFlowModal');
+    const openBtn = document.getElementById('openOnboardingFlowBtn');
+    const closeBtn = document.getElementById('closeOnboardingFlow');
+    const backdrop = document.getElementById('onboardingBackdrop');
+    const nextBtn = document.getElementById('onboardingNextBtn');
+    const backBtn = document.getElementById('onboardingBackBtn');
+    const stepLabel = document.getElementById('onboardingStepLabel');
+    const flowFill = document.getElementById('onboardingFlowProgress');
+    const panels = [
+      document.getElementById('onboardingStep1'),
+      document.getElementById('onboardingStep2'),
+      document.getElementById('onboardingStep3')
+    ];
+    const bioInput = document.getElementById('onboardingBioInput');
+    const avatarInput = document.getElementById('onboardingAvatarInput');
+    const sportSelect = document.getElementById('onboardingPrimarySport');
+    if (!modal || !openBtn || !nextBtn || !backBtn || !stepLabel || !flowFill) return;
+
+    const user = getCurrentUser();
+    if (bioInput) bioInput.value = user.bio || '';
+
+    if (sportSelect) {
+      try {
+        const text = await fetch('/data/list-of-sports.txt').then((r) => r.text());
+        const sports = text.split(/\r?\n/).map((s) => s.trim()).filter(Boolean).slice(0, 250);
+        sportSelect.innerHTML = '<option value="">Select your primary sport</option>' + sports.map((s) => '<option value="' + s + '">' + s + '</option>').join('');
+        const currentSport = user.primarySport || user.sport || '';
+        if (currentSport) sportSelect.value = currentSport;
+      } catch (e) {
+        // keep default option
+      }
+    }
+
+    let step = 1;
+    function renderStep() {
+      panels.forEach((p, idx) => {
+        if (!p) return;
+        p.style.display = idx === (step - 1) ? 'block' : 'none';
+      });
+      stepLabel.textContent = 'Step ' + step + ' of 3';
+      flowFill.style.width = String((step / 3) * 100) + '%';
+      backBtn.style.display = step > 1 ? '' : 'none';
+      nextBtn.textContent = step === 3 ? 'Finish' : 'Save & Continue';
+    }
+
+    async function saveStep1() {
+      if (!window.SpopeerAPI) return true;
+      const payload = {};
+      if (bioInput && bioInput.value.trim()) payload.bio = bioInput.value.trim();
+      if (Object.keys(payload).length) {
+        await window.SpopeerAPI.updateCurrentProfile(payload);
+      }
+      const file = avatarInput && avatarInput.files && avatarInput.files[0];
+      if (file) {
+        await window.SpopeerAPI.uploadAvatar(file);
+      }
+      return true;
+    }
+
+    async function saveStep2() {
+      if (!window.SpopeerAPI || !sportSelect) return true;
+      const sport = sportSelect.value.trim();
+      if (!sport) return false;
+      await window.SpopeerAPI.updateCurrentProfile({ primarySport: sport, sport: sport });
+      return true;
+    }
+
+    async function validateStep3() {
+      const info = await refreshOnboardingCards();
+      return !!(info && info.hasFollowed3);
+    }
+
+    function openModal() {
+      modal.classList.add('visible');
+      modal.setAttribute('aria-hidden', 'false');
+      step = 1;
+      renderStep();
+    }
+    function closeModal() {
+      modal.classList.remove('visible');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    backdrop && backdrop.addEventListener('click', closeModal);
+    backBtn.addEventListener('click', function () {
+      if (step > 1) { step -= 1; renderStep(); }
+    });
+
+    nextBtn.addEventListener('click', async function () {
+      nextBtn.disabled = true;
+      try {
+        if (step === 1) {
+          await saveStep1();
+          step = 2;
+          renderStep();
+          await refreshOnboardingCards();
+        } else if (step === 2) {
+          const ok = await saveStep2();
+          if (!ok) {
+            nextBtn.disabled = false;
+            return;
+          }
+          step = 3;
+          renderStep();
+          await refreshOnboardingCards();
+        } else {
+          const done = await validateStep3();
+          if (!done) {
+            nextBtn.disabled = false;
+            return;
+          }
+          closeModal();
+          await refreshOnboardingCards();
+        }
+      } catch (e) {
+        console.error('Onboarding step failed:', e);
+      }
+      nextBtn.disabled = false;
+    });
+
+    const info = await refreshOnboardingCards();
+    if (info && (!info.hasPhoto || !info.hasBio || !info.hasFollowed3)) {
+      openModal();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    const dismissPromptBtn = document.getElementById('dismissFirstPostPrompt');
+    const openComposerBtn = document.getElementById('openComposerFromPrompt');
+    const user = getCurrentUser();
+    const dismissKey = 'spopeer_first_post_prompt_dismissed_' + getUserKey(user);
+
+    if (dismissPromptBtn) {
+      dismissPromptBtn.addEventListener('click', function () {
+        localStorage.setItem(dismissKey, '1');
+        const card = document.getElementById('firstPostPrompt');
+        if (card) card.style.display = 'none';
+      });
+    }
+
+    if (openComposerBtn) {
+      openComposerBtn.addEventListener('click', openComposerFromAnyButton);
+    }
+
+    await loadSuggestedUsers();
+    await refreshOnboardingCards();
+    await initOnboardingFlow();
+  });
+})();
+</script>
 
 <script src="/js/navigation.js"></script>
 

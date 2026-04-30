@@ -127,43 +127,41 @@ async function seed() {
     // ─── CREATE POSTS ───
     console.log('\nCreating posts...');
 
-    await Post.bulkCreate([
-      {
-        userId: coach.id,
-        content: 'Just finished an amazing training session with my team! The energy was incredible. 💪',
-        sport: 'Soccer',
-        likesCount: 24,
-        commentsCount: 5
-      },
-      {
-        userId: club.id,
-        content: 'Excited to announce our new partnership with Elite Sports Academy! 🎉 More opportunities coming soon.',
-        sport: 'Basketball',
-        likesCount: 45,
-        commentsCount: 12
-      },
-      {
-        userId: professional.id,
-        content: 'New blog post: How nutrition impacts athletic performance. Check it out!',
-        sport: 'General',
-        likesCount: 18,
-        commentsCount: 8
-      },
-      {
-        userId: athlete.id,
-        content: 'Personal best today! Breaking my previous record feels amazing. Thanks to my coach for the guidance! 🏃‍♂️',
-        sport: 'Running',
-        likesCount: 56,
-        commentsCount: 15
-      }
-    ]);
-    console.log('  ✅ 4 posts created.');
+    const seededPosts = [
+      // Athlete
+      { userId: athlete.id, content: 'Personal best today! Breaking my previous record feels amazing. Thanks coach! 🏃‍♂️', sport: 'Running', likesCount: 56, commentsCount: 15 },
+      { userId: athlete.id, content: 'Easy recovery run this morning. Keeping the legs fresh for race day.', sport: 'Running', likesCount: 14, commentsCount: 3 },
+      { userId: athlete.id, content: 'Strength day complete: squats, lunges, core. Consistency beats motivation.', sport: 'Running', likesCount: 22, commentsCount: 6 },
+      { userId: athlete.id, content: 'Any tips for pacing the first 2k of a 10k race?', sport: 'Running', likesCount: 10, commentsCount: 9 },
+      { userId: athlete.id, content: 'Weekend target: 18km long run and mobility session.', sport: 'Running', likesCount: 19, commentsCount: 4 },
+      // Coach
+      { userId: coach.id, content: 'Just finished an amazing training session with my team! The energy was incredible. 💪', sport: 'Soccer', likesCount: 24, commentsCount: 5 },
+      { userId: coach.id, content: 'Drill of the day: 3v2 transition game for better decision making in the final third.', sport: 'Soccer', likesCount: 31, commentsCount: 7 },
+      { userId: coach.id, content: 'Reminder for youth players: first touch and scanning are non-negotiable fundamentals.', sport: 'Soccer', likesCount: 18, commentsCount: 5 },
+      { userId: coach.id, content: 'Looking for two assistant coaches for our summer camp in LA.', sport: 'Soccer', likesCount: 12, commentsCount: 6 },
+      { userId: coach.id, content: 'If your team struggles in build-up, simplify the first pass and body shape.', sport: 'Soccer', likesCount: 26, commentsCount: 8 },
+      // Club
+      { userId: club.id, content: 'Excited to announce our new partnership with Elite Sports Academy! 🎉', sport: 'Basketball', likesCount: 45, commentsCount: 12 },
+      { userId: club.id, content: 'Open tryouts this Saturday at 10:00 AM. Guards and forwards welcome.', sport: 'Basketball', likesCount: 38, commentsCount: 11 },
+      { userId: club.id, content: 'Our U18 team is heading to the regional finals. Proud of the work this season.', sport: 'Basketball', likesCount: 52, commentsCount: 14 },
+      { userId: club.id, content: 'Hiring: strength & conditioning coach (part-time).', sport: 'Basketball', likesCount: 16, commentsCount: 5 },
+      { userId: club.id, content: 'Community clinic highlights are now live. Thanks to everyone who joined!', sport: 'Basketball', likesCount: 27, commentsCount: 7 },
+      // Supportive professional
+      { userId: professional.id, content: 'New blog post: How nutrition impacts athletic performance.', sport: 'General', likesCount: 18, commentsCount: 8 },
+      { userId: professional.id, content: 'Pre-training snack idea: banana + greek yogurt + honey + pinch of salt.', sport: 'General', likesCount: 21, commentsCount: 6 },
+      { userId: professional.id, content: 'Hydration tip: don’t wait for thirst during sessions longer than 60 minutes.', sport: 'General', likesCount: 25, commentsCount: 4 },
+      { userId: professional.id, content: 'Athletes: track sleep quality for 2 weeks and compare with training output.', sport: 'General', likesCount: 13, commentsCount: 3 },
+      { userId: professional.id, content: 'Q&A tonight: supplements that actually matter vs hype.', sport: 'General', likesCount: 17, commentsCount: 10 }
+    ];
+
+    await Post.bulkCreate(seededPosts);
+    console.log('  ✅ ' + seededPosts.length + ' posts created.');
 
     // Update post counts
-    await athlete.update({ postsCount: 1 });
-    await coach.update({ postsCount: 1 });
-    await club.update({ postsCount: 1 });
-    await professional.update({ postsCount: 1 });
+    await athlete.update({ postsCount: seededPosts.filter((p) => p.userId === athlete.id).length });
+    await coach.update({ postsCount: seededPosts.filter((p) => p.userId === coach.id).length });
+    await club.update({ postsCount: seededPosts.filter((p) => p.userId === club.id).length });
+    await professional.update({ postsCount: seededPosts.filter((p) => p.userId === professional.id).length });
 
     // ─── CREATE CONNECTIONS ───
     console.log('\nCreating connections...');
