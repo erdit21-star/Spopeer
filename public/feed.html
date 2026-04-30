@@ -38,6 +38,7 @@
   <script src="js/admin-access.js"></script>
   <script src="js/profile-sync-service.js"></script>
   <script src="js/shared-ui.js"></script>
+  <script src="/js/game-tape-stories.js" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', async function () {
       if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
@@ -64,6 +65,7 @@
   <link rel="stylesheet" href="/css/shared-tokens.css" />
   <link rel="stylesheet" href="/css/shared-nav.css" />
   <link rel="stylesheet" href="/css/components/toast.css" />
+  <link rel="stylesheet" href="/css/components/game-tape-stories.css" />
   <style>
 
     /* ================================================================================================
@@ -2779,6 +2781,63 @@
 
   <!-- MAIN FEED -->
   <main class="feed-col">
+
+    <!-- GAME TAPE STORIES -->
+    <section class="game-tape-container" aria-label="Game Tape stories">
+      <div class="game-tape-wrapper">
+        <div class="game-tape-header">
+          <div class="game-tape-title">
+            <span class="game-tape-title-icon">🎥</span>
+            <span>Game Tape · Stories</span>
+            <span class="game-tape-badge" id="gameTapeNewBadge">0 new</span>
+          </div>
+          <div class="game-tape-scroll-hint">
+            <span>Scroll</span>
+            <span>← →</span>
+          </div>
+        </div>
+
+        <div class="game-tape-strip" id="gameTapeStrip">
+          <!-- Injected by /js/game-tape-stories.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME TAPE FULLSCREEN VIEWER -->
+    <div class="game-story-viewer" id="gameStoryViewer" aria-hidden="true">
+      <div class="game-viewer-container">
+        <div class="game-viewer-progress-bar">
+          <div class="game-viewer-progress-fill" id="viewerProgress"></div>
+        </div>
+
+        <div class="game-viewer-header">
+          <div class="game-viewer-user">
+            <div class="game-viewer-avatar" id="viewerAvatar">SP</div>
+            <div class="game-viewer-name">
+              <h4 id="viewerName">Spopeer Athlete</h4>
+              <p id="viewerMeta">Sport · now</p>
+            </div>
+          </div>
+          <button type="button" class="game-viewer-close" id="closeViewerBtn" aria-label="Close story">✕</button>
+        </div>
+
+        <div class="game-viewer-media" id="viewerMedia">
+          <!-- Injected by JS -->
+        </div>
+
+        <div class="game-viewer-stats" id="viewerStats">
+          <!-- Injected by JS -->
+        </div>
+
+        <button type="button" class="game-viewer-nav prev" id="viewerPrevBtn" aria-label="Previous story">‹</button>
+        <button type="button" class="game-viewer-nav next" id="viewerNextBtn" aria-label="Next story">›</button>
+
+        <div class="game-reply-composer" id="replyComposer">
+          <input type="text" class="game-reply-input" id="replyInput" placeholder="Reply to this story...">
+          <button type="button" class="game-reply-send" id="replySendBtn">Send</button>
+        </div>
+      </div>
+    </div>
 
     <!-- tabs -->
     <div class="feed-tabs">
