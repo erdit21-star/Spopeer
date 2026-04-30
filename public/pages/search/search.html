@@ -479,6 +479,10 @@
       .footer-grid { grid-template-columns: 1fr 1fr; padding: 36px 16px 0; }
       .footer-btm { padding: 14px 16px; flex-direction: column; text-align: center; }
     }
+    @media (max-width: 768px) {
+      .page-wrap { grid-template-columns: 1fr; }
+      .filter-sidebar { display: none; }
+    }
     @media (max-width: 600px) {
       .nav-inner { padding: 0 14px; }
       .nav-search { max-width: 170px; }

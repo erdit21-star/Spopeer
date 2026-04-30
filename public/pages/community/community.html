@@ -1039,6 +1039,12 @@
       .featured-visual { height: 100px; }
     }
 
+    @media (max-width: 768px) {
+      .app-layout { grid-template-columns: 1fr; padding: 12px; }
+      .sidebar-left,
+      .sidebar-right { display: none; }
+    }
+
     @media (max-width: 650px) {
       .app-layout { grid-template-columns: 1fr; padding: 12px; }
       .sidebar-left { display: none; }

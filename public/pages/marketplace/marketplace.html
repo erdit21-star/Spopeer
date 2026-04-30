@@ -468,6 +468,12 @@
       }
     }
 
+    @media (max-width: 768px) {
+      .app-layout { grid-template-columns: 1fr; }
+      .filter-sidebar { display: none; }
+      .listings-grid { grid-template-columns: 1fr; }
+    }
+
     @media (max-width: 640px) {
       .marketplace-header {
         flex-direction: column;

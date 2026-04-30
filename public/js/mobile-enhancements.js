@@ -273,6 +273,16 @@
                       panelRight.firstElementChild;
     if (!rightHeader) return;
 
+    function showConversationList() {
+      panelLeft.classList.add('mobile-open');
+      panelRight.style.display = 'none';
+    }
+
+    function showConversationPanel() {
+      panelLeft.classList.remove('mobile-open');
+      panelRight.style.display = '';
+    }
+
     // Don't double-inject
     if (rightHeader.querySelector('.sp-msg-back-btn')) return;
 
@@ -285,8 +295,7 @@
 
     backBtn.addEventListener('click', function () {
       if (isMobileWidth()) {
-        panelLeft.classList.add('mobile-open');
-        panelRight.style.display = 'none';
+        showConversationList();
       }
     });
 
@@ -295,11 +304,25 @@
     convItems.forEach(function (item) {
       item.addEventListener('click', function () {
         if (isMobileWidth()) {
-          panelLeft.classList.remove('mobile-open');
-          panelRight.style.display = '';
+          showConversationPanel();
         }
       });
     });
+
+    if (isMobileWidth()) {
+      showConversationList();
+    }
+
+    window.addEventListener('resize', function () {
+      if (isMobileWidth()) {
+        if (!panelLeft.classList.contains('mobile-open')) {
+          showConversationPanel();
+        }
+      } else {
+        panelLeft.classList.remove('mobile-open');
+        panelRight.style.display = '';
+      }
+    }, { passive: true });
   }
 
   /* ── 6. Ensure viewport meta exists ── */

@@ -179,6 +179,22 @@ iframe { border: 0; }
     margin: 5vh auto !important;
   }
 
+  /* Auth modal bottom-sheet cue */
+  .auth-sheet-handle {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: #d1d5db;
+    margin: 10px auto 2px;
+    flex-shrink: 0;
+  }
+
+  .auth-box {
+    position: relative !important;
+    padding-top: 8px !important;
+  }
+
   /* Profile menu position fix */
   .profile-menu {
     right: 4px !important;
@@ -205,7 +221,15 @@ iframe { border: 0; }
 
   /* Bottom safe-area spacing */
   body {
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Post action controls should remain finger-friendly even when non-button elements are used */
+  .mp-action {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -342,7 +366,8 @@ iframe { border: 0; }
   z-index: 500;
   background: var(--white, #ffffff);
   border-top: 1px solid var(--border, #e2e0d8);
-  padding: 8px 0 env(safe-area-inset-bottom, 8px);
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+  padding: 0;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
 }
 
@@ -351,6 +376,7 @@ iframe { border: 0; }
   align-items: center;
   justify-content: space-around;
   max-width: 600px;
+  height: 64px;
   margin: 0 auto;
 }
 

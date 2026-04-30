@@ -770,9 +770,12 @@
     .feed-tabs {
       display: flex; align-items: center; gap: 0;
       background: var(--white); border: 1.5px solid var(--border);
-      border-radius: var(--rL); padding: 5px; overflow: visible;
+      border-radius: var(--rL); padding: 5px; overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       position: relative;
     }
+    .feed-tabs::-webkit-scrollbar { display: none; }
     .feed-tab {
       flex: 1; padding: 8px 12px; border: none; background: transparent;
       font-size: 13px; font-weight: 600; color: var(--muted);
@@ -1828,9 +1831,7 @@
         padding: 0 14px;
       }
 
-      .nav-search {
-        max-width: 200px;
-      }
+      .nav-search { display: none; }
     }
 
     /* ================================================================
@@ -2450,8 +2451,8 @@
 </style>
   <link rel="stylesheet" href="/css/fonts.css">
 
-  <link rel="stylesheet" href="css/mobile-responsive.css">
-  <script src="js/mobile-enhancements.js" defer></script>
+  <link rel="stylesheet" href="/css/mobile-responsive.css">
+  <script src="/js/mobile-enhancements.js" defer></script>
 </head>
 <body>
 
