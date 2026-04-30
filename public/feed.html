@@ -702,6 +702,33 @@
     .nav-item.soon:hover { background: transparent; color: var(--ink-2); }
     .nav-item.soon:hover i { color: var(--muted); }
 
+    /* ── Coming Soon collapsible section ── */
+    .coming-soon-section {
+      border: none; margin-top: 4px;
+    }
+    .coming-soon-section summary {
+      list-style: none; display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: 10px; cursor: pointer;
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      transition: background .15s, color .15s;
+      user-select: none;
+    }
+    .coming-soon-section summary::-webkit-details-marker { display: none; }
+    .coming-soon-section summary:hover { background: var(--surface); color: var(--ink-2); }
+    .coming-soon-section[open] summary { color: var(--ink-2); }
+    .coming-soon-badge {
+      margin-left: auto; font-size: 9px; font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase;
+      background: var(--surface-2); color: var(--muted-2);
+      padding: 2px 7px; border-radius: var(--pill);
+      border: 1px solid var(--border); flex-shrink: 0;
+    }
+    .coming-soon-chevron {
+      font-size: 10px; transition: transform .2s; margin-left: 2px;
+    }
+    .coming-soon-section[open] .coming-soon-chevron { transform: rotate(180deg); }
+    .coming-soon-items { padding: 2px 0; display: flex; flex-direction: column; gap: 2px; }
+
     /* section label */
     .sidebar-section-label {
       font-size: 10px; font-weight: 800; letter-spacing: .1em;
@@ -1198,6 +1225,43 @@
     }
     .post-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,.07); border-color: #ddd; }
 
+    /* ── Empty feed state ── */
+    .feed-empty-state {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--rL); padding: 48px 32px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .feed-empty-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--blue-lt); color: var(--blue);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; margin-bottom: 4px;
+    }
+    .feed-empty-state h3 {
+      font-size: 18px; font-weight: 700; color: var(--ink); margin: 0;
+    }
+    .feed-empty-state p {
+      font-size: 14px; color: var(--muted); max-width: 340px;
+      line-height: 1.6; margin: 0;
+    }
+    .feed-empty-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 8px; }
+    .feed-empty-btn-primary {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 11px 20px; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--pill); font-size: 14px; font-weight: 600;
+      cursor: pointer; text-decoration: none; transition: .15s;
+      font-family: inherit;
+    }
+    .feed-empty-btn-primary:hover { background: var(--accent-hover); }
+    .feed-empty-btn-secondary {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 11px 20px; background: transparent; color: var(--ink-2);
+      border: 1.5px solid var(--border); border-radius: var(--pill);
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: .15s; font-family: inherit;
+    }
+    .feed-empty-btn-secondary:hover { border-color: var(--accent); color: var(--accent); background: var(--blue-lt); }
+
     .post-body { padding: 18px 18px 0; }
 
     .post-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
@@ -1207,7 +1271,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 15px; font-weight: 800; color: #fff;
     }
-    .av-orange { background: linear-gradient(135deg,#001f3f,#1a6bff); }
+    .av-orange { background: linear-gradient(135deg,#001233,#1a5cff); }
     .av-blue   { background: linear-gradient(135deg,#1a6bff,#6ca3ff); }
     .av-green  { background: linear-gradient(135deg,#16a34a,#4ade80); }
     .av-purple { background: linear-gradient(135deg,#7c3aed,#a78bfa); }
@@ -2628,62 +2692,34 @@
 
     <div class="sidebar-divider"></div>
 
-    <!-- ── PHASE 4 – Growth & Engagement ── -->
-    <div class="sidebar-section-label">Phase 4 – Growth &amp; Engagement</div>
-    <button class="nav-item soon"><i class="fa-solid fa-circle-dot" style="color:#dc2626"></i> Live Streaming <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-users-viewfinder"></i> Watch Parties <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-square-poll-vertical"></i> Polls &amp; Quizzes <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-people-group"></i> Fan Zones <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-bullseye"></i> Goal Setting <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-user-graduate"></i> Virtual Coaching <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-dumbbell"></i> Training Programs <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-brain"></i> Mental Health Support <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-calendar-plus"></i> Create &amp; RSVP Events <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-location-dot"></i> Local Event Discovery <span class="soon-badge">Soon</span></button>
+    <!-- ── COMING SOON (collapsed) ── -->
+    <details class="coming-soon-section">
+      <summary>
+        <i class="fa-solid fa-rocket" style="color:var(--blue);font-size:13px"></i>
+        What's Coming
+        <span class="coming-soon-badge">25+ features</span>
+        <i class="fa-solid fa-chevron-down coming-soon-chevron"></i>
+      </summary>
+      <div class="coming-soon-items">
+        <button class="nav-item soon"><i class="fa-solid fa-circle-dot" style="color:#dc2626"></i> Live Streaming <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-users-viewfinder"></i> Watch Parties <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-square-poll-vertical"></i> Polls &amp; Quizzes <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-people-group"></i> Fan Zones <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-bullseye"></i> Goal Setting <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-user-graduate"></i> Virtual Coaching <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-dumbbell"></i> Training Programs <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-brain"></i> Mental Health Support <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-crown"></i> Premium Content <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-briefcase"></i> Jobs &amp; Opportunities <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-chart-line"></i> Performance Tracking <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-robot"></i> AI Coach <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-trophy"></i> Fantasy Sports <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-medal"></i> Challenges <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-vr-cardboard"></i> Virtual Training <span class="soon-badge">Soon</span></button>
+        <button class="nav-item soon"><i class="fa-solid fa-clock-rotate-left"></i> Wearable Sync <span class="soon-badge">Soon</span></button>
+      </div>
+    </details>
 
-    <div class="sidebar-divider"></div>
-
-    <!-- ── PHASE 5 – Monetization ── -->
-    <div class="sidebar-section-label">Phase 5 – Monetization</div>
-    <a class="nav-item" href="/pages/sponsorship/sponsor.html"><i class="fa-solid fa-handshake"></i> Sponsorship Hub</a>
-    <button class="nav-item soon"><i class="fa-solid fa-crown"></i> Premium Content <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-coins"></i> Tipping <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-briefcase"></i> Jobs &amp; Opportunities <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-shirt"></i> Merchandise <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-award"></i> Badges &amp; Achievements <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-rectangle-ad"></i> Advertising Platform <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-bag-shopping"></i> In-App Purchases <span class="soon-badge">Soon</span></button>
-
-    <div class="sidebar-divider"></div>
-
-    <!-- ── PHASE 6 – Performance ── -->
-    <div class="sidebar-section-label">Phase 6 – Performance</div>
-    <button class="nav-item soon"><i class="fa-solid fa-chart-line"></i> Performance Tracking <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-robot"></i> AI Coach <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-kit-medical"></i> Injury Tracker <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-apple-whole"></i> Nutrition Plans <span class="soon-badge">Soon</span></button>
-
-    <div class="sidebar-divider"></div>
-
-    <!-- ── PHASE 7 – Content & Entertainment ── -->
-    <div class="sidebar-section-label">Phase 7 – Content &amp; Entertainment</div>
-    <button class="nav-item soon"><i class="fa-solid fa-newspaper"></i> Sports News <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-trophy"></i> Fantasy Sports <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-gamepad"></i> E-Sports <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-medal"></i> Challenges <span class="soon-badge">Soon</span></button>
-
-    <div class="sidebar-divider"></div>
-
-    <!-- ── PHASE 8 – Innovation ── -->
-    <div class="sidebar-section-label">Phase 8 – Innovation</div>
-    <button class="nav-item soon"><i class="fa-solid fa-vr-cardboard"></i> Virtual Training <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-clock-rotate-left"></i> Wearable Sync <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-hand-holding-heart"></i> Charity Events <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-gem"></i> NFT Collectibles <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-solid fa-language"></i> Language Translation <span class="soon-badge">Soon</span></button>
-    <button class="nav-item soon"><i class="fa-brands fa-bitcoin"></i> Blockchain <span class="soon-badge">Soon</span></button>
-
-    <div class="sidebar-divider"></div>
   </aside>
 
   <!-- MAIN FEED -->
@@ -4942,9 +4978,12 @@
 
     if (!visiblePosts.length) {
       container.innerHTML = `
-        <div class="post-card">
-          <div class="post-body">
-            <div class="post-text">No posts found for this tab yet.</div>
+        <div class="feed-empty-state">
+          <div class="feed-empty-icon"><i class="fa-regular fa-compass"></i></div>
+          <h3>Nothing here yet</h3>
+          <p>No posts for this tab yet. Try a different tab or follow more people to fill your feed.</p>
+          <div class="feed-empty-actions">
+            <a href="/pages/search/search.html" class="feed-empty-btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Discover people</a>
           </div>
         </div>
       `;
@@ -5324,9 +5363,26 @@ function loadPostsFromArray(posts) {
   feedCol.querySelectorAll('.post-card').forEach(card => card.remove());
 
   if (!posts || posts.length === 0) {
-    const emptyHTML = '<article class="post-card" data-empty-state="1"><div class="post-body"><div class="post-text">No posts yet.</div></div></article>';
+    const emptyHTML = `
+      <div class="feed-empty-state" data-empty-state="1">
+        <div class="feed-empty-icon"><i class="fa-regular fa-compass"></i></div>
+        <h3>Your feed is empty</h3>
+        <p>Follow athletes, coaches, and clubs to see their posts here. Or be the first to share something with your network.</p>
+        <div class="feed-empty-actions">
+          <a href="/pages/search/search.html" class="feed-empty-btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Discover people</a>
+          <button class="feed-empty-btn-secondary" data-focus-composer><i class="fa-regular fa-pen-to-square"></i> Create a post</button>
+        </div>
+      </div>`;
     if (createCard) {
       createCard.insertAdjacentHTML('afterend', emptyHTML);
+      // Wire the compose button
+      const composeBtn = createCard.nextElementSibling && createCard.nextElementSibling.querySelector('[data-focus-composer]');
+      if (composeBtn) {
+        composeBtn.addEventListener('click', function() {
+          const ta = document.querySelector('.composer-textarea');
+          if (ta) { ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); ta.focus(); }
+        });
+      }
     }
     return;
   }

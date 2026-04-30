@@ -95,7 +95,7 @@
 .user-chip:hover { border-color: var(--accent); }
 .chip-avatar {
   width: 28px; height: 28px; border-radius: 50%;
-  background: linear-gradient(135deg,#001f3f,#1a6bff);
+  background: linear-gradient(135deg,#001233,#1a5cff);
   color: #fff; font-size: 11px; font-weight: 800;
   display: flex; align-items: center; justify-content: center;
 }

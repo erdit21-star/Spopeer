@@ -21,7 +21,7 @@ function assertEmailReady() {
   }
 }
 
-const BRAND_COLOR = '#001f3f';
+const BRAND_COLOR = '#001233';
 const APP_NAME = 'Spopeer';
 const FOOTER_TEXT = `&copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.`;
 
