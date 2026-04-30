@@ -27,6 +27,7 @@ const { createPostSchema, validate } = require('../utils/schemas');
 const { cache } = require('../services/cache');
 const logger = require('../utils/logger');
 const { getBlockedUserIds } = require('../utils/blocks');
+const supportsPostViewCount = Object.prototype.hasOwnProperty.call(Post.rawAttributes || {}, 'viewCount');
 
 // ─── FEED HELPER ───
 const { ok, created, fail } = require('../utils/response');
@@ -123,6 +124,9 @@ router.post('/:id/view', optionalAuth, async (req, res) => {
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) {
       return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+    }
+    if (!supportsPostViewCount) {
+      return ok(res, { viewCount: 0 });
     }
     await post.increment('viewCount');
     await post.reload();
