@@ -8,59 +8,71 @@
 
   var creatives = [
     {
-      id: 'fuel-plan',
-      kicker: 'Sponsored',
-      title: 'Boost Match Readiness With Elite Sport Nutrition',
-      text: 'Personalized plans for athletes, teams, and high-performance programs.',
-      cta: 'Learn More',
-      media: 'https://placehold.co/240x240/001f3f/ffffff?text=Fuel+Plan',
-      href: 'https://example.com/fuel-plan',
-      weight: 5
+      id: 'test-ad-01', kicker: 'Sponsored', title: 'Test Ad 01 - Performance Cleats', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/001f3f/ffffff?text=Ad+01', href: 'https://example.com/test-ad-01', weight: 1
     },
     {
-      id: 'wearables',
-      kicker: 'Partner',
-      title: 'Smart Wearables For Real-Time Performance Tracking',
-      text: 'Monitor pace, heart rate, load, and recovery in one dashboard.',
-      cta: 'View Devices',
-      media: 'https://placehold.co/240x240/1a6bff/ffffff?text=Wearables',
-      href: 'https://example.com/wearables',
-      weight: 4
+      id: 'test-ad-02', kicker: 'Partner', title: 'Test Ad 02 - Training Tracker', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/1a6bff/ffffff?text=Ad+02', href: 'https://example.com/test-ad-02', weight: 1
     },
     {
-      id: 'skills-camp',
-      kicker: 'Sponsored',
-      title: 'Join The Summer Skills Camp Registration Window',
-      text: 'Limited spots for youth, academy, and elite prep sessions.',
-      cta: 'Reserve Spot',
-      media: 'https://placehold.co/240x240/0f8f5f/ffffff?text=Skills+Camp',
-      href: 'https://example.com/skills-camp',
-      weight: 3
+      id: 'test-ad-03', kicker: 'Sponsored', title: 'Test Ad 03 - Team Jerseys', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/0f8f5f/ffffff?text=Ad+03', href: 'https://example.com/test-ad-03', weight: 1
     },
     {
-      id: 'physio',
-      kicker: 'Promotion',
-      title: 'Sports Physio Slots Open For Next Week',
-      text: 'Book assessment and recovery sessions with certified specialists.',
-      cta: 'Book Session',
-      media: 'https://placehold.co/240x240/7c3aed/ffffff?text=Recovery',
-      href: 'https://example.com/physio',
-      weight: 2
+      id: 'test-ad-04', kicker: 'Promotion', title: 'Test Ad 04 - Athlete Recovery Kit', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/7c3aed/ffffff?text=Ad+04', href: 'https://example.com/test-ad-04', weight: 1
     },
     {
-      id: 'team-travel',
-      kicker: 'Partner',
-      title: 'Team Travel Deals For Tournaments & Camps',
-      text: 'Group booking offers tailored for clubs and event organizers.',
-      cta: 'Explore Offers',
-      media: 'https://placehold.co/240x240/c2410c/ffffff?text=Team+Travel',
-      href: 'https://example.com/team-travel',
-      weight: 2
+      id: 'test-ad-05', kicker: 'Partner', title: 'Test Ad 05 - Team Bus Deals', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/c2410c/ffffff?text=Ad+05', href: 'https://example.com/test-ad-05', weight: 1
+    },
+    {
+      id: 'test-ad-06', kicker: 'Sponsored', title: 'Test Ad 06 - Sports Nutrition Box', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/164e63/ffffff?text=Ad+06', href: 'https://example.com/test-ad-06', weight: 1
+    },
+    {
+      id: 'test-ad-07', kicker: 'Partner', title: 'Test Ad 07 - Goalkeeper Gloves', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/166534/ffffff?text=Ad+07', href: 'https://example.com/test-ad-07', weight: 1
+    },
+    {
+      id: 'test-ad-08', kicker: 'Promotion', title: 'Test Ad 08 - Match Video Tools', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/9a3412/ffffff?text=Ad+08', href: 'https://example.com/test-ad-08', weight: 1
+    },
+    {
+      id: 'test-ad-09', kicker: 'Sponsored', title: 'Test Ad 09 - Agility Ladders', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/1e3a8a/ffffff?text=Ad+09', href: 'https://example.com/test-ad-09', weight: 1
+    },
+    {
+      id: 'test-ad-10', kicker: 'Partner', title: 'Test Ad 10 - Event Tickets', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/4a044e/ffffff?text=Ad+10', href: 'https://example.com/test-ad-10', weight: 1
+    },
+    {
+      id: 'test-ad-11', kicker: 'Sponsored', title: 'Test Ad 11 - Team Analytics App', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/0f766e/ffffff?text=Ad+11', href: 'https://example.com/test-ad-11', weight: 1
+    },
+    {
+      id: 'test-ad-12', kicker: 'Promotion', title: 'Test Ad 12 - Physio Appointments', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/be123c/ffffff?text=Ad+12', href: 'https://example.com/test-ad-12', weight: 1
+    },
+    {
+      id: 'test-ad-13', kicker: 'Partner', title: 'Test Ad 13 - Smart Water Bottles', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/14532d/ffffff?text=Ad+13', href: 'https://example.com/test-ad-13', weight: 1
+    },
+    {
+      id: 'test-ad-14', kicker: 'Sponsored', title: 'Test Ad 14 - Coaching Webinar', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/7f1d1d/ffffff?text=Ad+14', href: 'https://example.com/test-ad-14', weight: 1
+    },
+    {
+      id: 'test-ad-15', kicker: 'Promotion', title: 'Test Ad 15 - Recovery Bands', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/78350f/ffffff?text=Ad+15', href: 'https://example.com/test-ad-15', weight: 1
+    },
+    {
+      id: 'test-ad-16', kicker: 'Partner', title: 'Test Ad 16 - Team Insurance', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/2e1065/ffffff?text=Ad+16', href: 'https://example.com/test-ad-16', weight: 1
+    },
+    {
+      id: 'test-ad-17', kicker: 'Sponsored', title: 'Test Ad 17 - Indoor Turf Rental', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/365314/ffffff?text=Ad+17', href: 'https://example.com/test-ad-17', weight: 1
+    },
+    {
+      id: 'test-ad-18', kicker: 'Promotion', title: 'Test Ad 18 - Match Day Meals', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/312e81/ffffff?text=Ad+18', href: 'https://example.com/test-ad-18', weight: 1
+    },
+    {
+      id: 'test-ad-19', kicker: 'Partner', title: 'Test Ad 19 - Gym Memberships', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/134e4a/ffffff?text=Ad+19', href: 'https://example.com/test-ad-19', weight: 1
+    },
+    {
+      id: 'test-ad-20', kicker: 'Sponsored', title: 'Test Ad 20 - Tournament Hosting', text: 'Fake campaign for rotation testing.', cta: 'Open Ad', media: 'https://placehold.co/240x240/172554/ffffff?text=Ad+20', href: 'https://example.com/test-ad-20', weight: 1
     }
   ];
 
   var slotState = {};
   var lastRotateAt = 0;
+  var rightRailRotateTimer = null;
+  var RIGHT_RAIL_ROTATE_MS = 5000;
 
   function escapeHtml(value) {
     return String(value || '')
@@ -83,6 +95,10 @@
     if (slotId.indexOf('right-rail-') === 0) return 4;
     if (slotId.indexOf('feed-inline-') === 0) return 2;
     return 3;
+  }
+
+  function isRightRailSlot(slotId) {
+    return slotId.indexOf('right-rail-') === 0;
   }
 
   function pickWeightedCreative(excludeIds, usedIds) {
@@ -126,7 +142,8 @@
         slotId: slotId,
         cadence: getSlotCadence(slotId),
         actionsSinceRotate: 0,
-        creativeId: null
+        creativeId: null,
+        sequenceIndex: 0
       };
     }
 
@@ -145,6 +162,10 @@
       return;
     }
 
+    var rotationLabel = isRightRailSlot(getSlotId(slot))
+      ? 'Rotates every 5 seconds'
+      : 'Rotates on activity';
+
     slot.innerHTML =
       '<div class="ad-slot-body">' +
         '<a class="ad-slot-media-link" href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer" aria-label="Open sponsored content">' +
@@ -157,7 +178,7 @@
           '<a class="ad-slot-cta" href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(creative.cta) + '</a>' +
         '</div>' +
       '</div>' +
-      '<div class="ad-slot-footer"><span>Ad placement</span><span>Rotates on activity</span></div>';
+      '<div class="ad-slot-footer"><span>Ad placement</span><span>' + rotationLabel + '</span></div>';
 
     slot.setAttribute('data-creative-id', creative.id);
   }
@@ -174,7 +195,12 @@
 
       var creative = getCreativeById(state.creativeId);
       if (!creative) {
-        creative = pickWeightedCreative({}, usedIds);
+        if (isRightRailSlot(state.slotId)) {
+          state.sequenceIndex = Math.max(0, Number(state.sequenceIndex || 0)) % creatives.length;
+          creative = creatives[state.sequenceIndex];
+        } else {
+          creative = pickWeightedCreative({}, usedIds);
+        }
         state.creativeId = creative && creative.id;
       }
 
@@ -201,10 +227,48 @@
 
     var usedIds = {};
     Object.keys(slotState).forEach(function (slotId) {
-      rotateSlot(slotState[slotId], usedIds);
+      var state = slotState[slotId];
+      if (isRightRailSlot(slotId)) {
+        state.sequenceIndex = (Number(state.sequenceIndex || 0) + 1) % creatives.length;
+        state.creativeId = creatives[state.sequenceIndex].id;
+      } else {
+        rotateSlot(state, usedIds);
+      }
     });
 
     renderAllSlots();
+  }
+
+  function rotateRightRailSlots() {
+    if (!creatives.length) return;
+
+    var changed = false;
+    Object.keys(slotState).forEach(function (slotId) {
+      if (!isRightRailSlot(slotId)) return;
+      var state = slotState[slotId];
+      state.sequenceIndex = (Number(state.sequenceIndex || 0) + 1) % creatives.length;
+      state.creativeId = creatives[state.sequenceIndex].id;
+      changed = true;
+    });
+
+    if (changed) {
+      renderAllSlots();
+    }
+  }
+
+  function startRightRailRotation() {
+    if (rightRailRotateTimer) {
+      clearInterval(rightRailRotateTimer);
+      rightRailRotateTimer = null;
+    }
+
+    var hasRightRailSlot = getSlots().some(function (slot) {
+      return isRightRailSlot(getSlotId(slot));
+    });
+
+    if (!hasRightRailSlot) return;
+
+    rightRailRotateTimer = setInterval(rotateRightRailSlots, RIGHT_RAIL_ROTATE_MS);
   }
 
   function rotateOnAction() {
@@ -216,6 +280,10 @@
     var changed = false;
 
     Object.keys(slotState).forEach(function (slotId) {
+      if (isRightRailSlot(slotId)) {
+        return;
+      }
+
       var state = slotState[slotId];
       state.actionsSinceRotate += 1;
 
@@ -259,6 +327,7 @@
     });
 
     renderAllSlots();
+    startRightRailRotation();
   }
 
   window.SpopeerAds = {
@@ -267,7 +336,7 @@
   };
 
   document.addEventListener('DOMContentLoaded', function () {
-    renderAllSlots();
+    refreshSlots();
     bindActionRotation();
   });
 })();
