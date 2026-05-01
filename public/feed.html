@@ -2838,6 +2838,7 @@
       </div>
       <div class="sp-body sp2-body">
         <div class="sp2-avatar-wrap">
+          <input type="file" id="spAvatarInput" accept="image/*" style="display:none;">
           <div class="sp2-hex-ring sp2-hex">
             <div class="sp2-hex-face sp2-hex sp-avatar" id="sidebarAvatar" data-user-chip-avatar>U</div>
           </div>
@@ -2905,19 +2906,19 @@
         </div>
 
         <div class="sp2-info-strip" id="spMetaRow">
-          <div class="sp2-info-row">
+          <div class="sp2-info-row" id="spInfoRowLocation">
             <i class="fa-solid fa-location-dot"></i>
             <span id="spLocation" data-user-location>Location</span>
             <span class="sp2-info-val" id="spCountryCode">--</span>
           </div>
-          <div class="sp2-info-row">
+          <div class="sp2-info-row" id="spInfoRowAvailability">
             <i class="fa-solid fa-futbol"></i>
             <span id="spAvailabilityText">Open to offers</span>
             <span class="sp2-avail-pill" id="spAvailabilityPill"><span class="sp2-avail-dot"></span> Available</span>
           </div>
-          <div class="sp2-info-row">
+          <div class="sp2-info-row" id="spInfoRowFreeFrom">
             <i class="fa-solid fa-calendar-days"></i>
-            <span>Free from</span>
+            <span id="spAvailableFromLabel">Free from</span>
             <span class="sp2-info-val" id="spAvailableFrom">Not set</span>
           </div>
         </div>
@@ -3749,9 +3750,75 @@
       }
     });
   }
+
+  var sidebarAvatarUploadBound = false;
+  function initSidebarAvatarUpload() {
+    if (sidebarAvatarUploadBound) return;
+    var avatarWrap = document.querySelector('.sp2-avatar-wrap');
+    var avatarInput = document.getElementById('spAvatarInput');
+    var avatarEl = document.getElementById('sidebarAvatar');
+    if (!avatarWrap || !avatarInput || !avatarEl) return;
+
+    sidebarAvatarUploadBound = true;
+
+    avatarWrap.addEventListener('click', function (event) {
+      if (event.target === avatarInput) return;
+      avatarInput.click();
+    });
+
+    avatarInput.addEventListener('change', async function () {
+      var file = avatarInput.files && avatarInput.files[0];
+      if (!file) return;
+      if (!window.SpopeerAPI || typeof window.SpopeerAPI.uploadAvatar !== 'function') return;
+
+      var localPreview = URL.createObjectURL(file);
+      avatarEl.innerHTML = '<img src="' + localPreview + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:0">';
+
+      try {
+        var uploadResult = await window.SpopeerAPI.uploadAvatar(file);
+        var avatarUrl =
+          (uploadResult && uploadResult.data && uploadResult.data.avatarUrl) ||
+          (uploadResult && uploadResult.payload && uploadResult.payload.avatarUrl) ||
+          (uploadResult && uploadResult.avatarUrl) ||
+          '';
+
+        if (avatarUrl) {
+          var current = getCurrentUserData();
+          var merged = Object.assign({}, current, {
+            avatarUrl: avatarUrl,
+            avatar: avatarUrl,
+            _profileUpdatedAt: Date.now()
+          });
+
+          if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+            window.CurrentUserStore.setCurrentUser(merged);
+          } else {
+            localStorage.setItem('spopeer_user', JSON.stringify(merged));
+            localStorage.setItem('_profileLastUpdated_', String(merged._profileUpdatedAt));
+          }
+
+          window.dispatchEvent(new CustomEvent('profileUpdated', {
+            detail: { profile: merged, source: 'feed-sidebar-avatar-upload' }
+          }));
+        }
+
+        var freshUser = await refreshCurrentUserFromBackend();
+        if (freshUser) {
+          updateSidebarFromProfile(freshUser);
+          hydrateSidebarProfile(freshUser);
+        }
+      } catch (error) {
+        console.error('Sidebar avatar upload failed', error);
+      } finally {
+        URL.revokeObjectURL(localPreview);
+        avatarInput.value = '';
+      }
+    });
+  }
   
   // Initialize sidebar with current profile
   var ud = getCurrentUserData();
+  initSidebarAvatarUpload();
   if (ud && (ud.email || ud.id)) {
     updateSidebarFromProfile(ud);
     
@@ -4044,6 +4111,40 @@
       profile.contractEnd,
       profile.availabilityDate
     ]) || 'Not set', 'Not set');
+
+    var locationRow = document.getElementById('spInfoRowLocation');
+    var availabilityRow = document.getElementById('spInfoRowAvailability');
+    var freeFromRow = document.getElementById('spInfoRowFreeFrom');
+    var freeFromLabelEl = document.getElementById('spAvailableFromLabel');
+    var freeFromIconEl = freeFromRow ? freeFromRow.querySelector('i') : null;
+
+    if (locationRow) locationRow.style.display = '';
+    if (availabilityRow) availabilityRow.style.display = '';
+    if (freeFromRow) freeFromRow.style.display = '';
+
+    if (type === 'club') {
+      if (freeFromLabelEl) freeFromLabelEl.textContent = 'Founded';
+      if (freeFromIconEl) freeFromIconEl.className = 'fa-solid fa-building';
+      setText('spAvailableFrom', firstNonEmpty([profile.foundedYear, profile.leagueLevel, profile.currentRanking]) || 'Not set', 'Not set');
+      setText('spAvailabilityText', firstNonEmpty([profile.availableTrials, profile.openPositions]) || (available ? 'Open trials now' : 'Trials closed'), 'Trials closed');
+      if (availPill) {
+        var clubOpen = available || !!firstNonEmpty([profile.availableTrials, profile.openPositions]);
+        availPill.className = 'sp2-avail-pill' + (clubOpen ? '' : ' no');
+        availPill.innerHTML = '<span class="sp2-avail-dot"></span>' + (clubOpen ? 'Open' : 'Closed');
+      }
+    } else if (type === 'coach') {
+      if (freeFromLabelEl) freeFromLabelEl.textContent = 'Experience';
+      if (freeFromIconEl) freeFromIconEl.className = 'fa-solid fa-stopwatch';
+      setText('spAvailableFrom', firstNonEmpty([profile.yearsOfCoaching, profile.experience, profile.yearsOfExperience]) || 'Not set', 'Not set');
+    } else if (type === 'supportive_professional') {
+      if (freeFromLabelEl) freeFromLabelEl.textContent = 'Service mode';
+      if (freeFromIconEl) freeFromIconEl.className = 'fa-solid fa-briefcase';
+      setText('spAvailableFrom', firstNonEmpty([profile.serviceMode, profile.availabilityHours, profile.preferredContact]) || 'Not set', 'Not set');
+      setText('spAvailabilityText', firstNonEmpty([profile.services, profile.specializationField, profile.specialization]) || (available ? 'Open for services' : 'Fully booked'), 'Service status');
+    } else {
+      if (freeFromLabelEl) freeFromLabelEl.textContent = 'Free from';
+      if (freeFromIconEl) freeFromIconEl.className = 'fa-solid fa-calendar-days';
+    }
 
     var roleSignalMap = {
       athlete: {
