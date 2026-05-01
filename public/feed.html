@@ -665,6 +665,487 @@
       text-decoration: none;
     }
 
+    /* ================================================================================================
+       PROFILE CARD V4 (sample-based replacement)
+    ================================================================================================ */
+    .sidebar-left .sidebar-profile.sp2-card {
+      width: 248px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      overflow: visible;
+      background: var(--white);
+      font-family: var(--fB);
+      position: relative;
+    }
+
+    .sidebar-left .sp2-cover {
+      height: 72px;
+      border-radius: 14px 14px 0 0;
+      background: linear-gradient(130deg, var(--accent) 0%, #0d3572 45%, var(--blue) 100%);
+      position: relative;
+      overflow: hidden;
+      transition: height .42s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .sidebar-left .sp2-card:hover .sp2-cover { height: 128px; }
+
+    .sidebar-left .sp2-cover-dots {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,.11) 1px, transparent 1px);
+      background-size: 14px 14px;
+    }
+
+    .sidebar-left .sp2-cover-glow {
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: rgba(26,107,255,.35);
+      filter: blur(28px);
+      transition: opacity .4s;
+    }
+
+    .sidebar-left .sp2-card:hover .sp2-cover-glow { opacity: 1.4; }
+
+    .sidebar-left .sp2-cover-jersey {
+      position: absolute;
+      right: 10px;
+      bottom: -8px;
+      font-family: var(--fD);
+      font-size: 72px;
+      font-weight: 800;
+      color: rgba(255,255,255,.06);
+      line-height: 1;
+      letter-spacing: -.06em;
+      transition: color .4s, font-size .4s;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .sidebar-left .sp2-card:hover .sp2-cover-jersey {
+      color: rgba(255,255,255,.12);
+      font-size: 88px;
+    }
+
+    .sidebar-left .sp2-cover-edit {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(255,255,255,.9);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity .2s;
+      background: rgba(0,0,0,.28);
+      padding: 4px 9px;
+      border-radius: var(--pill);
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .sidebar-left .sp2-card:hover .sp2-cover-edit { opacity: 1; }
+
+    .sidebar-left .sp2-body {
+      padding: 0 14px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0;
+    }
+
+    .sidebar-left .sp2-avatar-wrap {
+      position: relative;
+      margin-top: -30px;
+      margin-bottom: 9px;
+      z-index: 5;
+      display: inline-block;
+    }
+
+    .sidebar-left .sp2-hex { clip-path: polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%); }
+
+    .sidebar-left .sp2-hex-ring {
+      width: 70px;
+      height: 61px;
+      background: linear-gradient(135deg, var(--blue), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .22s, filter .22s;
+    }
+
+    .sidebar-left .sp2-avatar-wrap:hover .sp2-hex-ring {
+      transform: scale(1.05);
+      filter: drop-shadow(0 3px 8px rgba(26,107,255,.35));
+    }
+
+    .sidebar-left .sp2-hex-face {
+      width: 62px;
+      height: 54px;
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      font-family: var(--fD);
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--blue);
+    }
+
+    .sidebar-left .sp2-hex-face img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 0;
+    }
+
+    .sidebar-left .sp2-hex-cam {
+      position: absolute;
+      inset: 0;
+      clip-path: polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+      background: rgba(0,31,63,.58);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity .2s;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .sidebar-left .sp2-avatar-wrap:hover .sp2-hex-cam { opacity: 1; }
+    .sidebar-left .sp2-hex-cam i { color: #fff; font-size: 13px; }
+    .sidebar-left .sp2-hex-cam span {
+      color: rgba(255,255,255,.85);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: .06em;
+    }
+
+    .sidebar-left .sp2-online-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #22c55e;
+      border: 2.5px solid var(--white);
+      box-shadow: 0 0 0 2px rgba(34,197,94,.2);
+      position: absolute;
+      right: 1px;
+      bottom: 3px;
+    }
+
+    .sidebar-left .sp2-verified {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--blue);
+      background: #eef3ff;
+      border: 1px solid rgba(26,107,255,.18);
+      padding: 2px 8px;
+      border-radius: var(--pill);
+      margin-bottom: 5px;
+    }
+
+    .sidebar-left .sp2-name {
+      font-family: var(--fD);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -.025em;
+      margin-bottom: 1px;
+    }
+
+    .sidebar-left .sp2-handle {
+      font-size: 10px;
+      color: var(--muted-2);
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .sidebar-left .sp2-position-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .sidebar-left .sp2-jersey-badge {
+      font-family: var(--fD);
+      font-size: 11px;
+      font-weight: 800;
+      color: #fff;
+      background: var(--blue);
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: .02em;
+    }
+
+    .sidebar-left .sp2-pos-sep {
+      width: 3px;
+      height: 3px;
+      background: var(--muted-2);
+      border-radius: 50%;
+    }
+
+    .sidebar-left .sp2-pos-text {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--ink-2);
+      letter-spacing: .02em;
+    }
+
+    .sidebar-left .sp2-club-text {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .sidebar-left .sp2-badges-row {
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .sidebar-left .sp2-bio {
+      font-size: 10.5px;
+      color: var(--muted);
+      line-height: 1.55;
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: 400;
+      max-width: 210px;
+      display: block;
+    }
+
+    .sidebar-left .sp2-stats-row {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      overflow: visible;
+      margin-bottom: 10px;
+      padding: 0;
+      gap: 0;
+    }
+
+    .sidebar-left .sp2-stats-row .sp-stat {
+      flex: 1;
+      padding: 9px 4px;
+      text-align: center;
+    }
+
+    .sidebar-left .sp2-stats-row .sp-stat-label {
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted-2);
+      font-weight: 700;
+    }
+
+    .sidebar-left .sp2-stats-row .sp-stat-num {
+      font-family: var(--fD);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 1px;
+    }
+
+    .sidebar-left .sp2-info-strip {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .sidebar-left .sp2-info-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 10.5px;
+      color: var(--ink-2);
+      font-weight: 500;
+      text-align: left;
+    }
+
+    .sidebar-left .sp2-info-row i {
+      font-size: 10px;
+      color: var(--blue);
+      width: 13px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar-left .sp2-info-row > span:first-of-type {
+      flex: 1;
+      text-align: left;
+    }
+
+    .sidebar-left .sp2-info-val {
+      font-size: 9.5px;
+      color: var(--muted);
+      margin-left: auto;
+      flex-shrink: 0;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .sidebar-left .sp2-avail-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: var(--pill);
+      background: #dcfce7;
+      color: #16a34a;
+      border: 1px solid rgba(22,163,74,.2);
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-left .sp2-avail-pill.no {
+      background: #fef2f2;
+      color: #dc2626;
+      border-color: rgba(220,38,38,.2);
+    }
+
+    .sidebar-left .sp2-avail-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .sidebar-left .sp2-achieve-row {
+      width: 100%;
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .sidebar-left .sp2-achieve {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 7px 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      text-align: center;
+    }
+
+    .sidebar-left .sp2-achieve i { font-size: 13px; margin-bottom: 1px; }
+    .sidebar-left .sp2-achieve-gold i { color: #ca8a04; }
+    .sidebar-left .sp2-achieve-silver i { color: #64748b; }
+    .sidebar-left .sp2-achieve-bronze i { color: #c2410c; }
+
+    .sidebar-left .sp2-achieve-label {
+      font-size: 8px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .sidebar-left .sp2-achieve-val {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink);
+      font-family: var(--fD);
+    }
+
+    .sidebar-left .sp2-strength {
+      width: 100%;
+      margin-bottom: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-left .sp2-strength-hd { margin-bottom: 5px; }
+    .sidebar-left .sp2-strength-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    .sidebar-left .sp2-strength-pct {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--blue);
+    }
+
+    .sidebar-left .sp2-strength-track {
+      height: 5px;
+      background: #f1f5f9;
+      border-radius: var(--pill);
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-left .sp2-strength-fill {
+      height: 100%;
+      border-radius: var(--pill);
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+      transition: width .6s ease;
+    }
+
+    .sidebar-left .sp2-strength-tip {
+      font-size: 9.5px;
+      color: var(--muted);
+      text-align: left;
+    }
+
+    .sidebar-left .sp2-actions {
+      width: 100%;
+      display: flex;
+      gap: 6px;
+    }
+
+    .sidebar-left .sp2-footer {
+      width: 100%;
+      margin-top: 11px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-left .sp2-card .sp-stat-popover {
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+    }
+
     /* nav items */
     .nav-item {
       display: flex; align-items: center; gap: 12px;
@@ -2297,61 +2778,61 @@
   <aside class="sidebar-left">
     <!-- SIDEBAR PROFILE CARD -->
     <div class="profile-card-variant active" data-variant="card-stack" id="feedCardVariantStack">
-    <div class="sidebar-profile">
-      <div class="sp-cover">
-        <span class="sp-cover-edit"><i class="fa-solid fa-camera" style="font-size:9px"></i> Edit Cover</span>
+    <div class="sidebar-profile sp2-card">
+      <div class="sp-cover sp2-cover">
+        <div class="sp2-cover-dots"></div>
+        <div class="sp2-cover-glow"></div>
+        <div class="sp2-cover-jersey" id="spCoverJersey">7</div>
+        <span class="sp-cover-edit sp2-cover-edit"><i class="fa-solid fa-camera" style="font-size:9px"></i> Edit Cover</span>
       </div>
-      <div class="sp-body">
-        <div class="sp-avatar-wrap">
-          <div class="sp-avatar" id="sidebarAvatar" data-user-chip-avatar>U</div>
-          <div class="sp-online-dot"></div>
+      <div class="sp-body sp2-body">
+        <div class="sp2-avatar-wrap">
+          <div class="sp2-hex-ring sp2-hex">
+            <div class="sp2-hex-face sp2-hex sp-avatar" id="sidebarAvatar" data-user-chip-avatar>U</div>
+          </div>
+          <div class="sp2-hex-cam">
+            <i class="fa-solid fa-camera"></i>
+            <span>Upload</span>
+          </div>
+          <div class="sp-online-dot sp2-online-dot"></div>
         </div>
 
-        <div class="sp-verified" id="spVerified" style="display:none;"><i class="fa-solid fa-circle-check" style="font-size:9px"></i> Verified</div>
+        <div class="sp-verified sp2-verified" id="spVerified" style="display:none;"><i class="fa-solid fa-circle-check" style="font-size:9px"></i> Verified</div>
 
-        <div class="sp-name" id="sidebarName" data-user-chip-name>User</div>
-        <div class="sp-handle" id="sidebarHandle" data-user-handle>@user</div>
+        <div class="sp-name sp2-name" id="sidebarName" data-user-chip-name>User</div>
+        <div class="sp-handle sp2-handle" id="sidebarHandle" data-user-handle>@user</div>
 
-        <div class="sp-badges-row">
+        <div class="sp2-position-row">
+          <span class="sp2-jersey-badge" id="spJerseyBadge">#7</span>
+          <span class="sp2-pos-sep"></span>
+          <span class="sp2-pos-text" id="spPositionText">Position</span>
+          <span class="sp2-pos-sep"></span>
+          <span class="sp2-club-text" id="spClubText">Club</span>
+        </div>
+
+        <div class="sp-badges-row sp2-badges-row">
           <span class="sp-role-badge athlete" id="spRoleBadge" data-user-role-badge>
             <i class="fa-solid fa-person-running" style="font-size:8px"></i> Athlete
           </span>
           <span class="sp-sport-badge" id="spSportBadge" data-user-sport-badge>
             <i class="fa-solid fa-shoe-prints" style="font-size:8px"></i> Sport
           </span>
+          <span class="sp-plan-pill free" id="spPlanPill" data-user-plan-pill>
+            <i class="fa-solid fa-circle" style="font-size:8px"></i> Free
+          </span>
         </div>
 
-        <div class="sp-meta-row" id="spMetaRow">
-          <span class="sp-meta-item" id="spLocation" data-user-location><i class="fa-solid fa-location-dot"></i> Location</span>
-          <span class="sp-meta-sep"></span>
-          <span class="sp-plan-pill free" id="spPlanPill" data-user-plan-pill>Free</span>
-        </div>
+        <div class="sp-bio sp2-bio" id="spBio" data-user-bio style="display:none;">Bio</div>
 
-        <div class="sp-bio" id="spBio" data-user-bio style="display:none;">
-          Bio
-        </div>
-
-        <div class="sp-stats-row">
+        <div class="sp-stats-row sp2-stats-row">
           <div class="sp-stat" id="followersBtn" data-stat="followers">
             <div class="sp-stat-num" id="followersCount">0</div>
             <div class="sp-stat-label">Followers</div>
             <div class="sp-stat-popover" id="followersPopover">
-              <div class="sp-stat-popover-item">
-                <span>Athletes</span>
-                <span class="sp-stat-popover-count">0</span>
-              </div>
-              <div class="sp-stat-popover-item">
-                <span>Coaches</span>
-                <span class="sp-stat-popover-count">0</span>
-              </div>
-              <div class="sp-stat-popover-item">
-                <span>Clubs</span>
-                <span class="sp-stat-popover-count">0</span>
-              </div>
-              <div class="sp-stat-popover-item">
-                <span>Pros</span>
-                <span class="sp-stat-popover-count">0</span>
-              </div>
+              <div class="sp-stat-popover-item"><span>Athletes</span><span class="sp-stat-popover-count">0</span></div>
+              <div class="sp-stat-popover-item"><span>Coaches</span><span class="sp-stat-popover-count">0</span></div>
+              <div class="sp-stat-popover-item"><span>Clubs</span><span class="sp-stat-popover-count">0</span></div>
+              <div class="sp-stat-popover-item"><span>Pros</span><span class="sp-stat-popover-count">0</span></div>
             </div>
           </div>
           <div class="sp-stat-div"></div>
@@ -2359,50 +2840,67 @@
             <div class="sp-stat-num" id="followingCount">0</div>
             <div class="sp-stat-label">Following</div>
             <div class="sp-stat-popover" id="followingPopover">
-              <div class="sp-stat-popover-item">
-                <span>Athletes</span>
-                <span class="sp-stat-popover-count">0</span>
-              </div>
-              <div class="sp-stat-popover-item">
-                <span>Coaches</span>
-                <span class="sp-stat-popover-count">0</span>
-              </div>
-              <div class="sp-stat-popover-item">
-                <span>Clubs</span>
-                <span class="sp-stat-popover-count">0</span>
-              </div>
-              <div class="sp-stat-popover-item">
-                <span>Pros</span>
-                <span class="sp-stat-popover-count">0</span>
-              </div>
+              <div class="sp-stat-popover-item"><span>Athletes</span><span class="sp-stat-popover-count">0</span></div>
+              <div class="sp-stat-popover-item"><span>Coaches</span><span class="sp-stat-popover-count">0</span></div>
+              <div class="sp-stat-popover-item"><span>Clubs</span><span class="sp-stat-popover-count">0</span></div>
+              <div class="sp-stat-popover-item"><span>Pros</span><span class="sp-stat-popover-count">0</span></div>
             </div>
           </div>
           <div class="sp-stat-div"></div>
           <div class="sp-stat sp-posts-link" id="postsBtn" data-stat="posts">
             <div class="sp-stat-num" id="postsCount">0</div>
-            <div class="sp-stat-label">Posts</div>
+            <div class="sp-stat-label" id="postsLabel">Posts</div>
           </div>
         </div>
 
-        <div class="sp-info-strip" id="spInfoStrip" style="display:none;">
-          <div class="sp-info-row">
-            <i class="fa-solid fa-trophy"></i>
-            <span>Best Achievement</span>
-            <span class="sp-info-val">-</span>
+        <div class="sp2-info-strip" id="spMetaRow">
+          <div class="sp2-info-row">
+            <i class="fa-solid fa-location-dot"></i>
+            <span id="spLocation" data-user-location>Location</span>
+            <span class="sp2-info-val" id="spCountryCode">--</span>
           </div>
-          <div class="sp-info-row">
+          <div class="sp2-info-row">
+            <i class="fa-solid fa-futbol"></i>
+            <span id="spAvailabilityText">Open to offers</span>
+            <span class="sp2-avail-pill" id="spAvailabilityPill"><span class="sp2-avail-dot"></span> Available</span>
+          </div>
+          <div class="sp2-info-row">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>Free from</span>
+            <span class="sp2-info-val" id="spAvailableFrom">Not set</span>
+          </div>
+        </div>
+
+        <div class="sp-info-strip sp2-achieve-row" id="spInfoStrip" style="display:flex;">
+          <div class="sp2-achieve sp2-achieve-gold">
             <i class="fa-solid fa-medal"></i>
-            <span>Achievements</span>
-            <span class="sp-info-val">0 badges</span>
+            <div class="sp2-achieve-val" id="spAchieve1Val">-</div>
+            <div class="sp2-achieve-label" id="spAchieve1Label">Metric 1</div>
           </div>
-          <div class="sp-info-row">
-            <i class="fa-solid fa-map-location-dot"></i>
-            <span>Club/Affiliation</span>
-            <span class="sp-info-val">-</span>
+          <div class="sp2-achieve sp2-achieve-silver">
+            <i class="fa-solid fa-trophy"></i>
+            <div class="sp2-achieve-val" id="spAchieve2Val">-</div>
+            <div class="sp2-achieve-label" id="spAchieve2Label">Metric 2</div>
+          </div>
+          <div class="sp2-achieve sp2-achieve-bronze">
+            <i class="fa-solid fa-star"></i>
+            <div class="sp2-achieve-val" id="spAchieve3Val">-</div>
+            <div class="sp2-achieve-label" id="spAchieve3Label">Metric 3</div>
           </div>
         </div>
 
-        <div class="sp-actions">
+        <div class="sp-completion sp2-strength">
+          <div class="sp-completion-header sp2-strength-hd">
+            <span class="sp-completion-label sp2-strength-label">Profile Strength</span>
+            <span class="sp-completion-pct sp2-strength-pct" id="spCompletionPct">75%</span>
+          </div>
+          <div class="sp-completion-track sp2-strength-track">
+            <div class="sp-completion-fill sp2-strength-fill" id="spCompletionFill" style="width:75%"></div>
+          </div>
+          <div class="sp-completion-tip sp2-strength-tip">Add your <button type="button" class="sp-inline-action" onclick="navigateToEditProfile()">highlights and profile details</button> to reach 100%</div>
+        </div>
+
+        <div class="sp-actions sp2-actions">
           <a href="pages/profiles/public-profile.html" class="sp-btn-primary" id="editProfileBtn" onclick="event.preventDefault(); navigateToEditProfile();">
             <i class="fa-regular fa-pen-to-square" style="font-size:10px"></i> Edit Profile
           </a>
@@ -2411,18 +2909,7 @@
           </button>
         </div>
 
-        <div class="sp-completion">
-          <div class="sp-completion-header">
-            <span class="sp-completion-label">Profile Completion</span>
-            <span class="sp-completion-pct" id="spCompletionPct">75%</span>
-          </div>
-          <div class="sp-completion-track">
-            <div class="sp-completion-fill" id="spCompletionFill" style="width:75%"></div>
-          </div>
-          <div class="sp-completion-tip">Complete your <button type="button" class="sp-inline-action" onclick="navigateToEditProfile()">profile</button> to reach 100%</div>
-        </div>
-
-        <div class="sp-footer">
+        <div class="sp-footer sp2-footer">
           <span class="sp-member-since">Member since <strong id="spMemberSince">Jan 2024</strong></span>
           <a href="pages/profiles/public-profile.html" class="sp-profile-link">
             View public <i class="fa-solid fa-arrow-right" style="font-size:8px"></i>
@@ -3260,7 +3747,38 @@
     if (!profile) return;
     profile = normalizeFeedProfile(profile);
 
-    const type = profile.role || profile.userType || 'athlete';
+    function firstNonEmpty(values) {
+      for (var i = 0; i < values.length; i += 1) {
+        var value = values[i];
+        if (value === 0) return value;
+        if (value === null || value === undefined) continue;
+        if (String(value).trim() !== '') return value;
+      }
+      return '';
+    }
+
+    function normalizeRole(value) {
+      var raw = String(value || 'athlete').toLowerCase().trim();
+      if (raw === 'supportive professional' || raw === 'supportive-professional') {
+        return 'supportive_professional';
+      }
+      return raw.replace(/\s+/g, '_');
+    }
+
+    function setText(id, value, fallback) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var next = value;
+      if (next === null || next === undefined || String(next).trim() === '') {
+        next = fallback;
+      }
+      el.textContent = String(next);
+    }
+
+    var type = normalizeRole(profile.role || profile.userType || 'athlete');
+    if (['athlete', 'coach', 'club', 'supportive_professional'].indexOf(type) === -1) {
+      type = 'athlete';
+    }
 
     const profileLink = document.querySelector('.sp-profile-link');
     if (profileLink) profileLink.href = getProfileUrl();
@@ -3273,15 +3791,21 @@
 
     // Update display name
     const nameEl = document.getElementById('sidebarName');
+    var displayName = profile.displayName || [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'User';
     if (nameEl) {
-      const displayName = profile.displayName || [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'User';
       nameEl.textContent = displayName;
     }
 
     const locationEl = document.getElementById('spLocation');
+    var locationText = profile.location || [profile.city, profile.country].filter(Boolean).join(', ') || 'Add your location';
     if (locationEl) {
-      const locationText = profile.location || [profile.city, profile.country].filter(Boolean).join(', ') || 'Add your location';
-      locationEl.innerHTML = '<i class="fa-solid fa-location-dot"></i> ' + locationText;
+      locationEl.textContent = locationText;
+    }
+    const countryCodeEl = document.getElementById('spCountryCode');
+    if (countryCodeEl) {
+      var country = String(profile.countryCode || profile.country || '').trim();
+      var countryCode = country ? country.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() : '--';
+      countryCodeEl.textContent = countryCode || '--';
     }
     
     // Update cover background based on user type
@@ -3307,9 +3831,15 @@
       };
       if (profile.avatarUrl || profile.avatar) {
         avatar.style.background = '';
-        avatar.innerHTML = '<img src="' + (profile.avatarUrl || profile.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        avatar.innerHTML = '<img src="' + (profile.avatarUrl || profile.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:0">';
       } else {
-        avatar.innerHTML = '';
+        var initials = (displayName || 'User')
+          .split(' ')
+          .map(function (chunk) { return chunk[0] || ''; })
+          .join('')
+          .toUpperCase()
+          .slice(0, 2) || 'U';
+        avatar.textContent = initials;
         avatar.style.background = avatarGradients[type] || avatarGradients.athlete;
       }
     }
@@ -3392,36 +3922,124 @@
       bio.style.display = 'block';
     }
 
-    // Show/hide info strip based on user type and available data
-    const infoStrip = document.getElementById('spInfoStrip');
-    if (infoStrip) {
-      const hasInfo = profile.experience || profile.position || profile.club || profile.achievements;
-      infoStrip.style.display = hasInfo ? 'flex' : 'none';
-      
-      if (hasInfo) {
-        // Update info rows based on available data
-        const infoRows = infoStrip.querySelectorAll('.sp-info-row');
-        if (infoRows.length >= 3) {
-          // Row 1: Experience/Best Achievement
-          if (profile.experience) {
-            infoRows[0].innerHTML = '<i class="fa-solid fa-trophy"></i><span>Experience</span><span class="sp-info-val">' + profile.experience + ' years</span>';
-          } else if (profile.position) {
-            infoRows[0].innerHTML = '<i class="fa-solid fa-medal"></i><span>Position</span><span class="sp-info-val">' + profile.position + '</span>';
-          }
-          
-          // Row 2: Achievements
-          if (profile.achievements) {
-            infoRows[1].innerHTML = '<i class="fa-solid fa-award"></i><span>Achievements</span><span class="sp-info-val">' + profile.achievements + '</span>';
-          }
-          
-          // Row 3: Club/Affiliation
-          if (profile.club || profile.affiliation) {
-            const affiliation = profile.club || profile.affiliation;
-            infoRows[2].innerHTML = '<i class="fa-solid fa-map-location-dot"></i><span>Club</span><span class="sp-info-val">' + affiliation + '</span>';
-          }
-        }
-      }
+    var jerseyRaw = firstNonEmpty([profile.jerseyNumber, profile.shirtNumber, profile.squadNumber, profile.number]);
+    var jerseyLabel = jerseyRaw ? '#' + String(jerseyRaw) : '';
+    var jerseyEl = document.getElementById('spJerseyBadge');
+    if (jerseyEl) {
+      jerseyEl.style.display = jerseyLabel ? 'inline-flex' : 'none';
+      if (jerseyLabel) jerseyEl.textContent = jerseyLabel;
     }
+    setText('spCoverJersey', jerseyRaw || '7', '7');
+
+    var positionValue = firstNonEmpty([
+      profile.position,
+      profile.specialization,
+      profile.professionalTitle,
+      type === 'club' ? 'Organization' : ''
+    ]);
+    var clubValue = firstNonEmpty([
+      profile.currentTeam,
+      profile.club,
+      profile.affiliation,
+      profile.companyName,
+      profile.organization
+    ]);
+    setText('spPositionText', positionValue || (type === 'coach' ? 'Coach' : type === 'club' ? 'Club' : 'Position'), type === 'coach' ? 'Coach' : 'Position');
+    setText('spClubText', clubValue || (type === 'club' ? 'Organization' : 'Club'), type === 'club' ? 'Organization' : 'Club');
+
+    var availabilityRaw = String(firstNonEmpty([
+      profile.availability,
+      profile.transferStatus,
+      profile.contractStatus,
+      profile.availabilityStatus,
+      profile.availabilityHours
+    ]) || '').toLowerCase();
+    var available = !availabilityRaw || (availabilityRaw.indexOf('no') === -1 && availabilityRaw.indexOf('not') === -1 && availabilityRaw.indexOf('unavailable') === -1 && availabilityRaw.indexOf('contract') === -1);
+
+    var availabilityTextByRole = {
+      athlete: available ? 'Open to offers' : 'Active contract',
+      coach: available ? 'Open to coaching' : 'Not taking roles',
+      club: available ? 'Open trials now' : 'Trials closed',
+      supportive_professional: available ? 'Open for services' : 'Fully booked'
+    };
+    setText('spAvailabilityText', firstNonEmpty([profile.availabilityLabel, profile.availabilityText]) || availabilityTextByRole[type] || 'Availability not set', 'Availability not set');
+
+    var availPill = document.getElementById('spAvailabilityPill');
+    if (availPill) {
+      availPill.className = 'sp2-avail-pill' + (available ? '' : ' no');
+      availPill.innerHTML = '<span class="sp2-avail-dot"></span>' + (available ? 'Available' : 'Unavailable');
+    }
+    setText('spAvailableFrom', firstNonEmpty([
+      profile.availableFrom,
+      profile.freeFrom,
+      profile.contractEnd,
+      profile.availabilityDate
+    ]) || 'Not set', 'Not set');
+
+    var followers = profile.followersCount ?? profile.followers ?? 0;
+    var following = profile.followingCount ?? profile.following ?? 0;
+    setText('followersCount', formatCount(followers), '0');
+    setText('followingCount', formatCount(following), '0');
+
+    var sportName = String(profile.primarySport || profile.sport || '').toLowerCase();
+    var keyStatLabel = 'Posts';
+    var keyStatValue = profile.postsCount ?? profile.mediaCount ?? 0;
+    if (type === 'athlete') {
+      if (sportName.indexOf('basket') !== -1) {
+        keyStatLabel = 'PPG';
+        keyStatValue = firstNonEmpty([profile.ppg, profile.pointsPerGame, keyStatValue]);
+      } else if (sportName.indexOf('running') !== -1 || sportName.indexOf('marathon') !== -1) {
+        keyStatLabel = 'Pace';
+        keyStatValue = firstNonEmpty([profile.pace, profile.bestPace, keyStatValue]);
+      } else if (sportName.indexOf('gym') !== -1) {
+        keyStatLabel = 'PR';
+        keyStatValue = firstNonEmpty([profile.personalRecord, profile.pr, keyStatValue]);
+      } else {
+        keyStatLabel = 'Goals';
+        keyStatValue = firstNonEmpty([profile.goals, profile.goalCount, keyStatValue]);
+      }
+    } else if (type === 'coach') {
+      keyStatLabel = 'Athletes';
+      keyStatValue = firstNonEmpty([profile.athletesCoached, profile.teamsCoached, profile.clientsServed, keyStatValue]);
+    } else if (type === 'club') {
+      keyStatLabel = 'Teams';
+      keyStatValue = firstNonEmpty([profile.teamsCount, profile.teamsAndDivisions, keyStatValue]);
+    } else if (type === 'supportive_professional') {
+      keyStatLabel = 'Clients';
+      keyStatValue = firstNonEmpty([profile.clientsServed, profile.clientele, keyStatValue]);
+    }
+    setText('postsLabel', keyStatLabel, 'Posts');
+    setText('postsCount', typeof keyStatValue === 'number' ? formatCount(keyStatValue) : keyStatValue, '0');
+
+    var roleMetrics = {
+      athlete: [
+        { label: 'Goals', value: firstNonEmpty([profile.goals, profile.goalCount, 0]) },
+        { label: 'Assists', value: firstNonEmpty([profile.assists, profile.assistCount, 0]) },
+        { label: 'Titles', value: firstNonEmpty([profile.titlesWon, profile.achievementsCount, profile.achievements, '-']) }
+      ],
+      coach: [
+        { label: 'Experience', value: firstNonEmpty([profile.yearsOfCoaching, profile.experience, profile.yearsOfExperience, '-']) },
+        { label: 'Certs', value: firstNonEmpty([profile.certifications, profile.credentials, '-']) },
+        { label: 'Win Rate', value: firstNonEmpty([profile.winRate, profile.successRate, '-']) }
+      ],
+      club: [
+        { label: 'Teams', value: firstNonEmpty([profile.teamsAndDivisions, profile.teamsCount, '-']) },
+        { label: 'Members', value: firstNonEmpty([profile.membersCount, profile.communitySize, '-']) },
+        { label: 'Titles', value: firstNonEmpty([profile.championshipsWon, profile.achievements, '-']) }
+      ],
+      supportive_professional: [
+        { label: 'Experience', value: firstNonEmpty([profile.profExperience, profile.yearsOfExperience, profile.experience, '-']) },
+        { label: 'Clients', value: firstNonEmpty([profile.clientsServed, profile.clientele, '-']) },
+        { label: 'Services', value: firstNonEmpty([profile.services, profile.specialization, '-']) }
+      ]
+    };
+    var metrics = roleMetrics[type] || roleMetrics.athlete;
+    setText('spAchieve1Label', metrics[0].label, 'Metric 1');
+    setText('spAchieve1Val', metrics[0].value, '-');
+    setText('spAchieve2Label', metrics[1].label, 'Metric 2');
+    setText('spAchieve2Val', metrics[1].value, '-');
+    setText('spAchieve3Label', metrics[2].label, 'Metric 3');
+    setText('spAchieve3Val', metrics[2].value, '-');
 
     // Update member since
     const memberSince = document.getElementById('spMemberSince');
@@ -3434,8 +4052,12 @@
     const completionFill = document.getElementById('spCompletionFill');
     const completionPct = document.getElementById('spCompletionPct');
     if (completionFill && completionPct) {
-      const fields = ['displayName', 'bio', 'sport', 'primarySport', 'location', 'avatarUrl', 'position', 'subscriptionPlan'];
-      const filled = fields.filter(f => profile[f]).length;
+      const fields = [
+        'displayName', 'firstName', 'lastName', 'bio', 'sport', 'primarySport', 'position',
+        'currentTeam', 'location', 'city', 'country', 'avatarUrl', 'coverPhoto', 'availability',
+        'achievements', 'services', 'certifications', 'subscriptionPlan'
+      ];
+      const filled = fields.filter(function (f) { return !!profile[f]; }).length;
       const pct = Math.round((filled / fields.length) * 100);
       completionFill.style.width = pct + '%';
       completionPct.textContent = pct + '%';
