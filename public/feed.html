@@ -1681,9 +1681,73 @@
        RIGHT SIDEBAR
     ================================================================================================ */
     .sidebar-right {
-      position: sticky; top: calc(var(--nav-h) + 16px);
-      display: flex; flex-direction: column; gap: 14px;
-      overflow: hidden;
+      position: sticky;
+      top: calc(var(--nav-h) + 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-height: calc(100vh - var(--nav-h) - 24px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(15, 23, 42, 0.22) transparent;
+    }
+
+    .sidebar-right::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .sidebar-right::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar-right::-webkit-scrollbar-thumb {
+      background: rgba(15, 23, 42, 0.18);
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    .sidebar-right::-webkit-scrollbar-thumb:hover {
+      background: rgba(15, 23, 42, 0.28);
+      background-clip: padding-box;
+    }
+
+    .right-mini-footer {
+      margin-top: auto;
+      padding: 8px 4px 4px;
+      border-top: 1px solid var(--border);
+    }
+
+    .right-mini-footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--muted-2);
+    }
+
+    .right-mini-footer-links a {
+      color: var(--muted-2);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .right-mini-footer-links a:hover {
+      color: var(--accent);
+    }
+
+    .right-mini-footer-copy {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted-2);
+    }
+
+    .feed-infinite-sentinel {
+      height: 1px;
+      width: 100%;
     }
 
     .side-card {
@@ -3450,62 +3514,23 @@
       </ul>
     </div>
 
+    <div class="right-mini-footer" aria-label="Feed footer links">
+      <div class="right-mini-footer-links">
+        <a href="/pages/legal/about.html">About</a>
+        <span>&middot;</span>
+        <a href="/pages/company/help-center.html">Help</a>
+        <span>&middot;</span>
+        <a href="/pages/legal/terms.html">Terms</a>
+        <span>&middot;</span>
+        <a href="/pages/legal/privacy.html">Privacy</a>
+        <span>&middot;</span>
+        <a href="/pages/contact/index.html">Contact</a>
+      </div>
+      <div class="right-mini-footer-copy">&copy; 2026 Spopeer</div>
+    </div>
+
   </aside>
 </div><!-- /app-layout -->
-
-<!-- ====== FOOTER ====== -->
-<footer class="site-footer">
-  <div class="footer-grid">
-    <div class="foot-brand">
-      <a href="/index.html" class="foot-logo" data-home-link><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
-      <p>Connecting the global sports community — athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
-      <div class="social-row">
-        <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
-        <a href="https://www.facebook.com/spopeer/" target="_blank" class="soc-btn"><i class="fab fa-facebook"></i></a>
-        <a href="https://www.instagram.com/spo.peer/" target="_blank" class="soc-btn"><i class="fab fa-instagram"></i></a>
-      </div>
-    </div>
-    <div class="foot-col">
-      <h5>Platform</h5>
-      <ul>
-        <li><a href="/index.html#features">Features</a></li>
-        <li><a href="/index.html#how-it-works">How It Works</a></li>
-        <li><a href="/index.html#user-types">User Types</a></li>
-      </ul>
-    </div>
-    <div class="foot-col">
-      <h5>Company</h5>
-      <ul>
-        <li><a href="/pages/legal/about.html">About Us</a></li>
-        <li><a href="/pages/company/careers.html">Careers</a></li>
-        <li><a href="/pages/company/blog.html">Blog</a></li>
-      </ul>
-    </div>
-    <div class="foot-col">
-      <h5>Support</h5>
-      <ul>
-        <li><a href="/pages/company/help-center.html">Help Center</a></li>
-        <li><a href="/pages/contact/index.html">Contact Us</a></li>
-      </ul>
-    </div>
-    <div class="foot-col">
-      <h5>Legal</h5>
-      <ul>
-        <li><a href="/pages/legal/privacy.html">Privacy Policy</a></li>
-        <li><a href="/pages/legal/terms.html">Terms of Use</a></li>
-        <li><a href="/pages/company/report-abuse.html">Report Abuse</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-btm">
-    <p>&copy; 2026 Spopeer. All rights reserved.</p>
-    <div class="footer-btm-links">
-      <a href="/pages/legal/privacy.html">Privacy</a>
-      <a href="/pages/legal/terms.html">Terms</a>
-      <a href="/pages/contact/index.html">Contact</a>
-    </div>
-  </div>
-</footer>
 
 <script>
 (function () {
@@ -5244,6 +5269,93 @@
   }
 
   let selectedSports = [primarySport];
+  const FEED_PAGE_SIZE = 12;
+  let currentFeedPosts = [];
+  let currentFeedVisibleCount = 0;
+  let feedInfiniteObserver = null;
+
+  function teardownInfiniteFeedObserver() {
+    if (feedInfiniteObserver) {
+      feedInfiniteObserver.disconnect();
+      feedInfiniteObserver = null;
+    }
+  }
+
+  function buildFeedChunkHtml(posts, startIndex, endIndex) {
+    var parts = [];
+    for (var i = startIndex; i < endIndex; i += 1) {
+      var post = posts[i];
+      parts.push(renderPostCard(post));
+      if ((i + 1) % 4 === 0) {
+        parts.push('<section class="feed-sponsored-slot" data-sponsored-slot="feed-inline-' + (Math.floor(i / 4) + 1) + '"></section>');
+      }
+    }
+    return parts.join('');
+  }
+
+  function appendNextFeedChunk() {
+    const container = document.getElementById('generatedFeedContainer');
+    if (!container) return false;
+    if (currentFeedVisibleCount >= currentFeedPosts.length) return false;
+
+    const startIndex = currentFeedVisibleCount;
+    const endIndex = Math.min(startIndex + FEED_PAGE_SIZE, currentFeedPosts.length);
+    const sentinel = document.getElementById('feedInfiniteSentinel');
+    const chunkHtml = buildFeedChunkHtml(currentFeedPosts, startIndex, endIndex);
+
+    if (sentinel) {
+      sentinel.insertAdjacentHTML('beforebegin', chunkHtml);
+    } else {
+      container.insertAdjacentHTML('beforeend', chunkHtml);
+    }
+
+    const newlyVisiblePosts = currentFeedPosts.slice(startIndex, endIndex);
+    if (window.SpopeerFeedEngine) {
+      newlyVisiblePosts.forEach(function (post) {
+        window.SpopeerFeedEngine.markViewed(post.id);
+      });
+    }
+
+    currentFeedVisibleCount = endIndex;
+
+    if (window.SpopeerAds && typeof window.SpopeerAds.refreshSlots === 'function') {
+      window.SpopeerAds.refreshSlots();
+    }
+
+    return currentFeedVisibleCount < currentFeedPosts.length;
+  }
+
+  function setupInfiniteFeedObserver() {
+    teardownInfiniteFeedObserver();
+
+    const sentinel = document.getElementById('feedInfiniteSentinel');
+    if (!sentinel) return;
+
+    if (typeof IntersectionObserver !== 'function') {
+      while (appendNextFeedChunk()) {
+        // Fallback: render all posts when observer is unavailable.
+      }
+      return;
+    }
+
+    feedInfiniteObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        const hasMore = appendNextFeedChunk();
+        if (!hasMore) {
+          teardownInfiniteFeedObserver();
+          const marker = document.getElementById('feedInfiniteSentinel');
+          if (marker) marker.remove();
+        }
+      });
+    }, {
+      root: null,
+      rootMargin: '600px 0px',
+      threshold: 0.01
+    });
+
+    feedInfiniteObserver.observe(sentinel);
+  }
 
   function renderPostCard(post) {
     return `
@@ -5274,6 +5386,8 @@
   }
 
   function renderFeed(posts) {
+    teardownInfiniteFeedObserver();
+
     const oldContainer = document.getElementById("generatedFeedContainer");
     if (oldContainer) oldContainer.remove();
 
@@ -5283,9 +5397,10 @@
     container.style.flexDirection = "column";
     container.style.gap = "14px";
 
-    const visiblePosts = posts.slice(0, 20);
+    currentFeedPosts = Array.isArray(posts) ? posts.slice() : [];
+    currentFeedVisibleCount = 0;
 
-    if (!visiblePosts.length) {
+    if (!currentFeedPosts.length) {
       container.innerHTML = `
         <div class="feed-empty-state">
           <div class="feed-empty-icon"><i class="fa-regular fa-compass"></i></div>
@@ -5297,14 +5412,7 @@
         </div>
       `;
     } else {
-      var parts = [];
-      visiblePosts.forEach(function (post, index) {
-        parts.push(renderPostCard(post));
-        if ((index + 1) % 4 === 0) {
-          parts.push('<section class="feed-sponsored-slot" data-sponsored-slot="feed-inline-' + (Math.floor(index / 4) + 1) + '"></section>');
-        }
-      });
-      container.innerHTML = parts.join('');
+      container.innerHTML = '<div class="feed-infinite-sentinel" id="feedInfiniteSentinel" aria-hidden="true"></div>';
     }
 
     const insertAfter = document.querySelector(".create-card") || document.querySelector(".game-tape-container");
@@ -5314,12 +5422,9 @@
       feedMount.appendChild(container);
     }
 
-    if (window.SpopeerFeedEngine) {
-      visiblePosts.forEach(post => window.SpopeerFeedEngine.markViewed(post.id));
-    }
-
-    if (window.SpopeerAds && typeof window.SpopeerAds.refreshSlots === 'function') {
-      window.SpopeerAds.refreshSlots();
+    if (currentFeedPosts.length) {
+      appendNextFeedChunk();
+      setupInfiniteFeedObserver();
     }
   }
 
