@@ -2782,8 +2782,8 @@
   <!-- RIGHT SIDEBAR -->
   <aside class="sidebar-right">
 
-    <h4 class="ad-slot-rail-heading">Sponsored</h4>
-    <section class="right-rail-ad-slot" data-ad-slot="right-rail-main"></section>
+    <h4 class="sponsored-slot-rail-heading">Sponsored</h4>
+    <section class="right-rail-sponsored-slot" data-sponsored-slot="right-rail-main"></section>
 
     <!-- Spopeer Agent Hub -->
     <section class="spopeer-agent-card" id="spopeerAgentCard">
@@ -4466,7 +4466,7 @@
       visiblePosts.forEach(function (post, index) {
         parts.push(renderPostCard(post));
         if ((index + 1) % 4 === 0) {
-          parts.push('<section class="feed-ad-slot" data-ad-slot="feed-inline-' + (Math.floor(index / 4) + 1) + '"></section>');
+          parts.push('<section class="feed-sponsored-slot" data-sponsored-slot="feed-inline-' + (Math.floor(index / 4) + 1) + '"></section>');
         }
       });
       container.innerHTML = parts.join('');

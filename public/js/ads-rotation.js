@@ -84,11 +84,11 @@
   }
 
   function getSlots() {
-    return Array.prototype.slice.call(document.querySelectorAll('[data-ad-slot]'));
+    return Array.prototype.slice.call(document.querySelectorAll('[data-sponsored-slot]'));
   }
 
   function getSlotId(slot) {
-    return String((slot && slot.getAttribute('data-ad-slot')) || '').trim();
+    return String((slot && slot.getAttribute('data-sponsored-slot')) || '').trim();
   }
 
   function getSlotCadence(slotId) {
@@ -167,18 +167,18 @@
       : 'Rotates on activity';
 
     slot.innerHTML =
-      '<div class="ad-slot-body">' +
-        '<a class="ad-slot-media-link" href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer" aria-label="Open sponsored content">' +
-          '<div class="ad-slot-media" style="background-image:url(\'' + escapeHtml(creative.media) + '\')"></div>' +
+      '<div class="sponsored-slot-body">' +
+        '<a class="sponsored-slot-media-link" href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer" aria-label="Open sponsored content">' +
+          '<div class="sponsored-slot-media" style="background-image:url(\'' + escapeHtml(creative.media) + '\')"></div>' +
         '</a>' +
-        '<div class="ad-slot-copy">' +
-          '<span class="ad-slot-kicker"><span class="ad-slot-dot"></span>' + escapeHtml(creative.kicker) + '</span>' +
-          '<h4 class="ad-slot-title"><a href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(creative.title) + '</a></h4>' +
-          '<p class="ad-slot-text">' + escapeHtml(creative.text) + '</p>' +
-          '<a class="ad-slot-cta" href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(creative.cta) + '</a>' +
+        '<div class="sponsored-slot-copy">' +
+          '<span class="sponsored-slot-kicker"><span class="sponsored-slot-dot"></span>' + escapeHtml(creative.kicker) + '</span>' +
+          '<h4 class="sponsored-slot-title"><a href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(creative.title) + '</a></h4>' +
+          '<p class="sponsored-slot-text">' + escapeHtml(creative.text) + '</p>' +
+          '<a class="sponsored-slot-cta" href="' + escapeHtml(creative.href || '#') + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(creative.cta) + '</a>' +
         '</div>' +
       '</div>' +
-      '<div class="ad-slot-footer"><span>Ad placement</span><span>' + rotationLabel + '</span></div>';
+      '<div class="sponsored-slot-footer"><span>Ad placement</span><span>' + rotationLabel + '</span></div>';
 
     slot.setAttribute('data-creative-id', creative.id);
   }
