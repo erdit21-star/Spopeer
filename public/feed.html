@@ -1038,6 +1038,57 @@
       background: currentColor;
     }
 
+    .sidebar-left .sp2-role-signal {
+      width: 100%;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: linear-gradient(180deg, #f8fbff 0%, var(--surface) 100%);
+      padding: 8px;
+      text-align: left;
+    }
+
+    .sidebar-left .sp2-role-signal-title {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-left .sp2-role-signal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .sidebar-left .sp2-role-signal-item {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--white);
+      padding: 6px 5px;
+      text-align: center;
+    }
+
+    .sidebar-left .sp2-role-signal-label {
+      font-size: 8px;
+      color: var(--muted-2);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 2px;
+    }
+
+    .sidebar-left .sp2-role-signal-val {
+      font-size: 10px;
+      color: var(--ink);
+      font-weight: 700;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
     .sidebar-left .sp2-achieve-row {
       width: 100%;
       display: flex;
@@ -2871,6 +2922,24 @@
           </div>
         </div>
 
+        <div class="sp2-role-signal" id="spRoleSignalStrip">
+          <div class="sp2-role-signal-title" id="spRoleSignalTitle">Athlete Performance</div>
+          <div class="sp2-role-signal-grid">
+            <div class="sp2-role-signal-item">
+              <div class="sp2-role-signal-label" id="spRoleSignal1Label">Recent</div>
+              <div class="sp2-role-signal-val" id="spRoleSignal1Val">-</div>
+            </div>
+            <div class="sp2-role-signal-item">
+              <div class="sp2-role-signal-label" id="spRoleSignal2Label">Trend</div>
+              <div class="sp2-role-signal-val" id="spRoleSignal2Val">-</div>
+            </div>
+            <div class="sp2-role-signal-item">
+              <div class="sp2-role-signal-label" id="spRoleSignal3Label">Status</div>
+              <div class="sp2-role-signal-val" id="spRoleSignal3Val">-</div>
+            </div>
+          </div>
+        </div>
+
         <div class="sp-info-strip sp2-achieve-row" id="spInfoStrip" style="display:flex;">
           <div class="sp2-achieve sp2-achieve-gold">
             <i class="fa-solid fa-medal"></i>
@@ -3975,6 +4044,49 @@
       profile.contractEnd,
       profile.availabilityDate
     ]) || 'Not set', 'Not set');
+
+    var roleSignalMap = {
+      athlete: {
+        title: 'Athlete Performance',
+        points: [
+          { label: 'Recent', value: firstNonEmpty([profile.recentPerformance, profile.lastPerformance, profile.highlight]) || 'No update' },
+          { label: 'Trend', value: firstNonEmpty([profile.performanceTrend, profile.trend, profile.form]) || 'Stable' },
+          { label: 'Status', value: firstNonEmpty([profile.transferStatus, profile.contractStatus, available ? 'Open to offers' : 'Active contract']) || '-' }
+        ]
+      },
+      coach: {
+        title: 'Coach Authority',
+        points: [
+          { label: 'Experience', value: firstNonEmpty([profile.yearsOfCoaching, profile.experience, profile.yearsOfExperience]) || '-' },
+          { label: 'Certs', value: firstNonEmpty([profile.certifications, profile.credentials, profile.coachEducation]) || '-' },
+          { label: 'Success', value: firstNonEmpty([profile.winRate, profile.successRate, profile.athletesCoached]) || '-' }
+        ]
+      },
+      club: {
+        title: 'Club Scale',
+        points: [
+          { label: 'Teams', value: firstNonEmpty([profile.teamsCount, profile.teamsAndDivisions]) || '-' },
+          { label: 'Members', value: firstNonEmpty([profile.membersCount, profile.communitySize]) || '-' },
+          { label: 'Trials', value: firstNonEmpty([profile.availableTrials, profile.openPositions, available ? 'Open' : 'Closed']) || '-' }
+        ]
+      },
+      supportive_professional: {
+        title: 'Service Layer',
+        points: [
+          { label: 'Services', value: firstNonEmpty([profile.services, profile.specializationField, profile.specialization]) || '-' },
+          { label: 'Clients', value: firstNonEmpty([profile.clientsServed, profile.clientele]) || '-' },
+          { label: 'Mode', value: firstNonEmpty([profile.availabilityHours, profile.serviceMode, profile.preferredContact]) || (available ? 'Open' : 'Booked') }
+        ]
+      }
+    };
+    var roleSignal = roleSignalMap[type] || roleSignalMap.athlete;
+    setText('spRoleSignalTitle', roleSignal.title, 'Role Signals');
+    setText('spRoleSignal1Label', roleSignal.points[0].label, 'Signal 1');
+    setText('spRoleSignal1Val', roleSignal.points[0].value, '-');
+    setText('spRoleSignal2Label', roleSignal.points[1].label, 'Signal 2');
+    setText('spRoleSignal2Val', roleSignal.points[1].value, '-');
+    setText('spRoleSignal3Label', roleSignal.points[2].label, 'Signal 3');
+    setText('spRoleSignal3Val', roleSignal.points[2].value, '-');
 
     var followers = profile.followersCount ?? profile.followers ?? 0;
     var following = profile.followingCount ?? profile.following ?? 0;
