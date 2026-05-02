@@ -21,23 +21,17 @@ initSocket(server);
 // ─── START SERVER ───
 async function startServer() {
   try {
-    server.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Spopeer Server running on http://0.0.0.0:${PORT}`);
-    });
-
     try {
       assertEmailReady();
     } catch (e) {
       console.warn('⚠️ Email not configured:', e.message);
     }
 
-    testConnection()
-      .then(() => {
-        console.log('✅ Database connection verified.');
-      })
-      .catch((error) => {
-        console.warn('⚠️ Database connection failed after server start:', error.message);
-      });
+    await testConnection();
+
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`Spopeer Server running on http://0.0.0.0:${PORT}`);
+    });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
