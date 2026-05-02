@@ -24,21 +24,18 @@ async function startServer() {
     // Validate email config — non-blocking for Phase 1 (email is Phase 2)
     try { assertEmailReady(); } catch (e) { console.warn('⚠️  Email not configured:', e.message); }
 
-    // Test database connection
-    await testConnection();
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('ℹ️  Development mode: run "npm run migrate" before starting the server.');
-    } else {
-      console.log('ℹ️  Production mode: use migrations only (npm run migrate).');
-    }
-
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`\n🚀 Spopeer Server running on http://0.0.0.0:${PORT}`);
       console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
       console.log(`🔌 API Base: http://localhost:${PORT}/api`);
       console.log(`💬 Socket.io: ws://localhost:${PORT}`);
       console.log(`🌐 Frontend: http://localhost:${PORT}\n`);
+    });
+
+    // Test database connection after port bind so health checks can pass even
+    // during temporary database saturation.
+    testConnection().catch((error) => {
+      console.warn('⚠️ Database connection check failed after server start:', error && error.message ? error.message : error);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
