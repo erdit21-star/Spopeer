@@ -94,6 +94,7 @@
       case 'privacy': window.location.href = '/pages/legal/privacy.html'; break;
       case 'connections': window.location.href = '/pages/messaging/inbox.html'; break;
       case 'library': window.location.href = '/pages/library/index.html'; break;
+      case 'media-vault': window.location.href = '/pages/library/media.html'; break;
       case 'events': window.location.href = '/pages/events/event.html'; break;
       case 'help': window.location.href = '/pages/company/help-center.html'; break;
       case 'report': window.location.href = '/pages/contact/index.html'; break;

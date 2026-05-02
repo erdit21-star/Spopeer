@@ -1,0 +1,998 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spopeer Â· Media Vault</title>
+  <script src="../../js/auth.js"></script>
+  <script src="../../js/api.js"></script>
+  <script>window.Auth.requireAuth();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/shared-tokens.css" />
+  <link rel="stylesheet" href="/css/shared-nav.css" />
+  <style>
+    /* â”€â”€ layout â”€â”€ */
+    .app-layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 24px 48px;
+      display: grid;
+      grid-template-columns: var(--left-w) minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+    .sidebar-left {
+      position: sticky;
+      top: calc(var(--nav-h) + 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--rM);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-2);
+      text-decoration: none;
+      transition: .2s;
+    }
+    .nav-item:hover { background: var(--surface); color: var(--ink); text-decoration: none; }
+    .nav-item.active { background: var(--accent-lt); color: var(--accent); font-weight: 700; }
+
+    /* â”€â”€ main â”€â”€ */
+    .vault-main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+    .page-head {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 22px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .page-head-text h1 {
+      margin: 0 0 4px;
+      font-family: var(--fD);
+      font-size: 28px;
+      letter-spacing: -.03em;
+    }
+    .page-head-text p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      border-radius: var(--pill);
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: .2s;
+      font-family: var(--fB);
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--white); border-color: var(--accent); color: var(--accent); }
+    .btn-sm { padding: 7px 13px; font-size: 12px; }
+    .btn-danger { background: #fef2f2; color: #dc2626; border: 1.5px solid #fca5a5; }
+    .btn-danger:hover { background: #dc2626; color: #fff; }
+
+    /* â”€â”€ upload zone â”€â”€ */
+    .upload-zone {
+      background: var(--white);
+      border: 2px dashed var(--border);
+      border-radius: var(--rL);
+      padding: 36px 24px;
+      text-align: center;
+      transition: border-color .2s, background .2s;
+      cursor: pointer;
+    }
+    .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-lt);
+    }
+    .upload-zone i { font-size: 36px; color: var(--muted); margin-bottom: 12px; display: block; }
+    .upload-zone p { margin: 0 0 4px; font-weight: 700; color: var(--ink); }
+    .upload-zone small { color: var(--muted); font-size: 12px; }
+    #vaultFileInput { display: none; }
+
+    /* â”€â”€ progress bar â”€â”€ */
+    .upload-progress-bar {
+      display: none;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .upload-progress-bar.active { display: block; }
+    .upload-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width .3s;
+    }
+
+    /* â”€â”€ tabs â”€â”€ */
+    .vault-tabs {
+      display: flex;
+      gap: 8px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 10px;
+      flex-wrap: wrap;
+    }
+    .vault-tab {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: .2s;
+      font-family: var(--fB);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .vault-tab.active { background: var(--accent); color: #fff; }
+    .vault-tab .tab-count {
+      background: rgba(255,255,255,.25);
+      border-radius: 999px;
+      padding: 1px 7px;
+      font-size: 11px;
+    }
+    .vault-tab:not(.active) .tab-count {
+      background: var(--surface);
+      color: var(--ink-2);
+    }
+
+    /* â”€â”€ storage bar â”€â”€ */
+    .storage-bar-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--rL);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .storage-bar-label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+    .storage-bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+    .storage-bar-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .5s; }
+    .storage-bar-used { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+
+    /* â”€â”€ media grid â”€â”€ */
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .media-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: var(--rM);
+      overflow: hidden;
+      background: var(--surface);
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      transition: box-shadow .2s;
+    }
+    .media-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+    .media-item img, .media-item video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .media-item .media-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 8px;
+      opacity: 0;
+      transition: opacity .2s, background .2s;
+    }
+    .media-item:hover .media-overlay {
+      opacity: 1;
+      background: rgba(0,0,0,.45);
+    }
+    .media-overlay-top { display: flex; justify-content: flex-end; gap: 6px; }
+    .media-overlay-bottom { }
+    .media-overlay-caption {
+      font-size: 11px;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .media-icon-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255,255,255,.2);
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s;
+    }
+    .media-icon-btn:hover { background: rgba(255,255,255,.4); }
+    .media-icon-btn.delete:hover { background: #dc2626; }
+
+    .media-type-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: rgba(0,0,0,.6);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 99px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .media-duration {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0,0,0,.65);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* file (non-image/video) item */
+    .media-item.file-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px;
+    }
+    .media-item.file-item i { font-size: 32px; color: var(--accent); }
+    .media-item.file-item .file-name {
+      font-size: 11px;
+      color: var(--ink-2);
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .media-item.file-item .file-size { font-size: 10px; color: var(--muted); }
+
+    /* â”€â”€ empty state â”€â”€ */
+    .empty-state {
+      background: var(--white);
+      border: 2px dashed var(--border);
+      border-radius: var(--rL);
+      padding: 56px 32px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .empty-state i { font-size: 40px; margin-bottom: 14px; display: block; opacity: .4; }
+    .empty-state h3 { margin: 0 0 8px; color: var(--ink); font-size: 18px; }
+    .empty-state p { margin: 0 0 18px; font-size: 14px; }
+
+    /* â”€â”€ load more â”€â”€ */
+    .load-more-row { text-align: center; padding: 8px 0; }
+
+    /* â”€â”€ lightbox â”€â”€ */
+    .lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.88);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox-overlay.open { display: flex; }
+    .lightbox-inner {
+      position: relative;
+      max-width: 90vw;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .lightbox-media {
+      max-width: 90vw;
+      max-height: 78vh;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+    .lightbox-caption {
+      color: rgba(255,255,255,.7);
+      font-size: 13px;
+      text-align: center;
+    }
+    .lightbox-close {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      background: rgba(255,255,255,.15);
+      border: none;
+      color: #fff;
+      font-size: 22px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s;
+    }
+    .lightbox-close:hover { background: rgba(255,255,255,.3); }
+    .lightbox-nav {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,.15);
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s;
+    }
+    .lightbox-nav:hover { background: rgba(255,255,255,.3); }
+    #lightboxPrev { left: 16px; }
+    #lightboxNext { right: 16px; }
+
+    /* â”€â”€ caption edit modal â”€â”€ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--white);
+      border-radius: var(--rL);
+      padding: 28px;
+      width: 420px;
+      max-width: 95vw;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .modal-box h3 { margin: 0; font-size: 17px; }
+    .modal-box textarea {
+      border: 1.5px solid var(--border);
+      border-radius: var(--rM);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: var(--fB);
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+    }
+    .modal-box textarea:focus { border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* â”€â”€ toast â”€â”€ */
+    .vault-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #111;
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: var(--pill);
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 11000;
+      opacity: 0;
+      transition: transform .3s, opacity .3s;
+      pointer-events: none;
+    }
+    .vault-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    @media (max-width: 960px) {
+      .app-layout { grid-template-columns: 1fr; }
+      .sidebar-left { position: static; }
+      .media-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/fonts.css">
+  <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="../../js/mobile-enhancements.js" defer></script>
+  <script src="/js/topnav-normalizer.js"></script>
+</head>
+<body>
+  <header class="topnav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" data-home-link>
+        <span class="logo-mark">
+          <img src="/assets/images/logo-s.jpg" alt="Spopeer">
+        </span>
+        <span class="logo-text">Spopeer</span>
+      </a>
+      <div class="nav-right">
+        <div class="user-chip" id="userChip" data-user-chip>
+          <span class="chip-avatar" data-user-chip-avatar>?</span>
+          <span class="chip-name" data-user-chip-name>Loadingâ€¦</span>
+          <i class="fa-solid fa-chevron-down chip-caret"></i>
+        </div>
+        <div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">
+          <div class="profile-menu-section" data-section="identity">
+            <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="true">
+              <div class="profile-menu-title">Your Identity</div>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="view-profile"><i class="fa-regular fa-id-badge"></i> View Profile</button>
+              <button class="profile-menu-item" data-action="edit-profile"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</button>
+              <button class="profile-menu-item" data-action="your-activity"><i class="fa-regular fa-chart-line"></i> Your Posts / Activity</button>
+            </div>
+          </div>
+          <div class="profile-menu-section collapsed" data-section="account">
+            <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+              <div class="profile-menu-title">Account &amp; Settings</div>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="account-settings"><i class="fa-regular fa-gear"></i> Account Settings</button>
+              <button class="profile-menu-item" data-action="notifications"><i class="fa-regular fa-bell"></i> Notification Preferences</button>
+              <button class="profile-menu-item" data-action="privacy"><i class="fa-regular fa-shield"></i> Privacy &amp; Safety</button>
+              <button class="profile-menu-item" data-action="my-sports"><i class="fa-solid fa-dumbbell"></i> My Sports</button>
+              <button class="profile-menu-item" data-action="download-data"><i class="fa-solid fa-download"></i> Download My Data</button>
+            </div>
+          </div>
+          <div class="profile-menu-section collapsed" data-section="features">
+            <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+              <div class="profile-menu-title">Platform Features</div>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="media-vault"><i class="fa-regular fa-photo-film"></i> Media Vault</button>
+              <button class="profile-menu-item" data-action="library"><i class="fa-regular fa-bookmark"></i> Saved / Library</button>
+              <button class="profile-menu-item" data-action="events"><i class="fa-regular fa-calendar"></i> Your Events</button>
+              <button class="profile-menu-item" data-action="connections"><i class="fa-regular fa-handshake"></i> Your Connections</button>
+            </div>
+          </div>
+          <div class="profile-menu-section collapsed" data-section="help">
+            <div class="profile-menu-section-header" role="button" tabindex="0" aria-expanded="false">
+              <div class="profile-menu-title">Help &amp; Misc</div>
+              <i class="fa-solid fa-chevron-down profile-menu-section-toggle" aria-hidden="true"></i>
+            </div>
+            <div class="profile-menu-section-items">
+              <button class="profile-menu-item" data-action="help"><i class="fa-regular fa-question-circle"></i> Help Center</button>
+              <button class="profile-menu-item" data-action="report"><i class="fa-regular fa-flag"></i> Report a Problem</button>
+            </div>
+          </div>
+          <div class="profile-menu-section">
+            <div class="profile-menu-section-items" style="padding:10px 16px 10px;">
+              <button class="profile-menu-item logout" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-layout">
+    <aside class="sidebar-left">
+      <a href="../../feed.html" class="nav-item"><i class="fa-solid fa-house"></i> Feed</a>
+      <a href="index.html" class="nav-item"><i class="fa-solid fa-bookmark"></i> Library</a>
+      <a href="media.html" class="nav-item active"><i class="fa-solid fa-photo-film"></i> Media Vault</a>
+      <a href="../events/event.html" class="nav-item"><i class="fa-regular fa-calendar"></i> Events</a>
+      <a href="../sponsorship/sponsor.html" class="nav-item"><i class="fa-solid fa-handshake-angle"></i> Sponsorship</a>
+      <a href="../dashboard/settings.html" class="nav-item"><i class="fa-solid fa-gear"></i> Settings</a>
+    </aside>
+
+    <section class="vault-main">
+      <!-- Header -->
+      <div class="page-head">
+        <div class="page-head-text">
+          <h1><i class="fa-solid fa-photo-film" style="color:var(--accent);font-size:24px;margin-right:8px;"></i>Media Vault</h1>
+          <p>Your personal storage for photos, videos, and files. Upload, organise, and reuse them anywhere on Spopeer.</p>
+        </div>
+        <button class="btn btn-primary" id="uploadBtn">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+        </button>
+      </div>
+
+      <!-- Storage bar -->
+      <div class="storage-bar-card">
+        <span class="storage-bar-label"><i class="fa-solid fa-database"></i> Storage used</span>
+        <div class="storage-bar-track">
+          <div class="storage-bar-fill" id="storageBarFill" style="width:0%"></div>
+        </div>
+        <span class="storage-bar-used" id="storageBarUsed">0 MB</span>
+      </div>
+
+      <!-- Upload zone (hidden by default, shown on click) -->
+      <div class="upload-zone" id="uploadZone" style="display:none">
+        <input type="file" id="vaultFileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <p>Drag files here or click to browse</p>
+        <small>Photos, videos, PDFs and documents â€” max 100 MB per file</small>
+      </div>
+      <div class="upload-progress-bar" id="uploadProgressBar">
+        <div class="upload-progress-fill" id="uploadProgressFill"></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="vault-tabs">
+        <button class="vault-tab active" data-vault-tab="all">
+          <i class="fa-solid fa-layer-group"></i> All
+          <span class="tab-count" id="tabCountAll">0</span>
+        </button>
+        <button class="vault-tab" data-vault-tab="photo">
+          <i class="fa-regular fa-image"></i> Photos
+          <span class="tab-count" id="tabCountPhoto">0</span>
+        </button>
+        <button class="vault-tab" data-vault-tab="video">
+          <i class="fa-solid fa-video"></i> Videos
+          <span class="tab-count" id="tabCountVideo">0</span>
+        </button>
+        <button class="vault-tab" data-vault-tab="file">
+          <i class="fa-regular fa-file"></i> Files
+          <span class="tab-count" id="tabCountFile">0</span>
+        </button>
+      </div>
+
+      <!-- Grid -->
+      <div class="media-grid" id="mediaGrid"></div>
+      <div class="load-more-row" id="loadMoreRow" style="display:none">
+        <button class="btn btn-secondary" id="loadMoreBtn">Load more</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightboxOverlay">
+    <button class="lightbox-close" id="lightboxClose"><i class="fa-solid fa-xmark"></i></button>
+    <button class="lightbox-nav" id="lightboxPrev"><i class="fa-solid fa-chevron-left"></i></button>
+    <div class="lightbox-inner">
+      <img class="lightbox-media" id="lightboxImg" src="" alt="" style="display:none">
+      <video class="lightbox-media" id="lightboxVideo" controls style="display:none"></video>
+      <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+    <button class="lightbox-nav" id="lightboxNext"><i class="fa-solid fa-chevron-right"></i></button>
+  </div>
+
+  <!-- Caption edit modal -->
+  <div class="modal-overlay" id="captionModal">
+    <div class="modal-box">
+      <h3>Edit caption</h3>
+      <textarea id="captionInput" placeholder="Add a captionâ€¦" rows="3"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-secondary btn-sm" id="captionCancelBtn">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="captionSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="vault-toast" id="vaultToast"></div>
+
+  <script src="/js/shared-ui.js"></script>
+  <script src="/js/navigation.js"></script>
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/user-ui.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
+      if (window.UserUI) window.UserUI.bindAllChips();
+    });
+  </script>
+  <script>
+  (function () {
+    'use strict';
+
+    // â”€â”€ state â”€â”€
+    let _items = [];
+    let _activeTab = 'all';
+    let _page = 1;
+    let _pages = 1;
+    let _lightboxIndex = 0;
+    let _editingId = null;
+
+    // â”€â”€ DOM refs â”€â”€
+    const grid = document.getElementById('mediaGrid');
+    const loadMoreRow = document.getElementById('loadMoreRow');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('vaultFileInput');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progressFill = document.getElementById('uploadProgressFill');
+    const storageFill = document.getElementById('storageBarFill');
+    const storageUsed = document.getElementById('storageBarUsed');
+    const toast = document.getElementById('vaultToast');
+
+    // lightbox
+    const lbOverlay = document.getElementById('lightboxOverlay');
+    const lbImg = document.getElementById('lightboxImg');
+    const lbVideo = document.getElementById('lightboxVideo');
+    const lbCaption = document.getElementById('lightboxCaption');
+    const lbClose = document.getElementById('lightboxClose');
+    const lbPrev = document.getElementById('lightboxPrev');
+    const lbNext = document.getElementById('lightboxNext');
+
+    // caption modal
+    const captionModal = document.getElementById('captionModal');
+    const captionInput = document.getElementById('captionInput');
+    const captionSaveBtn = document.getElementById('captionSaveBtn');
+    const captionCancelBtn = document.getElementById('captionCancelBtn');
+
+    // â”€â”€ toast helper â”€â”€
+    let _toastTimer;
+    function showToast(msg, ms = 3000) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => toast.classList.remove('show'), ms);
+    }
+
+    // â”€â”€ format helpers â”€â”€
+    function fmtBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+    function mediaType(mime) {
+      if (!mime) return 'file';
+      if (mime.startsWith('image/')) return 'photo';
+      if (mime.startsWith('video/')) return 'video';
+      return 'file';
+    }
+    function fileIcon(mime) {
+      if (!mime) return 'fa-regular fa-file';
+      if (mime.includes('pdf')) return 'fa-regular fa-file-pdf';
+      if (mime.includes('word') || mime.includes('document')) return 'fa-regular fa-file-word';
+      if (mime.includes('sheet') || mime.includes('excel')) return 'fa-regular fa-file-excel';
+      if (mime.includes('presentation') || mime.includes('powerpoint')) return 'fa-regular fa-file-powerpoint';
+      return 'fa-regular fa-file';
+    }
+
+    // â”€â”€ tab counts â”€â”€
+    function updateTabCounts(items) {
+      document.getElementById('tabCountAll').textContent = items.length;
+      document.getElementById('tabCountPhoto').textContent = items.filter(i => mediaType(i.mimeType) === 'photo').length;
+      document.getElementById('tabCountVideo').textContent = items.filter(i => mediaType(i.mimeType) === 'video').length;
+      document.getElementById('tabCountFile').textContent = items.filter(i => mediaType(i.mimeType) === 'file').length;
+    }
+
+    // â”€â”€ storage bar â”€â”€
+    function updateStorageBar(items) {
+      const total = items.reduce((s, i) => s + (i.size || 0), 0);
+      const limit = 5 * 1024 * 1024 * 1024; // 5 GB display cap
+      const pct = Math.min((total / limit) * 100, 100);
+      storageFill.style.width = pct + '%';
+      storageUsed.textContent = fmtBytes(total) + ' used';
+    }
+
+    // â”€â”€ render items â”€â”€
+    function renderItems(items, append = false) {
+      if (!append) grid.innerHTML = '';
+
+      if (items.length === 0 && !append) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <i class="fa-regular fa-photo-film"></i>
+            <h3>No media yet</h3>
+            <p>Upload photos, videos and files to keep them organised in one place.</p>
+            <button class="btn btn-primary" onclick="document.getElementById('uploadBtn').click()">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Upload your first file
+            </button>
+          </div>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const type = mediaType(item.mimeType);
+        const el = document.createElement('div');
+        el.className = 'media-item' + (type === 'file' ? ' file-item' : '');
+        el.dataset.id = item.id;
+
+        if (type === 'photo') {
+          el.innerHTML = `
+            <img src="${item.url}" alt="${item.caption || item.originalName}" loading="lazy">
+            <span class="media-type-badge">Photo</span>
+            <div class="media-overlay">
+              <div class="media-overlay-top">
+                <button class="media-icon-btn caption-btn" title="Edit caption"><i class="fa-regular fa-pen-to-square"></i></button>
+                <button class="media-icon-btn delete" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
+              </div>
+              <div class="media-overlay-bottom">
+                <div class="media-overlay-caption">${item.caption || item.originalName}</div>
+              </div>
+            </div>`;
+          el.addEventListener('click', e => { if (!e.target.closest('button')) openLightbox(item); });
+        } else if (type === 'video') {
+          el.innerHTML = `
+            <video src="${item.url}" preload="metadata" muted></video>
+            <span class="media-type-badge">Video</span>
+            <div class="media-overlay">
+              <div class="media-overlay-top">
+                <button class="media-icon-btn caption-btn" title="Edit caption"><i class="fa-regular fa-pen-to-square"></i></button>
+                <button class="media-icon-btn delete" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
+              </div>
+              <div class="media-overlay-bottom">
+                <div class="media-overlay-caption">${item.caption || item.originalName}</div>
+              </div>
+            </div>`;
+          el.addEventListener('click', e => { if (!e.target.closest('button')) openLightbox(item); });
+        } else {
+          el.innerHTML = `
+            <i class="${fileIcon(item.mimeType)}"></i>
+            <span class="file-name">${item.originalName}</span>
+            <span class="file-size">${fmtBytes(item.size)}</span>
+            <div class="media-overlay" style="opacity:0;position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;gap:8px;border-radius:inherit;">
+              <a class="media-icon-btn" href="${item.url}" download="${item.originalName}" title="Download"><i class="fa-solid fa-download"></i></a>
+              <button class="media-icon-btn delete" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
+            </div>`;
+          el.addEventListener('mouseenter', () => el.querySelector('.media-overlay').style.opacity = '1');
+          el.addEventListener('mouseleave', () => el.querySelector('.media-overlay').style.opacity = '0');
+        }
+
+        // delete
+        const delBtn = el.querySelector('.delete');
+        if (delBtn) {
+          delBtn.addEventListener('click', e => { e.stopPropagation(); confirmDelete(item.id); });
+        }
+        // caption
+        const capBtn = el.querySelector('.caption-btn');
+        if (capBtn) {
+          capBtn.addEventListener('click', e => { e.stopPropagation(); openCaptionModal(item); });
+        }
+
+        grid.appendChild(el);
+      });
+    }
+
+    // â”€â”€ fetch â”€â”€
+    async function loadMedia(tab = 'all', page = 1, append = false) {
+      try {
+        const res = await fetch(`/api/media/my?type=${tab}&page=${page}&limit=48`, { credentials: 'include' });
+        if (!res.ok) throw new Error('fetch failed');
+        const data = await res.json();
+        const items = data.payload?.items || data.items || [];
+        _pages = data.payload?.pages || data.pages || 1;
+        _page = page;
+
+        if (!append) _items = items;
+        else _items = _items.concat(items);
+
+        renderItems(append ? items : _items, append);
+        updateTabCounts(_items);
+        updateStorageBar(_items);
+
+        loadMoreRow.style.display = _page < _pages ? 'block' : 'none';
+      } catch {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><i class="fa-regular fa-circle-xmark"></i><h3>Could not load media</h3><p>Check your connection and try again.</p></div>`;
+      }
+    }
+
+    // â”€â”€ tabs â”€â”€
+    document.querySelectorAll('[data-vault-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-vault-tab]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _activeTab = btn.dataset.vaultTab;
+        _items = [];
+        loadMedia(_activeTab, 1, false);
+      });
+    });
+
+    // â”€â”€ load more â”€â”€
+    loadMoreBtn.addEventListener('click', () => loadMedia(_activeTab, _page + 1, true));
+
+    // â”€â”€ upload â”€â”€
+    uploadBtn.addEventListener('click', () => {
+      const showing = uploadZone.style.display !== 'none';
+      uploadZone.style.display = showing ? 'none' : 'block';
+      if (!showing) uploadZone.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+    uploadZone.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadZone.classList.remove('drag-over');
+      if (e.dataTransfer.files.length) uploadFiles(Array.from(e.dataTransfer.files));
+    });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) uploadFiles(Array.from(fileInput.files));
+      fileInput.value = '';
+    });
+
+    async function uploadFiles(files) {
+      progressBar.classList.add('active');
+      progressFill.style.width = '0%';
+
+      let done = 0;
+      for (const file of files) {
+        if (file.size > 100 * 1024 * 1024) {
+          showToast(`"${file.name}" exceeds 100 MB â€” skipped.`);
+          done++;
+          progressFill.style.width = Math.round((done / files.length) * 100) + '%';
+          continue;
+        }
+        const fd = new FormData();
+        fd.append('file', file);
+        try {
+          const res = await fetch('/api/media/upload', { method: 'POST', body: fd, credentials: 'include' });
+          if (!res.ok) throw new Error('upload failed');
+          showToast(`"${file.name}" uploaded.`);
+        } catch {
+          showToast(`Failed to upload "${file.name}".`);
+        }
+        done++;
+        progressFill.style.width = Math.round((done / files.length) * 100) + '%';
+      }
+
+      setTimeout(() => {
+        progressBar.classList.remove('active');
+        uploadZone.style.display = 'none';
+        loadMedia(_activeTab, 1, false);
+      }, 600);
+    }
+
+    // â”€â”€ delete â”€â”€
+    async function confirmDelete(id) {
+      if (!confirm('Delete this file permanently?')) return;
+      try {
+        const res = await fetch(`/api/media/${id}`, { method: 'DELETE', credentials: 'include' });
+        if (!res.ok) throw new Error('delete failed');
+        _items = _items.filter(i => i.id !== id);
+        document.querySelector(`[data-id="${id}"]`)?.remove();
+        updateTabCounts(_items);
+        updateStorageBar(_items);
+        showToast('File deleted.');
+        if (_items.length === 0) renderItems([]);
+      } catch {
+        showToast('Could not delete file.');
+      }
+    }
+
+    // â”€â”€ caption modal â”€â”€
+    function openCaptionModal(item) {
+      _editingId = item.id;
+      captionInput.value = item.caption || '';
+      captionModal.classList.add('open');
+      captionInput.focus();
+    }
+    captionCancelBtn.addEventListener('click', () => captionModal.classList.remove('open'));
+    captionModal.addEventListener('click', e => { if (e.target === captionModal) captionModal.classList.remove('open'); });
+    captionSaveBtn.addEventListener('click', async () => {
+      const cap = captionInput.value.trim();
+      try {
+        const res = await fetch(`/api/media/${_editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ caption: cap }),
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error();
+        const idx = _items.findIndex(i => i.id === _editingId);
+        if (idx !== -1) _items[idx].caption = cap;
+        // update overlay caption in DOM
+        const el = document.querySelector(`[data-id="${_editingId}"]`);
+        const capEl = el?.querySelector('.media-overlay-caption');
+        if (capEl) capEl.textContent = cap || _items[idx]?.originalName || '';
+        captionModal.classList.remove('open');
+        showToast('Caption saved.');
+      } catch {
+        showToast('Could not save caption.');
+      }
+    });
+
+    // â”€â”€ lightbox â”€â”€
+    function lightboxItems() {
+      return _items.filter(i => mediaType(i.mimeType) !== 'file');
+    }
+    function openLightbox(item) {
+      const viewable = lightboxItems();
+      _lightboxIndex = viewable.findIndex(i => i.id === item.id);
+      showLightboxAt(_lightboxIndex);
+    }
+    function showLightboxAt(idx) {
+      const viewable = lightboxItems();
+      if (!viewable.length) return;
+      _lightboxIndex = (idx + viewable.length) % viewable.length;
+      const item = viewable[_lightboxIndex];
+      const type = mediaType(item.mimeType);
+
+      lbVideo.pause?.();
+      lbImg.style.display = 'none';
+      lbVideo.style.display = 'none';
+
+      if (type === 'photo') {
+        lbImg.src = item.url;
+        lbImg.alt = item.caption || item.originalName;
+        lbImg.style.display = 'block';
+      } else {
+        lbVideo.src = item.url;
+        lbVideo.style.display = 'block';
+      }
+      lbCaption.textContent = item.caption || '';
+      lbOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      lbOverlay.classList.remove('open');
+      lbVideo.pause?.();
+      lbVideo.src = '';
+      lbImg.src = '';
+      document.body.style.overflow = '';
+    }
+    lbClose.addEventListener('click', closeLightbox);
+    lbOverlay.addEventListener('click', e => { if (e.target === lbOverlay) closeLightbox(); });
+    lbPrev.addEventListener('click', () => showLightboxAt(_lightboxIndex - 1));
+    lbNext.addEventListener('click', () => showLightboxAt(_lightboxIndex + 1));
+    document.addEventListener('keydown', e => {
+      if (!lbOverlay.classList.contains('open')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') showLightboxAt(_lightboxIndex - 1);
+      if (e.key === 'ArrowRight') showLightboxAt(_lightboxIndex + 1);
+    });
+
+    // â”€â”€ init â”€â”€
+    loadMedia('all', 1);
+  })();
+  </script>
+</body>
+</html>
+
+

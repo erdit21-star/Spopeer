@@ -42,6 +42,29 @@ router.post('/upload', authenticate, uploadPost.single('file'), async (req, res)
   }
 });
 
+// ─── GET OWN MEDIA (authenticated shortcut) ───
+router.get('/my', authenticate, async (req, res) => {
+  try {
+    const { type, page = 1, limit = 48 } = req.query;
+    const where = { userId: req.userId };
+    if (type && type !== 'all') {
+      if (type === 'photo') where.mimeType = { [require('sequelize').Op.like]: 'image/%' };
+      if (type === 'video') where.mimeType = { [require('sequelize').Op.like]: 'video/%' };
+    }
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const { count, rows } = await Media.findAndCountAll({
+      where,
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset
+    });
+    ok(res, { items: rows, total: count, page: parseInt(page), pages: Math.ceil(count / parseInt(limit)) });
+  } catch (error) {
+    console.error('Get my media error:', error);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch media.');
+  }
+});
+
 // ─── GET USER MEDIA ───
 router.get('/user/:userId', optionalAuth, async (req, res) => {
   try {
