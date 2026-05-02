@@ -4,9 +4,9 @@
  * Handles caching strategies and offline functionality
  */
 
-const CACHE_NAME = 'spopeer-cache-v3';
-const ASSETS_CACHE = 'spopeer-assets-v3';
-const API_CACHE = 'spopeer-api-v3';
+const CACHE_NAME = 'spopeer-cache-v4';
+const ASSETS_CACHE = 'spopeer-assets-v4';
+const API_CACHE = 'spopeer-api-v4';
 const _STALE_WHILE_REVALIDATE_TTL = 5 * 60 * 1000; // 5 minutes
 
 const CRITICAL_ASSETS = [

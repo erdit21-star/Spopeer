@@ -125,16 +125,29 @@ const Auth = {
   },
 
   async requireAuth() {
+    // Fast-path: if localStorage already marks us as logged in, let the page
+    // render immediately (prevents white-screen on mobile while awaiting the
+    // API round-trip).  A background server check will still run; if it fails
+    // we clear the stale local state and redirect then.
+    const locallyLoggedIn = this.isLoggedIn();
+
     // Guard: api.js may not yet be loaded when requireAuth is called early in a page head.
-    // Fall back to localStorage optimistic check to avoid a false redirect loop.
     if (!window.SpopeerAPI) {
-      if (!this.isLoggedIn()) {
+      if (!locallyLoggedIn) {
         window.location.href = '/pages/auth/login.html';
       }
+      return; // page continues rendering optimistically
+    }
+
+    // If localStorage says not logged in, redirect immediately — no need to hit the server.
+    if (!locallyLoggedIn) {
+      window.location.href = '/pages/auth/login.html';
       return;
     }
+
+    // Background server validation — page is already rendering at this point.
+    // Only redirect if the server also rejects the session (cookie expired/invalid).
     try {
-      // Prefer CurrentUserStore to avoid duplicate /api/auth/me calls
       if (window.CurrentUserStore) {
         const user = await window.CurrentUserStore.refreshCurrentUser();
         if (!user) throw new Error('not authenticated');
@@ -142,7 +155,7 @@ const Auth = {
         await window.SpopeerAPI.me();
       }
     } catch (err) {
-      console.debug("Auth.requireAuth failed", err);
+      console.debug("Auth.requireAuth background check failed — session expired", err);
       localStorage.removeItem('spopeer_user');
       localStorage.removeItem('spopeer_loggedIn');
       localStorage.removeItem('user');
