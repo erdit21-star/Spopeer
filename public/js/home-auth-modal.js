@@ -138,6 +138,34 @@
       });
   }
 
+  function showGoogleFallbackError(message) {
+    var lp = document.getElementById('loginPanel');
+    var targetId = lp && lp.style.display !== 'none' ? 'modalLoginError' : 'modalSignupError';
+    var box = document.getElementById(targetId);
+    if (!box) return;
+    box.textContent = message || 'Google sign-in is unavailable right now. Please allow pop-ups and try again, or use email/password.';
+    box.style.display = 'block';
+  }
+
+  function requestGooglePrompt() {
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      showGoogleFallbackError('Google sign-in is still loading. Please wait a moment and try again.');
+      return;
+    }
+
+    try {
+      window.google.accounts.id.prompt(function (notification) {
+        var isNotDisplayed = notification && typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed();
+        var isSkipped = notification && typeof notification.isSkippedMoment === 'function' && notification.isSkippedMoment();
+        if (isNotDisplayed || isSkipped) {
+          showGoogleFallbackError('Google sign-in was blocked or unavailable in this browser. Please allow pop-ups and retry, or use email/password.');
+        }
+      });
+    } catch (err) {
+      showGoogleFallbackError('Google sign-in could not start. Please try again, or use email/password.');
+    }
+  }
+
   function initGoogleButtons() {
     if (!window.google || !window.google.accounts || !window.google.accounts.id) return;
     window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
@@ -147,7 +175,7 @@
         btn._gBound = true;
         btn.addEventListener('click', function (e) {
           e.preventDefault();
-          window.google.accounts.id.prompt();
+          requestGooglePrompt();
         });
       }
     });
