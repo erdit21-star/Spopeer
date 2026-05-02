@@ -1,4 +1,4 @@
-<!-- Updated  -->
+﻿<!-- Updated  -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -2785,6 +2785,7 @@
   <link rel="stylesheet" href="/css/fonts.css">
 
   <link rel="stylesheet" href="/css/mobile-responsive.css">
+  <script src="/js/topnav-normalizer.js"></script>
   <script src="/js/mobile-enhancements.js" defer></script>
 </head>
 <body>
@@ -2800,13 +2801,6 @@
     </div>
 
     <div class="nav-right">
-      <button class="nav-icon" id="marketplaceBtn" title="Marketplace" onclick="window.location.href='/pages/marketplace/marketplace.html'"><i class="fa-solid fa-store"></i></button>
-      <button class="nav-icon" id="exploreBtn" title="Explore" onclick="window.location.href='/pages/search/search.html'"><i class="fa-regular fa-compass"></i></button>
-      <button class="nav-icon" id="messagesBtn" title="Messages" onclick="window.location.href='/pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
-      <button class="nav-icon" id="notifBtn" title="Notifications">
-        <i class="fa-regular fa-bell"></i>
-        <span class="notif-badge" id="notifBadge"></span>
-      </button>
       <div class="notif-popover" id="notifPopover" aria-hidden="true">
         <div class="notif-popover-header">
           <div class="notif-popover-title">Notifications</div>
@@ -4470,19 +4464,6 @@
 
   /* ====== profile menu ====== */
   const profileMenu = (window.getProfileMenuElement && typeof window.getProfileMenuElement === 'function') ? window.getProfileMenuElement() : document.getElementById('profileMenu');
-
-
-  document.getElementById('exploreBtn')?.addEventListener('click', (e) => {
-    console.log('%c★ EXPLORE BTN CLICKED', 'color: orange; font-weight: bold');
-    e.stopPropagation();
-    window.location.href = '/pages/search/search.html';
-  });
-
-  document.getElementById('messagesBtn')?.addEventListener('click', (e) => {
-    console.log('%c★ MESSAGES BTN CLICKED', 'color: orange; font-weight: bold');
-    e.stopPropagation();
-    window.location.href = '/pages/messaging/inbox.html';
-  });
 
   /* ── SEARCH BAR ── */
   const navSearchInput = document.getElementById('navSearchInput');

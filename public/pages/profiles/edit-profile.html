@@ -398,6 +398,7 @@
   <link rel="stylesheet" href="/css/fonts.css">
 
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
+  <script src="/js/topnav-normalizer.js"></script>
   <script src="../../js/mobile-enhancements.js" defer></script>
 </head>
 <body>
@@ -412,9 +413,6 @@
         <input type="text" placeholder="Search athletes, clubs, coaches…" id="searchInput">
       </div>
       <div class="nav-right">
-        <button class="nav-icon" id="homeBtn" title="Home"><i class="fa-regular fa-house"></i></button>
-        <button class="nav-icon" id="messagesBtn" title="Messages"><i class="fa-regular fa-paper-plane"></i></button>
-        <button class="nav-icon" id="notifBtn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
         <div class="user-chip" id="userChip" role="button" tabindex="0" data-user-chip>
           <span class="chip-avatar" id="chipAvatar" data-user-chip-avatar>?</span>
           <span class="chip-name" id="chipName" data-user-chip-name>Loading…</span>
@@ -3000,10 +2998,7 @@ if (window.profileRuntime) {
     });
   });
 
-  // ── Nav buttons ──
-  document.getElementById('homeBtn').addEventListener('click', function(){ window.location.href = '/feed.html'; });
-  document.getElementById('messagesBtn').addEventListener('click', function(){ window.location.href = '../messaging/inbox.html'; });
-  document.getElementById('notifBtn').addEventListener('click', function(){ window.location.href = '../dashboard/notifications.html'; });
+  // ── Nav search ──
   document.getElementById('searchInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && e.target.value.trim()) {
       window.location.href = '../search/search.html?term=' + encodeURIComponent(e.target.value.trim());

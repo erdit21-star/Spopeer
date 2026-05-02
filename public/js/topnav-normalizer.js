@@ -123,8 +123,12 @@
   }
 
   function normalizeTopNav() {
-    var topNav = document.querySelector('.topnav');
+    var topNav = document.querySelector('.topnav, .navbar');
     if (!topNav) return;
+
+    if (!topNav.classList.contains('topnav')) {
+      topNav.classList.add('topnav');
+    }
 
     var navInner = topNav.querySelector('.nav-inner') || topNav;
     var navRight = navInner.querySelector('.nav-right');
