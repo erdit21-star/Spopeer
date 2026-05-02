@@ -45,7 +45,8 @@ const commonOpts = {
     dialectOptions: {
       ssl: { require: true, rejectUnauthorized: false },
       keepAlive: true,
-      options: '-c statement_timeout=25000'
+      options: '-c statement_timeout=25000',
+      family: 4
     },
     keepAlive: true
   })
