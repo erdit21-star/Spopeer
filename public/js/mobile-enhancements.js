@@ -231,6 +231,27 @@
     }, 1500);
   }
 
+  /* ── 5b. Ensure global topnav normalizer is loaded ── */
+  function ensureTopnavNormalizer(done) {
+    var callback = typeof done === 'function' ? done : function () {};
+    if (!document.querySelector('.topnav')) {
+      callback();
+      return;
+    }
+
+    if (document.querySelector('script[data-topnav-normalizer-loader="1"]')) {
+      callback();
+      return;
+    }
+
+    var script = document.createElement('script');
+    script.src = '/js/topnav-normalizer.js';
+    script.setAttribute('data-topnav-normalizer-loader', '1');
+    script.onload = callback;
+    script.onerror = callback;
+    document.head.appendChild(script);
+  }
+
   /* ── 6. Feed tabs horizontal scroll on mobile ── */
   function setupFeedTabs() {
     var tabBar = document.querySelector('.feed-tabs');
@@ -340,10 +361,12 @@
     wrapTables();
     makeEmbedsResponsive();
     setupPublicNavMobileMenu();
-    setupBottomNav();
-    setupMessagingMobile();
-    setupFeedTabs();
-    handleComposeHash();
+    ensureTopnavNormalizer(function () {
+      setupBottomNav();
+      setupMessagingMobile();
+      setupFeedTabs();
+      handleComposeHash();
+    });
   }
 
   if (document.readyState === 'loading') {
