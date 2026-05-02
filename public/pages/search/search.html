@@ -4,15 +4,15 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Search People — Spopeer</title>
-  <script>
-    (function(){
-      var _ud = null;
-      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') _ud = window.CurrentUserStore.getCurrentUser();
-      if (!_ud) { try { _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null'); } catch(e) { _ud = null; } }
-      var _li = (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true');
-      if (!_ud || !_li) window.location.href = '../../pages/auth/login.html';
-    })();
-  </script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sanitize.js"></script>
+  <script src="/js/profile-normalizer.js"></script>
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/user-ui.js"></script>
+  <script src="/js/shared-ui.js"></script>
+  <script src="/js/role-router.js"></script>
+  <script>window.Auth.requireAuth();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -947,7 +947,6 @@
 <script src="../../js/search-widget.js" onerror=""></script>
 
 <!-- Ensure API helpers and FollowManager are available for result buttons -->
-<script src="../../js/api.js"></script>
 <script src="../../js/follow.js"></script>
 <script src="/js/current-user-store.js"></script>
 <script src="/js/user-ui.js"></script>
@@ -1374,7 +1373,6 @@
 
 })();
 </script>
-<script src="../../js/shared-ui.js"></script>
 <script>
   if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
     window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });

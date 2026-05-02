@@ -4,17 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Settings — Spopeer</title>
-  <script>
-    (function(){
-      var _ud = null;
-      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') _ud = window.CurrentUserStore.getCurrentUser();
-      if (!_ud) { try { _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null'); } catch(e) { _ud = null; } }
-      var _li = (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true');
-      if (!_ud || !_li) window.location.href = '../../pages/auth/login.html';
-    })();
-  </script>
-  <script src="../../js/api.js"></script>
-  <script src="../../js/auth.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sanitize.js"></script>
+  <script src="/js/profile-normalizer.js"></script>
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/user-ui.js"></script>
+  <script src="/js/shared-ui.js"></script>
+  <script src="/js/role-router.js"></script>
+  <script>window.Auth.requireAuth();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -146,7 +144,8 @@
   <link rel="stylesheet" href="/css/fonts.css">
 
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
-  <script src="/js/topnav-normalizer.js"></script>`r`n  <script src="../../js/mobile-enhancements.js" defer></script>
+  <script src="/js/topnav-normalizer.js"></script>
+  <script src="/js/mobile-enhancements.js" defer></script>
 </head>
 <body>
 
@@ -597,23 +596,6 @@
   </div>
 </div>
 
-<footer class="site-footer" style="background:var(--white);border-top:1px solid var(--border);margin-top:60px;">
-  <div class="footer-grid" style="max-width:1280px;margin:0 auto;padding:48px 24px 0;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:40px;">
-    <div class="foot-brand">
-      <a href="/index.html" class="foot-logo" data-home-link style="font-family:var(--fD);font-size:21px;font-weight:800;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:7px;margin-bottom:10px;"><span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span><span class="logo-text">Spopeer</span></a>
-      <p style="font-size:13px;color:var(--muted);line-height:1.7;max-width:230px;">Connecting the global sports community — athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
-    </div>
-    <div class="foot-col"><h5 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin-bottom:14px;">Platform</h5><ul style="list-style:none;"><li><a href="/index.html#features">Features</a></li><li><a href="/index.html#how-it-works">How It Works</a></li><li><a href="/index.html#user-types">User Types</a></li></ul></div>
-    <div class="foot-col"><h5 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin-bottom:14px;">Company</h5><ul style="list-style:none;"><li><a href="/pages/legal/about.html">About Us</a></li><li><a href="/pages/company/careers.html">Careers</a></li><li><a href="/pages/company/blog.html">Blog</a></li></ul></div>
-    <div class="foot-col"><h5 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin-bottom:14px;">Support</h5><ul style="list-style:none;"><li><a href="/pages/company/help-center.html">Help Center</a></li><li><a href="/pages/contact/index.html">Contact Us</a></li></ul></div>
-    <div class="foot-col"><h5 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin-bottom:14px;">Legal</h5><ul style="list-style:none;"><li><a href="/pages/legal/privacy.html">Privacy Policy</a></li><li><a href="/pages/legal/terms.html">Terms of Use</a></li><li><a href="/pages/company/report-abuse.html">Report Abuse</a></li></ul></div>
-  </div>
-  <div class="footer-btm" style="max-width:1280px;margin:36px auto 0;padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-    <p style="font-size:12px;color:var(--muted-2);">&copy; 2026 Spopeer. All rights reserved.</p>
-    <div class="footer-btm-links" style="display:flex;gap:18px;"><a href="/pages/legal/privacy.html">Privacy</a><a href="/pages/legal/terms.html">Terms</a><a href="/pages/contact/index.html">Contact</a></div>
-  </div>
-</footer>
-
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -835,7 +817,6 @@
   });
 })();
 </script>
-<script src="../../js/shared-ui.js"></script>
 <script>
   if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
     window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });

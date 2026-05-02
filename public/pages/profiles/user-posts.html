@@ -9,6 +9,15 @@
     var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
     if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
   </script>
+    <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sanitize.js"></script>
+  <script src="/js/profile-normalizer.js"></script>
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/user-ui.js"></script>
+  <script src="/js/shared-ui.js"></script>
+  <script src="/js/role-router.js"></script>
+  <script>window.Auth.requireAuth();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -569,7 +578,8 @@
   <link rel="stylesheet" href="/css/fonts.css">
 
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
-  <script src="/js/topnav-normalizer.js"></script>`r`n  <script src="../../js/mobile-enhancements.js" defer></script>
+  <script src="/js/topnav-normalizer.js"></script>
+  <script src="/js/mobile-enhancements.js" defer></script>
 </head>
 <body>
 
@@ -848,7 +858,6 @@
 </div>
 
 <script src="../../js/profile-identity.js"></script>
-<script src="../../js/shared-ui.js"></script>
 <script>
 (async function () {
   const _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');

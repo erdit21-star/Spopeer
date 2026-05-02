@@ -10,29 +10,33 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="/css/styles.css" />
   <script src="/js/sanitize.js"></script>
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/user-ui.js"></script>
+  <script src="/js/shared-ui.js"></script>
   <script src="/js/topnav-normalizer.js"></script>
 </head>
 <body>
 
   <!-- ── NAV ── -->
   <nav class="topnav" style="background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:200;">
-    <div style="max-width:1180px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
-      <a href="/index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
-        <span style="width:34px;height:34px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <div class="nav-inner" style="max-width:1180px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+      <a href="/index.html" class="logo" data-home-link style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+        <span class="logo-mark" style="width:34px;height:34px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <img src="/assets/images/logo-s.jpg" alt="Spopeer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
         </span>
-        <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#001f3f;letter-spacing:-.03em;">Spopeer</span>
+        <span class="logo-text" style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#001f3f;letter-spacing:-.03em;">Spopeer</span>
       </a>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <a href="/feed.html" style="font-size:13px;font-weight:700;color:#475569;text-decoration:none;padding:8px 14px;border-radius:999px;transition:.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-          <i class="fa-solid fa-house"></i> Feed
-        </a>
-        <a href="/pages/community/community.html" style="font-size:13px;font-weight:700;color:#475569;text-decoration:none;padding:8px 14px;border-radius:999px;transition:.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-          <i class="fa-solid fa-people-group"></i> Community
-        </a>
-        <a href="/pages/search/search.html" style="font-size:13px;font-weight:700;color:#475569;text-decoration:none;padding:8px 14px;border-radius:999px;transition:.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-          <i class="fa-solid fa-magnifying-glass"></i> Search
-        </a>
+      <div class="nav-search" style="max-width:380px;flex:1 1 340px;display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:8px 12px;">
+        <i class="fa-solid fa-magnifying-glass" style="color:#64748b;"></i>
+        <input id="articlesNavSearch" type="text" placeholder="Search athletes, clubs, coaches" style="border:none;outline:none;background:transparent;width:100%;font-size:13px;" />
+      </div>
+      <div class="nav-right" style="display:flex;align-items:center;gap:10px;">
+        <div class="user-chip" id="userChip" data-user-chip>
+          <span class="chip-avatar" data-user-chip-avatar>U</span>
+          <span class="chip-name" data-user-chip-name>Guest</span>
+          <i class="fa-solid fa-chevron-down chip-caret"></i>
+        </div>
+        <div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true"></div>
       </div>
     </div>
   </nav>
@@ -176,6 +180,23 @@
   </main>
 
   <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
+      if (window.UserUI) window.UserUI.bindAllChips();
+
+      var navSearchInput = document.getElementById('articlesNavSearch');
+      if (navSearchInput) {
+        navSearchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            var query = navSearchInput.value.trim();
+            if (query) {
+              window.location.href = '/pages/search/search.html?term=' + encodeURIComponent(query);
+            }
+          }
+        });
+      }
+    });
+
     function openArticleComposer() {
       document.getElementById('articleComposer').classList.add('open');
       document.getElementById('articleTitle').focus();
