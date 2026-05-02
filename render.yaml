@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: spopeer-web
+    runtime: node
+    rootDir: server
+    buildCommand: npm install --omit=dev
+    startCommand: node server.js
+    plan: starter
+    numInstances: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_DIRECT_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_POOL_MAX
+        value: "3"
+      - key: DB_POOL_MIN
+        value: "0"
+      - key: DB_POOL_ACQUIRE
+        value: "10000"
+      - key: DB_POOL_IDLE
+        value: "5000"
+      - key: DB_POOL_EVICT
+        value: "15000"
+      - key: GOOGLE_VERIFY_TIMEOUT_MS
+        value: "10000"
+      - key: AUTH_DB_OP_TIMEOUT_MS
+        value: "8000"
+      - key: GOOGLE_VERIFY_RETRIES
+        value: "1"
+      - key: AUTH_DB_OP_RETRIES
+        value: "1"
+
+  - type: cron
+    name: spopeer-migrate
+    runtime: node
+    rootDir: server
+    schedule: "0 3 * * *"
+    buildCommand: npm install --omit=dev
+    startCommand: npx sequelize-cli db:migrate --env production
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_DIRECT_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false

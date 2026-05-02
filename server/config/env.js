@@ -10,6 +10,7 @@ const REQUIRED_IN_PRODUCTION = ['APP_URL', 'FRONTEND_URL']; // RESEND_API_KEY is
 
 // Used in validate() below
 const _RECOMMENDED = [
+  'DATABASE_DIRECT_URL',
   'DATABASE_URL',
   'DB_HOST',
   'DB_NAME',
@@ -26,11 +27,11 @@ function validate() {
   }
 
   const isProduction = process.env.NODE_ENV === 'production';
-  const hasDB = process.env.DATABASE_URL || process.env.DB_HOST;
+  const hasDB = process.env.DATABASE_DIRECT_URL || process.env.DATABASE_URL || process.env.DB_HOST;
 
   // In production, database config is mandatory
   if (isProduction && !hasDB) {
-    console.error('Production requires DATABASE_URL or DB_HOST to be set.');
+    console.error('Production requires DATABASE_DIRECT_URL, DATABASE_URL, or DB_HOST to be set.');
     process.exit(1);
   }
 
@@ -63,6 +64,7 @@ const config = {
     name: process.env.DB_NAME || 'spopeer',
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
+    directUrl: process.env.DATABASE_DIRECT_URL || null,
     url: process.env.DATABASE_URL || null
   }
 };

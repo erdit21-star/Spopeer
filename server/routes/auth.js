@@ -123,19 +123,29 @@ async function withRetries(factory, retries, label) {
     } catch (error) {
       lastError = error;
       const message = (error && error.message) || '';
-      const retryable =
-        (error && error.code === 'TIMEOUT') ||
-        /ECHECKOUTTIMEOUT|ConnectionAcquireTimeout|SequelizeConnectionAcquireTimeoutError/i.test(message);
+      const retryable = isTransientDbError(error) || (error && error.code === 'TIMEOUT');
 
       if (!retryable || attempt === retries) {
         throw error;
       }
 
       console.warn(`[GOOGLE_AUTH] retrying ${label} (${attempt + 1}/${retries}) after: ${message}`);
+      await new Promise((resolve) => setTimeout(resolve, 200 * (attempt + 1)));
     }
   }
 
   throw lastError;
+}
+
+function isTransientDbError(error) {
+  const message = String((error && error.message) || '');
+  const code = String((error && error.code) || '');
+  return (
+    code === 'ECONNRESET' ||
+    code === 'ECONNREFUSED' ||
+    code === 'ETIMEDOUT' ||
+    /ECHECKOUTTIMEOUT|ConnectionAcquireTimeout|SequelizeConnectionAcquireTimeoutError|timeout|terminating connection/i.test(message)
+  );
 }
 
 // Temporary request logger for auth routes — masks sensitive fields.
@@ -823,10 +833,11 @@ router.post('/google', googleLimiter, async (req, res) => {
       return fail(res, 503, 'NOT_CONFIGURED', 'Google authentication is not configured.');
     }
 
-    const requestedGoogleVerifyTimeoutMs = parseInt(process.env.GOOGLE_VERIFY_TIMEOUT_MS || '20000', 10);
-    const requestedAuthDbTimeoutMs = parseInt(process.env.AUTH_DB_OP_TIMEOUT_MS || '30000', 10);
-    const googleVerifyTimeoutMs = Math.max(Number.isFinite(requestedGoogleVerifyTimeoutMs) ? requestedGoogleVerifyTimeoutMs : 20000, 20000);
-    const authDbTimeoutMs = Math.max(Number.isFinite(requestedAuthDbTimeoutMs) ? requestedAuthDbTimeoutMs : 30000, 30000);
+    const requestedGoogleVerifyTimeoutMs = parseInt(process.env.GOOGLE_VERIFY_TIMEOUT_MS || '10000', 10);
+    const requestedAuthDbTimeoutMs = parseInt(process.env.AUTH_DB_OP_TIMEOUT_MS || '8000', 10);
+    const googleVerifyTimeoutMs = Number.isFinite(requestedGoogleVerifyTimeoutMs) ? requestedGoogleVerifyTimeoutMs : 10000;
+    // Keep this below pool.acquire (10000) so app-level timeout handles errors first.
+    const authDbTimeoutMs = Math.min(Number.isFinite(requestedAuthDbTimeoutMs) ? requestedAuthDbTimeoutMs : 8000, 9000);
     const googleVerifyRetries = parseInt(process.env.GOOGLE_VERIFY_RETRIES || '1', 10);
     const authDbRetries = parseInt(process.env.AUTH_DB_OP_RETRIES || '1', 10);
     console.info(`[GOOGLE_AUTH] effective timeouts verify=${googleVerifyTimeoutMs}ms db=${authDbTimeoutMs}ms retries verify=${googleVerifyRetries} db=${authDbRetries}`);
@@ -857,7 +868,10 @@ router.post('/google', googleLimiter, async (req, res) => {
 
     let user = await withRetries(
       () => withTimeout(
-        User.findOne({ where: { email: email.toLowerCase() } }),
+        User.findOne({
+          where: { email: email.toLowerCase() },
+          attributes: ['id', 'email', 'firstName', 'lastName', 'role', 'avatarUrl', 'emailVerified', 'isActive', 'googleId']
+        }),
         authDbTimeoutMs,
         'auth.google.findUser'
       ),
@@ -887,8 +901,8 @@ router.post('/google', googleLimiter, async (req, res) => {
         'auth.google.createUser'
       );
     } else if (!user.googleId) {
-      // Link Google ID to existing account
-      await withRetries(
+      // Link Google ID to existing account (non-blocking)
+      withRetries(
         () => withTimeout(
           user.update({
             googleId,
@@ -900,34 +914,18 @@ router.post('/google', googleLimiter, async (req, res) => {
         ),
         authDbRetries,
         'auth.google.linkGoogleId'
-      );
+      ).catch((linkErr) => {
+        console.error('[GOOGLE_AUTH] googleId link failed (non-fatal):', linkErr && linkErr.message ? linkErr.message : linkErr);
+      });
     }
 
     if (!user.isActive) {
       return fail(res, 403, 'ACCOUNT_INACTIVE', 'This account has been deactivated.');
     }
 
-    // Create RefreshSession
+    // Create refresh token immediately; persist session after response.
     const refreshToken = generateRefreshToken(user);
     const refreshTokenHash = sha256(refreshToken);
-    try {
-      await withRetries(
-        () => withTimeout(
-          RefreshSession.create({
-            userId: user.id,
-            tokenHash: refreshTokenHash,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-          }),
-          authDbTimeoutMs,
-          'auth.google.createRefreshSession'
-        ),
-        authDbRetries,
-        'auth.google.createRefreshSession'
-      );
-    } catch (sessionErr) {
-      // Keep login functional if refresh session persistence is temporarily unavailable.
-      console.error('[GOOGLE_AUTH] RefreshSession.create failed (non-fatal):', sessionErr && sessionErr.message ? sessionErr.message : sessionErr);
-    }
 
     // Generate access token
     const accessToken = generateAccessToken(user);
@@ -950,14 +948,40 @@ router.post('/google', googleLimiter, async (req, res) => {
       emailVerified: user.emailVerified
     };
 
-    return ok(res, {
+    const responsePayload = {
       message: 'Signed in with Google',
       user: curatedUser,
       accessToken,
       refreshToken
+    };
+
+    ok(res, responsePayload);
+
+    // Persist session asynchronously — non-fatal if DB is under pressure.
+    withRetries(
+      () => withTimeout(
+        RefreshSession.create({
+          userId: user.id,
+          tokenHash: refreshTokenHash,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        }),
+        authDbTimeoutMs,
+        'auth.google.createRefreshSession'
+      ),
+      authDbRetries,
+      'auth.google.createRefreshSession'
+    ).catch((sessionErr) => {
+      console.error('[GOOGLE_AUTH] RefreshSession.create failed (non-fatal):', sessionErr && sessionErr.message ? sessionErr.message : sessionErr);
     });
+
+    return;
   } catch (error) {
-    console.error('[GOOGLE_AUTH]', error && error.message);
+    console.error('[GOOGLE_AUTH] failed', {
+      message: error && error.message,
+      code: error && error.code,
+      name: error && error.name,
+      stack: error && error.stack
+    });
     if (error && error.code === 'TIMEOUT') {
       return fail(res, 503, 'AUTH_TIMEOUT', 'Google sign-in timed out. Please try again.');
     }

@@ -18,10 +18,19 @@ module.exports = {
   development: { ...base },
   test: { ...base },
   production: {
-    use_env_variable: 'DATABASE_URL',
+    use_env_variable: process.env.DATABASE_DIRECT_URL ? 'DATABASE_DIRECT_URL' : 'DATABASE_URL',
     dialect: 'postgres',
+    pool: {
+      max: 3,
+      min: 0,
+      acquire: 10000,
+      idle: 5000,
+      evict: 15000
+    },
     dialectOptions: {
-      ssl: { require: true, rejectUnauthorized: false }
+      ssl: { require: true, rejectUnauthorized: false },
+      keepAlive: true,
+      options: '-c statement_timeout=25000'
     }
   }
 };
