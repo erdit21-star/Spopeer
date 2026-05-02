@@ -845,8 +845,10 @@ router.post('/google', googleLimiter, async (req, res) => {
       return fail(res, 503, 'NOT_CONFIGURED', 'Google authentication is not configured.');
     }
 
-    const googleVerifyTimeoutMs = parseInt(process.env.GOOGLE_VERIFY_TIMEOUT_MS || '20000', 10);
-    const authDbTimeoutMs = parseInt(process.env.AUTH_DB_OP_TIMEOUT_MS || '30000', 10);
+    const requestedGoogleVerifyTimeoutMs = parseInt(process.env.GOOGLE_VERIFY_TIMEOUT_MS || '20000', 10);
+    const requestedAuthDbTimeoutMs = parseInt(process.env.AUTH_DB_OP_TIMEOUT_MS || '30000', 10);
+    const googleVerifyTimeoutMs = isProd ? Math.max(requestedGoogleVerifyTimeoutMs, 20000) : requestedGoogleVerifyTimeoutMs;
+    const authDbTimeoutMs = isProd ? Math.max(requestedAuthDbTimeoutMs, 30000) : requestedAuthDbTimeoutMs;
     const googleVerifyRetries = parseInt(process.env.GOOGLE_VERIFY_RETRIES || '1', 10);
     const authDbRetries = parseInt(process.env.AUTH_DB_OP_RETRIES || '1', 10);
 
