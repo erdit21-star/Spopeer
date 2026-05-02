@@ -74,6 +74,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Authenticated app shells should always prefer network to avoid stale/blank page boots.
+  if (url.pathname === '/feed.html' || url.pathname.startsWith('/pages/')) {
+    event.respondWith(networkFirstStrategy(request));
+    return;
+  }
+
   // API requests - Network First strategy
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirstStrategy(request));
