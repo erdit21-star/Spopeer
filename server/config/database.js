@@ -8,9 +8,10 @@ const { Sequelize } = require('sequelize');
 const { config: env } = require('./env');
 
 const isProduction = env.nodeEnv === 'production';
-const poolMax = parseInt(process.env.DB_POOL_MAX || (isProduction ? '2' : '10'), 10);
+const poolMax = parseInt(process.env.DB_POOL_MAX || (isProduction ? '1' : '10'), 10);
 const poolMin = parseInt(process.env.DB_POOL_MIN || '0', 10);
-const poolAcquire = parseInt(process.env.DB_POOL_ACQUIRE || (isProduction ? '60000' : '30000'), 10);
+const rawPoolAcquire = parseInt(process.env.DB_POOL_ACQUIRE || (isProduction ? '60000' : '30000'), 10);
+const poolAcquire = isProduction ? Math.max(rawPoolAcquire, 60000) : rawPoolAcquire;
 const poolIdle = parseInt(process.env.DB_POOL_IDLE || '10000', 10);
 const poolEvict = parseInt(process.env.DB_POOL_EVICT || '2000', 10);
 
@@ -35,8 +36,12 @@ const commonOpts = {
   })
 };
 
-// Only use DATABASE_URL if it looks like a valid postgres:// connection string
-const dbUrl = env.db.url && env.db.url.startsWith('postgres') ? env.db.url : null;
+// Prefer a direct session connection string in production if provided.
+// Useful when pooler/transaction-mode endpoints are saturated.
+const preferredDbUrl = process.env.DATABASE_URL_DIRECT || env.db.url;
+
+// Only use URL if it looks like a valid postgres:// connection string
+const dbUrl = preferredDbUrl && preferredDbUrl.startsWith('postgres') ? preferredDbUrl : null;
 
 const sequelize = dbUrl
   ? new Sequelize(dbUrl, commonOpts)

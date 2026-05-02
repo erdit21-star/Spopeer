@@ -17,7 +17,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const { User, PasswordResetToken, RefreshSession } = require('../models');
-const { authenticate, clearAuthCookies, generateAccessToken, generateRefreshToken, getCookieOptions } = require('../middleware/auth');
+const { authenticate, authenticateTokenOnly, clearAuthCookies, generateAccessToken, generateRefreshToken, getCookieOptions } = require('../middleware/auth');
 const { ok, fail } = require('../utils/response');
 const { sanitizePublicProfile } = require('../utils/privacy');
 const { sha256 } = require('../utils/crypto');
@@ -400,11 +400,22 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
 });
 
 // ─── GET CURRENT USER ───
-router.get('/me', authenticate, async (req, res) => {
+router.get('/me', authenticateTokenOnly, async (req, res) => {
   try {
-    const u = req.user;
+    let u = req.user;
+    try {
+      const dbUser = await User.findByPk(req.userId, {
+        attributes: ['id', 'email', 'role', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'sport', 'username', 'isActive']
+      });
+      if (dbUser && dbUser.isActive !== false) {
+        u = dbUser;
+      }
+    } catch (dbErr) {
+      console.warn('[AUTH /me] DB lookup skipped:', dbErr && dbErr.message ? dbErr.message : dbErr);
+    }
+
     return ok(res, { user: {
-      id: u.id, email: u.email, role: u.role,
+      id: u.id, email: u.email || null, role: u.role || null,
       firstName: u.firstName ?? null, lastName: u.lastName ?? null,
       displayName: u.displayName ?? null, avatarUrl: u.avatarUrl ?? null,
       sport: u.sport ?? null, username: u.username ?? null
@@ -415,11 +426,22 @@ router.get('/me', authenticate, async (req, res) => {
   }
 });
 
-router.get('/profile', authenticate, async (req, res) => {
+router.get('/profile', authenticateTokenOnly, async (req, res) => {
   try {
-    const u = req.user;
+    let u = req.user;
+    try {
+      const dbUser = await User.findByPk(req.userId, {
+        attributes: ['id', 'email', 'role', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'sport', 'username', 'isActive']
+      });
+      if (dbUser && dbUser.isActive !== false) {
+        u = dbUser;
+      }
+    } catch (dbErr) {
+      console.warn('[AUTH /profile] DB lookup skipped:', dbErr && dbErr.message ? dbErr.message : dbErr);
+    }
+
     return ok(res, { user: {
-      id: u.id, email: u.email, role: u.role,
+      id: u.id, email: u.email || null, role: u.role || null,
       firstName: u.firstName ?? null, lastName: u.lastName ?? null,
       displayName: u.displayName ?? null, avatarUrl: u.avatarUrl ?? null,
       sport: u.sport ?? null, username: u.username ?? null
