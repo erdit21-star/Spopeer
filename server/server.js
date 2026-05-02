@@ -24,8 +24,12 @@ async function startServer() {
     // Validate email config — non-blocking for Phase 1 (email is Phase 2)
     try { assertEmailReady(); } catch (e) { console.warn('⚠️  Email not configured:', e.message); }
 
-    // Test database connection
-    await testConnection();
+    // Test database connection (non-fatal at boot so platform health checks can pass)
+    try {
+      await testConnection();
+    } catch (error) {
+      console.warn('⚠️ Database connection failed at startup, continuing to open server:', error.message);
+    }
 
     if (process.env.NODE_ENV === 'development') {
       console.log('ℹ️  Development mode: run "npm run migrate" before starting the server.');
