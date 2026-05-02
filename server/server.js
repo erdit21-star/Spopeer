@@ -27,10 +27,14 @@ async function startServer() {
       console.warn('⚠️ Email not configured:', e.message);
     }
 
-    await testConnection();
-
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`Spopeer Server running on http://0.0.0.0:${PORT}`);
+    });
+
+    // Validate DB after the port is already open so platform health checks pass
+    // even during temporary database checkout spikes.
+    testConnection().catch((error) => {
+      console.warn('⚠️ Database connection check failed after server start:', error && error.message ? error.message : error);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
