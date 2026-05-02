@@ -21,29 +21,23 @@ initSocket(server);
 // ─── START SERVER ───
 async function startServer() {
   try {
-    // Validate email config — non-blocking for Phase 1 (email is Phase 2)
-    try { assertEmailReady(); } catch (e) { console.warn('⚠️  Email not configured:', e.message); }
-
-    // Test database connection (non-fatal at boot so platform health checks can pass)
-    try {
-      await testConnection();
-    } catch (error) {
-      console.warn('⚠️ Database connection failed at startup, continuing to open server:', error.message);
-    }
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('ℹ️  Development mode: run "npm run migrate" before starting the server.');
-    } else {
-      console.log('ℹ️  Production mode: use migrations only (npm run migrate).');
-    }
-
     server.listen(PORT, '0.0.0.0', () => {
-      console.log(`\n🚀 Spopeer Server running on http://0.0.0.0:${PORT}`);
-      console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
-      console.log(`🔌 API Base: http://localhost:${PORT}/api`);
-      console.log(`💬 Socket.io: ws://localhost:${PORT}`);
-      console.log(`🌐 Frontend: http://localhost:${PORT}\n`);
+      console.log(`🚀 Spopeer Server running on http://0.0.0.0:${PORT}`);
     });
+
+    try {
+      assertEmailReady();
+    } catch (e) {
+      console.warn('⚠️ Email not configured:', e.message);
+    }
+
+    testConnection()
+      .then(() => {
+        console.log('✅ Database connection verified.');
+      })
+      .catch((error) => {
+        console.warn('⚠️ Database connection failed after server start:', error.message);
+      });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
