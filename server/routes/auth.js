@@ -847,10 +847,12 @@ router.post('/google', googleLimiter, async (req, res) => {
 
     const requestedGoogleVerifyTimeoutMs = parseInt(process.env.GOOGLE_VERIFY_TIMEOUT_MS || '20000', 10);
     const requestedAuthDbTimeoutMs = parseInt(process.env.AUTH_DB_OP_TIMEOUT_MS || '30000', 10);
-    const googleVerifyTimeoutMs = isProd ? Math.max(requestedGoogleVerifyTimeoutMs, 20000) : requestedGoogleVerifyTimeoutMs;
-    const authDbTimeoutMs = isProd ? Math.max(requestedAuthDbTimeoutMs, 30000) : requestedAuthDbTimeoutMs;
+    // Enforce sane minimums in all environments to prevent accidental low env overrides.
+    const googleVerifyTimeoutMs = Math.max(Number.isFinite(requestedGoogleVerifyTimeoutMs) ? requestedGoogleVerifyTimeoutMs : 20000, 20000);
+    const authDbTimeoutMs = Math.max(Number.isFinite(requestedAuthDbTimeoutMs) ? requestedAuthDbTimeoutMs : 30000, 30000);
     const googleVerifyRetries = parseInt(process.env.GOOGLE_VERIFY_RETRIES || '1', 10);
     const authDbRetries = parseInt(process.env.AUTH_DB_OP_RETRIES || '1', 10);
+    console.info(`[GOOGLE_AUTH] effective timeouts verify=${googleVerifyTimeoutMs}ms db=${authDbTimeoutMs}ms retries verify=${googleVerifyRetries} db=${authDbRetries}`);
 
     const { credential } = req.body;
     if (!credential) {
