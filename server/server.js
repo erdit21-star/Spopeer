@@ -31,11 +31,15 @@ async function startServer() {
       console.log(`Spopeer Server running on http://0.0.0.0:${PORT}`);
     });
 
-    // Validate DB after the port is already open so platform health checks pass
-    // even during temporary database checkout spikes.
-    testConnection().catch((error) => {
-      console.warn('⚠️ Database connection check failed after server start:', error && error.message ? error.message : error);
-    });
+    // Optional startup DB probe (disabled by default to avoid consuming scarce
+    // pool slots before the first real user request on constrained DB plans).
+    if (process.env.STARTUP_DB_CHECK === 'true') {
+      testConnection().catch((error) => {
+        console.warn('⚠️ Database connection check failed after server start:', error && error.message ? error.message : error);
+      });
+    } else {
+      console.info('[DB] Startup DB check skipped (set STARTUP_DB_CHECK=true to enable)');
+    }
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);

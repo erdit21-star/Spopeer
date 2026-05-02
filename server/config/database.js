@@ -37,11 +37,23 @@ const commonOpts = {
 };
 
 // Prefer a direct session connection string in production if provided.
-// Useful when pooler/transaction-mode endpoints are saturated.
+// If DATABASE_URL appears to be a transaction/pooler endpoint and DB_* fields
+// are explicitly set, prefer DB_* so auth can bypass pooler checkout limits.
 const preferredDbUrl = process.env.DATABASE_URL_DIRECT || env.db.url;
+const urlLooksPooled = /pooler|pgbouncer|transaction/i.test(String(preferredDbUrl || ''));
+const hasExplicitDbFields = Boolean(
+  process.env.DB_HOST && process.env.DB_NAME && process.env.DB_USER && process.env.DB_PASSWORD
+);
+const shouldPreferDbFields = hasExplicitDbFields && (process.env.DB_FORCE_FIELDS === 'true' || urlLooksPooled);
 
 // Only use URL if it looks like a valid postgres:// connection string
-const dbUrl = preferredDbUrl && preferredDbUrl.startsWith('postgres') ? preferredDbUrl : null;
+const dbUrl = !shouldPreferDbFields && preferredDbUrl && preferredDbUrl.startsWith('postgres') ? preferredDbUrl : null;
+
+if (dbUrl) {
+  console.info(`[DB] Using URL connection (${urlLooksPooled ? 'pooled' : 'direct/unknown'} endpoint)`);
+} else {
+  console.info('[DB] Using DB_HOST/DB_NAME credentials for direct connection');
+}
 
 const sequelize = dbUrl
   ? new Sequelize(dbUrl, commonOpts)
