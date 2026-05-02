@@ -66,51 +66,6 @@ async function authenticate(req, res, next) {
 }
 
 /**
- * Token-only authentication.
- * Verifies JWT and attaches lightweight user claims without a DB query.
- * Useful for endpoints that must stay responsive even if DB is temporarily saturated.
- */
-function authenticateTokenOnly(req, res, next) {
-  try {
-    const token = extractToken(req);
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'AUTH_REQUIRED', message: 'Authentication required.' }
-      });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-    const userId = decoded.userId || decoded.id;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'AUTH_INVALID', message: 'Invalid session.' }
-      });
-    }
-
-    req.userId = userId;
-    req.user = {
-      id: userId,
-      email: decoded.email || null,
-      role: decoded.role || null
-    };
-    return next();
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'TOKEN_EXPIRED', message: 'Session expired. Please log in again.' }
-      });
-    }
-    return res.status(401).json({
-      success: false,
-      error: { code: 'AUTH_INVALID', message: 'Invalid session.' }
-    });
-  }
-}
-
-/**
  * Optional auth - attaches user if token exists, but doesn't block
  */
 async function optionalAuth(req, res, next) {
@@ -206,7 +161,6 @@ function clearAuthCookies(res) {
 
 module.exports = {
   authenticate,
-  authenticateTokenOnly,
   optionalAuth,
   generateToken,
   generateAccessToken,

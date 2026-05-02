@@ -17,7 +17,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const { User, PasswordResetToken, RefreshSession } = require('../models');
-const { authenticate, authenticateTokenOnly, clearAuthCookies, generateAccessToken, generateRefreshToken, getCookieOptions } = require('../middleware/auth');
+const { authenticate, clearAuthCookies, generateAccessToken, generateRefreshToken, getCookieOptions } = require('../middleware/auth');
 const { ok, fail } = require('../utils/response');
 const { sanitizePublicProfile } = require('../utils/privacy');
 const { sha256 } = require('../utils/crypto');
@@ -102,60 +102,16 @@ const googleLimiter = createLimiter({
 // Initialize Google OAuth client
 const googleClient = process.env.GOOGLE_CLIENT_ID ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID) : null;
 
-function withTimeout(promise, ms, label) {
-  let timeoutId;
-  const timeoutPromise = new Promise((_, reject) => {
-    timeoutId = setTimeout(() => {
-      const err = new Error(`${label} timed out after ${ms}ms`);
-      err.code = 'TIMEOUT';
-      reject(err);
-    }, ms);
-  });
-
-  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
-}
-
-async function withRetries(factory, retries, label) {
-  let lastError;
-  for (let attempt = 0; attempt <= retries; attempt += 1) {
-    try {
-      return await factory();
-    } catch (error) {
-      lastError = error;
-      const message = (error && error.message) || '';
-      const retryable =
-        (error && error.code === 'TIMEOUT') ||
-        /ECHECKOUTTIMEOUT|ConnectionAcquireTimeout|SequelizeConnectionAcquireTimeoutError/i.test(message);
-
-      if (!retryable || attempt === retries) {
-        throw error;
-      }
-
-      console.warn(`[GOOGLE_AUTH] retrying ${label} (${attempt + 1}/${retries}) after: ${message}`);
-    }
-  }
-
-  throw lastError;
-}
-
 // Temporary request logger for auth routes — masks sensitive fields.
 router.use((req, res, next) => {
-  const startedAt = Date.now();
   try {
     const safeBody = { ...(req.body || {}) };
     if (safeBody.password) safeBody.password = '***MASKED***';
     if (safeBody.newPassword) safeBody.newPassword = '***MASKED***';
-    if (safeBody.credential) safeBody.credential = '***MASKED_GOOGLE_CREDENTIAL***';
     console.info(`[AUTH] ${req.method} ${req.path} body=${JSON.stringify(safeBody)} ua=${req.get('user-agent') || ''}`);
   } catch (e) {
     console.warn('[AUTH] Request logging failed:', e && e.message);
   }
-
-  res.on('finish', () => {
-    const durationMs = Date.now() - startedAt;
-    console.info(`[AUTH] ${req.method} ${req.path} -> ${res.statusCode} (${durationMs}ms)`);
-  });
-
   next();
 });
 
@@ -444,22 +400,11 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
 });
 
 // ─── GET CURRENT USER ───
-router.get('/me', authenticateTokenOnly, async (req, res) => {
+router.get('/me', authenticate, async (req, res) => {
   try {
-    let u = req.user;
-    try {
-      const dbUser = await User.findByPk(req.userId, {
-        attributes: ['id', 'email', 'role', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'sport', 'username', 'isActive']
-      });
-      if (dbUser && dbUser.isActive !== false) {
-        u = dbUser;
-      }
-    } catch (dbErr) {
-      console.warn('[AUTH /me] DB lookup skipped:', dbErr && dbErr.message ? dbErr.message : dbErr);
-    }
-
+    const u = req.user;
     return ok(res, { user: {
-      id: u.id, email: u.email || null, role: u.role || null,
+      id: u.id, email: u.email, role: u.role,
       firstName: u.firstName ?? null, lastName: u.lastName ?? null,
       displayName: u.displayName ?? null, avatarUrl: u.avatarUrl ?? null,
       sport: u.sport ?? null, username: u.username ?? null
@@ -470,22 +415,11 @@ router.get('/me', authenticateTokenOnly, async (req, res) => {
   }
 });
 
-router.get('/profile', authenticateTokenOnly, async (req, res) => {
+router.get('/profile', authenticate, async (req, res) => {
   try {
-    let u = req.user;
-    try {
-      const dbUser = await User.findByPk(req.userId, {
-        attributes: ['id', 'email', 'role', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'sport', 'username', 'isActive']
-      });
-      if (dbUser && dbUser.isActive !== false) {
-        u = dbUser;
-      }
-    } catch (dbErr) {
-      console.warn('[AUTH /profile] DB lookup skipped:', dbErr && dbErr.message ? dbErr.message : dbErr);
-    }
-
+    const u = req.user;
     return ok(res, { user: {
-      id: u.id, email: u.email || null, role: u.role || null,
+      id: u.id, email: u.email, role: u.role,
       firstName: u.firstName ?? null, lastName: u.lastName ?? null,
       displayName: u.displayName ?? null, avatarUrl: u.avatarUrl ?? null,
       sport: u.sport ?? null, username: u.username ?? null
@@ -845,32 +779,15 @@ router.post('/google', googleLimiter, async (req, res) => {
       return fail(res, 503, 'NOT_CONFIGURED', 'Google authentication is not configured.');
     }
 
-    const requestedGoogleVerifyTimeoutMs = parseInt(process.env.GOOGLE_VERIFY_TIMEOUT_MS || '20000', 10);
-    const requestedAuthDbTimeoutMs = parseInt(process.env.AUTH_DB_OP_TIMEOUT_MS || '30000', 10);
-    // Enforce sane minimums in all environments to prevent accidental low env overrides.
-    const googleVerifyTimeoutMs = Math.max(Number.isFinite(requestedGoogleVerifyTimeoutMs) ? requestedGoogleVerifyTimeoutMs : 20000, 20000);
-    const authDbTimeoutMs = Math.max(Number.isFinite(requestedAuthDbTimeoutMs) ? requestedAuthDbTimeoutMs : 30000, 30000);
-    const googleVerifyRetries = parseInt(process.env.GOOGLE_VERIFY_RETRIES || '1', 10);
-    const authDbRetries = parseInt(process.env.AUTH_DB_OP_RETRIES || '1', 10);
-    console.info(`[GOOGLE_AUTH] effective timeouts verify=${googleVerifyTimeoutMs}ms db=${authDbTimeoutMs}ms retries verify=${googleVerifyRetries} db=${authDbRetries}`);
-
     const { credential } = req.body;
     if (!credential) {
       return fail(res, 400, 'VALIDATION', 'Google credential token is required.');
     }
 
-    const ticket = await withRetries(
-      () => withTimeout(
-        googleClient.verifyIdToken({
-          idToken: credential,
-          audience: process.env.GOOGLE_CLIENT_ID
-        }),
-        googleVerifyTimeoutMs,
-        'google.verifyIdToken'
-      ),
-      googleVerifyRetries,
-      'google.verifyIdToken'
-    );
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
     const payload = ticket.getPayload();
     const { sub: googleId, email, given_name: firstName, family_name: lastName, picture: avatarUrl } = payload;
 
@@ -878,52 +795,28 @@ router.post('/google', googleLimiter, async (req, res) => {
       return fail(res, 400, 'VALIDATION', 'Google account has no email.');
     }
 
-    let user = await withRetries(
-      () => withTimeout(
-        User.findOne({ where: { email: email.toLowerCase() } }),
-        authDbTimeoutMs,
-        'auth.google.findUser'
-      ),
-      authDbRetries,
-      'auth.google.findUser'
-    );
+    let user = await User.findOne({ where: { email: email.toLowerCase() } });
 
     // Create new user or link Google ID
     if (!user) {
-      user = await withRetries(
-        () => withTimeout(
-          User.create({
-            firstName: firstName || 'User',
-            lastName: lastName || '',
-            email: email.toLowerCase(),
-            googleId,
-            avatarUrl: avatarUrl || null,
-            role: 'athlete',
-            emailVerified: true,
-            isActive: true,
-            password: null
-          }),
-          authDbTimeoutMs,
-          'auth.google.createUser'
-        ),
-        authDbRetries,
-        'auth.google.createUser'
-      );
+      user = await User.create({
+        firstName: firstName || 'User',
+        lastName: lastName || '',
+        email: email.toLowerCase(),
+        googleId,
+        avatarUrl: avatarUrl || null,
+        role: 'athlete',
+        emailVerified: true,
+        isActive: true,
+        password: null
+      });
     } else if (!user.googleId) {
       // Link Google ID to existing account
-      await withRetries(
-        () => withTimeout(
-          user.update({
-            googleId,
-            avatarUrl: user.avatarUrl || avatarUrl || null,
-            emailVerified: true
-          }),
-          authDbTimeoutMs,
-          'auth.google.linkGoogleId'
-        ),
-        authDbRetries,
-        'auth.google.linkGoogleId'
-      );
+      await user.update({
+        googleId,
+        avatarUrl: user.avatarUrl || avatarUrl || null,
+        emailVerified: true
+      });
     }
 
     if (!user.isActive) {
@@ -933,24 +826,11 @@ router.post('/google', googleLimiter, async (req, res) => {
     // Create RefreshSession
     const refreshToken = generateRefreshToken(user);
     const refreshTokenHash = sha256(refreshToken);
-    try {
-      await withRetries(
-        () => withTimeout(
-          RefreshSession.create({
-            userId: user.id,
-            tokenHash: refreshTokenHash,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-          }),
-          authDbTimeoutMs,
-          'auth.google.createRefreshSession'
-        ),
-        authDbRetries,
-        'auth.google.createRefreshSession'
-      );
-    } catch (sessionErr) {
-      // Keep login functional if refresh session persistence is unavailable.
-      console.error('[GOOGLE_AUTH] RefreshSession.create failed (non-fatal):', sessionErr && sessionErr.message ? sessionErr.message : sessionErr);
-    }
+    await RefreshSession.create({
+      userId: user.id,
+      tokenHash: refreshTokenHash,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
 
     // Generate access token
     const accessToken = generateAccessToken(user);
@@ -981,9 +861,6 @@ router.post('/google', googleLimiter, async (req, res) => {
     });
   } catch (error) {
     console.error('[GOOGLE_AUTH]', error && error.message);
-    if (error && error.code === 'TIMEOUT') {
-      return fail(res, 503, 'AUTH_TIMEOUT', 'Google sign-in timed out. Please try again.');
-    }
     if (error.message && error.message.includes('Invalid token')) {
       return fail(res, 401, 'INVALID_TOKEN', 'Google token is invalid or expired.');
     }

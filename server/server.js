@@ -21,25 +21,25 @@ initSocket(server);
 // ─── START SERVER ───
 async function startServer() {
   try {
-    try {
-      assertEmailReady();
-    } catch (e) {
-      console.warn('⚠️ Email not configured:', e.message);
+    // Validate email config — non-blocking for Phase 1 (email is Phase 2)
+    try { assertEmailReady(); } catch (e) { console.warn('⚠️  Email not configured:', e.message); }
+
+    // Test database connection
+    await testConnection();
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('ℹ️  Development mode: run "npm run migrate" before starting the server.');
+    } else {
+      console.log('ℹ️  Production mode: use migrations only (npm run migrate).');
     }
 
     server.listen(PORT, '0.0.0.0', () => {
-      console.log(`Spopeer Server running on http://0.0.0.0:${PORT}`);
+      console.log(`\n🚀 Spopeer Server running on http://0.0.0.0:${PORT}`);
+      console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
+      console.log(`🔌 API Base: http://localhost:${PORT}/api`);
+      console.log(`💬 Socket.io: ws://localhost:${PORT}`);
+      console.log(`🌐 Frontend: http://localhost:${PORT}\n`);
     });
-
-    // Optional startup DB probe (disabled by default to avoid consuming scarce
-    // pool slots before the first real user request on constrained DB plans).
-    if (process.env.STARTUP_DB_CHECK === 'true') {
-      testConnection().catch((error) => {
-        console.warn('⚠️ Database connection check failed after server start:', error && error.message ? error.message : error);
-      });
-    } else {
-      console.info('[DB] Startup DB check skipped (set STARTUP_DB_CHECK=true to enable)');
-    }
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
