@@ -157,7 +157,27 @@
       window.google.accounts.id.prompt(function (notification) {
         var isNotDisplayed = notification && typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed();
         var isSkipped = notification && typeof notification.isSkippedMoment === 'function' && notification.isSkippedMoment();
-        if (isNotDisplayed || isSkipped) {
+        var notDisplayedReason = notification && typeof notification.getNotDisplayedReason === 'function'
+          ? notification.getNotDisplayedReason()
+          : '';
+        var skippedReason = notification && typeof notification.getSkippedReason === 'function'
+          ? notification.getSkippedReason()
+          : '';
+
+        // Only show a hard fallback when the browser truly blocks or cannot display Google sign-in.
+        // Normal skipped moments (dismissed/auto-cancelled/no-session) are expected and not actionable.
+        var hardBlocked = isNotDisplayed && [
+          'browser_not_supported',
+          'invalid_client',
+          'missing_client_id',
+          'opt_out_or_no_session',
+          'secure_http_required',
+          'suppressed_by_user',
+          'unregistered_origin'
+        ].indexOf(notDisplayedReason) !== -1;
+        var hardSkipped = isSkipped && skippedReason === 'tap_outside';
+
+        if (hardBlocked || hardSkipped) {
           showGoogleFallbackError('Google sign-in was blocked or unavailable in this browser. Please allow pop-ups and retry, or use email/password.');
         }
       });

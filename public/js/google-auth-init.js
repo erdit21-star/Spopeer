@@ -30,8 +30,26 @@
 
         var isNotDisplayed = notification && typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed();
         var isSkipped = notification && typeof notification.isSkippedMoment === 'function' && notification.isSkippedMoment();
+        var notDisplayedReason = notification && typeof notification.getNotDisplayedReason === 'function'
+          ? notification.getNotDisplayedReason()
+          : '';
+        var skippedReason = notification && typeof notification.getSkippedReason === 'function'
+          ? notification.getSkippedReason()
+          : '';
 
-        if (isNotDisplayed || isSkipped) {
+        // Avoid false alarms for expected One Tap skip moments.
+        var hardBlocked = isNotDisplayed && [
+          'browser_not_supported',
+          'invalid_client',
+          'missing_client_id',
+          'opt_out_or_no_session',
+          'secure_http_required',
+          'suppressed_by_user',
+          'unregistered_origin'
+        ].indexOf(notDisplayedReason) !== -1;
+        var hardSkipped = isSkipped && skippedReason === 'tap_outside';
+
+        if (hardBlocked || hardSkipped) {
           showGoogleFallbackError('Google sign-in was blocked or unavailable in this browser. Please allow pop-ups and retry, or use email/password.');
         }
       });
