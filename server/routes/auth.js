@@ -104,14 +104,22 @@ const googleClient = process.env.GOOGLE_CLIENT_ID ? new OAuth2Client(process.env
 
 // Temporary request logger for auth routes — masks sensitive fields.
 router.use((req, res, next) => {
+  const startedAt = Date.now();
   try {
     const safeBody = { ...(req.body || {}) };
     if (safeBody.password) safeBody.password = '***MASKED***';
     if (safeBody.newPassword) safeBody.newPassword = '***MASKED***';
+    if (safeBody.credential) safeBody.credential = '***MASKED_GOOGLE_CREDENTIAL***';
     console.info(`[AUTH] ${req.method} ${req.path} body=${JSON.stringify(safeBody)} ua=${req.get('user-agent') || ''}`);
   } catch (e) {
     console.warn('[AUTH] Request logging failed:', e && e.message);
   }
+
+  res.on('finish', () => {
+    const durationMs = Date.now() - startedAt;
+    console.info(`[AUTH] ${req.method} ${req.path} -> ${res.statusCode} (${durationMs}ms)`);
+  });
+
   next();
 });
 
