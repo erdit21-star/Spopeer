@@ -8,19 +8,29 @@ const { Sequelize } = require('sequelize');
 const { config: env } = require('./env');
 
 const isProduction = env.nodeEnv === 'production';
+const poolMax = parseInt(process.env.DB_POOL_MAX || (isProduction ? '2' : '10'), 10);
+const poolMin = parseInt(process.env.DB_POOL_MIN || '0', 10);
+const poolAcquire = parseInt(process.env.DB_POOL_ACQUIRE || (isProduction ? '60000' : '30000'), 10);
+const poolIdle = parseInt(process.env.DB_POOL_IDLE || '10000', 10);
+const poolEvict = parseInt(process.env.DB_POOL_EVICT || '2000', 10);
 
 const commonOpts = {
   dialect: 'postgres',
   logging: env.nodeEnv === 'development' ? console.log : false,
   pool: {
-    max: 10,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
+    max: poolMax,
+    min: poolMin,
+    acquire: poolAcquire,
+    idle: poolIdle,
+    evict: poolEvict
+  },
+  retry: {
+    max: parseInt(process.env.DB_RETRY_MAX || '2', 10)
   },
   ...(isProduction && {
     dialectOptions: {
-      ssl: { require: true, rejectUnauthorized: false }
+      ssl: { require: true, rejectUnauthorized: false },
+      application_name: process.env.DB_APP_NAME || 'spopeer-server'
     }
   })
 };
