@@ -661,11 +661,12 @@ footer{
   .footer-col button:hover{color:rgba(255,255,255,.85)}
   /* Responsive */
   @media(max-width:720px){
-    .auth-box{flex-direction:column;max-height:none;border-radius:18px}
+    .auth-modal{padding:0;align-items:stretch;justify-content:flex-end;overflow-y:auto}
+    .auth-box{flex-direction:column;max-height:none;border-radius:0;min-height:100dvh;width:100%;max-width:100%}
     .auth-left{padding:36px 28px 28px;flex-direction:row;align-items:center;gap:16px}
     .auth-left h2{font-size:20px;margin-bottom:0}
     .auth-left p,.auth-left-pills,.auth-left-logo{display:none}
-    .auth-right{padding:28px 24px}
+    .auth-right{padding:22px 16px calc(18px + env(safe-area-inset-bottom, 0px));overflow-y:auto;min-height:0}
     .form-row-2{grid-template-columns:1fr}
   }
   </style>

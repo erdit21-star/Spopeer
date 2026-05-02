@@ -104,9 +104,29 @@
         if (!r.ok) {
           throw new Error((r.data && (r.data.message || (r.data.error && r.data.error.message))) || 'Google sign-in failed.');
         }
-        var user = (r.data.data && r.data.data.user) || r.data.user;
-        if (user && window.Auth) window.Auth.login(user);
-        window.location.href = '/feed.html';
+        var user = (r.data.data && r.data.data.user) || r.data.user || null;
+
+        // Some API paths may authenticate via cookie but omit user payload.
+        // Confirm a usable profile before redirecting into the authenticated app shell.
+        if (!user && window.SpopeerAPI && typeof window.SpopeerAPI.me === 'function') {
+          return window.SpopeerAPI.me().then(function (me) {
+            var meUser = (me && (me.user || (me.data && me.data.user) || me.payload || (me.payload && me.payload.user))) || null;
+            if (!meUser) {
+              throw new Error('Google sign-in finished, but your profile could not be loaded. Please try again.');
+            }
+            if (window.Auth) window.Auth.login(meUser);
+            closeAuth();
+            window.location.assign('/feed.html');
+          });
+        }
+
+        if (!user) {
+          throw new Error('Google sign-in finished, but your profile could not be loaded. Please try again.');
+        }
+
+        if (window.Auth) window.Auth.login(user);
+        closeAuth();
+        window.location.assign('/feed.html');
       })
       .catch(function (err) {
         var lp = document.getElementById('loginPanel');
