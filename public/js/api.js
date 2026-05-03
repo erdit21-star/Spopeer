@@ -391,6 +391,14 @@
       });
     },
     adminDashboard: function () { return request("/api/admin/dashboard"); },
+    adminUsers: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/admin/users" + qs);
+    },
+    adminPosts: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/admin/posts" + qs);
+    },
     unwrap: unwrap
   };
 

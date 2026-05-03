@@ -65,8 +65,8 @@ body{font-family:var(--font-body);background:radial-gradient(circle at 20% 0%,#1
       <article class="card"><div class="k">Total Users</div><div class="v" id="totalUsers">0</div></article>
       <article class="card"><div class="k">Total Posts</div><div class="v" id="totalPosts">0</div></article>
       <article class="card"><div class="k">Total Follows</div><div class="v" id="totalFollows">0</div></article>
-      <article class="card"><div class="k">Total Views</div><div class="v" id="totalViews">0</div></article>
-      <article class="card"><div class="k">Total Bookmarks</div><div class="v" id="totalBookmarks">0</div></article>
+      <article class="card"><div class="k">New Users Today</div><div class="v" id="totalViews">0</div></article>
+      <article class="card"><div class="k">New Posts Today</div><div class="v" id="totalBookmarks">0</div></article>
     </section>
 
     <section class="panels">
@@ -91,27 +91,26 @@ body{font-family:var(--font-body);background:radial-gradient(circle at 20% 0%,#1
 
   <script>
     (async function () {
+      const status = document.getElementById('status');
       try {
         const [dashboardRes, usersRes, postsRes] = await Promise.all([
           window.SpopeerAPI.adminDashboard(),
-          window.SpopeerAPI.request('/api/admin/users?limit=5&page=1'),
-          window.SpopeerAPI.request('/api/admin/posts?limit=5&page=1')
+          window.SpopeerAPI.adminUsers({ limit: 5, page: 1 }),
+          window.SpopeerAPI.adminPosts({ limit: 5, page: 1 })
         ]);
 
         const overview = dashboardRes.payload || {};
         document.getElementById('totalUsers').textContent = String(overview.totalUsers || 0);
         document.getElementById('totalPosts').textContent = String(overview.totalPosts || 0);
         document.getElementById('totalFollows').textContent = String(overview.totalConnections || 0);
-        document.getElementById('totalViews').textContent = String(overview.totalMessages || 0);
-        document.getElementById('totalBookmarks').textContent = String((overview.usersBySubscription || []).reduce(function (acc, item) {
-          return acc + Number(item.count || 0);
-        }, 0));
+        document.getElementById('totalViews').textContent = String(overview.newUsersToday || 0);
+        document.getElementById('totalBookmarks').textContent = String(overview.newPostsToday || 0);
 
         const roleList = document.getElementById('usersByRoleList');
         const roleItems = overview.usersByRole || [];
         roleList.innerHTML = roleItems.length
           ? roleItems.map(function (item) {
-              return '<div class="row"><strong>' + (item._id || 'unknown') + '</strong><span>' + String(item.count || 0) + '</span></div>';
+              return '<div class="row"><strong>' + (item.role || 'unknown') + '</strong><span>' + String(item.count || 0) + '</span></div>';
             }).join('')
           : '<p class="empty">No platform activity yet</p>';
 
@@ -137,9 +136,11 @@ body{font-family:var(--font-body);background:radial-gradient(circle at 20% 0%,#1
             }).join('')
           : '<p class="empty">No posts yet</p>';
 
-        document.getElementById('status').textContent = 'Real analytics loaded from backend.';
+        status.textContent = 'Real analytics loaded from backend.';
       } catch (err) {
-        window.location.href = '/feed.html';
+        console.error('Admin dashboard load error:', err);
+        status.style.color = '#ef4444';
+        status.textContent = 'Failed to load analytics: ' + (err && err.message ? err.message : String(err));
       }
     })();
   </script>
