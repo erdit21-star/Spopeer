@@ -427,7 +427,12 @@ let usersFilter = { search: '', role: '', active: '' };
 let postsFilter = { search: '', isActive: 'true' };
 
 function apiUnwrap(res) {
-  return res && res.payload !== undefined ? res.payload : res;
+  if (!res || typeof res !== 'object') return res;
+  if (res.data !== undefined) return res.data;
+  if (res.payload !== undefined) return res.payload;
+  if (res.results !== undefined) return res.results;
+  if (res.user !== undefined) return res.user;
+  return res;
 }
 
 function showToast(msg, type) {
@@ -636,6 +641,7 @@ async function loadUsers(page) {
 }
 
 function renderUsersTable(rows, pagination) {
+  rows = Array.isArray(rows) ? rows : [];
   const tbody = document.getElementById('users-tbody');
   if (!rows.length) {
     tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-users-slash"></i><p>No users found</p></div></td></tr>';
@@ -645,7 +651,7 @@ function renderUsersTable(rows, pagination) {
   tbody.innerHTML = rows.map(function (u) {
     const name = ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || 'Unknown';
     const sport = u.sport || u.primarySport || '-';
-    return '<tr><td><div class="user-cell"><div class="u-avatar">' + initials(u) + '</div><div><div class="u-name">' + name + '</div><div class="u-email">' + (u.email || '-') + '</div></div></div></td><td>' + roleChip(u.role) + '</td><td>' + subChip(u.subscription) + '</td><td>' + sport + '</td><td>' + statusChip(u.isActive) + '</td><td>' + fmtDate(u.createdAt) + '</td><td><div style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="editUser(' + u.id + ')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="toggleUserActive(' + u.id + ', ' + (!!u.isActive) + ')"><i class="fa-solid fa-' + (u.isActive ? 'ban' : 'check') + '"></i></button></div></td></tr>';
+    return '<tr><td><div class="user-cell"><div class="u-avatar">' + initials(u) + '</div><div><div class="u-name">' + name + '</div><div class="u-email">' + (u.email || '-') + '</div></div></div></td><td>' + roleChip(u.role) + '</td><td>' + subChip(u.subscription) + '</td><td>' + sport + '</td><td>' + statusChip(u.isActive) + '</td><td>' + fmtDate(u.createdAt) + '</td><td><div style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="editUser(' + JSON.stringify(String(u.id)) + ')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="toggleUserActive(' + JSON.stringify(String(u.id)) + ', ' + (!!u.isActive) + ')"><i class="fa-solid fa-' + (u.isActive ? 'ban' : 'check') + '"></i></button></div></td></tr>';
   }).join('');
 
   const total = pagination.total || rows.length;
@@ -662,7 +668,7 @@ function filterUsers(search, role, active) {
 }
 
 function editUser(id) {
-  const u = usersData.find(function (x) { return x.id === id; });
+  const u = usersData.find(function (x) { return String(x.id) === String(id); });
   if (!u) return;
   document.getElementById('edit-user-id').value = id;
   document.getElementById('edit-user-role').value = u.role || 'athlete';
