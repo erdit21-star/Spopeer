@@ -5552,6 +5552,21 @@
     renderFeed(normalizedPosts);
   }
 
+  function renderPosts(posts) {
+    var normalizedPosts = (Array.isArray(posts) ? posts : []).map(normalizeFeedPost);
+    renderFeed(normalizedPosts);
+  }
+
+  document.addEventListener("DOMContentLoaded", async function () {
+    const posts = await window.SpopeerFeedEngine.getForYouFeed();
+
+    console.log("[Spopeer Feed] posts to render:", posts);
+
+    if (typeof renderPosts === "function") {
+      renderPosts(posts);
+    }
+  });
+
   // Activate initial tab visually based on saved setting
   feedTabs.forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === currentTab);

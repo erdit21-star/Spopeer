@@ -1,77 +1,80 @@
 (function () {
   function unwrapPosts(result) {
+    console.log("[Spopeer Feed] raw result:", result);
+
     if (!result) return [];
 
     if (Array.isArray(result)) return result;
+
     if (Array.isArray(result.posts)) return result.posts;
+
     if (Array.isArray(result.data)) return result.data;
 
-    // IMPORTANT: for /api/posts paginated response
     if (result.data && Array.isArray(result.data.posts)) {
       return result.data.posts;
-    }
-
-    if (result.data && Array.isArray(result.data.items)) {
-      return result.data.items;
     }
 
     if (result.data && Array.isArray(result.data.rows)) {
       return result.data.rows;
     }
 
-    if (Array.isArray(result.payload)) return result.payload;
+    if (result.data && Array.isArray(result.data.items)) {
+      return result.data.items;
+    }
 
+    if (result.data && result.data.data && Array.isArray(result.data.data)) {
+      return result.data.data;
+    }
+
+    console.warn("[Spopeer Feed] Could not unwrap posts:", result);
     return [];
   }
 
   function unwrapPost(result) {
     if (!result) return null;
-
     if (result.post) return result.post;
     if (result.data) return result.data;
     if (result.payload) return result.payload;
-
     return result;
   }
 
   async function getForYouFeed() {
     try {
-      const result = await window.SpopeerAPI.getForYouFeed();
+      const result = await window.SpopeerAPI.listPosts({
+        limit: 50,
+        page: 1,
+        _: Date.now(),
+      });
+
       return unwrapPosts(result);
     } catch (err) {
-      console.warn("[Spopeer] For-you feed unavailable.", err);
+      console.error("[Spopeer] For-you feed failed:", err);
       return [];
     }
   }
 
   async function getFollowingFeed() {
-    try {
-      const result = await window.SpopeerAPI.getFollowingFeed();
-      return unwrapPosts(result);
-    } catch (err) {
-      console.warn("[Spopeer] Following feed unavailable.", err);
-      return [];
-    }
+    return getForYouFeed();
   }
 
   async function getSportFeed(selectedSport) {
     try {
-      const result = await window.SpopeerAPI.getSportFeed(selectedSport);
+      const result = await window.SpopeerAPI.listPosts({
+        limit: 50,
+        page: 1,
+        sport: selectedSport || "",
+        _: Date.now(),
+      });
+
       return unwrapPosts(result);
     } catch (err) {
-      console.warn("[Spopeer] Sport feed unavailable.", err);
+      console.error("[Spopeer] Sport feed failed:", err);
       return [];
     }
   }
 
   async function getTrendingFeed() {
-    try {
-      const result = await window.SpopeerAPI.getTrendingFeed();
-      return unwrapPosts(result);
-    } catch (err) {
-      console.warn("[Spopeer] Trending feed unavailable.", err);
-      return [];
-    }
+    return getForYouFeed();
   }
 
   async function createPost(payload) {
