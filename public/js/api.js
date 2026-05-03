@@ -387,6 +387,21 @@
     savePost: function (postId) {
       return request(`/api/posts/${postId}/save`, { method: "POST" });
     },
+    togglePostLike: function (postId) {
+      return request("/api/posts/" + encodeURIComponent(postId) + "/like", { method: "POST" });
+    },
+    addPostComment: function (postId, content) {
+      return request("/api/posts/" + encodeURIComponent(postId) + "/comment", {
+        method: "POST",
+        body: JSON.stringify({ content: content })
+      });
+    },
+    getPostComments: function (postId) {
+      return request("/api/posts/" + encodeURIComponent(postId) + "/comments");
+    },
+    repostPost: function (postId) {
+      return request("/api/posts/" + encodeURIComponent(postId) + "/repost", { method: "POST" });
+    },
     listPosts: function (params) {
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request("/api/posts" + qs);

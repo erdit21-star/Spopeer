@@ -24,6 +24,7 @@
   <script src="/js/role-router.js"></script>
   <script src="js/stats-manager.js"></script>
   <script src="js/feed-engine.js"></script>
+  <script src="js/post-interactions.js"></script>
   <script src="js/admin-access.js"></script>
   <script src="js/profile-sync-service.js"></script>
   <script src="js/shared-ui.js"></script>
@@ -1636,7 +1637,31 @@
 
     /* action row */
     .post-actions {
-      display: flex; align-items: center; padding: 6px 0 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 12px;
+      padding-top: 10px;
+    }
+    .post-actions button {
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #475569;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .post-actions button.active {
+      background: #ecfdf5;
+      color: #115e59;
+      border-color: #99f6e4;
+    }
+    .post-meta {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 4px;
     }
     .act-btn {
       flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -5378,16 +5403,24 @@
           </div>
           <div class="post-text">${escapeHtml(post.text || "")}</div>
           ${mediaHtml}
-          <div class="post-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
-            <button type="button" onclick="likePost(${post.id})">Like ${post.likesCount || 0}</button>
-            <button type="button" onclick="openComments(${post.id})">Comment ${post.commentsCount || 0}</button>
-            <button type="button" onclick="repostPost(${post.id})">Repost ${post.repostsCount || 0}</button>
-            <button type="button" onclick="savePost(${post.id})">Save</button>
+          <div class="post-actions">
+            <button type="button" onclick="likePost(${post.id})" class="${post.liked ? 'active' : ''}">
+              👍 ${post.liked ? 'Liked' : 'Like'} ${post.likesCount || 0}
+            </button>
+            <button type="button" onclick="commentPost(${post.id})">
+              💬 Comment ${post.commentsCount || 0}
+            </button>
+            <button type="button" onclick="viewComments(${post.id})">
+              👁 View comments
+            </button>
+            <button type="button" onclick="repostPost(${post.id})">
+              🔁 Repost ${post.repostsCount || 0}
+            </button>
+            <button type="button" onclick="savePost(${post.id})">
+              🔖 Save
+            </button>
           </div>
           <div class="post-stats">
-            <span><i class="fa-regular fa-heart"></i> ${post.likesCount || 0}</span>
-            <span><i class="fa-regular fa-comment"></i> ${post.commentsCount || 0}</span>
-            <span><i class="fa-regular fa-share-from-square"></i> ${post.repostsCount || 0}</span>
             <span><i class="fa-regular fa-eye"></i> ${post.views || 0}</span>
           </div>
         </div>
