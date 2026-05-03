@@ -34,6 +34,15 @@
     });
 
     renderedFallbackButtons[buttonId] = true;
+    return host;
+  }
+
+  function switchToNativeGoogleButton(buttonId) {
+    var originalButton = document.getElementById(buttonId);
+    var host = renderNativeGoogleButton(buttonId);
+    if (!originalButton || !host) return;
+    originalButton.style.display = 'none';
+    originalButton.setAttribute('aria-hidden', 'true');
   }
 
   function getCookieValue(name) {
@@ -185,6 +194,11 @@
       showGoogleFallbackError('Google sign-in is still loading. Please wait a moment and try again.');
       return;
     }
+    if (isLikelyMobile()) {
+      switchToNativeGoogleButton(buttonId);
+      showGoogleFallbackError('Tap the Google button to continue sign-in on mobile.');
+      return;
+    }
 
     try {
       window.google.accounts.id.prompt(function (notification) {
@@ -239,7 +253,7 @@
     });
     ['modalLoginGoogleBtn', 'modalSignupGoogleBtn'].forEach(function (id) {
       var btn = document.getElementById(id);
-      if (btn && !btn._gBound) {
+      if (btn && !btn._gBound && !isLikelyMobile()) {
         btn._gBound = true;
         btn.addEventListener('click', function (e) {
           e.preventDefault();
@@ -248,7 +262,7 @@
       }
 
       if (isLikelyMobile()) {
-        renderNativeGoogleButton(id);
+        switchToNativeGoogleButton(id);
       }
     });
   }

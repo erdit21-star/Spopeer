@@ -36,6 +36,15 @@
     });
 
     renderedFallbackButtons[buttonId] = true;
+    return host;
+  }
+
+  function switchToNativeGoogleButton(buttonId) {
+    var originalButton = document.getElementById(buttonId);
+    var host = renderNativeGoogleButton(buttonId);
+    if (!originalButton || !host) return;
+    originalButton.style.display = 'none';
+    originalButton.setAttribute('aria-hidden', 'true');
   }
 
   function showGoogleFallbackError(message) {
@@ -52,6 +61,11 @@
   function requestGooglePrompt(buttonId) {
     if (!window.google || !window.google.accounts || !window.google.accounts.id) {
       showGoogleFallbackError('Google sign-in is still loading. Please wait a moment and try again.');
+      return;
+    }
+    if (isLikelyMobile()) {
+      switchToNativeGoogleButton(buttonId);
+      showGoogleFallbackError('Tap the Google button to continue sign-in on mobile.');
       return;
     }
     if (googlePromptInFlight) return;
@@ -125,7 +139,7 @@
     // Bind click handlers to all Google buttons on this page
     ['loginGoogleBtn', 'signupGoogleBtn', 'loginModernGoogleBtn'].forEach(function (id) {
       var btn = document.getElementById(id);
-      if (btn) {
+      if (btn && !isLikelyMobile()) {
         btn.addEventListener('click', function (e) {
           e.preventDefault();
           requestGooglePrompt(id);
@@ -135,7 +149,7 @@
 
     if (isLikelyMobile()) {
       ['loginGoogleBtn', 'signupGoogleBtn', 'loginModernGoogleBtn'].forEach(function (id) {
-        renderNativeGoogleButton(id);
+        switchToNativeGoogleButton(id);
       });
     }
   }
