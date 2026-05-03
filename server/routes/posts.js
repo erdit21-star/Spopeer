@@ -252,6 +252,21 @@ router.get('/saved', authenticate, async (req, res) => {
   }
 });
 
+// ─── DEBUG: LATEST POSTS ───
+router.get('/debug/latest', authenticate, async (req, res) => {
+  try {
+    const posts = await Post.findAll({
+      limit: 10,
+      order: [['createdAt', 'DESC']],
+      attributes: ['id', 'userId', 'content', 'sport', 'image', 'isActive', 'createdAt']
+    });
+
+    return ok(res, posts);
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', error.message);
+  }
+});
+
 // ─── GET SINGLE POST ───
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
@@ -450,21 +465,6 @@ router.get('/:id/comments', optionalAuth, async (req, res) => {
     ok(res, comments);
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch comments.');
-  }
-});
-
-// ─── DEBUG: LATEST POSTS ───
-router.get('/debug/latest', authenticate, async (req, res) => {
-  try {
-    const posts = await Post.findAll({
-      limit: 10,
-      order: [['createdAt', 'DESC']],
-      attributes: ['id', 'userId', 'content', 'sport', 'image', 'isActive', 'createdAt']
-    });
-
-    return ok(res, posts);
-  } catch (error) {
-    return fail(res, 500, 'SERVER_ERROR', error.message);
   }
 });
 
