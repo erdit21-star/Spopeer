@@ -5,7 +5,20 @@
     if (Array.isArray(result)) return result;
     if (Array.isArray(result.posts)) return result.posts;
     if (Array.isArray(result.data)) return result.data;
-    if (result.data && Array.isArray(result.data.posts)) return result.data.posts;
+
+    // IMPORTANT: for /api/posts paginated response
+    if (result.data && Array.isArray(result.data.posts)) {
+      return result.data.posts;
+    }
+
+    if (result.data && Array.isArray(result.data.items)) {
+      return result.data.items;
+    }
+
+    if (result.data && Array.isArray(result.data.rows)) {
+      return result.data.rows;
+    }
+
     if (Array.isArray(result.payload)) return result.payload;
 
     return [];
