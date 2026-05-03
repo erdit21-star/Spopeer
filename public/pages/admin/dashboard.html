@@ -324,7 +324,7 @@
     </div>
 
     <div id="section-marketplace" class="section">
-      <div class="page-header"><div><div class="page-title">Marketplace</div><div class="page-subtitle">Listings overview (mock until dedicated admin endpoints are added)</div></div></div>
+      <div class="page-header"><div><div class="page-title">Marketplace</div><div class="page-subtitle">Live marketplace data from admin endpoints</div></div></div>
       <div class="panel">
         <div class="tab-row">
           <button class="tab-btn active" onclick="switchMarketTab('listings', this)">Listings</button>
@@ -874,39 +874,62 @@ function renderRankTable(tbodyId, rows, valueKey) {
   }).join('');
 }
 
-function loadMarketplace(type) {
+async function loadMarketplace(type) {
   const thead = document.getElementById('market-thead');
   const tbody = document.getElementById('market-tbody');
-  document.getElementById('market-info').textContent = 'Showing ' + type + ' (UI mock)';
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted);">Loading...</td></tr>';
 
-  const samples = {
-    listings: [
-      { id: 1, title: 'Nike Mercurial', category: 'Equipment', sport: 'Football', price: '150', status: 'active' },
-      { id: 2, title: 'Speed ladder set', category: 'Training', sport: 'Athletics', price: '40', status: 'sold' }
-    ],
-    sponsorships: [
-      { id: 1, title: 'Energy brand local partnership', mode: 'offer', sport: 'Basketball', status: 'active' }
-    ],
-    jobs: [
-      { id: 1, title: 'Head Coach', type: 'full-time', sport: 'Football', location: 'Athens', isActive: true }
-    ],
-    inquiries: [
-      { id: 1, status: 'pending', message: 'Interested in your listing.' }
-    ]
-  };
+  let res;
+  try {
+    if (type === 'listings') {
+      res = await window.SpopeerAPI.adminMarketplaceListings({ page: 1, limit: 50 });
+      const rows = apiUnwrap(res) || [];
+      thead.innerHTML = '<tr><th>#</th><th>Title</th><th>Category</th><th>Sport</th><th>Price</th><th>Status</th></tr>';
+      tbody.innerHTML = rows.length ? rows.map(function (l) {
+        const price = l.price != null ? ('EUR ' + Number(l.price).toFixed(2)) : '-';
+        const statusClass = l.status === 'active' ? 'green' : l.status === 'sold' ? 'blue' : 'amber';
+        return '<tr><td>' + l.id + '</td><td>' + (l.title || '-') + '</td><td>' + (l.category || '-') + '</td><td>' + (l.sport ? '<span class="chip chip-blue">' + l.sport + '</span>' : '-') + '</td><td>' + price + '</td><td><span class="chip chip-' + statusClass + '">' + (l.status || '-') + '</span></td></tr>';
+      }).join('') : '<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--muted);">No listings found</td></tr>';
+      document.getElementById('market-info').textContent = 'Showing ' + rows.length + ' listings';
+      return;
+    }
 
-  if (type === 'listings') {
-    thead.innerHTML = '<tr><th>#</th><th>Title</th><th>Category</th><th>Sport</th><th>Price</th><th>Status</th></tr>';
-    tbody.innerHTML = samples.listings.map(function (l) { return '<tr><td>' + l.id + '</td><td>' + l.title + '</td><td>' + l.category + '</td><td><span class="chip chip-blue">' + l.sport + '</span></td><td>EUR ' + l.price + '</td><td><span class="chip chip-green">' + l.status + '</span></td></tr>'; }).join('');
-  } else if (type === 'sponsorships') {
-    thead.innerHTML = '<tr><th>#</th><th>Title</th><th>Mode</th><th>Sport</th><th>Status</th></tr>';
-    tbody.innerHTML = samples.sponsorships.map(function (s) { return '<tr><td>' + s.id + '</td><td>' + s.title + '</td><td><span class="chip chip-purple">' + s.mode + '</span></td><td><span class="chip chip-blue">' + s.sport + '</span></td><td><span class="chip chip-green">' + s.status + '</span></td></tr>'; }).join('');
-  } else if (type === 'jobs') {
-    thead.innerHTML = '<tr><th>#</th><th>Title</th><th>Type</th><th>Sport</th><th>Location</th><th>Status</th></tr>';
-    tbody.innerHTML = samples.jobs.map(function (j) { return '<tr><td>' + j.id + '</td><td>' + j.title + '</td><td><span class="chip chip-blue">' + j.type + '</span></td><td><span class="chip chip-green">' + j.sport + '</span></td><td>' + j.location + '</td><td>' + (j.isActive ? '<span class="chip chip-green">Active</span>' : '<span class="chip chip-red">Inactive</span>') + '</td></tr>'; }).join('');
-  } else {
-    thead.innerHTML = '<tr><th>#</th><th>Status</th><th>Message</th></tr>';
-    tbody.innerHTML = samples.inquiries.map(function (q) { return '<tr><td>' + q.id + '</td><td><span class="chip chip-amber">' + q.status + '</span></td><td class="content-preview">' + q.message + '</td></tr>'; }).join('');
+    if (type === 'sponsorships') {
+      res = await window.SpopeerAPI.adminMarketplaceSponsorships({ page: 1, limit: 50 });
+      const rows = apiUnwrap(res) || [];
+      thead.innerHTML = '<tr><th>#</th><th>Title</th><th>Mode</th><th>Sport</th><th>Status</th><th>Posted</th></tr>';
+      tbody.innerHTML = rows.length ? rows.map(function (s) {
+        const statusClass = s.status === 'active' ? 'green' : s.status === 'closed' ? 'red' : 'amber';
+        return '<tr><td>' + s.id + '</td><td>' + (s.title || '-') + '</td><td><span class="chip chip-purple">' + (s.mode || '-') + '</span></td><td>' + (s.sport ? '<span class="chip chip-blue">' + s.sport + '</span>' : '-') + '</td><td><span class="chip chip-' + statusClass + '">' + (s.status || '-') + '</span></td><td>' + fmtDate(s.createdAt) + '</td></tr>';
+      }).join('') : '<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--muted);">No sponsorships found</td></tr>';
+      document.getElementById('market-info').textContent = 'Showing ' + rows.length + ' sponsorships';
+      return;
+    }
+
+    if (type === 'jobs') {
+      res = await window.SpopeerAPI.adminMarketplaceJobs({ page: 1, limit: 50 });
+      const rows = apiUnwrap(res) || [];
+      thead.innerHTML = '<tr><th>#</th><th>Title</th><th>Type</th><th>Sport</th><th>Location</th><th>Status</th></tr>';
+      tbody.innerHTML = rows.length ? rows.map(function (j) {
+        return '<tr><td>' + j.id + '</td><td>' + (j.title || '-') + '</td><td><span class="chip chip-blue">' + (j.type || '-') + '</span></td><td>' + (j.sport ? '<span class="chip chip-green">' + j.sport + '</span>' : '-') + '</td><td>' + (j.location || '-') + '</td><td>' + (j.isActive ? '<span class="chip chip-green">Active</span>' : '<span class="chip chip-red">Inactive</span>') + '</td></tr>';
+      }).join('') : '<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--muted);">No jobs found</td></tr>';
+      document.getElementById('market-info').textContent = 'Showing ' + rows.length + ' jobs';
+      return;
+    }
+
+    res = await window.SpopeerAPI.adminMarketplaceInquiries({ page: 1, limit: 50 });
+    const rows = apiUnwrap(res) || [];
+    thead.innerHTML = '<tr><th>#</th><th>Status</th><th>Listing</th><th>Message</th><th>Date</th></tr>';
+    tbody.innerHTML = rows.length ? rows.map(function (q) {
+      const statusClass = q.status === 'pending' ? 'amber' : q.status === 'accepted' ? 'green' : q.status === 'declined' ? 'red' : 'gray';
+      return '<tr><td>' + q.id + '</td><td><span class="chip chip-' + statusClass + '">' + (q.status || '-') + '</span></td><td>' + (q.listingTitle || ('Listing #' + (q.listingId || '-'))) + '</td><td class="content-preview">' + (q.message || '-') + '</td><td>' + fmtDate(q.createdAt) + '</td></tr>';
+    }).join('') : '<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--muted);">No inquiries found</td></tr>';
+    document.getElementById('market-info').textContent = 'Showing ' + rows.length + ' inquiries';
+  } catch (err) {
+    console.error('Marketplace admin load failed:', err);
+    thead.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--red);">Failed to load marketplace data.</td></tr>';
+    document.getElementById('market-info').textContent = 'Failed to load ' + type;
   }
 }
 
@@ -916,14 +939,26 @@ function switchMarketTab(type, btn) {
   loadMarketplace(type);
 }
 
-function renderAuditLog() {
+async function renderAuditLog() {
   const body = document.getElementById('audit-log-body');
-  const rows = [
-    { action: 'report_resolved', target: 'Report #14', by: 'Admin', time: '2 min ago' },
-    { action: 'user_suspended', target: 'User #220', by: 'Admin', time: '20 min ago' },
-    { action: 'post_removed', target: 'Post #810', by: 'Admin', time: '1 hr ago' }
-  ];
-  body.innerHTML = rows.map(function (r) { return '<tr><td>' + r.action + '</td><td>' + r.target + '</td><td>' + r.by + '</td><td>' + r.time + '</td></tr>'; }).join('');
+  body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted);">Loading audit logs...</td></tr>';
+  try {
+    const res = await window.SpopeerAPI.adminAuditLogs({ page: 1, limit: 50 });
+    const rows = apiUnwrap(res) || [];
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted);">No audit logs yet</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(function (r) {
+      const admin = r.admin || {};
+      const adminName = ((admin.firstName || '') + ' ' + (admin.lastName || '')).trim() || admin.email || ('Admin #' + (r.adminId || '-'));
+      const target = r.targetType ? (r.targetType + ' #' + (r.targetId || '-')) : '-';
+      return '<tr><td>' + (r.action || '-') + '</td><td>' + target + '</td><td>' + adminName + '</td><td>' + fmtDate(r.createdAt) + '</td></tr>';
+    }).join('');
+  } catch (err) {
+    console.error('Audit log load failed:', err);
+    body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--red);">Failed to load audit logs.</td></tr>';
+  }
 }
 
 function renderPagination(containerId, pages, current, onPage) {

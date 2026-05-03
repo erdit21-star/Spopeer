@@ -412,6 +412,26 @@
       return request("/api/admin/posts/" + encodeURIComponent(postId), { method: "DELETE" });
     },
     adminAnalytics: function () { return request("/api/admin/analytics"); },
+    adminMarketplaceListings: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/admin/marketplace/listings" + qs);
+    },
+    adminMarketplaceSponsorships: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/admin/marketplace/sponsorships" + qs);
+    },
+    adminMarketplaceJobs: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/admin/marketplace/jobs" + qs);
+    },
+    adminMarketplaceInquiries: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/admin/marketplace/inquiries" + qs);
+    },
+    adminAuditLogs: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/admin/audit-logs" + qs);
+    },
     moderationReports: function (params) {
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request("/api/moderation/reports" + qs);

@@ -13,9 +13,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { User, Post, Connection, Message, Like, Comment } = require('../models');
-const { authenticate } = require('../middleware/auth');
-const { requireAdmin } = require('../middleware/admin');
+const { User, Post, Connection, Message, Like, Comment, Listing, Sponsorship, Job, Inquiry, AdminAuditLog } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../models');
 const ADMIN_METRICS_TTL_MS = 15 * 1000;
@@ -39,6 +37,21 @@ function setCachedAdminMetrics(key, value) {
     value,
     expiresAt: Date.now() + ADMIN_METRICS_TTL_MS
   });
+}
+
+async function writeAdminAuditLog(req, action, targetType, targetId, details) {
+  try {
+    await AdminAuditLog.create({
+      adminId: req.userId,
+      action,
+      targetType: targetType || null,
+      targetId: targetId || null,
+      details: details || null,
+      ipAddress: req.ip
+    });
+  } catch (err) {
+    console.warn('Admin audit log write failed:', err.message);
+  }
 }
 
 // ─── DASHBOARD STATS ───
@@ -153,6 +166,7 @@ router.put('/users/:id', async (req, res) => {
     });
 
     await user.update(updates);
+    await writeAdminAuditLog(req, 'user_updated', 'user', user.id, JSON.stringify(updates));
     ok(res, { message: 'User updated.', payload: user.toJSON() });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to update user.');
@@ -170,6 +184,7 @@ router.delete('/users/:id', async (req, res) => {
     }
 
     await user.update({ isActive: false });
+    await writeAdminAuditLog(req, 'user_deactivated', 'user', user.id, user.email || null);
     ok(res, { message: 'User deactivated.' });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to deactivate user.');
@@ -209,6 +224,7 @@ router.delete('/posts/:id', async (req, res) => {
     if (!post) return fail(res, 404, 'NOT_FOUND', 'Post not found.');
 
     await post.update({ isActive: false });
+    await writeAdminAuditLog(req, 'post_removed', 'post', post.id, null);
     ok(res, { message: 'Post removed.' });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to remove post.');
@@ -263,6 +279,157 @@ router.get('/analytics', async (req, res) => {
     ok(res, payload);
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch analytics.');
+  }
+});
+
+// ─── MARKETPLACE LISTINGS (admin view) ───
+router.get('/marketplace/listings', async (req, res) => {
+  try {
+    const { search, status, page = 1, limit = 20 } = req.query;
+    const where = {};
+    if (status) where.status = status;
+    if (search) {
+      where[Op.or] = [
+        { title: { [Op.iLike]: `%${search}%` } },
+        { description: { [Op.iLike]: `%${search}%` } }
+      ];
+    }
+
+    const parsedLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+    const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+    const offset = (parsedPage - 1) * parsedLimit;
+
+    const { rows, count } = await Listing.findAndCountAll({
+      where,
+      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'email', 'role'] }],
+      limit: parsedLimit,
+      offset,
+      order: [['createdAt', 'DESC']]
+    });
+
+    ok(res, rows, { pagination: { total: count, page: parsedPage, pages: Math.ceil(count / parsedLimit) } });
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch marketplace listings.');
+  }
+});
+
+// ─── SPONSORSHIPS (admin view) ───
+router.get('/marketplace/sponsorships', async (req, res) => {
+  try {
+    const { search, status, page = 1, limit = 20 } = req.query;
+    const where = {};
+    if (status) where.status = status;
+    if (search) {
+      where[Op.or] = [
+        { title: { [Op.iLike]: `%${search}%` } },
+        { summary: { [Op.iLike]: `%${search}%` } }
+      ];
+    }
+
+    const parsedLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+    const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+    const offset = (parsedPage - 1) * parsedLimit;
+
+    const { rows, count } = await Sponsorship.findAndCountAll({
+      where,
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email', 'role'] }],
+      limit: parsedLimit,
+      offset,
+      order: [['createdAt', 'DESC']]
+    });
+
+    ok(res, rows, { pagination: { total: count, page: parsedPage, pages: Math.ceil(count / parsedLimit) } });
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch sponsorships.');
+  }
+});
+
+// ─── JOBS (admin view) ───
+router.get('/marketplace/jobs', async (req, res) => {
+  try {
+    const { search, isActive, page = 1, limit = 20 } = req.query;
+    const where = {};
+    if (isActive !== undefined) where.isActive = isActive === 'true';
+    if (search) {
+      where[Op.or] = [
+        { title: { [Op.iLike]: `%${search}%` } },
+        { description: { [Op.iLike]: `%${search}%` } }
+      ];
+    }
+
+    const parsedLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+    const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+    const offset = (parsedPage - 1) * parsedLimit;
+
+    const { rows, count } = await Job.findAndCountAll({
+      where,
+      include: [{ model: User, as: 'club', attributes: ['id', 'firstName', 'lastName', 'email', 'role'] }],
+      limit: parsedLimit,
+      offset,
+      order: [['createdAt', 'DESC']]
+    });
+
+    ok(res, rows, { pagination: { total: count, page: parsedPage, pages: Math.ceil(count / parsedLimit) } });
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch jobs.');
+  }
+});
+
+// ─── INQUIRIES (admin view) ───
+router.get('/marketplace/inquiries', async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const where = {};
+    if (status) where.status = status;
+
+    const parsedLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+    const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+    const offset = (parsedPage - 1) * parsedLimit;
+
+    const { rows, count } = await Inquiry.findAndCountAll({
+      where,
+      limit: parsedLimit,
+      offset,
+      order: [['createdAt', 'DESC']]
+    });
+
+    const listingIds = Array.from(new Set(rows.map((r) => r.listingId).filter(Boolean)));
+    const listings = listingIds.length ? await Listing.findAll({
+      where: { id: { [Op.in]: listingIds } },
+      attributes: ['id', 'title']
+    }) : [];
+    const listingMap = new Map(listings.map((l) => [l.id, l.title]));
+
+    const payload = rows.map((row) => {
+      const json = row.toJSON();
+      json.listingTitle = listingMap.get(json.listingId) || null;
+      return json;
+    });
+
+    ok(res, payload, { pagination: { total: count, page: parsedPage, pages: Math.ceil(count / parsedLimit) } });
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch inquiries.');
+  }
+});
+
+// ─── AUDIT LOGS (admin view) ───
+router.get('/audit-logs', async (req, res) => {
+  try {
+    const { page = 1, limit = 50 } = req.query;
+    const parsedLimit = Math.max(1, Math.min(200, parseInt(limit, 10) || 50));
+    const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+    const offset = (parsedPage - 1) * parsedLimit;
+
+    const { rows, count } = await AdminAuditLog.findAndCountAll({
+      include: [{ model: User, as: 'admin', attributes: ['id', 'firstName', 'lastName', 'email', 'role'] }],
+      limit: parsedLimit,
+      offset,
+      order: [['createdAt', 'DESC']]
+    });
+
+    ok(res, rows, { pagination: { total: count, page: parsedPage, pages: Math.ceil(count / parsedLimit) } });
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch audit logs.');
   }
 });
 
