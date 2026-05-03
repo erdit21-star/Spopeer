@@ -350,7 +350,21 @@
     },
     getTrendingFeed: function () { return request("/api/posts/feed/trending"); },
     createPost: function (payload) {
-      return request("/api/posts", { method: "POST", body: JSON.stringify(payload) });
+      if (payload instanceof FormData) {
+        const token = localStorage.getItem("spopeerToken");
+        const headers = token ? { Authorization: "Bearer " + token } : {};
+
+        return request("/api/posts", {
+          method: "POST",
+          body: payload,
+          headers,
+        });
+      }
+
+      return request("/api/posts", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
     },
     listPosts: function (params) {
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';

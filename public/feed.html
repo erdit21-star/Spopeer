@@ -4965,9 +4965,9 @@
     const visibility = document.getElementById('postVisibility').value;
     const userData = getCurrentUserData();
 
-    // Validate content
-    if (!content && composerState.media.length === 0 && !composerState.poll && !composerState.event) {
-      if (window.SpopeerToast) window.SpopeerToast.warning('Please add some content to your post');
+    // Backend currently requires text content.
+    if (!content) {
+      if (window.SpopeerToast) window.SpopeerToast.warning('Write something before posting.');
       return;
     }
 
@@ -5013,14 +5013,21 @@
       submitComposer.disabled = true;
       submitComposer.textContent = 'Posting...';
 
-      const postPayload = {
-        content: content,
-        visibility: visibility,
-        sport: userData.primarySport || userData.sport || 'General',
-        media: composerState.media.length > 0
-          ? composerState.media.map(m => m.src).filter(Boolean)
-          : []
-      };
+      const sport = userData.primarySport || userData.sport || 'General';
+      const firstMediaFile = composerState.media && composerState.media[0] ? composerState.media[0].file : null;
+      let postPayload;
+      if (firstMediaFile) {
+        postPayload = new FormData();
+        postPayload.append('content', content);
+        postPayload.append('sport', sport);
+        postPayload.append('image', firstMediaFile);
+      } else {
+        postPayload = {
+          content: content,
+          visibility: visibility,
+          sport: sport
+        };
+      }
 
       // Reset composer
       postContent.value = '';
@@ -5038,7 +5045,11 @@
       eventCreator.style.display = 'none';
       composerState = { media: [], poll: null, event: null, type: 'text' };
 
-      await API.createPost(postPayload);
+      if (window.SpopeerFeedEngine && typeof window.SpopeerFeedEngine.createPost === 'function') {
+        await window.SpopeerFeedEngine.createPost(postPayload);
+      } else {
+        await API.createPost(postPayload);
+      }
 
       // Reload feed to show new post at top
       await loadAllPosts();
