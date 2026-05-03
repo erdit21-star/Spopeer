@@ -1,149 +1,954 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spopeer - Admin Dashboard</title>
-<script src="../../js/api.js"></script>
-<script src="../../js/auth.js"></script>
-<script src="/js/role-router.js"></script>
-<script>window.SpopeerRoleRouter.requireAdmin();</script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#080c14;
-  --surface:#0d1320;
-  --surface-2:#111827;
-  --border:#1e2d45;
-  --text:#e8edf5;
-  --text-2:#8fa3c0;
-  --accent:#2563ff;
-  --green:#10b981;
-  --font-head:'Syne',sans-serif;
-  --font-body:'Plus Jakarta Sans',sans-serif;
-}
-body{font-family:var(--font-body);background:radial-gradient(circle at 20% 0%,#13203b 0,#080c14 45%);color:var(--text);min-height:100vh}
-.wrap{max-width:1100px;margin:0 auto;padding:22px 16px 38px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
-.h1{font-family:var(--font-head);font-size:26px;font-weight:800}
-.sub{color:var(--text-2);font-size:13px;margin-top:4px}
-.btn{border:1px solid var(--border);background:var(--surface-2);color:var(--text);padding:9px 12px;border-radius:10px;text-decoration:none;font-size:13px}
-.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0}
-.card{background:rgba(13,19,32,.9);border:1px solid var(--border);border-radius:14px;padding:14px}
-.k{font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-.v{font-family:var(--font-head);font-size:24px;font-weight:700}
-.panels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.panel h2{font-size:14px;margin-bottom:10px}
-.list{display:flex;flex-direction:column;gap:8px}
-.row{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
-.row strong{font-size:12px}
-.row span{font-size:12px;color:var(--text-2);text-align:right}
-.empty{font-size:12px;color:var(--text-2);padding:8px 0}
-.status{margin-top:14px;font-size:12px;color:var(--green)}
-@media (max-width:980px){
-  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .panels{grid-template-columns:1fr}
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spopeer - Admin Dashboard</title>
+  <script src="../../js/api.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script src="/js/role-router.js"></script>
+  <script>window.SpopeerRoleRouter.requireAdmin();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="/css/fonts.css">
-
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
   <script src="../../js/mobile-enhancements.js" defer></script>
+  <style>
+    :root {
+      --bg:#fafaf8;
+      --white:#ffffff;
+      --surface:#f3f3ef;
+      --surface-2:#eeeeea;
+      --border:#ebebe7;
+      --ink:#111111;
+      --ink-2:#333333;
+      --muted:#7a7a7a;
+      --accent:#001233;
+      --accent-hover:#002060;
+      --blue:#1a6bff;
+      --blue-lt:#eef3ff;
+      --green:#16a34a;
+      --green-lt:#dcfce7;
+      --amber:#d97706;
+      --amber-lt:#fef3c7;
+      --red:#b91c1c;
+      --red-lt:#fee2e2;
+      --purple:#7c3aed;
+      --purple-lt:#f3effe;
+      --fD:'Syne',sans-serif;
+      --fB:'Plus Jakarta Sans',sans-serif;
+      --rS:10px;
+      --rM:16px;
+      --rL:24px;
+      --pill:999px;
+      --nav-h:64px;
+      --sidebar-w:240px;
+      --shadow-sm:0 1px 3px rgba(0,0,0,.07);
+      --shadow-md:0 4px 16px rgba(0,0,0,.09);
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:var(--fB);background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden}
+    button,input,select,textarea{font:inherit}
+
+    .admin-nav{
+      position:fixed;top:0;left:0;right:0;height:var(--nav-h);
+      background:var(--accent);display:flex;align-items:center;padding:0 24px;z-index:100;
+      box-shadow:0 2px 12px rgba(0,0,0,.2)
+    }
+    .nav-logo{font-family:var(--fD);font-size:1.25rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:10px}
+    .nav-logo span{background:var(--blue);color:#fff;font-size:.65rem;font-weight:700;padding:3px 8px;border-radius:var(--pill);text-transform:uppercase}
+    .nav-spacer{flex:1}
+    .nav-actions{display:flex;align-items:center;gap:12px}
+    .nav-icon-btn{width:38px;height:38px;border:none;border-radius:var(--pill);background:rgba(255,255,255,.12);color:#fff;cursor:pointer}
+    .nav-icon-btn:hover{background:rgba(255,255,255,.2)}
+    .nav-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .nav-user-info{color:rgba(255,255,255,.85);font-size:.82rem;text-align:right}
+    .nav-user-info strong{display:block;color:#fff}
+
+    .admin-layout{display:flex;padding-top:var(--nav-h);min-height:100vh}
+    .admin-sidebar{
+      width:var(--sidebar-w);position:fixed;top:var(--nav-h);left:0;bottom:0;
+      background:var(--white);border-right:1.5px solid var(--border);padding:16px 12px;overflow-y:auto
+    }
+    .sidebar-section-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 10px 4px}
+    .sidebar-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border:none;background:none;width:100%;text-align:left;border-radius:var(--rS);cursor:pointer;color:var(--ink-2)}
+    .sidebar-link i{width:18px;color:var(--muted)}
+    .sidebar-link:hover{background:var(--surface)}
+    .sidebar-link.active{background:var(--accent);color:#fff;font-weight:600}
+    .sidebar-link.active i{color:rgba(255,255,255,.85)}
+    .sidebar-badge{margin-left:auto;background:var(--red);color:#fff;padding:1px 7px;border-radius:var(--pill);font-size:.68rem;font-weight:700}
+    .sidebar-bottom{margin-top:10px;padding-top:12px;border-top:1.5px solid var(--border)}
+
+    .admin-main{flex:1;margin-left:var(--sidebar-w);padding:28px 32px;overflow-x:hidden}
+    .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
+    .page-title{font-family:var(--fD);font-size:1.5rem;font-weight:800;color:var(--accent)}
+    .page-subtitle{font-size:.84rem;color:var(--muted)}
+    .header-actions{display:flex;gap:10px;align-items:center}
+
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:var(--rS);font-size:.85rem;font-weight:600;border:none;cursor:pointer}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-primary:hover{background:var(--accent-hover)}
+    .btn-secondary{background:var(--surface);color:var(--ink-2);border:1.5px solid var(--border)}
+    .btn-danger{background:var(--red-lt);color:var(--red);border:1.5px solid #fca5a5}
+    .btn-success{background:var(--green-lt);color:var(--green);border:1.5px solid #86efac}
+    .btn-sm{padding:5px 12px;font-size:.79rem}
+
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+    .stat-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rM);padding:20px;display:flex;gap:14px;box-shadow:var(--shadow-sm)}
+    .stat-icon{width:44px;height:44px;border-radius:var(--rS);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+    .stat-icon.blue{background:var(--blue-lt);color:var(--blue)}
+    .stat-icon.green{background:var(--green-lt);color:var(--green)}
+    .stat-icon.amber{background:var(--amber-lt);color:var(--amber)}
+    .stat-icon.red{background:var(--red-lt);color:var(--red)}
+    .stat-icon.purple{background:var(--purple-lt);color:var(--purple)}
+    .stat-label{font-size:.78rem;color:var(--muted)}
+    .stat-value{font-family:var(--fD);font-size:1.75rem;font-weight:800;line-height:1}
+    .stat-change{font-size:.75rem;margin-top:5px;font-weight:600;color:var(--green)}
+
+    .panel{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rM);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:24px}
+    .panel-header{padding:16px 20px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .panel-title{font-family:var(--fD);font-size:1rem;font-weight:800}
+    .panel-body{padding:20px}
+    .panel-body.no-pad{padding:0}
+
+    .analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+    .bar-chart{display:flex;align-items:flex-end;gap:8px;height:180px;padding:0 16px}
+    .bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+    .bar{width:100%;border-radius:6px 6px 0 0;min-height:4px;background:var(--blue)}
+    .bar-label{font-size:.68rem;color:var(--muted)}
+
+    .donut-wrap{display:flex;align-items:center;gap:24px}
+    .donut-legend{display:flex;flex-direction:column;gap:10px;width:100%}
+    .legend-item{display:flex;align-items:center;gap:8px;font-size:.82rem}
+    .legend-dot{width:10px;height:10px;border-radius:50%}
+
+    .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--pill);font-size:.75rem;font-weight:600}
+    .chip-blue{background:var(--blue-lt);color:var(--blue)}
+    .chip-green{background:var(--green-lt);color:var(--green)}
+    .chip-amber{background:var(--amber-lt);color:var(--amber)}
+    .chip-red{background:var(--red-lt);color:var(--red)}
+    .chip-purple{background:var(--purple-lt);color:var(--purple)}
+    .chip-gray{background:var(--surface-2);color:var(--muted)}
+
+    .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .search-wrap{position:relative;flex:1;min-width:220px}
+    .search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+    .search-input{width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--border);border-radius:var(--rS);background:var(--surface)}
+    .filter-select{padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--rS);background:var(--surface)}
+
+    .sp-table{width:100%;border-collapse:collapse}
+    .sp-table th{padding:11px 16px;text-align:left;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--surface);border-bottom:1.5px solid var(--border)}
+    .sp-table td{padding:13px 16px;font-size:.855rem;color:var(--ink-2);border-bottom:1px solid var(--border);vertical-align:middle}
+
+    .user-cell{display:flex;align-items:center;gap:10px}
+    .u-avatar{width:34px;height:34px;border-radius:50%;background:#cce7ff;color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700}
+    .u-name{font-weight:600;color:var(--ink)}
+    .u-email{font-size:.77rem;color:var(--muted)}
+
+    .tab-row{display:flex;border-bottom:1.5px solid var(--border);padding:0 20px;overflow-x:auto}
+    .tab-btn{padding:13px 18px;font-size:.855rem;font-weight:600;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap}
+    .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .tab-count{display:inline-flex;align-items:center;justify-content:center;background:var(--surface-2);border-radius:var(--pill);font-size:.7rem;padding:1px 7px;margin-left:6px}
+
+    .pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1.5px solid var(--border);font-size:.83rem;color:var(--muted)}
+    .page-btns{display:flex;gap:4px}
+    .page-btn{width:32px;height:32px;border-radius:var(--rS);border:1.5px solid var(--border);background:var(--white);cursor:pointer}
+    .page-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+    .section{display:none}
+    .section.active{display:block}
+
+    .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .2s}
+    .modal-overlay.open{opacity:1;pointer-events:auto}
+    .modal{background:var(--white);border-radius:var(--rL);max-width:500px;width:100%}
+    .modal-header{padding:20px 24px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .modal-title{font-family:var(--fD);font-size:1.05rem;font-weight:800}
+    .modal-close{width:32px;height:32px;border-radius:var(--pill);border:none;background:var(--surface);cursor:pointer}
+    .modal-body{padding:24px}
+    .modal-footer{padding:16px 24px;border-top:1.5px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+    .form-group{margin-bottom:14px}
+    .form-label{display:block;font-size:.825rem;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+    .form-control{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--rS);background:var(--surface)}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+    .toast-stack{position:fixed;bottom:24px;right:24px;z-index:500;display:flex;flex-direction:column;gap:8px}
+    .toast{background:var(--ink);color:#fff;padding:12px 18px;border-radius:var(--rS);font-size:.85rem;display:flex;align-items:center;gap:10px}
+    .toast.success{background:var(--green)}
+    .toast.error{background:var(--red)}
+    .toast.warn{background:var(--amber)}
+
+    .empty-state{display:flex;flex-direction:column;align-items:center;padding:48px 24px;color:var(--muted);text-align:center}
+    .content-preview{max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    @media (max-width:900px){
+      .admin-sidebar{width:64px}
+      .sidebar-link span,.sidebar-section-label,.sidebar-badge,.nav-user-info{display:none}
+      .admin-main{margin-left:64px;padding:20px 16px}
+      .sidebar-link{justify-content:center}
+      .analytics-grid{grid-template-columns:1fr}
+    }
+    @media (max-width:600px){
+      .stats-grid{grid-template-columns:1fr 1fr}
+      .form-row{grid-template-columns:1fr}
+    }
+  </style>
 </head>
 <body>
-  <main class="wrap">
-    <header class="top">
-      <div>
-        <h1 class="h1">Admin Dashboard</h1>
-        <p class="sub">Real platform analytics from persisted backend data.</p>
+<nav class="admin-nav">
+  <div class="nav-logo"><i class="fa-solid fa-bolt"></i> Spopeer <span>Admin</span></div>
+  <div class="nav-spacer"></div>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" onclick="showToast('No new system alerts','success')" title="Alerts"><i class="fa-solid fa-bell"></i></button>
+    <button class="nav-icon-btn" onclick="refreshDashboard()" title="Refresh"><i class="fa-solid fa-rotate-right"></i></button>
+    <div class="nav-user-info"><strong id="adminUserName">Admin User</strong><span id="adminUserRole">admin</span></div>
+    <div class="nav-avatar" id="adminAvatar">A</div>
+  </div>
+</nav>
+
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-section-label">Overview</div>
+    <button class="sidebar-link active" onclick="switchSection('dashboard', this)"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></button>
+
+    <div class="sidebar-section-label">Management</div>
+    <button class="sidebar-link" onclick="switchSection('users', this)"><i class="fa-solid fa-users"></i><span>Users</span></button>
+    <button class="sidebar-link" onclick="switchSection('content', this)"><i class="fa-solid fa-newspaper"></i><span>Content</span></button>
+    <button class="sidebar-link" onclick="switchSection('marketplace', this)"><i class="fa-solid fa-store"></i><span>Marketplace</span></button>
+
+    <div class="sidebar-section-label">Moderation</div>
+    <button class="sidebar-link" onclick="switchSection('reports', this)"><i class="fa-solid fa-flag"></i><span>Reports</span><span class="sidebar-badge" id="sb-reports">0</span></button>
+
+    <div class="sidebar-section-label">Insights</div>
+    <button class="sidebar-link" onclick="switchSection('analytics', this)"><i class="fa-solid fa-chart-line"></i><span>Analytics</span></button>
+    <button class="sidebar-link" onclick="switchSection('auditlog', this)"><i class="fa-solid fa-scroll"></i><span>Audit Log</span></button>
+
+    <div class="sidebar-bottom">
+      <div class="sidebar-section-label">System</div>
+      <button class="sidebar-link" onclick="switchSection('settings', this)"><i class="fa-solid fa-gear"></i><span>Settings</span></button>
+      <button class="sidebar-link" style="color:var(--red);" onclick="adminSignOut()"><i class="fa-solid fa-right-from-bracket" style="color:var(--red);"></i><span>Sign Out</span></button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div id="section-dashboard" class="section active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-subtitle">Spopeer platform overview - Live data from API</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary btn-sm" onclick="refreshDashboard()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+          <a class="btn btn-primary btn-sm" href="/feed.html"><i class="fa-solid fa-arrow-left"></i> Back to Feed</a>
+        </div>
       </div>
-      <a class="btn" href="/feed.html">Back to Feed</a>
-    </header>
 
-    <section class="grid">
-      <article class="card"><div class="k">Total Users</div><div class="v" id="totalUsers">0</div></article>
-      <article class="card"><div class="k">Total Posts</div><div class="v" id="totalPosts">0</div></article>
-      <article class="card"><div class="k">Total Follows</div><div class="v" id="totalFollows">0</div></article>
-      <article class="card"><div class="k">New Users Today</div><div class="v" id="totalViews">0</div></article>
-      <article class="card"><div class="k">New Posts Today</div><div class="v" id="totalBookmarks">0</div></article>
-    </section>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon blue"><i class="fa-solid fa-users"></i></div><div><div class="stat-label">Total Users</div><div class="stat-value" id="kpi-users">-</div><div class="stat-change" id="kpi-users-today">+0 today</div></div></div>
+        <div class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-file-lines"></i></div><div><div class="stat-label">Total Posts</div><div class="stat-value" id="kpi-posts">-</div><div class="stat-change" id="kpi-posts-today">+0 today</div></div></div>
+        <div class="stat-card"><div class="stat-icon amber"><i class="fa-solid fa-link"></i></div><div><div class="stat-label">Connections</div><div class="stat-value" id="kpi-connections">-</div><div class="stat-change">Active links</div></div></div>
+        <div class="stat-card"><div class="stat-icon purple"><i class="fa-solid fa-envelope"></i></div><div><div class="stat-label">Messages Sent</div><div class="stat-value" id="kpi-messages">-</div><div class="stat-change">All-time</div></div></div>
+        <div class="stat-card"><div class="stat-icon red"><i class="fa-solid fa-flag"></i></div><div><div class="stat-label">Pending Reports</div><div class="stat-value" id="kpi-reports">0</div><div class="stat-change" style="color:var(--red)">Needs review</div></div></div>
+      </div>
 
-    <section class="panels">
-      <article class="card panel">
-        <h2>Users By Role</h2>
-        <div class="list" id="usersByRoleList"><p class="empty">No platform activity yet</p></div>
-      </article>
+      <div class="analytics-grid">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">User Registrations (last 6 months)</div><span class="chip chip-green">Growing</span></div>
+          <div class="panel-body"><div class="bar-chart" id="reg-chart"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Users by Role</div></div>
+          <div class="panel-body">
+            <div class="donut-wrap">
+              <svg width="120" height="120" viewBox="0 0 120 120" id="donut-svg"><circle cx="60" cy="60" r="46" fill="none" stroke="var(--surface-2)" stroke-width="16"/></svg>
+              <div class="donut-legend" id="donut-legend"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <article class="card panel">
-        <h2>Latest Users</h2>
-        <div class="list" id="latestUsersList"><p class="empty">No users yet</p></div>
-      </article>
+      <div class="analytics-grid">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Subscription Breakdown</div></div>
+          <div class="panel-body" id="sub-breakdown"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Quick Actions</div></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:10px;">
+            <button class="btn btn-secondary" onclick="switchSection('users', findSidebarButton('users'))"><i class="fa-solid fa-user-plus"></i> Manage Users</button>
+            <button class="btn btn-secondary" onclick="switchSection('reports', findSidebarButton('reports'))"><i class="fa-solid fa-flag"></i> Review Reports <span id="qa-report-count" style="background:var(--red);color:#fff;border-radius:var(--pill);padding:1px 8px;font-size:.72rem;margin-left:4px;">0</span></button>
+            <button class="btn btn-secondary" onclick="switchSection('content', findSidebarButton('content'))"><i class="fa-solid fa-newspaper"></i> Moderate Content</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <article class="card panel">
-        <h2>Latest Posts</h2>
-        <div class="list" id="latestPostsList"><p class="empty">No posts yet</p></div>
-      </article>
-    </section>
+    <div id="section-users" class="section">
+      <div class="page-header"><div><div class="page-title">User Management</div><div class="page-subtitle">All registered Spopeer users</div></div></div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="filter-bar" style="flex:1;">
+            <div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="search-input" type="text" placeholder="Search by name, email" oninput="filterUsers(this.value)"></div>
+            <select class="filter-select" onchange="filterUsers(null, this.value)"><option value="">All Roles</option><option value="athlete">Athlete</option><option value="coach">Coach</option><option value="club">Club</option><option value="supportive_professional">Professional</option><option value="admin">Admin</option></select>
+            <select class="filter-select" onchange="filterUsers(null, null, this.value)"><option value="">All Status</option><option value="true">Active</option><option value="false">Inactive</option></select>
+          </div>
+        </div>
+        <div class="panel-body no-pad">
+          <table class="sp-table">
+            <thead><tr><th>User</th><th>Role</th><th>Subscription</th><th>Sport</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted);">Loading users...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination"><span id="users-pagination-info">Showing 0 users</span><div class="page-btns" id="users-page-btns"></div></div>
+      </div>
+    </div>
 
-    <p id="status" class="status"></p>
+    <div id="section-content" class="section">
+      <div class="page-header"><div><div class="page-title">Content Moderation</div><div class="page-subtitle">Posts moderation</div></div></div>
+      <div class="panel">
+        <div class="tab-row">
+          <button class="tab-btn active" onclick="switchContentTab('posts', this)">Posts <span class="tab-count" id="tc-posts">0</span></button>
+          <button class="tab-btn" onclick="switchContentTab('removed', this)">Removed <span class="tab-count" id="tc-removed">0</span></button>
+        </div>
+        <div class="panel-header" style="border-top:0;"><div class="filter-bar" style="flex:1;"><div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="search-input" type="text" placeholder="Search post content" oninput="filterPosts(this.value)"></div></div></div>
+        <div class="panel-body no-pad">
+          <table class="sp-table">
+            <thead><tr><th>Author</th><th>Content</th><th>Sport</th><th>Likes</th><th>Comments</th><th>Posted</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="posts-tbody"><tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted);">Loading posts...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination"><span id="posts-pagination-info">Showing 0 posts</span><div class="page-btns" id="posts-page-btns"></div></div>
+      </div>
+    </div>
+
+    <div id="section-marketplace" class="section">
+      <div class="page-header"><div><div class="page-title">Marketplace</div><div class="page-subtitle">Listings overview (mock until dedicated admin endpoints are added)</div></div></div>
+      <div class="panel">
+        <div class="tab-row">
+          <button class="tab-btn active" onclick="switchMarketTab('listings', this)">Listings</button>
+          <button class="tab-btn" onclick="switchMarketTab('sponsorships', this)">Sponsorships</button>
+          <button class="tab-btn" onclick="switchMarketTab('jobs', this)">Jobs</button>
+          <button class="tab-btn" onclick="switchMarketTab('inquiries', this)">Inquiries</button>
+        </div>
+        <div class="panel-body no-pad"><table class="sp-table"><thead id="market-thead"></thead><tbody id="market-tbody"></tbody></table></div>
+        <div class="pagination"><span id="market-info">Showing items</span><div class="page-btns"></div></div>
+      </div>
+    </div>
+
+    <div id="section-reports" class="section">
+      <div class="page-header"><div><div class="page-title">Reports and Flags</div><div class="page-subtitle">User-submitted reports from moderation API</div></div></div>
+      <div class="panel">
+        <div class="tab-row">
+          <button class="tab-btn active" onclick="switchReportTab('pending', this)">Pending <span class="tab-count" id="rt-pending">0</span></button>
+          <button class="tab-btn" onclick="switchReportTab('reviewed', this)">Under Review <span class="tab-count" id="rt-reviewed">0</span></button>
+          <button class="tab-btn" onclick="switchReportTab('resolved', this)">Resolved <span class="tab-count" id="rt-resolved">0</span></button>
+          <button class="tab-btn" onclick="switchReportTab('dismissed', this)">Dismissed <span class="tab-count" id="rt-dismissed">0</span></button>
+        </div>
+        <div class="panel-body no-pad">
+          <table class="sp-table">
+            <thead><tr><th>#</th><th>Reporter</th><th>Target</th><th>Reason</th><th>Description</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="reports-tbody"><tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted);">Loading reports...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination"><span id="reports-pagination-info">Showing 0 reports</span><div class="page-btns" id="reports-page-btns"></div></div>
+      </div>
+    </div>
+
+    <div id="section-analytics" class="section">
+      <div class="page-header"><div><div class="page-title">Analytics</div><div class="page-subtitle">Engagement and growth from admin analytics API</div></div><div class="header-actions"><button class="btn btn-secondary btn-sm" onclick="loadAnalytics()"><i class="fa-solid fa-rotate-right"></i> Refresh</button></div></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon blue"><i class="fa-solid fa-user-plus"></i></div><div><div class="stat-label">New Users (30d)</div><div class="stat-value" id="an-users">-</div></div></div>
+        <div class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-pen-to-square"></i></div><div><div class="stat-label">New Posts (30d)</div><div class="stat-value" id="an-posts">-</div></div></div>
+        <div class="stat-card"><div class="stat-icon amber"><i class="fa-solid fa-heart"></i></div><div><div class="stat-label">Total Likes</div><div class="stat-value" id="an-likes">-</div></div></div>
+        <div class="stat-card"><div class="stat-icon purple"><i class="fa-solid fa-comment"></i></div><div><div class="stat-label">Total Comments</div><div class="stat-value" id="an-comments">-</div></div></div>
+      </div>
+      <div class="analytics-grid">
+        <div class="panel"><div class="panel-header"><div class="panel-title">Top Posters</div></div><div class="panel-body no-pad"><table class="sp-table"><thead><tr><th>#</th><th>User</th><th>Role</th><th>Posts</th></tr></thead><tbody id="top-posters-tbody"></tbody></table></div></div>
+        <div class="panel"><div class="panel-header"><div class="panel-title">Most Followed</div></div><div class="panel-body no-pad"><table class="sp-table"><thead><tr><th>#</th><th>User</th><th>Role</th><th>Followers</th></tr></thead><tbody id="most-followed-tbody"></tbody></table></div></div>
+      </div>
+    </div>
+
+    <div id="section-auditlog" class="section">
+      <div class="page-header"><div><div class="page-title">Audit Log</div><div class="page-subtitle">Recent admin actions</div></div></div>
+      <div class="panel"><div class="panel-body no-pad"><table class="sp-table"><thead><tr><th>Action</th><th>Target</th><th>By</th><th>Time</th></tr></thead><tbody id="audit-log-body"></tbody></table></div></div>
+    </div>
+
+    <div id="section-settings" class="section">
+      <div class="page-header"><div><div class="page-title">Settings</div><div class="page-subtitle">Local admin preferences</div></div></div>
+      <div class="panel"><div class="panel-body"><p style="color:var(--muted);font-size:.9rem;">Runtime feature flags are not exposed by backend endpoints yet. Keep this section as UI-only for now.</p></div></div>
+    </div>
   </main>
+</div>
 
-  <script>
-    (async function () {
-      const status = document.getElementById('status');
-      try {
-        const [dashboardRes, usersRes, postsRes] = await Promise.all([
-          window.SpopeerAPI.adminDashboard(),
-          window.SpopeerAPI.adminUsers({ limit: 5, page: 1 }),
-          window.SpopeerAPI.adminPosts({ limit: 5, page: 1 })
-        ]);
+<div class="modal-overlay" id="modal-edit-user">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Edit User</div><button class="modal-close" onclick="closeModal('modal-edit-user')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-user-id">
+      <div class="form-group"><label class="form-label">Role</label><select class="form-control" id="edit-user-role"><option value="athlete">Athlete</option><option value="coach">Coach</option><option value="club">Club</option><option value="supportive_professional">Supportive Professional</option><option value="admin">Admin</option></select></div>
+      <div class="form-group"><label class="form-label">Subscription</label><select class="form-control" id="edit-user-sub"><option value="free">Free</option><option value="pro">Pro</option><option value="elite">Elite</option></select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Active</label><select class="form-control" id="edit-user-active"><option value="true">Active</option><option value="false">Suspended</option></select></div>
+        <div class="form-group"><label class="form-label">Verified</label><select class="form-control" id="edit-user-verified"><option value="false">No</option><option value="true">Yes</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-edit-user')">Cancel</button><button class="btn btn-primary" onclick="saveUserEdit()">Save</button></div>
+  </div>
+</div>
 
-        const overview = dashboardRes.payload || {};
-        document.getElementById('totalUsers').textContent = String(overview.totalUsers || 0);
-        document.getElementById('totalPosts').textContent = String(overview.totalPosts || 0);
-        document.getElementById('totalFollows').textContent = String(overview.totalConnections || 0);
-        document.getElementById('totalViews').textContent = String(overview.newUsersToday || 0);
-        document.getElementById('totalBookmarks').textContent = String(overview.newPostsToday || 0);
+<div class="modal-overlay" id="modal-resolve-report">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Resolve Report</div><button class="modal-close" onclick="closeModal('modal-resolve-report')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="resolve-report-id">
+      <div class="form-group"><label class="form-label">Action</label><select class="form-control" id="resolve-status"><option value="reviewed">Mark as Reviewed</option><option value="resolved">Resolve</option><option value="dismissed">Dismiss</option></select></div>
+      <div class="form-group"><label class="form-label">Resolution Notes</label><textarea class="form-control" id="resolve-notes" rows="3"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-resolve-report')">Cancel</button><button class="btn btn-primary" onclick="submitReportReview()">Submit</button></div>
+  </div>
+</div>
 
-        const roleList = document.getElementById('usersByRoleList');
-        const roleItems = overview.usersByRole || [];
-        roleList.innerHTML = roleItems.length
-          ? roleItems.map(function (item) {
-              return '<div class="row"><strong>' + (item.role || 'unknown') + '</strong><span>' + String(item.count || 0) + '</span></div>';
-            }).join('')
-          : '<p class="empty">No platform activity yet</p>';
+<div class="toast-stack" id="toast-stack"></div>
 
-        const latestUsersList = document.getElementById('latestUsersList');
-        const latestUsers = usersRes.payload || [];
-        latestUsersList.innerHTML = latestUsers.length
-          ? latestUsers.map(function (user) {
-              const name = ((user.firstName || '') + ' ' + (user.lastName || '')).trim() || user.email || 'Unknown user';
-              const role = user.role || 'unknown';
-              return '<div class="row"><strong>' + name + '</strong><span>' + role + '</span></div>';
-            }).join('')
-          : '<p class="empty">No users yet</p>';
+<script>
+let usersData = [];
+let postsData = [];
+let reportsData = [];
+let analyticsData = {};
+let currentReportTab = 'pending';
+let currentUsersPage = 1;
+let currentPostsPage = 1;
+let currentReportsPage = 1;
+const PAGE_SIZE = 20;
 
-        const latestPostsList = document.getElementById('latestPostsList');
-        const latestPosts = postsRes.payload || [];
-        latestPostsList.innerHTML = latestPosts.length
-          ? latestPosts.map(function (post) {
-              const author = post.author && (post.author.firstName || post.author.lastName)
-                ? ((post.author.firstName || '') + ' ' + (post.author.lastName || '')).trim()
-                : 'Unknown';
-              const text = post.content ? post.content.slice(0, 60) : '';
-              return '<div class="row"><strong>' + author + '</strong><span>' + text + '</span></div>';
-            }).join('')
-          : '<p class="empty">No posts yet</p>';
+let usersFilter = { search: '', role: '', active: '' };
+let postsFilter = { search: '', isActive: 'true' };
 
-        status.textContent = 'Real analytics loaded from backend.';
-      } catch (err) {
-        console.error('Admin dashboard load error:', err);
-        status.style.color = '#ef4444';
-        status.textContent = 'Failed to load analytics: ' + (err && err.message ? err.message : String(err));
-      }
-    })();
-  </script>
+function apiUnwrap(res) {
+  return res && res.payload !== undefined ? res.payload : res;
+}
+
+function showToast(msg, type) {
+  const stack = document.getElementById('toast-stack');
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type || '');
+  const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-circle-xmark' : type === 'warn' ? 'fa-triangle-exclamation' : 'fa-circle-info';
+  t.innerHTML = '<i class="fa-solid ' + icon + '"></i> ' + msg;
+  stack.appendChild(t);
+  setTimeout(function () { t.remove(); }, 3500);
+}
+
+function fmtDate(d) {
+  if (!d) return '-';
+  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function fmtNum(n) {
+  if (n == null) return '-';
+  return Number(n).toLocaleString();
+}
+
+function initials(u) {
+  const f = ((u && u.firstName) || '?').charAt(0);
+  const l = ((u && u.lastName) || '?').charAt(0);
+  return (f + l).toUpperCase();
+}
+
+function roleChip(role) {
+  const map = { athlete:'blue', coach:'green', club:'amber', supportive_professional:'purple', admin:'red' };
+  const labels = { athlete:'Athlete', coach:'Coach', club:'Club', supportive_professional:'Professional', admin:'Admin' };
+  return '<span class="chip chip-' + (map[role] || 'gray') + '">' + (labels[role] || role || 'Unknown') + '</span>';
+}
+
+function subChip(s) {
+  const c = s === 'pro' ? 'blue' : s === 'elite' ? 'amber' : 'gray';
+  return '<span class="chip chip-' + c + '">' + (s || 'free') + '</span>';
+}
+
+function statusChip(active) {
+  return active ? '<span class="chip chip-green">Active</span>' : '<span class="chip chip-red">Suspended</span>';
+}
+
+function reportStatusChip(status) {
+  const map = { pending:'amber', reviewed:'blue', resolved:'green', dismissed:'gray' };
+  return '<span class="chip chip-' + (map[status] || 'gray') + '">' + (status || 'unknown') + '</span>';
+}
+
+function findSidebarButton(key) {
+  return Array.from(document.querySelectorAll('.sidebar-link')).find(function (btn) {
+    return btn.textContent.toLowerCase().indexOf(key.toLowerCase()) !== -1;
+  });
+}
+
+function switchSection(id, btn) {
+  document.querySelectorAll('.section').forEach(function (s) { s.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-link').forEach(function (b) { b.classList.remove('active'); });
+  const target = document.getElementById('section-' + id);
+  if (target) target.classList.add('active');
+  if (btn) btn.classList.add('active');
+
+  if (id === 'users' && !usersData.length) loadUsers();
+  if (id === 'content' && !postsData.length) loadPosts();
+  if (id === 'reports') loadReports();
+  if (id === 'analytics' && !analyticsData.topPosters) loadAnalytics();
+  if (id === 'marketplace') loadMarketplace('listings');
+  if (id === 'auditlog') renderAuditLog();
+}
+
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('open');
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+}
+
+document.addEventListener('click', function (e) {
+  if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
+});
+
+async function loadAdminHeaderUser() {
+  try {
+    const user = await window.Auth.syncUserFromBackend();
+    if (!user) return;
+    const name = ((user.firstName || '') + ' ' + (user.lastName || '')).trim() || user.email || 'Admin User';
+    const role = user.role || 'admin';
+    document.getElementById('adminUserName').textContent = name;
+    document.getElementById('adminUserRole').textContent = role;
+    document.getElementById('adminAvatar').textContent = initials(user);
+  } catch (err) {
+    console.warn('Failed to load admin header user', err);
+  }
+}
+
+async function adminSignOut() {
+  try {
+    await window.Auth.logout();
+  } catch (err) {
+    showToast('Logout failed', 'error');
+  }
+}
+
+async function loadDashboard() {
+  try {
+    const res = await window.SpopeerAPI.adminDashboard();
+    const d = apiUnwrap(res) || {};
+    document.getElementById('kpi-users').textContent = fmtNum(d.totalUsers || 0);
+    document.getElementById('kpi-posts').textContent = fmtNum(d.totalPosts || 0);
+    document.getElementById('kpi-connections').textContent = fmtNum(d.totalConnections || 0);
+    document.getElementById('kpi-messages').textContent = fmtNum(d.totalMessages || 0);
+    document.getElementById('kpi-users-today').textContent = '+' + (d.newUsersToday || 0) + ' today';
+    document.getElementById('kpi-posts-today').textContent = '+' + (d.newPostsToday || 0) + ' today';
+    renderDonut(d.usersByRole || []);
+    renderSubBreakdown(d.usersBySubscription || []);
+  } catch (err) {
+    console.warn('Dashboard API unavailable, using fallback:', err);
+    const fallback = {
+      totalUsers: 0,
+      totalPosts: 0,
+      totalConnections: 0,
+      totalMessages: 0,
+      newUsersToday: 0,
+      newPostsToday: 0,
+      usersByRole: [],
+      usersBySubscription: []
+    };
+    renderDonut(fallback.usersByRole);
+    renderSubBreakdown(fallback.usersBySubscription);
+  }
+
+  await loadReportCounts();
+  renderBarChart();
+}
+
+function renderBarChart() {
+  const wrap = document.getElementById('reg-chart');
+  const months = ['Nov','Dec','Jan','Feb','Mar','Apr'];
+  const vals = [41, 58, 72, 89, 112, 143];
+  const max = Math.max.apply(null, vals);
+  wrap.innerHTML = months.map(function (m, i) {
+    return '<div class="bar-col"><div class="bar" style="height:' + (Math.round((vals[i] / max) * 140) + 4) + 'px"></div><div class="bar-label">' + m + '</div></div>';
+  }).join('');
+}
+
+function renderDonut(roles) {
+  const colors = { athlete:'#1a6bff', coach:'#16a34a', club:'#d97706', supportive_professional:'#7c3aed', admin:'#b91c1c' };
+  const labels = { athlete:'Athlete', coach:'Coach', club:'Club', supportive_professional:'Professional', admin:'Admin' };
+  const total = roles.reduce(function (s, r) { return s + Number(r.count || 0); }, 0) || 1;
+  const R = 46;
+  const C = 2 * Math.PI * R;
+  let offset = 0;
+  let arcs = '';
+
+  roles.forEach(function (r) {
+    const frac = Number(r.count || 0) / total;
+    const dash = frac * C;
+    arcs += '<circle cx="60" cy="60" r="46" fill="none" stroke="' + (colors[r.role] || '#aaa') + '" stroke-width="16" stroke-dasharray="' + dash + ' ' + (C - dash) + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 60 60)"></circle>';
+    offset += dash;
+  });
+
+  document.getElementById('donut-svg').innerHTML = '<circle cx="60" cy="60" r="46" fill="none" stroke="var(--surface-2)" stroke-width="16"></circle>' + arcs + '<text x="60" y="65" text-anchor="middle" font-family="Syne,sans-serif" font-size="13" font-weight="800" fill="var(--ink)">' + fmtNum(total) + '</text>';
+
+  document.getElementById('donut-legend').innerHTML = roles.length ? roles.map(function (r) {
+    return '<div class="legend-item"><div class="legend-dot" style="background:' + (colors[r.role] || '#aaa') + '"></div><span>' + (labels[r.role] || r.role) + '</span><span style="margin-left:auto;font-weight:700;">' + fmtNum(r.count || 0) + '</span></div>';
+  }).join('') : '<span style="color:var(--muted)">No role data yet</span>';
+}
+
+function renderSubBreakdown(subs) {
+  const total = subs.reduce(function (s, r) { return s + Number(r.count || 0); }, 0) || 1;
+  const colors = { free:'var(--muted)', pro:'var(--blue)', elite:'var(--amber)' };
+  const host = document.getElementById('sub-breakdown');
+  if (!subs.length) {
+    host.innerHTML = '<span style="color:var(--muted)">No subscription data yet.</span>';
+    return;
+  }
+  host.innerHTML = subs.map(function (s) {
+    const pct = Math.round((Number(s.count || 0) / total) * 100);
+    return '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;font-size:.835rem;margin-bottom:5px;"><span style="font-weight:600;text-transform:capitalize;">' + (s.subscription || 'free') + '</span><span style="color:var(--muted);">' + fmtNum(s.count || 0) + ' (' + pct + '%)</span></div><div style="height:7px;background:var(--surface-2);border-radius:999px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:' + (colors[s.subscription] || 'var(--blue)') + ';border-radius:999px"></div></div></div>';
+  }).join('');
+}
+
+async function refreshDashboard() {
+  await loadDashboard();
+  showToast('Dashboard refreshed', 'success');
+}
+
+async function loadUsers(page) {
+  currentUsersPage = page || 1;
+  const params = { page: currentUsersPage, limit: PAGE_SIZE };
+  if (usersFilter.search) params.search = usersFilter.search;
+  if (usersFilter.role) params.role = usersFilter.role;
+  if (usersFilter.active !== '') params.isActive = usersFilter.active;
+
+  try {
+    const res = await window.SpopeerAPI.adminUsers(params);
+    usersData = apiUnwrap(res) || [];
+    renderUsersTable(usersData, (res && res.pagination) || {});
+  } catch (err) {
+    console.warn('Users API failed', err);
+    usersData = [];
+    renderUsersTable([], { total: 0, page: 1, pages: 1 });
+  }
+}
+
+function renderUsersTable(rows, pagination) {
+  const tbody = document.getElementById('users-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-users-slash"></i><p>No users found</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function (u) {
+    const name = ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || 'Unknown';
+    const sport = u.sport || u.primarySport || '-';
+    return '<tr><td><div class="user-cell"><div class="u-avatar">' + initials(u) + '</div><div><div class="u-name">' + name + '</div><div class="u-email">' + (u.email || '-') + '</div></div></div></td><td>' + roleChip(u.role) + '</td><td>' + subChip(u.subscription) + '</td><td>' + sport + '</td><td>' + statusChip(u.isActive) + '</td><td>' + fmtDate(u.createdAt) + '</td><td><div style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="editUser(' + u.id + ')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="toggleUserActive(' + u.id + ', ' + (!!u.isActive) + ')"><i class="fa-solid fa-' + (u.isActive ? 'ban' : 'check') + '"></i></button></div></td></tr>';
+  }).join('');
+
+  const total = pagination.total || rows.length;
+  const pages = pagination.pages || pagination.totalPages || 1;
+  document.getElementById('users-pagination-info').textContent = 'Showing ' + rows.length + ' of ' + fmtNum(total) + ' users';
+  renderPagination('users-page-btns', pages, currentUsersPage, loadUsers);
+}
+
+function filterUsers(search, role, active) {
+  if (search !== null && search !== undefined) usersFilter.search = search;
+  if (role !== undefined && role !== null) usersFilter.role = role || '';
+  if (active !== undefined && active !== null) usersFilter.active = active;
+  loadUsers(1);
+}
+
+function editUser(id) {
+  const u = usersData.find(function (x) { return x.id === id; });
+  if (!u) return;
+  document.getElementById('edit-user-id').value = id;
+  document.getElementById('edit-user-role').value = u.role || 'athlete';
+  document.getElementById('edit-user-sub').value = u.subscription || 'free';
+  document.getElementById('edit-user-active').value = String(!!u.isActive);
+  document.getElementById('edit-user-verified').value = String(!!u.verified);
+  openModal('modal-edit-user');
+}
+
+async function saveUserEdit() {
+  const id = document.getElementById('edit-user-id').value;
+  const payload = {
+    role: document.getElementById('edit-user-role').value,
+    subscription: document.getElementById('edit-user-sub').value,
+    isActive: document.getElementById('edit-user-active').value === 'true',
+    verified: document.getElementById('edit-user-verified').value === 'true'
+  };
+  try {
+    await window.SpopeerAPI.adminUpdateUser(id, payload);
+    showToast('User updated', 'success');
+  } catch (err) {
+    showToast('Failed to update user', 'error');
+  }
+  closeModal('modal-edit-user');
+  loadUsers(currentUsersPage);
+}
+
+async function toggleUserActive(id, isActive) {
+  try {
+    if (isActive) {
+      await window.SpopeerAPI.adminDeactivateUser(id);
+    } else {
+      await window.SpopeerAPI.adminUpdateUser(id, { isActive: true });
+    }
+    showToast('User status updated', 'success');
+  } catch (err) {
+    showToast('Failed to update user status', 'error');
+  }
+  loadUsers(currentUsersPage);
+}
+
+async function loadPosts(page) {
+  currentPostsPage = page || 1;
+  const params = { page: currentPostsPage, limit: PAGE_SIZE, isActive: postsFilter.isActive };
+  if (postsFilter.search) params.search = postsFilter.search;
+
+  try {
+    const res = await window.SpopeerAPI.adminPosts(params);
+    postsData = apiUnwrap(res) || [];
+    renderPostsTable(postsData, (res && res.pagination) || {});
+  } catch (err) {
+    console.warn('Posts API failed', err);
+    postsData = [];
+    renderPostsTable([], { total: 0, pages: 1 });
+  }
+}
+
+function renderPostsTable(rows, pagination) {
+  document.getElementById('tc-posts').textContent = rows.filter(function (p) { return !!p.isActive; }).length;
+  document.getElementById('tc-removed').textContent = rows.filter(function (p) { return !p.isActive; }).length;
+
+  const tbody = document.getElementById('posts-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-newspaper"></i><p>No posts found</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function (p) {
+    const a = p.author || {};
+    const authorName = ((a.firstName || '') + ' ' + (a.lastName || '')).trim() || 'Unknown';
+    return '<tr><td><div class="user-cell"><div class="u-avatar">' + initials(a) + '</div><div><div class="u-name">' + authorName + '</div><div class="u-email">' + roleChip(a.role) + '</div></div></div></td><td><div class="content-preview">' + (p.content || '') + '</div></td><td>' + (p.sport ? '<span class="chip chip-blue">' + p.sport + '</span>' : '-') + '</td><td>' + fmtNum(p.likesCount || 0) + '</td><td>' + fmtNum(p.commentsCount || 0) + '</td><td>' + fmtDate(p.createdAt) + '</td><td>' + (p.isActive ? '<span class="chip chip-green">Live</span>' : '<span class="chip chip-red">Removed</span>') + '</td><td>' + (p.isActive ? '<button class="btn btn-danger btn-sm" onclick="removePost(' + p.id + ')"><i class="fa-solid fa-trash"></i></button>' : '-') + '</td></tr>';
+  }).join('');
+
+  const total = pagination.total || rows.length;
+  const pages = pagination.pages || pagination.totalPages || 1;
+  document.getElementById('posts-pagination-info').textContent = 'Showing ' + rows.length + ' of ' + fmtNum(total) + ' posts';
+  renderPagination('posts-page-btns', pages, currentPostsPage, loadPosts);
+}
+
+function filterPosts(search) {
+  postsFilter.search = search || '';
+  loadPosts(1);
+}
+
+function switchContentTab(tab, btn) {
+  document.querySelectorAll('#section-content .tab-btn').forEach(function (b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  postsFilter.isActive = tab === 'removed' ? 'false' : 'true';
+  loadPosts(1);
+}
+
+async function removePost(id) {
+  try {
+    await window.SpopeerAPI.adminDeletePost(id);
+    showToast('Post removed', 'success');
+    loadPosts(currentPostsPage);
+  } catch (err) {
+    showToast('Failed to remove post', 'error');
+  }
+}
+
+async function loadReportCounts() {
+  const statuses = ['pending', 'reviewed', 'resolved', 'dismissed'];
+  const counts = { pending: 0, reviewed: 0, resolved: 0, dismissed: 0 };
+
+  await Promise.all(statuses.map(async function (status) {
+    try {
+      const res = await window.SpopeerAPI.moderationReports({ status: status, page: 1, limit: 1 });
+      const pg = res && res.pagination ? res.pagination : {};
+      counts[status] = Number(pg.total || 0);
+    } catch (err) {
+      counts[status] = 0;
+    }
+  }));
+
+  document.getElementById('rt-pending').textContent = String(counts.pending);
+  document.getElementById('rt-reviewed').textContent = String(counts.reviewed);
+  document.getElementById('rt-resolved').textContent = String(counts.resolved);
+  document.getElementById('rt-dismissed').textContent = String(counts.dismissed);
+  document.getElementById('sb-reports').textContent = String(counts.pending);
+  document.getElementById('qa-report-count').textContent = String(counts.pending);
+  document.getElementById('kpi-reports').textContent = String(counts.pending);
+}
+
+async function loadReports(page) {
+  currentReportsPage = page || 1;
+  try {
+    const res = await window.SpopeerAPI.moderationReports({ status: currentReportTab, page: currentReportsPage, limit: PAGE_SIZE });
+    reportsData = apiUnwrap(res) || [];
+    renderReportsTable(reportsData, (res && res.pagination) || {});
+  } catch (err) {
+    console.warn('Reports API failed', err);
+    reportsData = [];
+    renderReportsTable([], { total: 0, pages: 1 });
+  }
+  loadReportCounts();
+}
+
+function renderReportsTable(rows, pagination) {
+  const tbody = document.getElementById('reports-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-flag"></i><p>No ' + currentReportTab + ' reports</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function (r) {
+    const rep = r.reporter || {};
+    return '<tr><td>#' + r.id + '</td><td><div class="user-cell"><div class="u-avatar">' + initials(rep) + '</div><div><div class="u-name">' + (((rep.firstName || '') + ' ' + (rep.lastName || '')).trim() || 'Unknown') + '</div><div class="u-email">' + (rep.email || '') + '</div></div></div></td><td><span class="chip chip-blue">' + (r.targetType || 'unknown') + '</span> #' + (r.targetId || '-') + '</td><td><span class="chip chip-amber">' + (r.reason || '-') + '</span></td><td><div class="content-preview">' + (r.description || '-') + '</div></td><td>' + fmtDate(r.createdAt) + '</td><td>' + reportStatusChip(r.status) + '</td><td>' + (r.status === 'pending' ? '<button class="btn btn-primary btn-sm" onclick="openReportReview(' + r.id + ')"><i class="fa-solid fa-gavel"></i> Review</button>' : '-') + '</td></tr>';
+  }).join('');
+
+  const total = pagination.total || rows.length;
+  const pages = pagination.pages || pagination.totalPages || 1;
+  document.getElementById('reports-pagination-info').textContent = 'Showing ' + rows.length + ' of ' + fmtNum(total) + ' reports';
+  renderPagination('reports-page-btns', pages, currentReportsPage, loadReports);
+}
+
+function switchReportTab(tab, btn) {
+  document.querySelectorAll('#section-reports .tab-btn').forEach(function (b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  currentReportTab = tab;
+  loadReports(1);
+}
+
+function openReportReview(id) {
+  document.getElementById('resolve-report-id').value = id;
+  document.getElementById('resolve-notes').value = '';
+  openModal('modal-resolve-report');
+}
+
+async function submitReportReview() {
+  const id = document.getElementById('resolve-report-id').value;
+  const status = document.getElementById('resolve-status').value;
+  const resolution = document.getElementById('resolve-notes').value;
+  try {
+    await window.SpopeerAPI.moderationReviewReport(id, { status: status, resolution: resolution });
+    showToast('Report updated', 'success');
+  } catch (err) {
+    showToast('Failed to update report', 'error');
+  }
+  closeModal('modal-resolve-report');
+  loadReports(currentReportsPage);
+}
+
+async function loadAnalytics() {
+  try {
+    const res = await window.SpopeerAPI.adminAnalytics();
+    analyticsData = apiUnwrap(res) || {};
+  } catch (err) {
+    analyticsData = { newUsersLast30Days: 0, newPostsLast30Days: 0, totalLikes: 0, totalComments: 0, topPosters: [], mostFollowed: [] };
+  }
+
+  document.getElementById('an-users').textContent = fmtNum(analyticsData.newUsersLast30Days || 0);
+  document.getElementById('an-posts').textContent = fmtNum(analyticsData.newPostsLast30Days || 0);
+  document.getElementById('an-likes').textContent = fmtNum(analyticsData.totalLikes || 0);
+  document.getElementById('an-comments').textContent = fmtNum(analyticsData.totalComments || 0);
+
+  renderRankTable('top-posters-tbody', analyticsData.topPosters || [], 'postsCount');
+  renderRankTable('most-followed-tbody', analyticsData.mostFollowed || [], 'followersCount');
+}
+
+function renderRankTable(tbodyId, rows, valueKey) {
+  const el = document.getElementById(tbodyId);
+  if (!rows.length) {
+    el.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted);">No data</td></tr>';
+    return;
+  }
+  el.innerHTML = rows.map(function (u, i) {
+    return '<tr><td>' + (i + 1) + '</td><td><div class="user-cell"><div class="u-avatar">' + initials(u) + '</div><div><div class="u-name">' + (((u.firstName || '') + ' ' + (u.lastName || '')).trim() || 'Unknown') + '</div></div></div></td><td>' + roleChip(u.role) + '</td><td style="font-weight:700;">' + fmtNum(u[valueKey] || 0) + '</td></tr>';
+  }).join('');
+}
+
+function loadMarketplace(type) {
+  const thead = document.getElementById('market-thead');
+  const tbody = document.getElementById('market-tbody');
+  document.getElementById('market-info').textContent = 'Showing ' + type + ' (UI mock)';
+
+  const samples = {
+    listings: [
+      { id: 1, title: 'Nike Mercurial', category: 'Equipment', sport: 'Football', price: '150', status: 'active' },
+      { id: 2, title: 'Speed ladder set', category: 'Training', sport: 'Athletics', price: '40', status: 'sold' }
+    ],
+    sponsorships: [
+      { id: 1, title: 'Energy brand local partnership', mode: 'offer', sport: 'Basketball', status: 'active' }
+    ],
+    jobs: [
+      { id: 1, title: 'Head Coach', type: 'full-time', sport: 'Football', location: 'Athens', isActive: true }
+    ],
+    inquiries: [
+      { id: 1, status: 'pending', message: 'Interested in your listing.' }
+    ]
+  };
+
+  if (type === 'listings') {
+    thead.innerHTML = '<tr><th>#</th><th>Title</th><th>Category</th><th>Sport</th><th>Price</th><th>Status</th></tr>';
+    tbody.innerHTML = samples.listings.map(function (l) { return '<tr><td>' + l.id + '</td><td>' + l.title + '</td><td>' + l.category + '</td><td><span class="chip chip-blue">' + l.sport + '</span></td><td>EUR ' + l.price + '</td><td><span class="chip chip-green">' + l.status + '</span></td></tr>'; }).join('');
+  } else if (type === 'sponsorships') {
+    thead.innerHTML = '<tr><th>#</th><th>Title</th><th>Mode</th><th>Sport</th><th>Status</th></tr>';
+    tbody.innerHTML = samples.sponsorships.map(function (s) { return '<tr><td>' + s.id + '</td><td>' + s.title + '</td><td><span class="chip chip-purple">' + s.mode + '</span></td><td><span class="chip chip-blue">' + s.sport + '</span></td><td><span class="chip chip-green">' + s.status + '</span></td></tr>'; }).join('');
+  } else if (type === 'jobs') {
+    thead.innerHTML = '<tr><th>#</th><th>Title</th><th>Type</th><th>Sport</th><th>Location</th><th>Status</th></tr>';
+    tbody.innerHTML = samples.jobs.map(function (j) { return '<tr><td>' + j.id + '</td><td>' + j.title + '</td><td><span class="chip chip-blue">' + j.type + '</span></td><td><span class="chip chip-green">' + j.sport + '</span></td><td>' + j.location + '</td><td>' + (j.isActive ? '<span class="chip chip-green">Active</span>' : '<span class="chip chip-red">Inactive</span>') + '</td></tr>'; }).join('');
+  } else {
+    thead.innerHTML = '<tr><th>#</th><th>Status</th><th>Message</th></tr>';
+    tbody.innerHTML = samples.inquiries.map(function (q) { return '<tr><td>' + q.id + '</td><td><span class="chip chip-amber">' + q.status + '</span></td><td class="content-preview">' + q.message + '</td></tr>'; }).join('');
+  }
+}
+
+function switchMarketTab(type, btn) {
+  document.querySelectorAll('#section-marketplace .tab-btn').forEach(function (b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  loadMarketplace(type);
+}
+
+function renderAuditLog() {
+  const body = document.getElementById('audit-log-body');
+  const rows = [
+    { action: 'report_resolved', target: 'Report #14', by: 'Admin', time: '2 min ago' },
+    { action: 'user_suspended', target: 'User #220', by: 'Admin', time: '20 min ago' },
+    { action: 'post_removed', target: 'Post #810', by: 'Admin', time: '1 hr ago' }
+  ];
+  body.innerHTML = rows.map(function (r) { return '<tr><td>' + r.action + '</td><td>' + r.target + '</td><td>' + r.by + '</td><td>' + r.time + '</td></tr>'; }).join('');
+}
+
+function renderPagination(containerId, pages, current, onPage) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!pages || pages <= 1) {
+    el.innerHTML = '';
+    return;
+  }
+  let html = '';
+  if (current > 1) html += '<button class="page-btn" onclick="' + onPage.name + '(' + (current - 1) + ')"><i class="fa-solid fa-chevron-left"></i></button>';
+  const start = Math.max(1, current - 2);
+  const end = Math.min(pages, current + 2);
+  for (let p = start; p <= end; p++) {
+    html += '<button class="page-btn' + (p === current ? ' active' : '') + '" onclick="' + onPage.name + '(' + p + ')">' + p + '</button>';
+  }
+  if (current < pages) html += '<button class="page-btn" onclick="' + onPage.name + '(' + (current + 1) + ')"><i class="fa-solid fa-chevron-right"></i></button>';
+  el.innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
+  await loadAdminHeaderUser();
+  await loadDashboard();
+});
+</script>
 <script src="/js/navigation.js"></script>
 </body>
 </html>

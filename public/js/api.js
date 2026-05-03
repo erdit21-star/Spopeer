@@ -399,6 +399,29 @@
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request("/api/admin/posts" + qs);
     },
+    adminUpdateUser: function (userId, payload) {
+      return request("/api/admin/users/" + encodeURIComponent(userId), {
+        method: "PUT",
+        body: JSON.stringify(payload || {})
+      });
+    },
+    adminDeactivateUser: function (userId) {
+      return request("/api/admin/users/" + encodeURIComponent(userId), { method: "DELETE" });
+    },
+    adminDeletePost: function (postId) {
+      return request("/api/admin/posts/" + encodeURIComponent(postId), { method: "DELETE" });
+    },
+    adminAnalytics: function () { return request("/api/admin/analytics"); },
+    moderationReports: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/moderation/reports" + qs);
+    },
+    moderationReviewReport: function (reportId, payload) {
+      return request("/api/moderation/reports/" + encodeURIComponent(reportId), {
+        method: "PUT",
+        body: JSON.stringify(payload || {})
+      });
+    },
     unwrap: unwrap
   };
 
