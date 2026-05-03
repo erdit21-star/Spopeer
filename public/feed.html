@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spopeer · Home</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <script src="/js/auth.js"></script>
   <script src="/js/sanitize.js"></script>
   <script src="/js/api.js"></script>
@@ -1638,30 +1639,71 @@
     /* action row */
     .post-actions {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 8px;
       border-top: 1px solid #e2e8f0;
-      margin-top: 12px;
-      padding-top: 10px;
     }
-    .post-actions button {
+    .post-action-btn {
+      min-width: 38px;
+      height: 30px;
+      padding: 0 9px;
       border: 1px solid #e2e8f0;
-      background: #fff;
-      color: #475569;
-      padding: 8px 10px;
       border-radius: 999px;
-      font-weight: 700;
+      background: #ffffff;
+      color: #64748b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 800;
       cursor: pointer;
+      transition: 0.15s ease;
     }
-    .post-actions button.active {
-      background: #ecfdf5;
-      color: #115e59;
-      border-color: #99f6e4;
-    }
+    .post-action-btn:hover { background: #f8fafc; color: #0f172a; }
+    .post-action-btn.active { background: #ecfdf5; color: #0f766e; border-color: #99f6e4; }
+    .post-action-btn:disabled { opacity: 0.65; cursor: not-allowed; }
     .post-meta {
       color: #64748b;
       font-size: 13px;
       margin-top: 4px;
+    }
+    .comments-panel {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    .comments-panel.open { display: block; }
+    .comments-list { display: grid; gap: 8px; margin-bottom: 10px; }
+    .comment-item { display: flex; gap: 8px; align-items: flex-start; }
+    .comment-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #0f766e; color: white;
+      display: grid; place-items: center;
+      font-size: 12px; font-weight: 900; flex-shrink: 0;
+    }
+    .comment-body {
+      background: #ffffff; border: 1px solid #e2e8f0;
+      border-radius: 13px; padding: 8px 10px; flex: 1;
+    }
+    .comment-body strong { display: block; font-size: 12px; color: #0f172a; }
+    .comment-body p { margin: 3px 0 0; font-size: 13px; color: #334155; }
+    .comment-empty { color: #64748b; font-size: 13px; }
+    .comment-form { display: flex; gap: 7px; }
+    .comment-form input {
+      flex: 1; height: 34px;
+      border: 1px solid #e2e8f0; border-radius: 999px;
+      padding: 0 12px; font-size: 13px;
+    }
+    .comment-form button {
+      height: 34px; border: 0; border-radius: 999px;
+      padding: 0 13px; background: #0f766e; color: white;
+      font-size: 12px; font-weight: 850; cursor: pointer;
     }
     .act-btn {
       flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -5404,24 +5446,38 @@
           <div class="post-text">${escapeHtml(post.text || "")}</div>
           ${mediaHtml}
           <div class="post-actions">
-            <button type="button" onclick="likePost(${post.id})" class="${post.liked ? 'active' : ''}">
-              👍 ${post.liked ? 'Liked' : 'Like'} ${post.likesCount || 0}
+            <button
+              type="button"
+              class="post-action-btn ${post.liked ? 'active' : ''}"
+              data-like-button="${post.id}"
+              data-count="${post.likesCount || 0}"
+              onclick="likePost(${post.id})">
+              <span>♥</span>
+              <span class="action-count">${post.likesCount || 0}</span>
             </button>
-            <button type="button" onclick="commentPost(${post.id})">
-              💬 Comment ${post.commentsCount || 0}
+            <button
+              type="button"
+              class="post-action-btn"
+              data-comment-button="${post.id}"
+              data-count="${post.commentsCount || 0}"
+              onclick="toggleComments(${post.id})">
+              <span>💬</span>
+              <span class="action-count">${post.commentsCount || 0}</span>
             </button>
-            <button type="button" onclick="viewComments(${post.id})">
-              👁 View comments
+            <button type="button" class="post-action-btn" onclick="repostPost(${post.id})">
+              <span>↻</span>
+              <span>${post.repostsCount || 0}</span>
             </button>
-            <button type="button" onclick="repostPost(${post.id})">
-              🔁 Repost ${post.repostsCount || 0}
-            </button>
-            <button type="button" onclick="savePost(${post.id})">
-              🔖 Save
+            <button type="button" class="post-action-btn" onclick="savePost(${post.id})">
+              <span>🔖</span>
             </button>
           </div>
-          <div class="post-stats">
-            <span><i class="fa-regular fa-eye"></i> ${post.views || 0}</span>
+          <div class="comments-panel" data-comments-panel="${post.id}">
+            <div class="comments-list" data-comments-list="${post.id}"></div>
+            <div class="comment-form">
+              <input type="text" data-comment-input="${post.id}" placeholder="Write a comment..." />
+              <button type="button" data-comment-submit="${post.id}" onclick="submitComment(${post.id})">Send</button>
+            </div>
           </div>
         </div>
       </article>
@@ -7018,6 +7074,7 @@ function escapeHtml(text) {
   }
 })();
 </script>
+<script src="/js/post-interactions.js"></script>
 </body>
 </html>
 
