@@ -343,12 +343,19 @@
     getPublicProfileByEmail: function (email) {
       return request("/api/profiles/profile/" + encodeURIComponent(email));
     },
-    getForYouFeed: function () { return request("/api/posts/feed/for-you"); },
-    getFollowingFeed: function () { return request("/api/posts/feed/following"); },
-    getSportFeed: function (sport) {
-      return request("/api/posts/feed/sport" + (sport ? "?sport=" + encodeURIComponent(sport) : ""));
+    getForYouFeed: function () {
+      return request("/api/posts/feed/for-you?_=" + Date.now());
     },
-    getTrendingFeed: function () { return request("/api/posts/feed/trending"); },
+    getFollowingFeed: function () {
+      return request("/api/posts/feed/following?_=" + Date.now());
+    },
+    getSportFeed: function (sport) {
+      var qs = sport ? ("sport=" + encodeURIComponent(sport) + "&") : "";
+      return request("/api/posts/feed/sport?" + qs + "_=" + Date.now());
+    },
+    getTrendingFeed: function () {
+      return request("/api/posts/feed/trending?_=" + Date.now());
+    },
     createPost: function (payload) {
       if (payload instanceof FormData) {
         const token = localStorage.getItem("spopeerToken");

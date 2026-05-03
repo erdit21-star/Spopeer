@@ -5051,8 +5051,12 @@
         await API.createPost(postPayload);
       }
 
-      // Reload feed to show new post at top
-      await loadAllPosts();
+      // Reload feed to show new post at top using the active tab renderer.
+      if (typeof renderCurrentTab === 'function') {
+        await renderCurrentTab();
+      } else {
+        await loadAllPosts();
+      }
 
       // Refresh sidebar stats from backend
       if (window.SpopeerStatsManager) {
@@ -5730,7 +5734,9 @@ function normalizePost(p) {
 
 // Initialize on page load with real backend data only
 document.addEventListener('DOMContentLoaded', function() {
-  loadAllPosts();
+  if (!window.SpopeerFeedEngine) {
+    loadAllPosts();
+  }
 });
 
 async function loadAllPosts() {
