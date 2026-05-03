@@ -420,44 +420,46 @@ nav{
 /* ── FOOTER ── */
 footer{
   background:var(--ink);color:rgba(255,255,255,.45);
-  padding:48px 24px 36px;
+  padding:32px 24px 24px;
 }
 .footer-inner{
   max-width:1180px;margin:0 auto;
   display:flex;flex-wrap:wrap;justify-content:space-between;
-  gap:32px;
+  gap:24px;
 }
 .footer-brand .logo-text{color:#fff;font-size:18px}
 .footer-brand p{
   font-size:13px;color:rgba(255,255,255,.35);
   margin-top:8px;max-width:260px;line-height:1.6;
 }
-.footer-links{display:flex;flex-wrap:wrap;gap:48px}
-.footer-col h4{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:14px}
-.footer-col a{
-  display:block;font-size:13px;color:rgba(255,255,255,.5);
-  text-decoration:none;margin-bottom:9px;transition:color .15s;
-}
-.footer-col a:hover{color:rgba(255,255,255,.85)}
-.footer-bottom{
-  max-width:1180px;margin:32px auto 0;
-  padding-top:20px;border-top:1px solid rgba(255,255,255,.08);
-  display:flex;flex-wrap:wrap;justify-content:space-between;
-  align-items:center;gap:12px;
-}
-.footer-bottom p{font-size:12px;color:rgba(255,255,255,.3)}
-.footer-social{display:flex;gap:10px}
+.footer-brand-social{display:flex;gap:10px;margin-top:14px}
 .social-btn{
   width:32px;height:32px;border-radius:8px;
   background:rgba(255,255,255,.07);
   display:flex;align-items:center;justify-content:center;
-  color:rgba(255,255,255,.4);font-size:13px;
+  color:rgba(255,255,255,.4);font-size:14px;
+  text-decoration:none;
   transition:background .15s,color .15s;
 }
 .social-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+.footer-links{display:flex;flex-wrap:wrap;gap:36px}
+.footer-col h4{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:12px}
+.footer-col a{
+  display:block;font-size:13px;color:rgba(255,255,255,.5);
+  text-decoration:none;margin-bottom:8px;transition:color .15s;
+}
+.footer-col a:hover{color:rgba(255,255,255,.85)}
+.footer-bottom{
+  max-width:1180px;margin:20px auto 0;
+  padding-top:16px;border-top:1px solid rgba(255,255,255,.08);
+  display:flex;flex-wrap:wrap;justify-content:space-between;
+  align-items:center;gap:12px;
+}
+.footer-bottom p{font-size:12px;color:rgba(255,255,255,.3)}
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes heroBlink{0%,100%{opacity:1}50%{opacity:0}}
 .hero-copy,.hero-visual{animation:fadeUp .6s ease both}
 .hero-visual{animation-delay:.1s}
 .role-card:nth-child(1){animation:fadeUp .5s .05s ease both}
@@ -685,8 +687,8 @@ footer{
 
     <nav class="topbar-nav">
       <a href="#user-types">Who It's For</a>
-      <a href="#how-it-works">How It Works</a>
       <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
     </nav>
 
     <div class="nav-ctas">
@@ -700,8 +702,8 @@ footer{
   </div>
   <div class="mobile-menu" id="mobileMenu">
     <a class="nav-link" href="#user-types">Who It's For</a>
-    <a class="nav-link" href="#how-it-works">How It Works</a>
     <a class="nav-link" href="#features">Features</a>
+    <a class="nav-link" href="#how-it-works">How It Works</a>
     <div style="height:8px"></div>
     <button type="button" class="btn btn-ghost" onclick="openAuth('login')">Log in</button>
     <button type="button" class="btn btn-solid" onclick="openAuth('signup')">Sign up free</button>
@@ -742,59 +744,92 @@ footer{
           <i class="fa-regular fa-envelope"></i>
         </div>
       </div>
-      <div class="feed-area">
-        <div class="preview-post">
-          <div class="mp-top">
-            <div class="mp-av a1">JN</div>
-            <div>
-              <div class="mp-name">John North</div>
-              <div class="mp-role">Athlete · Running</div>
-            </div>
-          </div>
-          <div class="mp-tag"><i class="fa-solid fa-running" style="font-size:9px"></i> Training</div>
-          <div class="mp-body">5K personal best today — 18:42. The hill work is finally paying off. 🏃‍♂️</div>
-          <div class="mp-actions">
-            <div class="mp-action liked"><i class="fa-solid fa-heart"></i> 48</div>
-            <div class="mp-action"><i class="fa-regular fa-comment"></i> 12</div>
-            <div class="mp-action"><i class="fa-regular fa-share-from-square"></i></div>
-          </div>
-        </div>
-        <div class="preview-post">
-          <div class="mp-top">
-            <div class="mp-av a2">SC</div>
-            <div>
-              <div class="mp-name">Sarah Coach</div>
-              <div class="mp-role">Coach · Football</div>
-            </div>
-          </div>
-          <div class="mp-tag"><i class="fa-solid fa-futbol" style="font-size:9px"></i> Tactics</div>
-          <div class="mp-body">New drill series for high-press transitions — sharing the full breakdown with my network.</div>
-          <div class="mp-actions">
-            <div class="mp-action liked"><i class="fa-solid fa-heart"></i> 91</div>
-            <div class="mp-action"><i class="fa-regular fa-comment"></i> 24</div>
-            <div class="mp-action"><i class="fa-regular fa-bookmark"></i></div>
-          </div>
-        </div>
-        <div class="preview-post">
-          <div class="mp-top">
-            <div class="mp-av a3">FC</div>
-            <div>
-              <div class="mp-name">City FC</div>
-              <div class="mp-role">Club · Basketball</div>
-            </div>
-          </div>
-          <div class="mp-tag"><i class="fa-solid fa-basketball" style="font-size:9px"></i> Recruitment</div>
-          <div class="mp-body">We're looking for a point guard for the upcoming season. DM or apply via the marketplace.</div>
-          <div class="mp-actions">
-            <div class="mp-action"><i class="fa-regular fa-heart"></i> 33</div>
-            <div class="mp-action"><i class="fa-regular fa-comment"></i> 8</div>
-            <div class="mp-action"><i class="fa-regular fa-share-from-square"></i></div>
-          </div>
-        </div>
+      <div class="feed-area" id="heroPosts">
+        <!-- posts injected by JS -->
       </div>
     </div>
   </div>
 </section>
+
+<script>
+(function(){
+  var POSTS=[
+    {av:'AP',cls:'a1',name:'Alex Petrov',role:'Athlete · Football',tag:'fa-futbol','tagTxt':'Transfer',body:'FC Spartans just sent me a connection request. Big opportunity — let\'s see where this goes! 🔥',likes:87,comments:31,live:false},
+    {av:'MC',cls:'a2',name:'Maria Chen',role:'Athlete · Swimming',tag:'fa-microphone','tagTxt':'Live Interview',body:'🔴 LIVE NOW — I\'m being interviewed by Sports Weekly. Join the session and ask me anything!',likes:214,comments:68,live:true},
+    {av:'UH',cls:'a3',name:'United Hawks FC',role:'Club · Football',tag:'fa-shield-halved','tagTxt':'Club News',body:'We\'re in early talks with Coach Daniel Moreira for our head-coaching role next season. Exciting times ahead.',likes:142,comments:44,live:false},
+    {av:'BW',cls:'a1',name:'Coach Brian Walsh',role:'Coach · Football',tag:'fa-whistle','tagTxt':'Opportunity',body:'Had a very productive first meeting with River United FC today. A fascinating project — details soon.',likes:76,comments:19,live:false},
+    {av:'LB',cls:'a2',name:'Lucas Bianchi',role:'Athlete · Basketball',tag:'fa-basketball','tagTxt':'Transfer',body:'Real Madrid Baloncesto just sent me a trial offer. This is what I\'ve been working for my whole career 🏀✨',likes:531,comments:127,live:false},
+    {av:'NS',cls:'a3',name:'Nordic Ski Club',role:'Club · Skiing',tag:'fa-person-skiing','tagTxt':'Scouting',body:'We\'ve opened dialogue with three promising junior athletes from the national championships. Scouting underway.',likes:64,comments:18,live:false},
+    {av:'AT',cls:'a1',name:'Ava Torres',role:'Athlete · Tennis',tag:'fa-microphone','tagTxt':'Live Interview',body:'🔴 LIVE — Tennis Channel is interviewing me about the upcoming season. Watch and drop your questions!',likes:309,comments:92,live:true},
+    {av:'SM',cls:'a2',name:'Coach Sandra Melo',role:'Coach · Athletics',tag:'fa-stopwatch','tagTxt':'Coaching Win',body:'My athlete just ran a new 400m PB — 47.83! Months of specific track work finally coming together 🎉',likes:188,comments:53,live:false},
+    {av:'JO',cls:'a3',name:'James Okafor',role:'Athlete · Football',tag:'fa-pen-nib','tagTxt':'Signed',body:'Signed my first professional contract today 🖊️ Grateful for every coach, club, and person who believed in me.',likes:894,comments:241,live:false},
+    {av:'EP',cls:'a1',name:'Dr. Emma Park',role:'Professional · Sports Medicine',tag:'fa-heart-pulse','tagTxt':'Sports Science',body:'Pre-season physicals completed for the full squad — everyone cleared to begin full training. Great group! 💪',likes:112,comments:27,live:false},
+    {av:'HR',cls:'a2',name:'Horizon RFC',role:'Club · Rugby',tag:'fa-shield-halved','tagTxt':'Recruitment',body:'🔍 Seeking a wing forward with top-level speed and experience. Apply now via the Spopeer Marketplace.',likes:58,comments:14,live:false},
+    {av:'MS',cls:'a3',name:'Marco Silva',role:'Athlete · Cycling',tag:'fa-bicycle','tagTxt':'Opportunity',body:'The team director from ProCycling Ventures just messaged me. Something big could be on the horizon 🚴‍♂️',likes:143,comments:38,live:false},
+    {av:'KN',cls:'a1',name:'Keita Ndiaye',role:'Athlete · Basketball',tag:'fa-basketball','tagTxt':'Training',body:'Back-to-back triple-doubles in scrimmage this week. The new offence scheme is clicking perfectly 🏀',likes:267,comments:74,live:false},
+    {av:'CF',cls:'a2',name:'City Futsal FC',role:'Club · Futsal',tag:'fa-futbol','tagTxt':'Club Update',body:'Our new training facility opens next Monday. Huge step forward for youth development in our region.',likes:195,comments:62,live:false},
+    {av:'RL',cls:'a3',name:'Coach Rosa Lima',role:'Coach · Athletics',tag:'fa-whistle','tagTxt':'Tactics',body:'Shared a full sprint mechanics breakdown in my community group. Free to read — link in bio 👇',likes:334,comments:89,live:false}
+  ];
+
+  var colMap={a1:'linear-gradient(135deg,#001233,#1a5cff)',a2:'linear-gradient(135deg,#12a150,#00c17a)',a3:'linear-gradient(135deg,#f59e0b,#ff7c00)'};
+  var idx=0;
+  var container=document.getElementById('heroPosts');
+  if(!container)return;
+
+  function buildPost(p){
+    var el=document.createElement('div');
+    el.className='preview-post';
+    el.style.animation='none';
+    el.innerHTML=
+      '<div class="mp-top">'+
+        '<div class="mp-av" style="background:'+colMap[p.cls]+'">'+p.av+'</div>'+
+        '<div><div class="mp-name">'+p.name+'</div><div class="mp-role">'+p.role+'</div></div>'+
+      '</div>'+
+      (p.live?'<div class="mp-tag" style="background:#fee2e2;color:#dc2626"><i class="fa-solid fa-circle" style="font-size:7px;animation:heroBlink 1s step-start infinite"></i> LIVE</div>':
+              '<div class="mp-tag"><i class="fa-solid '+p.tag+'" style="font-size:9px"></i> '+p.tagTxt+'</div>')+
+      '<div class="mp-body">'+p.body+'</div>'+
+      '<div class="mp-actions">'+
+        '<div class="mp-action liked"><i class="fa-solid fa-heart"></i> '+p.likes+'</div>'+
+        '<div class="mp-action"><i class="fa-regular fa-comment"></i> '+p.comments+'</div>'+
+        '<div class="mp-action"><i class="fa-regular fa-share-from-square"></i></div>'+
+      '</div>';
+    return el;
+  }
+
+  // seed with first 3
+  function seed(){
+    container.innerHTML='';
+    for(var i=0;i<3;i++){
+      container.appendChild(buildPost(POSTS[(idx+i)%POSTS.length]));
+    }
+    idx=(idx+3)%POSTS.length;
+  }
+  seed();
+
+  // every 2.5 s add a new post at top, remove last
+  setInterval(function(){
+    var newPost=buildPost(POSTS[idx%POSTS.length]);
+    idx=(idx+1)%POSTS.length;
+    newPost.style.opacity='0';
+    newPost.style.transform='translateY(-10px)';
+    newPost.style.transition='opacity .4s ease,transform .4s ease';
+    container.insertBefore(newPost,container.firstChild);
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        newPost.style.opacity='1';
+        newPost.style.transform='translateY(0)';
+      });
+    });
+    var children=container.children;
+    if(children.length>3){
+      var last=children[children.length-1];
+      last.style.transition='opacity .3s ease';
+      last.style.opacity='0';
+      setTimeout(function(){last.remove();},320);
+    }
+  },2500);
+})();
+</script>
 
 <!-- ── SPORTS STRIP ── -->
 <div class="sports-strip">
@@ -930,6 +965,11 @@ footer{
         <span class="logo-text">Spopeer</span>
       </div>
       <p>Connect. Share. Play. — The sports networking platform for athletes, coaches, clubs, and professionals.</p>
+      <div class="footer-brand-social">
+        <a class="social-btn" href="https://instagram.com/spopeer" target="_blank" rel="noopener" aria-label="Spopeer on Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a class="social-btn" href="https://facebook.com/spopeer" target="_blank" rel="noopener" aria-label="Spopeer on Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a class="social-btn" href="https://twitter.com/spopeer" target="_blank" rel="noopener" aria-label="Spopeer on Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+      </div>
     </div>
 
     <div class="footer-links">
@@ -938,16 +978,6 @@ footer{
         <button type="button" onclick="openAuth('signup')">Sign up</button>
         <button type="button" onclick="openAuth('login')">Log in</button>
         <a href="pages/search/search.html">Search</a>
-        <a href="#features">Features</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="#user-types">User Types</a>
-      </div>
-      <div class="footer-col">
-        <h4>For you</h4>
-        <a href="pages/features/athlete-read-more.html">Athletes</a>
-        <a href="pages/features/coach-read-more.html">Coaches</a>
-        <a href="pages/features/club-read-more.html">Clubs</a>
-        <a href="pages/features/professional-read-more.html">Supportive Professionals</a>
       </div>
       <div class="footer-col">
         <h4>Company</h4>
@@ -969,11 +999,6 @@ footer{
 
   <div class="footer-bottom">
     <p>© 2026 Sports For All. Spopeer — All rights reserved.</p>
-    <div class="footer-social">
-      <a class="social-btn" href="/pages/community/community.html" aria-label="Community"><i class="fa-solid fa-people-group"></i></a>
-      <a class="social-btn" href="/pages/community/reels.html" aria-label="Reels"><i class="fa-solid fa-circle-play"></i></a>
-      <a class="social-btn" href="/pages/company/blog.html" aria-label="Blog"><i class="fa-solid fa-newspaper"></i></a>
-    </div>
   </div>
 </footer>
 

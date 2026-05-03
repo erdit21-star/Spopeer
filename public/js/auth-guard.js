@@ -51,4 +51,24 @@
     isLoggedIn: isLoggedIn,
     requireAuth: requireAuth
   };
+
+  // When the browser restores a page from the back/forward cache (bfcache),
+  // re-check auth so a logged-out user can never see protected pages by pressing Back.
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+      // Page was restored from bfcache — verify the session is still valid.
+      if (!isLoggedIn()) {
+        // Local auth is already cleared; redirect immediately.
+        window.location.replace('/pages/auth/login.html');
+        return;
+      }
+      // Also verify with the server in case the session expired server-side.
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.me === 'function') {
+        window.SpopeerAPI.me().catch(function () {
+          clearLocalAuth();
+          window.location.replace('/pages/auth/login.html');
+        });
+      }
+    }
+  });
 })();
