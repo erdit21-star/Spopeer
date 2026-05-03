@@ -19,7 +19,7 @@ module.exports = (sequelize) => {
     content: {
       type: DataTypes.TEXT,
       allowNull: false,
-      validate: { len: [1, 5000] }
+      validate: { len: [0, 5000] }
     },
     image: {
       type: DataTypes.STRING(500),
