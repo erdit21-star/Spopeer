@@ -1613,12 +1613,35 @@
 
     .post-text { font-size: 14px; color: var(--ink-2); line-height: 1.7; margin-bottom: 14px; }
 
-    /* media placeholder */
+    /* responsive post media */
+    .post-media,
+    .post-image,
+    .post-card img {
+      width: 100%;
+      max-width: 100%;
+    }
     .post-media {
-      background: var(--surface); border-radius: var(--rM);
-      height: 200px; display: flex; align-items: center; justify-content: center;
-      color: var(--muted-2); font-size: 2rem; margin-bottom: 14px;
-      border: 1.5px solid var(--border);
+      margin-top: 12px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    .post-media img,
+    .post-image {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 520px;
+      object-fit: contain;
+      border-radius: 16px;
+    }
+    .post-media video {
+      display: block;
+      width: 100%;
+      max-height: 520px;
+      border-radius: 16px;
+      background: #000;
     }
 
     /* tags */
@@ -2471,30 +2494,35 @@
       border-color: var(--accent);
     }
 
-    .add-poll-option-btn {
-      align-self: flex-start;
-      padding: 6px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--pill);
-      background: transparent;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
-      font-family: var(--fB);
+    .poll-options {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .poll-option-input {
+      width: 100%;
+      height: 38px;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      padding: 0 14px;
+      font-size: 14px;
+    }
+    .poll-box {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .poll-option {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      border-radius: 999px;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 800;
       cursor: pointer;
-      transition: .2s;
     }
-
-    .add-poll-option-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: var(--accent-lt);
-    }
-
-    /* Event Creator */
-    .event-creator {
-      margin: 16px 0;
-      padding: 16px;
+    .add-poll-option-btn {
       background: var(--surface);
       border-radius: var(--rM);
       border: 1.5px solid var(--border);
@@ -3355,11 +3383,11 @@
             <div class="poll-title">
               <input type="text" placeholder="Poll question" id="pollQuestion">
             </div>
-            <div class="poll-options">
-              <input type="text" placeholder="Option 1" class="poll-option" data-index="0">
-              <input type="text" placeholder="Option 2" class="poll-option" data-index="1">
+            <div class="poll-options" id="pollOptionsContainer">
+              <input type="text" class="poll-option-input" data-poll-option="true" placeholder="Option 1">
+              <input type="text" class="poll-option-input" data-poll-option="true" placeholder="Option 2">
             </div>
-            <button type="button" class="add-poll-option-btn">+ Add Option</button>
+            <button type="button" class="add-poll-option-btn" onclick="addPollOption()">+ Add Option</button>
           </div>
 
           <!-- Event Creator -->
@@ -4967,16 +4995,25 @@
   }
 
   // Add poll option
-  document.querySelector('.add-poll-option-btn')?.addEventListener('click', () => {
-    const pollOptions = document.querySelector('.poll-options');
-    const newIndex = pollOptions.children.length;
-    const newOption = document.createElement('input');
-    newOption.type = 'text';
-    newOption.className = 'poll-option';
-    newOption.placeholder = `Option ${newIndex + 1}`;
-    newOption.dataset.index = newIndex;
-    pollOptions.appendChild(newOption);
-  });
+  let pollOptionsCount = 2;
+
+  window.addPollOption = function () {
+    pollOptionsCount += 1;
+    const container = document.getElementById('pollOptionsContainer');
+    if (!container) return;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'poll-option-input';
+    input.placeholder = 'Option ' + pollOptionsCount;
+    input.dataset.pollOption = 'true';
+    container.appendChild(input);
+  };
+
+  function collectPollOptions() {
+    return Array.from(document.querySelectorAll("[data-poll-option='true']"))
+      .map(function (i) { return i.value.trim(); })
+      .filter(function (v) { return v.length > 0; });
+  }
 
   // Photo input handler
   photoInput?.addEventListener('change', (e) => {
@@ -5051,9 +5088,7 @@
     // Capture poll data if poll is active
     if (pollCreator.style.display !== 'none') {
       const pollQuestion = document.getElementById('pollQuestion').value.trim();
-      const pollOptions = Array.from(document.querySelectorAll('.poll-option'))
-        .map(opt => opt.value.trim())
-        .filter(opt => opt.length > 0);
+      const pollOptions = collectPollOptions();
 
       if (!pollQuestion || pollOptions.length < 2) {
         if (window.SpopeerToast) window.SpopeerToast.warning('Poll needs a question and at least 2 options');
@@ -5110,10 +5145,13 @@
       postContent.value = '';
       mediaPreview.innerHTML = '';
       document.getElementById('pollQuestion').value = '';
-      Array.from(document.querySelectorAll('.poll-option')).forEach((opt, i) => {
-        opt.value = i < 2 ? '' : undefined;
-        if (i >= 2) opt.remove();
-      });
+      pollOptionsCount = 2;
+      const pollContainer = document.getElementById('pollOptionsContainer');
+      if (pollContainer) {
+        pollContainer.innerHTML =
+          '<input type="text" class="poll-option-input" data-poll-option="true" placeholder="Option 1">' +
+          '<input type="text" class="poll-option-input" data-poll-option="true" placeholder="Option 2">';
+      }
       document.getElementById('eventTitle').value = '';
       document.getElementById('eventDateTime').value = '';
       document.getElementById('eventLocation').value = '';
@@ -5414,15 +5452,32 @@
     feedInfiniteObserver.observe(sentinel);
   }
 
+  function renderPoll(post) {
+    var options = [];
+    try {
+      options = typeof post.pollOptions === 'string'
+        ? JSON.parse(post.pollOptions)
+        : (post.pollOptions || []);
+    } catch (e) {
+      options = [];
+    }
+    if (!options.length) return '';
+    return '<div class="poll-box">' +
+      options.map(function (option, index) {
+        return '<button class="poll-option" onclick="votePoll(' + post.id + ',' + index + ')">' + escapeHtml(String(option)) + '</button>';
+      }).join('') +
+      '</div>';
+  }
+
   function renderPostCard(post) {
     var imageUrl = post.image || null;
     var videoUrl = post.video || null;
     var mediaHtml = '';
     if (imageUrl) {
-      mediaHtml += '<div class="post-media"><img src="' + escapeHtml(imageUrl) + '" alt="post media" style="width:100%;border-radius:10px;"></div>';
+      mediaHtml += '<div class="post-media"><img src="' + escapeHtml(imageUrl) + '" alt="Post image" loading="lazy"></div>';
     }
     if (videoUrl) {
-      mediaHtml += '<div class="post-media"><video controls style="width:100%;border-radius:10px;"><source src="' + escapeHtml(videoUrl) + '"></video></div>';
+      mediaHtml += '<div class="post-media"><video controls><source src="' + escapeHtml(videoUrl) + '"></video></div>';
     }
 
     return `
@@ -5445,6 +5500,7 @@
           </div>
           <div class="post-text">${escapeHtml(post.text || "")}</div>
           ${mediaHtml}
+          ${renderPoll(post)}
           <div class="post-actions">
             <button
               type="button"
