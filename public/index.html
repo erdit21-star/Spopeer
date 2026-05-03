@@ -195,7 +195,7 @@ nav{
 }
 .app-logo-sm{font-family:var(--fd);font-size:16px;font-weight:800;color:var(--navy)}
 .app-topbar-icons{display:flex;gap:14px;color:var(--muted);font-size:15px}
-.feed-area{padding:12px 14px;background:var(--bg);display:flex;flex-direction:column;gap:10px}
+.feed-area{padding:12px 14px;background:var(--bg);display:flex;flex-direction:column;gap:10px;overflow:hidden}
 .preview-post{
   background:var(--white);border:1px solid var(--border);
   border-radius:16px;padding:13px;
@@ -806,28 +806,26 @@ footer{
   }
   seed();
 
-  // every 2.5 s add a new post at top, remove last
+  // every 6 s swap top post — fade only, no translate so left column never shifts
   setInterval(function(){
     var newPost=buildPost(POSTS[idx%POSTS.length]);
     idx=(idx+1)%POSTS.length;
     newPost.style.opacity='0';
-    newPost.style.transform='translateY(-10px)';
-    newPost.style.transition='opacity .4s ease,transform .4s ease';
+    newPost.style.transition='opacity .5s ease';
     container.insertBefore(newPost,container.firstChild);
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
         newPost.style.opacity='1';
-        newPost.style.transform='translateY(0)';
       });
     });
     var children=container.children;
     if(children.length>3){
       var last=children[children.length-1];
-      last.style.transition='opacity .3s ease';
+      last.style.transition='opacity .4s ease';
       last.style.opacity='0';
-      setTimeout(function(){last.remove();},320);
+      setTimeout(function(){last.remove();},420);
     }
-  },2500);
+  },6000);
 })();
 </script>
 
