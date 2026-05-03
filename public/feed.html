@@ -5338,6 +5338,16 @@
   }
 
   function renderPostCard(post) {
+    var imageUrl = post.image || null;
+    var videoUrl = post.video || null;
+    var mediaHtml = '';
+    if (imageUrl) {
+      mediaHtml += '<div class="post-media"><img src="' + escapeHtml(imageUrl) + '" alt="post media" style="width:100%;border-radius:10px;"></div>';
+    }
+    if (videoUrl) {
+      mediaHtml += '<div class="post-media"><video controls style="width:100%;border-radius:10px;"><source src="' + escapeHtml(videoUrl) + '"></video></div>';
+    }
+
     return `
       <article class="post-card" data-post-id="${post.id}">
         <div class="post-body">
@@ -5347,13 +5357,14 @@
               <div>
                 <div class="author-name">${post.authorName || "Unknown user"}</div>
                 <div class="author-meta">
-                  <span class="role-tag">${post.role || post.userType || "athlete"}</span>
+                  <span class="role-tag">${post.role || "athlete"}</span>
                   <span>${post.sport || ""}</span>
                 </div>
               </div>
             </div>
           </div>
-          <div class="post-text">${post.text || ""}</div>
+          <div class="post-text">${escapeHtml(post.text || "")}</div>
+          ${mediaHtml}
           <div class="post-stats">
             <span><i class="fa-regular fa-heart"></i> ${post.likes || 0}</span>
             <span><i class="fa-regular fa-comment"></i> ${post.comments || 0}</span>
@@ -5415,6 +5426,51 @@
     } else {
       sportIndicator.textContent = String(selectedSports.length);
     }
+  }
+
+  function normalizeFeedPost(post) {
+    if (!post || typeof post !== 'object') {
+      return {
+        id: '',
+        authorName: 'Unknown user',
+        role: 'athlete',
+        sport: '',
+        text: '',
+        image: null,
+        video: null,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        views: 0
+      };
+    }
+
+    var author = post.author && typeof post.author === 'object' ? post.author : null;
+    var authorName =
+      (post.authorName) ||
+      (author && ((author.displayName || '').trim())) ||
+      (author && (((author.firstName || '') + ' ' + (author.lastName || '')).trim())) ||
+      'Unknown user';
+    var initials = authorName.split(' ').map(function (n) { return n[0] || ''; }).join('').slice(0, 2).toUpperCase() || 'U';
+
+    var mediaArray = Array.isArray(post.media) ? post.media : [];
+    var imageFromArray = mediaArray.find(function (m) { return m && (m.type === 'image' || /\.(png|jpe?g|gif|webp|avif)(\?.*)?$/i.test(String(m.url || m.src || ''))); });
+    var videoFromArray = mediaArray.find(function (m) { return m && (m.type === 'video' || /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(String(m.url || m.src || ''))); });
+
+    return {
+      id: post.id,
+      authorName: authorName,
+      role: post.role || post.userType || (author && author.role) || 'athlete',
+      sport: post.sport || (author && author.sport) || '',
+      text: post.text || post.content || '',
+      image: post.image || (imageFromArray && (imageFromArray.url || imageFromArray.src)) || null,
+      video: post.video || (videoFromArray && (videoFromArray.url || videoFromArray.src)) || null,
+      likes: Number(post.likes ?? post.likesCount ?? 0),
+      comments: Number(post.comments ?? post.commentsCount ?? 0),
+      shares: Number(post.shares ?? post.repostsCount ?? 0),
+      views: Number(post.views ?? post.viewCount ?? post.viewsCount ?? 0),
+      authorInitials: initials
+    };
   }
 
   function populateSportsDropdown() {
@@ -5482,7 +5538,8 @@
       posts = await window.SpopeerFeedEngine.getTrendingFeed();
     }
 
-    renderFeed(posts);
+    var normalizedPosts = (Array.isArray(posts) ? posts : []).map(normalizeFeedPost);
+    renderFeed(normalizedPosts);
   }
 
   // Activate initial tab visually based on saved setting
@@ -6462,6 +6519,8 @@ function escapeHtml(text) {
     const checklist = document.getElementById('onboardingChecklist');
     const fill = document.getElementById('onboardingProgressFill');
     const text = document.getElementById('onboardingProgressText');
+    if (firstPostPrompt) firstPostPrompt.style.display = 'none';
+    if (checklistCard) checklistCard.style.display = 'none';
     if (!checklistCard || !checklist || !fill || !text) return;
 
     const userKey = getUserKey(user);
@@ -6524,7 +6583,12 @@ function escapeHtml(text) {
     const bioInput = document.getElementById('onboardingBioInput');
     const avatarInput = document.getElementById('onboardingAvatarInput');
     const sportSelect = document.getElementById('onboardingPrimarySport');
-    if (!modal || !openBtn || !nextBtn || !backBtn || !stepLabel || !flowFill) return;
+    if (modal) {
+      modal.classList.remove('visible');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    if (openBtn) openBtn.style.display = 'none';
+    return;
 
     const user = getCurrentUser();
     if (bioInput) bioInput.value = user.bio || '';
