@@ -158,7 +158,7 @@
             }
             if (window.Auth) window.Auth.login(meUser);
             closeAuth();
-            window.location.assign('/feed.html');
+            window.location.replace('/feed.html?from=auth');
           });
         }
 
@@ -168,7 +168,7 @@
 
         if (window.Auth) window.Auth.login(user);
         closeAuth();
-        window.location.assign('/feed.html');
+        window.location.replace('/feed.html?from=auth');
       })
       .catch(function (err) {
         var lp = document.getElementById('loginPanel');
@@ -294,7 +294,7 @@
         var result = await window.SpopeerAPI.login({ email: email, password: password });
         var user = (result.data && result.data.user) || result.user;
         if (user && window.Auth) window.Auth.login(user);
-        window.location.href = '/feed.html';
+        window.location.replace('/feed.html?from=auth');
       } catch (err) {
         errorBox.textContent = err.message || 'Login failed.';
         errorBox.style.display = 'block';
@@ -400,7 +400,7 @@
         var user = (result.data && result.data.user) || result.user;
         if (user && window.Auth) {
           window.Auth.login(user);
-          window.location.href = '/feed.html';
+          window.location.replace('/feed.html?from=auth');
         } else {
           errorBox.style.background = '#dcfce7';
           errorBox.style.color = '#166534';

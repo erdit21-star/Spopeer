@@ -214,7 +214,7 @@
         const token = (result.data && result.data.token) || result.token;
         if (token) localStorage.setItem('token', token);
         if (user) window.Auth.login(user);
-        window.location.href = '/feed.html';
+        window.location.replace('/feed.html?from=auth');
       } catch (err) {
         if (errorBox) {
           errorBox.textContent = err.message || 'Login failed.';
@@ -255,7 +255,7 @@
         }
 
         if (window.Auth) window.Auth.login(userData);
-        window.location.assign('/feed.html');
+        window.location.replace('/feed.html?from=auth');
       } catch (err) {
         console.error('[Google Auth]', err);
         const errorBox = document.getElementById('loginError');

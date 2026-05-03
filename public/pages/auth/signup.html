@@ -299,7 +299,7 @@
           if (token) localStorage.setItem('token', token);
           if (user) {
             window.Auth.login(user);
-            window.location.href = '/feed.html';
+            window.location.replace('/feed.html?from=auth');
           } else {
             // Account created — user object missing from response (edge case)
             if (errorBox) {
@@ -352,7 +352,7 @@
         }
 
         if (window.Auth) window.Auth.login(userData);
-        window.location.assign('/feed.html');
+        window.location.replace('/feed.html?from=auth');
       } catch (err) {
         console.error('[Google Auth]', err);
         const errorBox = document.getElementById('signupError');
