@@ -4,6 +4,39 @@
   'use strict';
 
   var googlePromptInFlight = false;
+  var renderedFallbackButtons = Object.create(null);
+
+  function isLikelyMobile() {
+    try {
+      return window.matchMedia('(max-width: 900px)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function renderNativeGoogleButton(buttonId) {
+    if (!buttonId || renderedFallbackButtons[buttonId]) return;
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) return;
+
+    var originalButton = document.getElementById(buttonId);
+    if (!originalButton || !originalButton.parentElement) return;
+
+    var host = document.createElement('div');
+    host.id = buttonId + 'NativeFallback';
+    host.style.marginTop = '10px';
+    originalButton.parentElement.insertBefore(host, originalButton.nextSibling);
+
+    window.google.accounts.id.renderButton(host, {
+      type: 'standard',
+      theme: 'outline',
+      text: 'continue_with',
+      size: 'large',
+      shape: 'pill',
+      width: Math.min(360, Math.max(220, Math.floor((originalButton.parentElement.clientWidth || 320) - 8)))
+    });
+
+    renderedFallbackButtons[buttonId] = true;
+  }
 
   function showGoogleFallbackError(message) {
     var text = message || 'Google sign-in could not open on this browser. Allow pop-ups and try again, or use email/password.';
@@ -16,7 +49,7 @@
     box.style.display = 'block';
   }
 
-  function requestGooglePrompt() {
+  function requestGooglePrompt(buttonId) {
     if (!window.google || !window.google.accounts || !window.google.accounts.id) {
       showGoogleFallbackError('Google sign-in is still loading. Please wait a moment and try again.');
       return;
@@ -50,11 +83,21 @@
         var hardSkipped = isSkipped && skippedReason === 'tap_outside';
 
         if (hardBlocked || hardSkipped) {
+          if (isLikelyMobile()) {
+            renderNativeGoogleButton(buttonId);
+            showGoogleFallbackError('Google sign-in pop-up was blocked on mobile. Use the Google button shown below to continue.');
+            return;
+          }
           showGoogleFallbackError('Google sign-in was blocked or unavailable in this browser. Please allow pop-ups and retry, or use email/password.');
         }
       });
     } catch (error) {
       googlePromptInFlight = false;
+      if (isLikelyMobile()) {
+        renderNativeGoogleButton(buttonId);
+        showGoogleFallbackError('Google sign-in pop-up could not start on mobile. Use the Google button shown below.');
+        return;
+      }
       showGoogleFallbackError('Google sign-in could not start. Please try again or use email/password.');
     }
   }
@@ -74,7 +117,9 @@
     // that may have run before the callback function was defined.
     window.google.accounts.id.initialize({
       client_id: clientId,
-      callback: callback
+      callback: callback,
+      use_fedcm_for_prompt: true,
+      itp_support: true
     });
 
     // Bind click handlers to all Google buttons on this page
@@ -83,10 +128,16 @@
       if (btn) {
         btn.addEventListener('click', function (e) {
           e.preventDefault();
-          requestGooglePrompt();
+          requestGooglePrompt(id);
         });
       }
     });
+
+    if (isLikelyMobile()) {
+      ['loginGoogleBtn', 'signupGoogleBtn', 'loginModernGoogleBtn'].forEach(function (id) {
+        renderNativeGoogleButton(id);
+      });
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function () {

@@ -2,6 +2,39 @@
   'use strict';
 
   var GOOGLE_CLIENT_ID = '527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com';
+  var renderedFallbackButtons = Object.create(null);
+
+  function isLikelyMobile() {
+    try {
+      return window.matchMedia('(max-width: 900px)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function renderNativeGoogleButton(buttonId) {
+    if (!buttonId || renderedFallbackButtons[buttonId]) return;
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) return;
+
+    var originalButton = document.getElementById(buttonId);
+    if (!originalButton || !originalButton.parentElement) return;
+
+    var host = document.createElement('div');
+    host.id = buttonId + 'NativeFallback';
+    host.style.marginTop = '10px';
+    originalButton.parentElement.insertBefore(host, originalButton.nextSibling);
+
+    window.google.accounts.id.renderButton(host, {
+      type: 'standard',
+      theme: 'outline',
+      text: 'continue_with',
+      size: 'large',
+      shape: 'pill',
+      width: Math.min(360, Math.max(220, Math.floor((originalButton.parentElement.clientWidth || 320) - 8)))
+    });
+
+    renderedFallbackButtons[buttonId] = true;
+  }
 
   function getCookieValue(name) {
     var escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -147,7 +180,7 @@
     box.style.display = 'block';
   }
 
-  function requestGooglePrompt() {
+  function requestGooglePrompt(buttonId) {
     if (!window.google || !window.google.accounts || !window.google.accounts.id) {
       showGoogleFallbackError('Google sign-in is still loading. Please wait a moment and try again.');
       return;
@@ -178,25 +211,44 @@
         var hardSkipped = isSkipped && skippedReason === 'tap_outside';
 
         if (hardBlocked || hardSkipped) {
+          if (isLikelyMobile()) {
+            renderNativeGoogleButton(buttonId);
+            showGoogleFallbackError('Google sign-in pop-up was blocked on mobile. Use the Google button shown below to continue.');
+            return;
+          }
           showGoogleFallbackError('Google sign-in was blocked or unavailable in this browser. Please allow pop-ups and retry, or use email/password.');
         }
       });
     } catch (err) {
+      if (isLikelyMobile()) {
+        renderNativeGoogleButton(buttonId);
+        showGoogleFallbackError('Google sign-in pop-up could not start on mobile. Use the Google button shown below.');
+        return;
+      }
       showGoogleFallbackError('Google sign-in could not start. Please try again, or use email/password.');
     }
   }
 
   function initGoogleButtons() {
     if (!window.google || !window.google.accounts || !window.google.accounts.id) return;
-    window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCredential,
+      use_fedcm_for_prompt: true,
+      itp_support: true
+    });
     ['modalLoginGoogleBtn', 'modalSignupGoogleBtn'].forEach(function (id) {
       var btn = document.getElementById(id);
       if (btn && !btn._gBound) {
         btn._gBound = true;
         btn.addEventListener('click', function (e) {
           e.preventDefault();
-          requestGooglePrompt();
+          requestGooglePrompt(id);
         });
+      }
+
+      if (isLikelyMobile()) {
+        renderNativeGoogleButton(id);
       }
     });
   }
