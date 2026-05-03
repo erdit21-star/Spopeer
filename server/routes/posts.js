@@ -453,5 +453,20 @@ router.get('/:id/comments', optionalAuth, async (req, res) => {
   }
 });
 
+// ─── DEBUG: LATEST POSTS ───
+router.get('/debug/latest', authenticate, async (req, res) => {
+  try {
+    const posts = await Post.findAll({
+      limit: 10,
+      order: [['createdAt', 'DESC']],
+      attributes: ['id', 'userId', 'content', 'sport', 'image', 'isActive', 'createdAt']
+    });
+
+    return ok(res, posts);
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', error.message);
+  }
+});
+
 module.exports = router;
 
