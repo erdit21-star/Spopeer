@@ -202,14 +202,14 @@ router.post('/', authenticate, uploadPost.single('image'), validate(createPostSc
   try {
     const { content, sport } = req.body;
 
-    const sanitizedContent = sanitizeString(content, 5000);
-    if (!sanitizedContent) {
-      return fail(res, 400, 'VALIDATION', 'Post content is required.');
+    const sanitizedContent = sanitizeString(content || '', 5000);
+    if (!sanitizedContent && !req.file) {
+      return fail(res, 400, 'VALIDATION', 'Write text or add an image/video.');
     }
 
     const postData = {
       userId: req.userId,
-      content: sanitizedContent,
+      content: sanitizedContent || '',
       sport: sanitizeString(sport, 100) || req.user.sport || 'General'
     };
 

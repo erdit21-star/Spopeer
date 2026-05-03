@@ -369,6 +369,24 @@
         body: JSON.stringify(payload),
       });
     },
+    toggleLike: function (postId) {
+      return request(`/api/posts/${postId}/like`, { method: "POST" });
+    },
+    addComment: function (postId, content) {
+      return request(`/api/posts/${postId}/comment`, {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+    },
+    getComments: function (postId) {
+      return request(`/api/posts/${postId}/comments`);
+    },
+    repost: function (postId) {
+      return request(`/api/posts/${postId}/repost`, { method: "POST" });
+    },
+    savePost: function (postId) {
+      return request(`/api/posts/${postId}/save`, { method: "POST" });
+    },
     listPosts: function (params) {
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request("/api/posts" + qs);

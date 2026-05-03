@@ -68,7 +68,7 @@ const profileUpdateSchema = z.object({
 // ─── POSTS ───
 
 const createPostSchema = z.object({
-  content: z.string().min(1, 'Post content is required.').max(5000),
+  content: z.string().max(5000).optional().or(z.literal('')),
   sport: z.string().max(100).optional(),
   image: z.string().max(500).optional()
 });

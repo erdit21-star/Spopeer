@@ -5373,12 +5373,21 @@
               </div>
             </div>
           </div>
+          <div class="post-meta">
+            ${post.sport || "General"} · ${new Date(post.createdAt).toLocaleString()}
+          </div>
           <div class="post-text">${escapeHtml(post.text || "")}</div>
           ${mediaHtml}
+          <div class="post-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
+            <button type="button" onclick="likePost(${post.id})">Like ${post.likesCount || 0}</button>
+            <button type="button" onclick="openComments(${post.id})">Comment ${post.commentsCount || 0}</button>
+            <button type="button" onclick="repostPost(${post.id})">Repost ${post.repostsCount || 0}</button>
+            <button type="button" onclick="savePost(${post.id})">Save</button>
+          </div>
           <div class="post-stats">
-            <span><i class="fa-regular fa-heart"></i> ${post.likes || 0}</span>
-            <span><i class="fa-regular fa-comment"></i> ${post.comments || 0}</span>
-            <span><i class="fa-regular fa-share-from-square"></i> ${post.shares || 0}</span>
+            <span><i class="fa-regular fa-heart"></i> ${post.likesCount || 0}</span>
+            <span><i class="fa-regular fa-comment"></i> ${post.commentsCount || 0}</span>
+            <span><i class="fa-regular fa-share-from-square"></i> ${post.repostsCount || 0}</span>
             <span><i class="fa-regular fa-eye"></i> ${post.views || 0}</span>
           </div>
         </div>
@@ -5472,12 +5481,13 @@
       authorName: authorName,
       role: post.role || post.userType || (author && author.role) || 'athlete',
       sport: post.sport || (author && author.sport) || '',
+      createdAt: post.createdAt || new Date().toISOString(),
       text: post.text || post.content || '',
       image: post.image || (imageFromArray && (imageFromArray.url || imageFromArray.src)) || null,
       video: post.video || (videoFromArray && (videoFromArray.url || videoFromArray.src)) || null,
-      likes: Number(post.likes ?? post.likesCount ?? 0),
-      comments: Number(post.comments ?? post.commentsCount ?? 0),
-      shares: Number(post.shares ?? post.repostsCount ?? 0),
+      likesCount: Number(post.likesCount ?? post.likes ?? 0),
+      commentsCount: Number(post.commentsCount ?? post.comments ?? 0),
+      repostsCount: Number(post.repostsCount ?? post.shares ?? 0),
       views: Number(post.views ?? post.viewCount ?? post.viewsCount ?? 0),
       authorInitials: initials
     };
@@ -5557,6 +5567,31 @@
     renderFeed(normalizedPosts);
   }
 
+  async function loadFeed() {
+    await renderCurrentTab();
+  }
+
+  async function likePost(postId) {
+    await window.SpopeerAPI.toggleLike(postId);
+    await loadFeed();
+  }
+
+  async function repostPost(postId) {
+    await window.SpopeerAPI.repost(postId);
+    await loadFeed();
+  }
+
+  async function savePost(postId) {
+    await window.SpopeerAPI.savePost(postId);
+    alert("Saved.");
+  }
+
+  async function openComments(postId) {
+    const result = await window.SpopeerAPI.getComments(postId);
+    const comments = Array.isArray(result) ? result : (result && Array.isArray(result.comments) ? result.comments : []);
+    alert("Comments: " + comments.length);
+  }
+
   document.addEventListener("DOMContentLoaded", async function () {
     const posts = await window.SpopeerFeedEngine.getForYouFeed();
 
@@ -5606,6 +5641,10 @@
   window.nextStory = nextStory;
   window.prevStory = prevStory;
   window.viewStory = viewStory;
+  window.likePost = likePost;
+  window.repostPost = repostPost;
+  window.savePost = savePost;
+  window.openComments = openComments;
 
   updateSportIndicator();
   populateSportsDropdown();
