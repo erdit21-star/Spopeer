@@ -5379,12 +5379,15 @@
           <div class="post-text">${escapeHtml(post.text || "")}</div>
           ${mediaHtml}
           <div class="post-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
-            <button type="button" onclick="likePost(${post.id})">${post.liked ? "Liked" : "Like"} ${post.likesCount || 0}</button>
+            <button type="button" onclick="likePost(${post.id})">Like ${post.likesCount || 0}</button>
             <button type="button" onclick="openComments(${post.id})">Comment ${post.commentsCount || 0}</button>
             <button type="button" onclick="repostPost(${post.id})">Repost ${post.repostsCount || 0}</button>
             <button type="button" onclick="savePost(${post.id})">Save</button>
           </div>
           <div class="post-stats">
+            <span><i class="fa-regular fa-heart"></i> ${post.likesCount || 0}</span>
+            <span><i class="fa-regular fa-comment"></i> ${post.commentsCount || 0}</span>
+            <span><i class="fa-regular fa-share-from-square"></i> ${post.repostsCount || 0}</span>
             <span><i class="fa-regular fa-eye"></i> ${post.views || 0}</span>
           </div>
         </div>
@@ -5485,7 +5488,6 @@
       likesCount: Number(post.likesCount ?? post.likes ?? 0),
       commentsCount: Number(post.commentsCount ?? post.comments ?? 0),
       repostsCount: Number(post.repostsCount ?? post.shares ?? 0),
-      liked: Boolean(post.liked),
       views: Number(post.views ?? post.viewCount ?? post.viewsCount ?? 0),
       authorInitials: initials
     };
@@ -5585,18 +5587,8 @@
   }
 
   async function openComments(postId) {
-    const draft = window.prompt("Write a comment (or leave empty to only view count):", "");
-    if (typeof draft === "string" && draft.trim()) {
-      await window.SpopeerAPI.addComment(postId, draft.trim());
-      await loadFeed();
-      return;
-    }
     const result = await window.SpopeerAPI.getComments(postId);
-    const comments = Array.isArray(result)
-      ? result
-      : (result && Array.isArray(result.comments)
-        ? result.comments
-        : (result && result.data && Array.isArray(result.data) ? result.data : []));
+    const comments = Array.isArray(result) ? result : (result && Array.isArray(result.comments) ? result.comments : []);
     alert("Comments: " + comments.length);
   }
 
