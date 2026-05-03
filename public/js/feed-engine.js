@@ -1,41 +1,64 @@
-// Updated
 (function () {
   function unwrapPosts(result) {
     if (!result) return [];
+
     if (Array.isArray(result)) return result;
     if (Array.isArray(result.posts)) return result.posts;
     if (Array.isArray(result.data)) return result.data;
     if (result.data && Array.isArray(result.data.posts)) return result.data.posts;
-    if (result.payload && Array.isArray(result.payload)) return result.payload;
+    if (Array.isArray(result.payload)) return result.payload;
+
     return [];
   }
 
   function unwrapPost(result) {
     if (!result) return null;
+
     if (result.post) return result.post;
     if (result.data) return result.data;
     if (result.payload) return result.payload;
+
     return result;
   }
 
   async function getForYouFeed() {
-    const result = await window.SpopeerAPI.getForYouFeed();
-    return unwrapPosts(result);
+    try {
+      const result = await window.SpopeerAPI.getForYouFeed();
+      return unwrapPosts(result);
+    } catch (err) {
+      console.warn("[Spopeer] For-you feed unavailable.", err);
+      return [];
+    }
   }
 
   async function getFollowingFeed() {
-    const result = await window.SpopeerAPI.getFollowingFeed();
-    return unwrapPosts(result);
+    try {
+      const result = await window.SpopeerAPI.getFollowingFeed();
+      return unwrapPosts(result);
+    } catch (err) {
+      console.warn("[Spopeer] Following feed unavailable.", err);
+      return [];
+    }
   }
 
   async function getSportFeed(selectedSport) {
-    const result = await window.SpopeerAPI.getSportFeed(selectedSport);
-    return unwrapPosts(result);
+    try {
+      const result = await window.SpopeerAPI.getSportFeed(selectedSport);
+      return unwrapPosts(result);
+    } catch (err) {
+      console.warn("[Spopeer] Sport feed unavailable.", err);
+      return [];
+    }
   }
 
   async function getTrendingFeed() {
-    const result = await window.SpopeerAPI.getTrendingFeed();
-    return unwrapPosts(result);
+    try {
+      const result = await window.SpopeerAPI.getTrendingFeed();
+      return unwrapPosts(result);
+    } catch (err) {
+      console.warn("[Spopeer] Trending feed unavailable.", err);
+      return [];
+    }
   }
 
   async function createPost(payload) {

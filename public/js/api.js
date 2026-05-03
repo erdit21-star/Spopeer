@@ -358,13 +358,9 @@
     },
     createPost: function (payload) {
       if (payload instanceof FormData) {
-        const token = localStorage.getItem("spopeerToken");
-        const headers = token ? { Authorization: "Bearer " + token } : {};
-
         return request("/api/posts", {
           method: "POST",
           body: payload,
-          headers,
         });
       }
 
