@@ -5740,7 +5740,16 @@ async function loadAllPosts() {
     const timer = setTimeout(() => controller.abort(), 5000);
     const data = await API.request('/api/posts', { signal: controller.signal });
     clearTimeout(timer);
-    const posts = (data.payload || []).map(normalizePost);
+    const rows = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.payload)
+          ? data.payload
+          : Array.isArray(data?.results)
+            ? data.results
+            : [];
+    const posts = rows.map(normalizePost);
     if (posts.length > 0) {
       loadPostsFromArray(posts);
       return;
