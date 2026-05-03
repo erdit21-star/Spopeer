@@ -5379,10 +5379,18 @@
           <div class="post-text">${escapeHtml(post.text || "")}</div>
           ${mediaHtml}
           <div class="post-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
-            <button type="button" onclick="likePost(${post.id})">${post.liked ? "Liked" : "Like"} ${post.likesCount || 0}</button>
-            <button type="button" onclick="openComments(${post.id})">Comment ${post.commentsCount || 0}</button>
-            <button type="button" onclick="repostPost(${post.id})">Repost ${post.repostsCount || 0}</button>
-            <button type="button" onclick="savePost(${post.id})">Save</button>
+            <button type="button" onclick="likePost(${post.id})">
+              <i class="fa-${post.liked ? "solid" : "regular"} fa-heart"></i> ${post.liked ? "Liked" : "Like"} ${post.likesCount || 0}
+            </button>
+            <button type="button" onclick="openComments(${post.id})">
+              <i class="fa-regular fa-message"></i> Comment ${post.commentsCount || 0}
+            </button>
+            <button type="button" onclick="repostPost(${post.id})">
+              <i class="fa-solid fa-retweet"></i> Repost ${post.repostsCount || 0}
+            </button>
+            <button type="button" onclick="savePost(${post.id})">
+              <i class="fa-regular fa-bookmark"></i> Save
+            </button>
           </div>
           <div class="post-stats">
             <span><i class="fa-regular fa-eye"></i> ${post.views || 0}</span>
