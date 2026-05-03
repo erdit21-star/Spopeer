@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spopeer · Feed</title>
+
+<!-- Auth & core scripts (must load before DOMContentLoaded) -->
+<script src="/js/auth.js"></script>
+<script src="/js/sanitize.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/profile-normalizer.js"></script>
+<script src="/js/current-user-store.js"></script>
+<script>
+  window.Auth.requireAuth();
+</script>
+
+<!-- Service worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/js/service-worker.js').catch(function (err) {
+      console.debug('SW registration failed:', err);
+    });
+  }
+</script>
+
+<script src="/js/feed-engine.js"></script>
+
+<style>
+:root {
+  --bg:#f3f6fb;
+  --card:#ffffff;
+  --primary:#0f766e;
+  --primary-dark:#115e59;
+  --accent:#2563eb;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --soft:#ecfdf5;
+  --soft-blue:#eff6ff;
+  --radius:22px;
+  --shadow:0 14px 34px rgba(15,23,42,.08);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  padding-bottom:86px;
+}
+
+.mobile-app{
+  max-width:480px;
+  min-height:100vh;
+  margin:0 auto;
+}
+
+/* TOPBAR */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(14px);
+  padding:14px 14px 12px;
+  border-bottom:1px solid var(--border);
+}
+
+.topbar-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:21px;
+  font-weight:850;
+  color:var(--primary-dark);
+  text-decoration:none;
+}
+
+.brand-mark{
+  width:35px;
+  height:35px;
+  border-radius:13px;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  box-shadow:0 8px 18px rgba(15,118,110,.25);
+}
+
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.icon-btn,.user-chip{
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text);
+  cursor:pointer;
+}
+
+.icon-btn{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  text-decoration:none;
+}
+
+.user-chip{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  height:38px;
+  padding:4px 8px 4px 4px;
+  border-radius:999px;
+  text-decoration:none;
+}
+
+.chip-avatar{
+  width:29px;
+  height:29px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:12px;
+  font-weight:900;
+  overflow:hidden;
+}
+
+.chip-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:50%;
+}
+
+.search-bar{
+  margin-top:12px;
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:11px 14px;
+  color:var(--muted);
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  text-decoration:none;
+}
+
+/* STORIES */
+.stories{
+  padding:13px 12px 8px;
+  display:flex;
+  gap:13px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+
+.stories::-webkit-scrollbar{display:none;}
+
+.story{
+  min-width:70px;
+  text-align:center;
+  cursor:pointer;
+}
+
+.story-avatar{
+  width:66px;
+  height:66px;
+  border-radius:50%;
+  padding:3px;
+  background:linear-gradient(135deg,#2563eb,#0f766e);
+}
+
+.story-avatar.unseen{
+  background:linear-gradient(135deg,#2563eb,#0f766e);
+}
+
+.story-avatar.seen{
+  background:#cbd5e1;
+}
+
+.story-avatar.add-story{
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+}
+
+.story-avatar-inner{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  background:#fff;
+  display:grid;
+  place-items:center;
+  font-weight:850;
+  color:var(--primary-dark);
+  border:2px solid #fff;
+  overflow:hidden;
+}
+
+.story-avatar-inner img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:50%;
+}
+
+.story p{
+  margin-top:6px;
+  font-size:11px;
+  font-weight:700;
+  color:var(--text);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:66px;
+}
+
+/* CONTENT */
+.content{padding:0 12px 14px;}
+
+/* PROFILE CARD */
+.profile-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:26px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  margin-top:6px;
+}
+
+.profile-cover{
+  height:74px;
+  background:
+    radial-gradient(circle at top right,rgba(255,255,255,.28),transparent 38%),
+    linear-gradient(135deg,var(--primary),var(--accent));
+  position:relative;
+}
+
+.profile-menu-btn{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:36px;
+  height:36px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.18);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+}
+
+.profile-body{padding:0 15px 15px;}
+
+.profile-identity{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  margin-top:-32px;
+  position:relative;
+  z-index:2;
+}
+
+.profile-avatar{
+  width:72px;
+  height:72px;
+  border-radius:24px;
+  background:#fff;
+  border:4px solid #fff;
+  color:var(--primary-dark);
+  display:grid;
+  place-items:center;
+  font-size:23px;
+  font-weight:950;
+  box-shadow:0 10px 22px rgba(15,23,42,.18);
+  overflow:hidden;
+}
+
+.profile-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.profile-status{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  background:var(--soft);
+  color:var(--primary-dark);
+  border:1px solid #bbf7d0;
+  padding:7px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:850;
+  margin-bottom:4px;
+}
+
+.profile-name-row{margin-top:10px;}
+
+.profile-name-row h2{font-size:20px;line-height:1.15;}
+
+.profile-name-row p{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:650;
+}
+
+.profile-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:11px;
+}
+
+.profile-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 9px;
+  border-radius:999px;
+  background:#f8fafc;
+  border:1px solid var(--border);
+  font-size:12px;
+  font-weight:750;
+  color:var(--text);
+}
+
+.profile-bio{
+  margin-top:12px;
+  color:#334155;
+  font-size:13px;
+  line-height:1.45;
+}
+
+.profile-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:14px;
+}
+
+.stat{
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:17px;
+  padding:10px 8px;
+  text-align:center;
+}
+
+.stat strong{display:block;font-size:17px;}
+
+.stat span{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.profile-completion{
+  margin-top:14px;
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:11px;
+}
+
+.completion-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12px;
+  font-weight:850;
+}
+
+.completion-top span:last-child{color:var(--primary);}
+
+.progress{
+  height:8px;
+  background:#e2e8f0;
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:8px;
+}
+
+.progress-fill{
+  height:100%;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  border-radius:999px;
+  transition:width .6s ease;
+}
+
+.profile-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-top:14px;
+}
+
+.profile-actions a{
+  text-decoration:none;
+  border-radius:999px;
+  padding:11px 12px;
+  font-size:13px;
+  font-weight:850;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+}
+
+.view-profile-btn{
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:#fff;
+}
+
+.edit-profile-btn{
+  background:#fff;
+  color:var(--primary-dark);
+  border:1px solid var(--border);
+}
+
+/* QUICK ACTIONS */
+.quick-actions{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-top:15px;
+}
+
+.quick-action{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:13px 8px;
+  text-align:center;
+  box-shadow:0 5px 18px rgba(15,23,42,.05);
+  font-size:12px;
+  font-weight:780;
+  cursor:pointer;
+  text-decoration:none;
+  color:var(--text);
+  display:block;
+}
+
+.quick-action i{
+  display:block;
+  margin:0 auto 7px;
+  width:24px;
+  height:24px;
+  color:var(--primary);
+}
+
+/* COMPOSER */
+.composer,.post-card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:14px;
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
+}
+
+.composer{margin-top:15px;}
+
+.composer-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.mini-avatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:var(--soft);
+  color:var(--primary-dark);
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  font-size:14px;
+  flex-shrink:0;
+  overflow:hidden;
+}
+
+.mini-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:50%;
+}
+
+.composer-input{
+  flex:1;
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:11px 14px;
+  color:var(--muted);
+  font-size:14px;
+  cursor:pointer;
+  text-decoration:none;
+  display:block;
+}
+
+.composer-actions,.post-actions{
+  display:flex;
+  justify-content:space-between;
+  border-top:1px solid var(--border);
+  margin-top:12px;
+  padding-top:10px;
+}
+
+button{font-family:inherit;}
+
+.composer-actions button,.post-actions button{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-weight:750;
+  font-size:13px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  cursor:pointer;
+  padding:4px 6px;
+  border-radius:8px;
+  transition:background .15s;
+}
+
+.composer-actions button:hover,.post-actions button:hover{
+  background:#f1f5f9;
+}
+
+.post-actions button.liked{
+  color:var(--primary);
+}
+
+/* FEED */
+.section-title{
+  margin:18px 2px 10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.section-title h3{font-size:16px;}
+
+.section-title a{
+  color:var(--primary);
+  text-decoration:none;
+  font-size:13px;
+  font-weight:850;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.post-card{margin-bottom:14px;}
+
+.post-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.post-user{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.post-user-info strong{font-size:14px;}
+
+.post-user-info p{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.badge{
+  background:var(--soft);
+  color:var(--primary-dark);
+  padding:5px 9px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:850;
+  white-space:nowrap;
+}
+
+.badge.athlete{background:var(--soft-blue);color:#1e40af;}
+.badge.coach{background:var(--soft);color:var(--primary-dark);}
+.badge.club{background:#fef3c7;color:#92400e;}
+.badge.professional{background:#f3e8ff;color:#6b21a8;}
+
+.post-text{
+  margin-top:12px;
+  font-size:14px;
+  line-height:1.45;
+}
+
+.post-media{
+  margin-top:12px;
+  height:160px;
+  border-radius:18px;
+  background:
+    linear-gradient(135deg,rgba(15,118,110,.1),rgba(37,99,235,.16)),
+    #eef6ff;
+  display:grid;
+  place-items:center;
+  color:var(--primary-dark);
+  font-weight:850;
+  border:1px solid #dbeafe;
+  overflow:hidden;
+}
+
+.post-media img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:18px;
+}
+
+.post-media-content{text-align:center;}
+
+.post-media-content i{
+  width:34px;
+  height:34px;
+  margin-bottom:8px;
+}
+
+/* Feed loading/empty states */
+.feed-loading,.feed-empty{
+  text-align:center;
+  padding:40px 20px;
+  color:var(--muted);
+}
+
+.feed-loading i,.feed-empty i{
+  width:40px;
+  height:40px;
+  margin-bottom:12px;
+  opacity:.5;
+}
+
+.feed-loading p,.feed-empty p{font-size:14px;}
+
+/* Skeleton */
+.skeleton{
+  background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.4s infinite;
+  border-radius:10px;
+}
+
+@keyframes shimmer{
+  0%{background-position:200% 0;}
+  100%{background-position:-200% 0;}
+}
+
+/* NAV */
+.bottom-nav{
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:480px;
+  background:#fff;
+  border-top:1px solid var(--border);
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  padding:9px 6px 11px;
+  z-index:30;
+}
+
+.nav-item{
+  text-align:center;
+  color:var(--muted);
+  font-size:11px;
+  text-decoration:none;
+  font-weight:850;
+}
+
+.nav-item.active{color:var(--primary);}
+
+i[data-lucide]{
+  width:20px;
+  height:20px;
+  stroke-width:2.2;
+}
+
+.nav-item i{
+  display:block;
+  margin:0 auto 3px;
+  width:23px;
+  height:23px;
+}
+
+.nav-item.active i{stroke-width:2.8;}
+
+/* Profile menu dropdown */
+.profile-dropdown{
+  position:absolute;
+  top:calc(100% + 8px);
+  right:0;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  padding:6px;
+  min-width:180px;
+  display:none;
+  z-index:50;
+}
+
+.profile-dropdown.open{display:block;}
+
+.profile-dropdown a,.profile-dropdown button{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:750;
+  color:var(--text);
+  text-decoration:none;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  text-align:left;
+}
+
+.profile-dropdown a:hover,.profile-dropdown button:hover{
+  background:#f8fafc;
+}
+
+.profile-dropdown .logout-btn{color:#ef4444;}
+
+.top-actions-wrapper{position:relative;}
+
+@media (min-width:768px) {
+  body{background:#e5e7eb;}
+  .mobile-app{
+    border-left:1px solid var(--border);
+    border-right:1px solid var(--border);
+  }
+}
+</style>
+</head>
+
+<body>
+<main class="mobile-app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-row">
+      <a href="/feed-mobile.html" class="brand">
+        <div class="brand-mark">S</div>
+        Spopeer
+      </a>
+
+      <div class="top-actions-wrapper">
+        <div class="top-actions">
+          <a href="/messages.html" class="icon-btn" aria-label="Messages">
+            <i data-lucide="messages-square"></i>
+          </a>
+
+          <button class="icon-btn" id="notifBtn" aria-label="Notifications">
+            <i data-lucide="bell-ring"></i>
+          </button>
+
+          <button class="user-chip" id="userChipBtn" aria-label="Account menu">
+            <span class="chip-avatar" id="topChipAvatar"></span>
+            <i data-lucide="chevron-down"></i>
+          </button>
+        </div>
+
+        <!-- Dropdown -->
+        <div class="profile-dropdown" id="profileDropdown">
+          <a href="/pages/profiles/public-profile.html" id="dropdownViewProfile">
+            <i data-lucide="circle-user-round"></i>
+            View profile
+          </a>
+          <a href="/pages/profiles/edit-profile.html">
+            <i data-lucide="pen-line"></i>
+            Edit profile
+          </a>
+          <a href="/pages/dashboard/dashboard.html">
+            <i data-lucide="layout-dashboard"></i>
+            Dashboard
+          </a>
+          <a href="/pages/settings/settings.html">
+            <i data-lucide="settings"></i>
+            Settings
+          </a>
+          <button class="logout-btn" id="dropdownLogoutBtn">
+            <i data-lucide="log-out"></i>
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <a href="/pages/search/search.html" class="search-bar" aria-label="Search">
+      <i data-lucide="search"></i>
+      Search athletes, coaches, clubs, sports...
+    </a>
+  </header>
+
+  <!-- STORIES -->
+  <section class="stories" id="storiesRow" aria-label="Stories">
+    <!-- Add your story -->
+    <div class="story" id="addStoryBtn" role="button" aria-label="Add your story">
+      <div class="story-avatar add-story">
+        <div class="story-avatar-inner">
+          <i data-lucide="plus"></i>
+        </div>
+      </div>
+      <p>Your Story</p>
+    </div>
+    <!-- Dynamic stories injected by JS -->
+  </section>
+
+  <section class="content">
+
+    <!-- PROFILE CARD -->
+    <section class="profile-card">
+      <div class="profile-cover">
+        <button class="profile-menu-btn" id="profileCardMenuBtn" aria-label="Profile options">
+          <i data-lucide="more-vertical"></i>
+        </button>
+      </div>
+
+      <div class="profile-body">
+        <div class="profile-identity">
+          <div class="profile-avatar" id="profileCardAvatar"></div>
+
+          <div class="profile-status">
+            <i data-lucide="badge-check"></i>
+            Active profile
+          </div>
+        </div>
+
+        <div class="profile-name-row">
+          <h2 id="profileCardName">Loading…</h2>
+          <p id="profileCardMeta"></p>
+        </div>
+
+        <div class="profile-tags" id="profileCardTags"></div>
+
+        <p class="profile-bio" id="profileCardBio"></p>
+
+        <div class="profile-stats">
+          <div class="stat">
+            <strong id="statConnections">—</strong>
+            <span>Connections</span>
+          </div>
+          <div class="stat">
+            <strong id="statPosts">—</strong>
+            <span>Posts</span>
+          </div>
+          <div class="stat">
+            <strong id="statFollowing">—</strong>
+            <span>Following</span>
+          </div>
+        </div>
+
+        <div class="profile-completion">
+          <div class="completion-top">
+            <span>Profile strength</span>
+            <span id="completionPct">—</span>
+          </div>
+          <div class="progress">
+            <div class="progress-fill" id="completionBar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="profile-actions">
+          <a href="/pages/profiles/public-profile.html" id="viewProfileLink" class="view-profile-btn">
+            View profile
+            <i data-lucide="arrow-right"></i>
+          </a>
+          <a href="/pages/profiles/edit-profile.html" class="edit-profile-btn">
+            Edit profile
+            <i data-lucide="pen-line"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUICK ACTIONS -->
+    <section class="quick-actions" aria-label="Quick actions">
+      <a href="/pages/search/search.html?role=athlete" class="quick-action">
+        <i data-lucide="circle-user-round"></i>
+        Athletes
+      </a>
+      <a href="/pages/search/search.html?role=coach" class="quick-action">
+        <i data-lucide="shield-check"></i>
+        Coaches
+      </a>
+      <a href="/pages/search/search.html?role=club" class="quick-action">
+        <i data-lucide="landmark"></i>
+        Clubs
+      </a>
+      <a href="/pages/community/community.html" class="quick-action">
+        <i data-lucide="sparkles"></i>
+        AI Agent
+      </a>
+    </section>
+
+    <!-- COMPOSER -->
+    <section class="composer" aria-label="Create post">
+      <div class="composer-top">
+        <div class="mini-avatar" id="composerAvatar"></div>
+        <a href="/create-post.html" class="composer-input">
+          Share an update, achievement, or opportunity…
+        </a>
+      </div>
+
+      <div class="composer-actions">
+        <button onclick="window.location.href='/create-post.html?type=media'">
+          <i data-lucide="image-plus"></i>
+          Media
+        </button>
+        <button onclick="window.location.href='/create-post.html?type=result'">
+          <i data-lucide="trophy"></i>
+          Result
+        </button>
+        <button onclick="window.location.href='/create-post.html?type=article'">
+          <i data-lucide="newspaper"></i>
+          Article
+        </button>
+      </div>
+    </section>
+
+    <!-- FEED -->
+    <div class="section-title">
+      <h3>Latest from your sports network</h3>
+      <a href="/pages/search/search.html">
+        Explore
+        <i data-lucide="sliders-horizontal"></i>
+      </a>
+    </div>
+
+    <div id="feedContainer">
+      <!-- Skeleton placeholder -->
+      <div class="post-card" id="feedSkeleton">
+        <div class="post-header">
+          <div class="post-user">
+            <div class="mini-avatar skeleton" style="width:40px;height:40px;border-radius:50%;"></div>
+            <div>
+              <div class="skeleton" style="width:120px;height:14px;margin-bottom:6px;"></div>
+              <div class="skeleton" style="width:80px;height:11px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="skeleton" style="height:14px;margin-top:14px;width:90%;"></div>
+        <div class="skeleton" style="height:14px;margin-top:8px;width:70%;"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="/feed-mobile.html" class="nav-item active">
+      <i data-lucide="house"></i>
+      Feed
+    </a>
+    <a href="/pages/search/search.html" class="nav-item">
+      <i data-lucide="search"></i>
+      Search
+    </a>
+    <a href="/create-post.html" class="nav-item">
+      <i data-lucide="circle-plus"></i>
+      Post
+    </a>
+    <a href="/messages.html" class="nav-item">
+      <i data-lucide="messages-square"></i>
+      Messages
+    </a>
+    <a href="/pages/profiles/public-profile.html" class="nav-item" id="navProfileLink">
+      <i data-lucide="circle-user-round"></i>
+      Profile
+    </a>
+  </nav>
+
+</main>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function timeAgo(isoDate) {
+    if (!isoDate) return '';
+    const diff = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000);
+    if (diff < 60) return diff + 's ago';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return Math.floor(diff / 86400) + 'd ago';
+  }
+
+  function getInitials(name) {
+    if (!name) return 'U';
+    return name.trim().split(/\s+/).map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
+  }
+
+  function capitalise(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  function calcProfileStrength(user) {
+    const fields = [
+      user.displayName, user.bio, user.location || user.country,
+      user.sport || user.primarySport, user.avatarUrl,
+      user.role || user.userType
+    ];
+    const filled = fields.filter(Boolean).length;
+    return Math.round((filled / fields.length) * 100);
+  }
+
+  // ── Avatar renderer ───────────────────────────────────────────────────────
+  function renderAvatarInto(el, user, large) {
+    if (!el) return;
+    if (user && user.avatarUrl) {
+      el.innerHTML = '<img src="' + escHtml(user.avatarUrl) + '" alt="' + escHtml(user.displayName || 'User') + '">';
+    } else {
+      el.textContent = user ? getInitials(user.displayName) : 'U';
+    }
+  }
+
+  // ── Profile card ──────────────────────────────────────────────────────────
+  function populateProfileCard(user) {
+    if (!user) return;
+
+    // Avatar
+    renderAvatarInto(document.getElementById('profileCardAvatar'), user, true);
+
+    // Chip avatar (topbar)
+    renderAvatarInto(document.getElementById('topChipAvatar'), user, false);
+
+    // Composer mini-avatar
+    renderAvatarInto(document.getElementById('composerAvatar'), user, false);
+
+    // Name
+    var nameEl = document.getElementById('profileCardName');
+    if (nameEl) nameEl.textContent = user.displayName || 'Your Name';
+
+    // Meta line: @handle · Role · Sport/Location
+    var metaEl = document.getElementById('profileCardMeta');
+    if (metaEl) {
+      var handle = user.username || (user.email ? user.email.split('@')[0] : '');
+      var role = capitalise(user.role || user.userType || '');
+      var parts = [];
+      if (handle) parts.push('@' + handle);
+      if (role && role !== 'User') parts.push(role);
+      if (user.sport || user.primarySport) parts.push(capitalise(user.sport || user.primarySport));
+      metaEl.textContent = parts.join(' · ');
+    }
+
+    // Tags
+    var tagsEl = document.getElementById('profileCardTags');
+    if (tagsEl) {
+      var tags = [];
+      if (user.role || user.userType) {
+        tags.push({ icon: 'briefcase-business', label: capitalise(user.role || user.userType) });
+      }
+      if (user.location || user.country || user.city) {
+        tags.push({ icon: 'map-pin', label: user.city || user.location || user.country });
+      }
+      if (user.sport || user.primarySport) {
+        tags.push({ icon: 'activity', label: capitalise(user.sport || user.primarySport) });
+      }
+      tagsEl.innerHTML = tags.map(function (t) {
+        return '<span class="profile-tag"><i data-lucide="' + escHtml(t.icon) + '"></i>' + escHtml(t.label) + '</span>';
+      }).join('');
+    }
+
+    // Bio
+    var bioEl = document.getElementById('profileCardBio');
+    if (bioEl) bioEl.textContent = user.bio || '';
+
+    // Stats
+    var conn = user.followersCount || user.followers || 0;
+    var posts = user.postsCount || 0;
+    var following = user.followingCount || user.following || 0;
+    var statConn = document.getElementById('statConnections');
+    var statPosts = document.getElementById('statPosts');
+    var statFollowing = document.getElementById('statFollowing');
+    if (statConn) statConn.textContent = conn;
+    if (statPosts) statPosts.textContent = posts;
+    if (statFollowing) statFollowing.textContent = following;
+
+    // Profile completion
+    var pct = calcProfileStrength(user);
+    var pctEl = document.getElementById('completionPct');
+    var barEl = document.getElementById('completionBar');
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (barEl) barEl.style.width = pct + '%';
+
+    // View profile link — add userId param if available
+    var userId = user.id || user.userId || user.email;
+    if (userId) {
+      var profileUrl = '/pages/profiles/public-profile.html?userId=' + encodeURIComponent(userId);
+      var viewLink = document.getElementById('viewProfileLink');
+      var navProfile = document.getElementById('navProfileLink');
+      var dropViewProfile = document.getElementById('dropdownViewProfile');
+      if (viewLink) viewLink.href = profileUrl;
+      if (navProfile) navProfile.href = profileUrl;
+      if (dropViewProfile) dropViewProfile.href = profileUrl;
+    }
+
+    // Re-run Lucide to render new icons
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  // ── Stories ───────────────────────────────────────────────────────────────
+  function buildStoriesRow(user) {
+    var row = document.getElementById('storiesRow');
+    if (!row) return;
+
+    var demoStories = [
+      { initials: 'AN', name: 'Alex N.', seen: false },
+      { initials: 'MC', name: 'Michael', seen: false },
+      { initials: 'JD', name: 'Jordan', seen: true },
+      { initials: 'SR', name: 'Sara R.', seen: false },
+    ];
+
+    // Remove existing dynamic stories (keep add-story item)
+    row.querySelectorAll('.story.dynamic').forEach(function (el) { el.remove(); });
+
+    demoStories.forEach(function (s) {
+      var div = document.createElement('div');
+      div.className = 'story dynamic';
+      div.innerHTML =
+        '<div class="story-avatar ' + (s.seen ? 'seen' : 'unseen') + '">' +
+          '<div class="story-avatar-inner">' + escHtml(s.initials) + '</div>' +
+        '</div>' +
+        '<p>' + escHtml(s.name) + '</p>';
+      row.appendChild(div);
+    });
+  }
+
+  // ── Post card renderer ────────────────────────────────────────────────────
+  function badgeClass(role) {
+    var r = (role || '').toLowerCase();
+    if (r === 'athlete') return 'badge athlete';
+    if (r === 'coach') return 'badge coach';
+    if (r === 'club') return 'badge club';
+    return 'badge professional';
+  }
+
+  function renderPostCard(post) {
+    var authorName = post.authorName || post.author?.displayName || post.user?.displayName || 'Spopeer User';
+    var authorRole = capitalise(post.authorRole || post.author?.role || post.user?.role || '');
+    var authorInitials = getInitials(authorName);
+    var authorAvatar = post.authorAvatar || post.author?.avatarUrl || post.user?.avatarUrl || '';
+    var content = post.content || post.text || post.body || '';
+    var createdAt = post.createdAt || post.timestamp || '';
+    var likes = post.likesCount || post.likes || 0;
+    var comments = post.commentsCount || post.comments || 0;
+    var postId = post.id || post.postId || '';
+
+    var avatarHtml = authorAvatar
+      ? '<img src="' + escHtml(authorAvatar) + '" alt="' + escHtml(authorName) + '">'
+      : escHtml(authorInitials);
+
+    var mediaHtml = '';
+    if (post.mediaUrl || post.imageUrl) {
+      mediaHtml =
+        '<div class="post-media">' +
+          '<img src="' + escHtml(post.mediaUrl || post.imageUrl) + '" alt="Post media" loading="lazy">' +
+        '</div>';
+    } else if (post.mediaType && post.mediaType !== 'none') {
+      mediaHtml =
+        '<div class="post-media">' +
+          '<div class="post-media-content">' +
+            '<i data-lucide="image"></i>' +
+            '<div>' + escHtml(post.mediaType) + '</div>' +
+          '</div>' +
+        '</div>';
+    }
+
+    var article = document.createElement('article');
+    article.className = 'post-card';
+    article.dataset.postId = postId;
+    article.innerHTML =
+      '<div class="post-header">' +
+        '<div class="post-user">' +
+          '<div class="mini-avatar">' + avatarHtml + '</div>' +
+          '<div class="post-user-info">' +
+            '<strong>' + escHtml(authorName) + '</strong>' +
+            '<p>' + escHtml(authorRole || 'Member') + (createdAt ? ' · ' + timeAgo(createdAt) : '') + '</p>' +
+          '</div>' +
+        '</div>' +
+        (authorRole ? '<span class="' + badgeClass(authorRole) + '">' + escHtml(authorRole) + '</span>' : '') +
+      '</div>' +
+      '<p class="post-text">' + escHtml(content) + '</p>' +
+      mediaHtml +
+      '<div class="post-actions">' +
+        '<button data-action="like" data-post-id="' + escHtml(postId) + '">' +
+          '<i data-lucide="thumbs-up"></i>' +
+          '<span class="like-count">' + likes + '</span>' +
+        '</button>' +
+        '<button data-action="comment" data-post-id="' + escHtml(postId) + '">' +
+          '<i data-lucide="message-square-text"></i>' +
+          '<span>' + comments + '</span>' +
+        '</button>' +
+        '<button data-action="repost" data-post-id="' + escHtml(postId) + '">' +
+          '<i data-lucide="repeat-2"></i>' +
+          'Repost' +
+        '</button>' +
+        '<button data-action="share" data-post-id="' + escHtml(postId) + '">' +
+          '<i data-lucide="send"></i>' +
+          'Share' +
+        '</button>' +
+      '</div>';
+    return article;
+  }
+
+  // ── Feed loader ───────────────────────────────────────────────────────────
+  async function loadFeed() {
+    var container = document.getElementById('feedContainer');
+    if (!container) return;
+
+    try {
+      var posts = [];
+      if (window.SpopeerFeedEngine) {
+        posts = await window.SpopeerFeedEngine.getForYouFeed();
+      }
+
+      // Remove skeleton
+      var skeleton = document.getElementById('feedSkeleton');
+      if (skeleton) skeleton.remove();
+
+      if (!posts || posts.length === 0) {
+        container.innerHTML =
+          '<div class="feed-empty">' +
+            '<i data-lucide="rss"></i>' +
+            '<p>No posts yet. Follow athletes and clubs to fill your feed!</p>' +
+            '<a href="/pages/search/search.html" style="display:inline-block;margin-top:12px;color:var(--primary);font-weight:800;text-decoration:none;">Discover people &rarr;</a>' +
+          '</div>';
+        if (window.lucide) window.lucide.createIcons();
+        return;
+      }
+
+      var frag = document.createDocumentFragment();
+      posts.forEach(function (post) {
+        frag.appendChild(renderPostCard(post));
+      });
+      container.appendChild(frag);
+
+      if (window.lucide) window.lucide.createIcons();
+
+      // Register views for loaded posts
+      if (window.SpopeerFeedEngine && window.SpopeerFeedEngine.registerView) {
+        posts.forEach(function (post) {
+          if (post.id) window.SpopeerFeedEngine.registerView(post.id);
+        });
+      }
+    } catch (err) {
+      console.warn('[Mobile Feed] Failed to load feed:', err);
+      var skeleton2 = document.getElementById('feedSkeleton');
+      if (skeleton2) skeleton2.remove();
+      container.innerHTML =
+        '<div class="feed-empty">' +
+          '<i data-lucide="wifi-off"></i>' +
+          '<p>Could not load the feed. Check your connection and try again.</p>' +
+        '</div>';
+      if (window.lucide) window.lucide.createIcons();
+    }
+  }
+
+  // ── Post actions (like, share, etc.) ─────────────────────────────────────
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-action]');
+    if (!btn) return;
+
+    var action = btn.dataset.action;
+    var postId = btn.dataset.postId;
+
+    if (action === 'like') {
+      btn.classList.toggle('liked');
+      var countEl = btn.querySelector('.like-count');
+      if (countEl) {
+        var n = parseInt(countEl.textContent, 10) || 0;
+        countEl.textContent = btn.classList.contains('liked') ? n + 1 : Math.max(0, n - 1);
+      }
+      if (window.SpopeerAPI && postId) {
+        window.SpopeerAPI.likePost && window.SpopeerAPI.likePost(postId).catch(function () {});
+      }
+    }
+
+    if (action === 'comment' && postId) {
+      window.location.href = '/pages/posts/post-detail.html?postId=' + encodeURIComponent(postId);
+    }
+
+    if (action === 'share' && postId) {
+      var url = window.location.origin + '/pages/posts/post-detail.html?postId=' + encodeURIComponent(postId);
+      if (navigator.share) {
+        navigator.share({ url: url, title: 'Spopeer post' }).catch(function () {});
+      } else {
+        navigator.clipboard && navigator.clipboard.writeText(url).then(function () {
+          alert('Link copied!');
+        });
+      }
+    }
+  });
+
+  // ── Profile dropdown ──────────────────────────────────────────────────────
+  var chipBtn = document.getElementById('userChipBtn');
+  var dropdown = document.getElementById('profileDropdown');
+
+  if (chipBtn && dropdown) {
+    chipBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', function () {
+      dropdown.classList.remove('open');
+    });
+  }
+
+  var logoutBtn = document.getElementById('dropdownLogoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function () {
+      if (window.Auth) {
+        window.Auth.logout();
+      } else {
+        localStorage.clear();
+        window.location.replace('/index.html');
+      }
+    });
+  }
+
+  // ── Profile card menu ─────────────────────────────────────────────────────
+  var pcMenuBtn = document.getElementById('profileCardMenuBtn');
+  if (pcMenuBtn) {
+    pcMenuBtn.addEventListener('click', function () {
+      window.location.href = '/pages/profiles/edit-profile.html';
+    });
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  function init() {
+    // Init Lucide icons first pass
+    if (window.lucide) window.lucide.createIcons();
+
+    // Populate profile card from CurrentUserStore or Auth fallback
+    var user = null;
+    if (window.CurrentUserStore) {
+      user = window.CurrentUserStore.getCurrentUser();
+      window.CurrentUserStore.subscribe(populateProfileCard);
+    }
+    if (!user && window.Auth) {
+      user = window.Auth.getUser();
+    }
+    if (user) populateProfileCard(user);
+
+    buildStoriesRow(user);
+
+    loadFeed();
+
+    // Refresh user data in background
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.refreshCurrentUser === 'function') {
+      window.CurrentUserStore.refreshCurrentUser().catch(function () {});
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
