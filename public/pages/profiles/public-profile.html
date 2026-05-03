@@ -459,6 +459,19 @@
           <span><i class="fa-solid fa-photo-film"></i> Gallery</span>
           <button id="uploadMediaBtn" style="display:none;padding:6px 14px;background:var(--accent);color:var(--accent-light);border:none;border-radius:var(--pill);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fB)"><i class="fa-solid fa-plus"></i> Upload</button>
         </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <select id="media-type-filter" style="padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:var(--white);font-size:12px;">
+            <option value="all">All Media</option>
+            <option value="image">Images</option>
+            <option value="video">Videos</option>
+          </select>
+          <select id="media-source-filter" style="padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:var(--white);font-size:12px;">
+            <option value="all">All Sources</option>
+            <option value="profile">Profile Photos</option>
+            <option value="posts">Post Uploads</option>
+            <option value="saved">Saved/Liked</option>
+          </select>
+        </div>
         <div id="media-container" class="media-grid"></div>
       </div>
     </div>
@@ -474,7 +487,18 @@
     <!-- TESTIMONIALS -->
     <div class="tab-content" id="testimonials">
       <div class="content-card">
-        <div class="content-card-title"><i class="fa-regular fa-comments"></i> Reviews & Testimonials</div>
+        <div class="content-card-title"><i class="fa-regular fa-comments"></i> Comments Received</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <select id="comments-sort-filter" style="padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:var(--white);font-size:12px;">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+          <select id="comments-length-filter" style="padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:var(--white);font-size:12px;">
+            <option value="all">All Lengths</option>
+            <option value="short">Short (1-80 chars)</option>
+            <option value="long">Long (80+ chars)</option>
+          </select>
+        </div>
         <div id="testimonials-content"></div>
       </div>
     </div>

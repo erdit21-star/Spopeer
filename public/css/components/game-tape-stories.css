@@ -16,7 +16,7 @@
 }
 
 .game-tape-header {
-  padding: 14px 18px;
+  padding: 10px 14px;
   background:
     radial-gradient(circle at 10% 20%, rgba(255,255,255,.12), transparent 24%),
     linear-gradient(135deg, var(--accent, #001f3f) 0%, #003d7a 48%, var(--blue, #1a6bff) 100%);
@@ -30,23 +30,23 @@
 .game-tape-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-family: var(--fB, 'Plus Jakarta Sans', Arial, sans-serif);
   font-weight: 800;
-  font-size: 14px;
+  font-size: 12px;
   letter-spacing: -.01em;
 }
 
 .game-tape-title-icon {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: rgba(255,255,255,.14);
   border: 1px solid rgba(255,255,255,.20);
-  font-size: 15px;
+  font-size: 12px;
 }
 
 .game-tape-badge {

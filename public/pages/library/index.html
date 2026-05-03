@@ -410,16 +410,39 @@
       <div class="page-head">
         <h1>Your Library</h1>
         <p>
-          Keep everything you saved in one place — posts, links, and articles.
-          Use this space as your personal sports knowledge hub.
+          Keep your activity organized in one place: posts, links, articles, videos,
+          images, events, and sponsorships.
         </p>
       </div>
 
       <div class="library-tabs">
         <button class="library-tab active" data-library-tab="all">All</button>
-        <button class="library-tab" data-library-tab="post">Posts</button>
-        <button class="library-tab" data-library-tab="link">Links</button>
-        <button class="library-tab" data-library-tab="article">Articles</button>
+        <button class="library-tab" data-library-tab="posts">Posts</button>
+        <button class="library-tab" data-library-tab="links">Links</button>
+        <button class="library-tab" data-library-tab="articles">Articles</button>
+        <button class="library-tab" data-library-tab="videos">Videos</button>
+        <button class="library-tab" data-library-tab="images">Images</button>
+        <button class="library-tab" data-library-tab="events">Events</button>
+        <button class="library-tab" data-library-tab="sponsorships">Sponsorships</button>
+      </div>
+
+      <div class="library-tabs" style="padding:10px 12px;gap:8px;align-items:center;justify-content:space-between;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <label for="librarySourceFilter" style="font-size:12px;color:var(--muted);font-weight:700;">Source</label>
+          <select id="librarySourceFilter" style="padding:9px 10px;border:1px solid var(--border);border-radius:999px;font-size:12px;background:var(--white);">
+            <option value="all">All Sources</option>
+            <option value="created">Created by me</option>
+            <option value="saved">Saved/liked/commented</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <label for="librarySort" style="font-size:12px;color:var(--muted);font-weight:700;">Sort</label>
+          <select id="librarySort" style="padding:9px 10px;border:1px solid var(--border);border-radius:999px;font-size:12px;background:var(--white);">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="title">Title (A-Z)</option>
+          </select>
+        </div>
       </div>
 
       <div id="libraryContent"></div>

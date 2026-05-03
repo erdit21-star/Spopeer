@@ -24,6 +24,8 @@
       displayName,
       initials,
       avatarUrl: user.avatarUrl || user.avatar || '',
+      coverPhotoUrl: user.coverPhotoUrl || user.coverUrl || '',
+      coverUrl: user.coverUrl || user.coverPhotoUrl || '',
       role: user.role || user.userType || 'user'
     };
   }
@@ -128,8 +130,16 @@
         res?.payload ||
         res?.payload?.user ||
         null;
+      const stored = getStoredUser() || {};
+      const merged = user ? {
+        ...stored,
+        ...user,
+        avatarUrl: user.avatarUrl || user.avatar || stored.avatarUrl || '',
+        coverPhotoUrl: user.coverPhotoUrl || user.coverUrl || stored.coverPhotoUrl || '',
+        coverUrl: user.coverUrl || user.coverPhotoUrl || stored.coverUrl || ''
+      } : stored;
 
-      return setCurrentUser(user);
+      return setCurrentUser(merged);
     } catch (err) {
       console.warn('Failed to refresh current user:', err);
       // Keep the last known user to avoid chip/card flicker across pages.

@@ -2540,14 +2540,14 @@ if (window.profileRuntime) {
 
         var savedUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) || JSON.parse(localStorage.getItem('spopeer_user') || '{}');
         var mergedUser = Object.assign({}, savedUser, { coverPhotoUrl: coverUrl, coverUrl: coverUrl });
+        ud = mergedUser;
         if (window.SpopeerAPI.setUser) {
           window.SpopeerAPI.setUser(mergedUser, 'EditProfileCoverUpload');
         }
+        safeSave(mergedUser);
 
         if (cs) {
-          cs.style.backgroundImage = 'url('+coverUrl+')';
-          cs.style.backgroundSize = 'cover';
-          cs.style.backgroundPosition = 'center';
+          cs.style.background = 'url('+coverUrl+') center/cover no-repeat';
         }
         showToast('Cover photo updated!', 'success');
       } catch (uploadErr) {

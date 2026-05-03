@@ -953,29 +953,190 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     emitAnalytics('profile:sync:applied', { ts: incomingTs });
   });
 
-  /* Media — show real data or empty state */
-  const mc=document.getElementById('media-container');
-  if(payload&&payload.media&&payload.media.length){
-    payload.media.forEach(function(item){
-      const d=document.createElement('div');d.className='media-placeholder';
-      if(item.type==='video'){
-        d.innerHTML='<video src="'+item.url+'" style="width:100%;height:100%;object-fit:cover"></video><div class="media-badge">Video</div>';
-      } else {
-        d.innerHTML='<img src="'+item.url+'" alt="" style="width:100%;height:100%;object-fit:cover"><div class="media-badge">Photo</div>';
-      }
-      mc.appendChild(d);
-    });
-  } else {
-    mc.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:32px 16px;color:var(--muted)"><i class="fa-regular fa-image" style="font-size:28px;margin-bottom:8px;display:block"></i>No media yet</div>';
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
+
+  function inferMediaType(url) {
+    var src = String(url || '').toLowerCase();
+    if (!src) return null;
+    if (/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/.test(src) || src.indexOf('youtube.com') !== -1 || src.indexOf('youtu.be') !== -1 || src.indexOf('vimeo.com') !== -1) {
+      return 'video';
+    }
+    return 'image';
+  }
+
+  function unwrapData(res) {
+    if (!res || typeof res !== 'object') return res;
+    if (res.data !== undefined) return res.data;
+    if (res.payload !== undefined) return res.payload;
+    if (res.results !== undefined) return res.results;
+    if (res.items !== undefined) return res.items;
+    return res;
+  }
+
+  var mediaItems = [];
+  var receivedComments = [];
+
+  function renderMedia() {
+    var host = document.getElementById('media-container');
+    if (!host) return;
+
+    var typeFilter = document.getElementById('media-type-filter');
+    var sourceFilter = document.getElementById('media-source-filter');
+    var typeVal = typeFilter ? typeFilter.value : 'all';
+    var sourceVal = sourceFilter ? sourceFilter.value : 'all';
+
+    var rows = mediaItems.filter(function (item) {
+      if (typeVal !== 'all' && item.type !== typeVal) return false;
+      if (sourceVal !== 'all' && item.source !== sourceVal) return false;
+      return true;
+    });
+
+    if (!rows.length) {
+      host.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px 16px;color:var(--muted)"><i class="fa-regular fa-image" style="font-size:28px;margin-bottom:8px;display:block"></i>No media in this filter</div>';
+      return;
+    }
+
+    host.innerHTML = rows.map(function (item) {
+      var mediaHtml = item.type === 'video'
+        ? '<video src="' + escapeHtml(item.url) + '" style="width:100%;height:100%;object-fit:cover" controls preload="metadata"></video>'
+        : '<img src="' + escapeHtml(item.url) + '" alt="" style="width:100%;height:100%;object-fit:cover">';
+      return '<div class="media-placeholder">' + mediaHtml + '<div class="media-badge">' + (item.type === 'video' ? 'Video' : 'Photo') + '</div></div>';
+    }).join('');
+  }
+
+  function renderComments() {
+    var host = document.getElementById('testimonials-content');
+    if (!host) return;
+
+    var sortFilter = document.getElementById('comments-sort-filter');
+    var lenFilter = document.getElementById('comments-length-filter');
+    var sortVal = sortFilter ? sortFilter.value : 'newest';
+    var lenVal = lenFilter ? lenFilter.value : 'all';
+
+    var rows = receivedComments.filter(function (item) {
+      var size = String(item.content || '').length;
+      if (lenVal === 'short' && !(size > 0 && size < 80)) return false;
+      if (lenVal === 'long' && size < 80) return false;
+      return true;
+    }).slice();
+
+    rows.sort(function (a, b) {
+      var diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return sortVal === 'oldest' ? -diff : diff;
+    });
+
+    if (!rows.length) {
+      host.innerHTML = '<div style="text-align:center;padding:24px 16px;color:var(--muted)"><i class="fa-regular fa-comment" style="font-size:24px;margin-bottom:8px;display:block"></i>No comments in this filter</div>';
+      return;
+    }
+
+    host.innerHTML = rows.map(function (comment) {
+      var author = comment.author || {};
+      var authorName = ((author.firstName || '') + ' ' + (author.lastName || '')).trim() || 'User';
+      var initials = authorName.split(' ').map(function (part) { return part.charAt(0); }).join('').toUpperCase().slice(0, 2) || 'U';
+      return '<div class="testimonial-card">' +
+        '<div class="testimonial-head"><div class="t-av">' + escapeHtml(initials) + '</div><div><div class="t-name">' + escapeHtml(authorName) + '</div><div class="t-role">' + new Date(comment.createdAt).toLocaleDateString() + '</div></div></div>' +
+        '<div class="t-text">' + escapeHtml(comment.content || '') + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function loadMediaAndComments() {
+    var targetId = payload && payload.id ? payload.id : null;
+    if (!targetId || !window.SpopeerAPI || typeof window.SpopeerAPI.listPosts !== 'function') {
+      mediaItems = [];
+      receivedComments = [];
+      renderMedia();
+      renderComments();
+      return;
+    }
+
+    var posts = [];
+    try {
+      var postsRes = await window.SpopeerAPI.listPosts({ authorId: targetId, limit: 200 });
+      posts = Array.isArray(unwrapData(postsRes)) ? unwrapData(postsRes) : [];
+    } catch (err) {
+      posts = [];
+    }
+
+    var mediaOut = [];
+    var commentsOut = [];
+
+    var coverUrl = payload.coverPhotoUrl || payload.coverUrl || '';
+    var avatarUrl = payload.avatarUrl || payload.avatar || '';
+    if (coverUrl) mediaOut.push({ type: inferMediaType(coverUrl) || 'image', source: 'profile', url: coverUrl });
+    if (avatarUrl) mediaOut.push({ type: inferMediaType(avatarUrl) || 'image', source: 'profile', url: avatarUrl });
+
+    if (payload.mediaLinks && payload.mediaLinks.highlightVideo) {
+      mediaOut.push({ type: 'video', source: 'profile', url: payload.mediaLinks.highlightVideo });
+    }
+
+    posts.forEach(function (post) {
+      if (!post) return;
+      var postMedia = post.image || post.mediaUrl || post.videoUrl || '';
+      if (postMedia) {
+        mediaOut.push({ type: inferMediaType(postMedia) || 'image', source: 'posts', url: postMedia });
+      }
+    });
+
+    if (isOwnProfile && typeof window.SpopeerAPI.listSavedPosts === 'function') {
+      try {
+        var savedRes = await window.SpopeerAPI.listSavedPosts();
+        var savedRows = Array.isArray(unwrapData(savedRes)) ? unwrapData(savedRes) : [];
+        savedRows.forEach(function (saved) {
+          var p = saved && (saved.post || saved);
+          if (!p) return;
+          var savedMedia = p.image || p.mediaUrl || p.videoUrl || '';
+          if (savedMedia) {
+            mediaOut.push({ type: inferMediaType(savedMedia) || 'image', source: 'saved', url: savedMedia });
+          }
+        });
+      } catch (_savedErr) {
+        // Ignore saved-media fetch failures.
+      }
+    }
+
+    var commentResults = await Promise.allSettled(posts.map(function (post) {
+      return window.SpopeerAPI.listPostComments(post.id);
+    }));
+
+    commentResults.forEach(function (result) {
+      if (result.status !== 'fulfilled') return;
+      var rows = Array.isArray(unwrapData(result.value)) ? unwrapData(result.value) : [];
+      rows.forEach(function (comment) {
+        var commentAuthorId = comment && comment.author ? comment.author.id : null;
+        if (commentAuthorId != null && String(commentAuthorId) === String(targetId)) return;
+        commentsOut.push(comment);
+      });
+    });
+
+    mediaItems = mediaOut;
+    receivedComments = commentsOut;
+    renderMedia();
+    renderComments();
+  }
+
+  var mediaTypeFilter = document.getElementById('media-type-filter');
+  var mediaSourceFilter = document.getElementById('media-source-filter');
+  var commentsSortFilter = document.getElementById('comments-sort-filter');
+  var commentsLengthFilter = document.getElementById('comments-length-filter');
+  if (mediaTypeFilter) mediaTypeFilter.addEventListener('change', renderMedia);
+  if (mediaSourceFilter) mediaSourceFilter.addEventListener('change', renderMedia);
+  if (commentsSortFilter) commentsSortFilter.addEventListener('change', renderComments);
+  if (commentsLengthFilter) commentsLengthFilter.addEventListener('change', renderComments);
+
+  await loadMediaAndComments();
 
   /* Achievements — empty state */
   const ag=document.getElementById('achievements-content');
   ag.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted)"><i class="fa-regular fa-trophy" style="font-size:24px;margin-bottom:8px;display:block"></i>No achievements yet</div>';
-
-  /* Testimonials — empty state */
-  const tc=document.getElementById('testimonials-content');
-  tc.innerHTML='<div style="text-align:center;padding:24px 16px;color:var(--muted)"><i class="fa-regular fa-comment" style="font-size:24px;margin-bottom:8px;display:block"></i>No testimonials yet</div>';
 
   /* Recommended — empty state */
   const rc=document.getElementById('recommended-content');

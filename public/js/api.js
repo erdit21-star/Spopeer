@@ -352,6 +352,14 @@
     createPost: function (payload) {
       return request("/api/posts", { method: "POST", body: JSON.stringify(payload) });
     },
+    listPosts: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/posts" + qs);
+    },
+    listSavedPosts: function () { return request("/api/posts/saved"); },
+    listPostComments: function (postId) {
+      return request("/api/posts/" + encodeURIComponent(postId) + "/comments");
+    },
     registerView: function (postId) {
       return request("/api/posts/" + encodeURIComponent(postId) + "/view", { method: "POST" });
     },
@@ -389,6 +397,10 @@
         method: "POST",
         body: JSON.stringify({ status: status })
       });
+    },
+    listSponsorships: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/sponsorships" + qs);
     },
     adminDashboard: function () { return request("/api/admin/dashboard"); },
     adminUsers: function (params) {
