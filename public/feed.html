@@ -1441,59 +1441,7 @@
     .create-card {
       background: var(--white);
       border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 24px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.04), 0 2px 6px rgba(0,0,0,.02);
-      transition: box-shadow .2s;
-    }
-    .create-card:focus-within {
-      box-shadow: 0 10px 32px rgba(0,0,0,.07), 0 2px 8px rgba(0,0,0,.03);
-    }
-    .create-top { display: flex; gap: 14px; align-items: center; margin-bottom: 0; }
-    .create-av {
-      width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg,#001f3f,#1a6bff);
-      color: #fff; font-size: 15px; font-weight: 800;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,31,63,.18);
-    }
-    .create-input {
-      flex: 1; padding: 12px 20px;
-      background: var(--white); border: 1.5px solid var(--border);
-      border-radius: var(--pill); font-size: 14px; font-family: var(--fB);
-      color: var(--ink); cursor: text; transition: .2s;
-    }
-    .create-input::placeholder { color: var(--muted-2); }
-    .create-input:focus {
-      outline: none;
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(26,107,255,.07);
-    }
-    .create-actions {
-      display: flex; align-items: center; gap: 4px;
-      margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
-    }
-    .create-tool {
-      display: flex; align-items: center; gap: 6px;
-      padding: 8px 14px; border-radius: var(--pill);
-      border: none; background: transparent;
-      font-size: 13px; font-weight: 500; color: var(--muted);
-      cursor: pointer; font-family: var(--fB); transition: .15s;
-    }
-    .create-tool:hover { background: var(--surface); color: var(--ink); }
-    .create-tool i { font-size: 14px; }
-    .create-post-btn {
-      margin-left: auto; padding: 9px 26px;
-      background: var(--accent); color: #fff; border: none;
-      border-radius: var(--pill); font-size: 13px; font-weight: 700;
-      font-family: var(--fB); cursor: pointer; transition: .2s;
-      letter-spacing: .01em;
-    }
-    .create-post-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-
-    /* ====== POST CARD ====== */
-    .post-card {
-      background: var(--white); border: 1px solid var(--border);
+      /* create post — #sp-inline-composer is injected by feed-engine.js */
       border-radius: 24px; overflow: hidden; transition: .2s;
       box-shadow: 0 2px 8px rgba(0,0,0,.03);
     }
@@ -3338,20 +3286,7 @@
       </div>
     </section>
 
-    <!-- create post -->
-    <div class="create-card">
-      <div class="create-top" data-user-chip>
-        <div class="create-av" data-user-chip-avatar>U</div>
-        <input class="create-input" placeholder="Share your training, achievements, or thoughts...">
-      </div>
-      <div class="create-actions">
-        <button class="create-tool" data-tool="photo"><i class="fa-solid fa-image"></i> Photo</button>
-        <button class="create-tool" data-tool="video"><i class="fa-solid fa-video"></i> Video</button>
-        <button class="create-tool" data-tool="poll"><i class="fa-solid fa-chart-bar"></i> Poll</button>
-        <button class="create-tool" data-tool="event"><i class="fa-solid fa-calendar-days"></i> Event</button>
-        <button class="create-post-btn">Post</button>
-      </div>
-    </div>
+    <!-- inline composer injected by feed-engine.js (#sp-inline-composer) -->
 
     <div id="feedPostsMount"></div>
 
@@ -5130,7 +5065,7 @@
   // Function to add new post to feed
   function addPostToFeed(post, userData, postData) {
     const feedCol = document.querySelector('.feed-col');
-    const createCard = document.querySelector('.create-card');
+    const createCard = document.getElementById('sp-inline-composer') || document.querySelector('.game-tape-container');
 
     const userInitials = (userData.firstName?.[0]?.toUpperCase() || '') + (userData.lastName?.[0]?.toUpperCase() || '') || 'U';
     const userRole = userData.role || 'Athlete';
@@ -5503,7 +5438,7 @@
       container.innerHTML = '<div class="feed-infinite-sentinel" id="feedInfiniteSentinel" aria-hidden="true"></div>';
     }
 
-    const insertAfter = document.querySelector(".create-card") || document.querySelector(".game-tape-container");
+    const insertAfter = document.getElementById("sp-inline-composer") || document.querySelector(".game-tape-container");
     if (insertAfter && insertAfter.parentNode) {
       insertAfter.parentNode.insertBefore(container, insertAfter.nextSibling);
     } else if (feedMount) {
@@ -5983,8 +5918,8 @@ function loadPostsFromArray(posts) {
   const feedCol = document.querySelector('.feed-col');
   if (!feedCol) return;
   
-  // Find the create-card element
-  const createCard = feedCol.querySelector('.create-card');
+  // Find the composer anchor element
+  const createCard = document.getElementById('sp-inline-composer') || feedCol.querySelector('.game-tape-container');
   
   // Remove ALL existing post cards before re-rendering
   feedCol.querySelectorAll('.post-card').forEach(card => card.remove());
