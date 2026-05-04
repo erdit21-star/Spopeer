@@ -399,6 +399,12 @@
     getPostComments: function (postId) {
       return request("/api/posts/" + encodeURIComponent(postId) + "/comments");
     },
+    votePoll: function (postId, optionIndex) {
+      return request("/api/posts/" + encodeURIComponent(postId) + "/poll/vote", {
+        method: "POST",
+        body: JSON.stringify({ optionIndex: optionIndex })
+      });
+    },
     repostPost: function (postId) {
       return request("/api/posts/" + encodeURIComponent(postId) + "/repost", { method: "POST" });
     },

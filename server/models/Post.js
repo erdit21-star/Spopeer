@@ -29,6 +29,21 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(100),
       allowNull: true
     },
+    type: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      defaultValue: 'post'
+    },
+    pollOptions: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: null
+    },
+    pollVotes: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: null
+    },
     likesCount: {
       type: DataTypes.INTEGER,
       defaultValue: 0

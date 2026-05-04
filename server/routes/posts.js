@@ -200,7 +200,7 @@ router.get('/', optionalAuth, async (req, res) => {
 // ─── CREATE POST ───
 router.post('/', authenticate, uploadPost.single('image'), validate(createPostSchema), async (req, res) => {
   try {
-    const { content, sport } = req.body;
+    const { content, sport, type, pollOptions } = req.body;
 
     const sanitizedContent = sanitizeString(content || '', 5000);
     if (!sanitizedContent && !req.file) {
@@ -212,6 +212,34 @@ router.post('/', authenticate, uploadPost.single('image'), validate(createPostSc
       content: sanitizedContent || '',
       sport: sanitizeString(sport, 100) || req.user.sport || 'General'
     };
+
+    const postType = type || 'post';
+
+    if (postType === 'poll') {
+      let parsedOptions = [];
+
+      try {
+        parsedOptions = typeof pollOptions === 'string'
+          ? JSON.parse(pollOptions)
+          : pollOptions;
+      } catch (error) {
+        return fail(res, 400, 'VALIDATION', 'Invalid poll options.');
+      }
+
+      parsedOptions = Array.isArray(parsedOptions)
+        ? parsedOptions.map(option => sanitizeString(option, 200)).filter(Boolean)
+        : [];
+
+      if (parsedOptions.length < 2) {
+        return fail(res, 400, 'VALIDATION', 'Poll needs at least 2 options.');
+      }
+
+      postData.type = 'poll';
+      postData.pollOptions = parsedOptions;
+      postData.pollVotes = parsedOptions.map(() => 0);
+    } else {
+      postData.type = postType;
+    }
 
     if (req.file) {
       const { url } = await persistFile(req.file, 'posts', req.userId);
@@ -264,6 +292,42 @@ router.get('/debug/latest', authenticate, async (req, res) => {
     return ok(res, posts);
   } catch (error) {
     return fail(res, 500, 'SERVER_ERROR', error.message);
+  }
+});
+
+router.post('/:id/poll/vote', authenticate, async (req, res) => {
+  try {
+    const { optionIndex } = req.body;
+
+    const post = await Post.findByPk(req.params.id);
+
+    if (!post || !post.isActive) {
+      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+    }
+
+    if (post.type !== 'poll') {
+      return fail(res, 400, 'VALIDATION', 'This post is not a poll.');
+    }
+
+    const options = post.pollOptions || [];
+    const votes = post.pollVotes || options.map(() => 0);
+
+    const index = Number(optionIndex);
+
+    if (!Number.isInteger(index) || index < 0 || index >= options.length) {
+      return fail(res, 400, 'VALIDATION', 'Invalid poll option.');
+    }
+
+    votes[index] += 1;
+
+    await post.update({ pollVotes: votes });
+
+    return ok(res, {
+      pollOptions: options,
+      pollVotes: votes
+    });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to vote on poll.');
   }
 });
 

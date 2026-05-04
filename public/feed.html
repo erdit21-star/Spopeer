@@ -5357,25 +5357,25 @@
   }
 
   function renderPoll(post) {
-    let options = [];
+    if (post.type !== "poll") return "";
 
-    try {
-      options = typeof post.pollOptions === "string"
-        ? JSON.parse(post.pollOptions)
-        : post.pollOptions || [];
-    } catch {
-      options = [];
-    }
-
-    if (!options.length) return "";
+    const options = Array.isArray(post.pollOptions) ? post.pollOptions : [];
+    const votes = Array.isArray(post.pollVotes) ? post.pollVotes : options.map(() => 0);
+    const totalVotes = votes.reduce((sum, vote) => sum + Number(vote || 0), 0);
 
     return `
-      <div class="poll-box">
-        ${options.map((option, index) => `
-          <button class="poll-option" onclick="votePoll(${post.id}, ${index})">
-            ${option}
-          </button>
-        `).join("")}
+      <div class="poll-box" data-poll-box="${post.id}">
+        ${options.map((option, index) => {
+          const count = Number(votes[index] || 0);
+          const percent = totalVotes ? Math.round((count / totalVotes) * 100) : 0;
+
+          return `
+            <button class="poll-option" onclick="votePoll(${post.id}, ${index})">
+              <span>${escapeHtml(option)}</span>
+              <strong>${percent}%</strong>
+            </button>
+          `;
+        }).join("")}
       </div>
     `;
   }
@@ -5544,6 +5544,9 @@
       likesCount: Number(post.likesCount ?? post.likes ?? 0),
       commentsCount: Number(post.commentsCount ?? post.comments ?? 0),
       repostsCount: Number(post.repostsCount ?? post.shares ?? 0),
+      type: post.type || 'post',
+      pollOptions: Array.isArray(post.pollOptions) ? post.pollOptions : [],
+      pollVotes: Array.isArray(post.pollVotes) ? post.pollVotes : [],
       views: Number(post.views ?? post.viewCount ?? post.viewsCount ?? 0),
       authorInitials: initials
     };
@@ -5627,6 +5630,14 @@
     await renderCurrentTab();
   }
 
+  async function votePoll(postId, optionIndex) {
+    await window.SpopeerAPI.votePoll(postId, optionIndex);
+
+    if (typeof window.loadFeed === "function") {
+      await window.loadFeed();
+    }
+  }
+
   async function likePost(postId) {
     await window.SpopeerAPI.toggleLike(postId);
     await loadFeed();
@@ -5698,6 +5709,7 @@
   window.prevStory = prevStory;
   window.viewStory = viewStory;
   window.likePost = likePost;
+  window.votePoll = votePoll;
   window.repostPost = repostPost;
   window.savePost = savePost;
   window.openComments = openComments;
