@@ -1608,6 +1608,50 @@
     .tag {
       font-size: 12px; font-weight: 600; color: var(--blue);
       background: var(--blue-lt); padding: 3px 10px; border-radius: var(--pill);
+
+        /* ── event post card ── */
+        .post-event-card {
+          margin-top: 12px;
+          border-radius: 14px;
+          border: 1.5px solid #e8f0fb;
+          background: linear-gradient(135deg, #f0f6ff 0%, #fafbff 100%);
+          overflow: hidden;
+        }
+        .post-event-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 14px 16px 10px;
+          border-bottom: 1px solid #dce8f5;
+        }
+        .post-event-icon {
+          width: 40px; height: 40px;
+          border-radius: 10px;
+          background: var(--accent, #1d77ef);
+          display: flex; align-items: center; justify-content: center;
+          color: #fff; font-size: 17px; flex-shrink: 0;
+        }
+        .post-event-badge {
+          font-size: 11px; font-weight: 700; letter-spacing: .5px;
+          text-transform: uppercase; color: var(--accent, #1d77ef);
+          background: #ddeeff; padding: 2px 8px; border-radius: 20px;
+        }
+        .post-event-title {
+          font-size: 15px; font-weight: 700; color: #111;
+          flex: 1; margin: 0;
+        }
+        .post-event-details {
+          padding: 12px 16px 14px;
+          display: flex; flex-direction: column; gap: 8px;
+        }
+        .post-event-row {
+          display: flex; align-items: flex-start; gap: 10px;
+          font-size: 13.5px; color: #444;
+        }
+        .post-event-row i {
+          width: 16px; color: var(--accent, #1d77ef);
+          margin-top: 2px; flex-shrink: 0;
+        }
     }
 
     /* stats row */
@@ -5032,6 +5076,8 @@
       formData.append("image", mediaFile);
       if (mediaType === "video") {
         formData.append("type", "video");
+      } else {
+        formData.append("type", "photo");
       }
     }
 
@@ -5060,6 +5106,7 @@
         description ? "Details: " + description : ""
       ].filter(Boolean);
 
+      formData.append("type", "event");
       if (eventParts.length) {
         finalContent = [content, eventParts.join("\n")].filter(Boolean).join("\n\n");
       }
@@ -5377,6 +5424,36 @@
     `;
   }
 
+  function parseEventContent(text) {
+    const lines = (text || '').split('\n');
+    const result = { title: '', when: '', where: '', details: '', extra: [] };
+    lines.forEach(function(line) {
+      if (/^Event:\s*/i.test(line))   result.title   = line.replace(/^Event:\s*/i, '').trim();
+      else if (/^When:\s*/i.test(line))    result.when    = line.replace(/^When:\s*/i, '').trim();
+      else if (/^Where:\s*/i.test(line))   result.where   = line.replace(/^Where:\s*/i, '').trim();
+      else if (/^Details:\s*/i.test(line)) result.details = line.replace(/^Details:\s*/i, '').trim();
+      else if (line.trim()) result.extra.push(line.trim());
+    });
+    return result;
+  }
+
+  function renderEventCardHtml(text) {
+    var ev = parseEventContent(text || '');
+    var rows = '';
+    if (ev.when)    rows += '<div class="post-event-row"><i class="fa-regular fa-clock"></i><span>' + escapeHtml(ev.when) + '</span></div>';
+    if (ev.where)   rows += '<div class="post-event-row"><i class="fa-solid fa-location-dot"></i><span>' + escapeHtml(ev.where) + '</span></div>';
+    if (ev.details) rows += '<div class="post-event-row"><i class="fa-regular fa-file-lines"></i><span>' + escapeHtml(ev.details) + '</span></div>';
+    ev.extra.forEach(function(l) { rows += '<div class="post-event-row"><i class="fa-solid fa-circle-dot"></i><span>' + escapeHtml(l) + '</span></div>'; });
+    return '<div class="post-event-card">'
+      + '<div class="post-event-header">'
+      +   '<div class="post-event-icon"><i class="fa-solid fa-calendar-days"></i></div>'
+      +   '<span class="post-event-badge">Event</span>'
+      +   (ev.title ? '<h3 class="post-event-title">' + escapeHtml(ev.title) + '</h3>' : '')
+      + '</div>'
+      + (rows ? '<div class="post-event-details">' + rows + '</div>' : '')
+      + '</div>';
+  }
+
   function renderPostCard(post) {
     var imageUrl = post.image || null;
     var videoUrl = post.video || null;
@@ -5385,11 +5462,15 @@
       imageUrl = null;
     }
     var mediaHtml = '';
-    if (imageUrl) {
-      mediaHtml += '<div class="post-media"><img src="' + escapeHtml(imageUrl) + '" alt="Post image" loading="lazy"></div>';
-    }
-    if (videoUrl) {
-      mediaHtml += '<div class="post-media"><video controls><source src="' + escapeHtml(videoUrl) + '"></video></div>';
+    if (post.type === 'event') {
+      mediaHtml += renderEventCardHtml(post.text || '');
+    } else {
+      if (imageUrl) {
+        mediaHtml += '<div class="post-media"><img src="' + escapeHtml(imageUrl) + '" alt="Post image" loading="lazy"></div>';
+      }
+      if (videoUrl) {
+        mediaHtml += '<div class="post-media"><video controls><source src="' + escapeHtml(videoUrl) + '"></video></div>';
+      }
     }
 
     return `
@@ -5640,6 +5721,10 @@
   async function loadFeed() {
     await renderCurrentTab();
   }
+
+  window.loadFeed = loadFeed;
+  window.renderFeed = renderFeed;
+  window.renderCurrentTab = renderCurrentTab;
 
   async function votePoll(postId, optionIndex) {
     await window.SpopeerAPI.votePoll(postId, optionIndex);
@@ -6327,14 +6412,15 @@ function generatePostHTML(post) {
   }
 
   let mediaHTML = '';
-  if (imageUrl) {
+  if (post.type === 'event') {
+    mediaHTML = renderEventCardHtml(post.content || post.text || '');
+  } else if (imageUrl) {
     mediaHTML += `<div class="post-media"><img src="${imageUrl}" style="width:100%;border-radius:8px;"></div>`;
-  }
-  if (videoUrl) {
+    if (videoUrl) mediaHTML += `<div class="post-media"><video controls style="width:100%;border-radius:8px;"><source src="${videoUrl}"></video></div>`;
+  } else if (videoUrl) {
     mediaHTML += `<div class="post-media"><video controls style="width:100%;border-radius:8px;"><source src="${videoUrl}"></video></div>`;
   }
   // Only show media section when there is actual media content
-  // (no empty 200px gray placeholder for text-only posts)
 
   const currentUser = getCurrentUserData();
   const currentEmail = currentUser.email || currentUser.userEmail || '';

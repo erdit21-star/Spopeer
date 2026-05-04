@@ -14,13 +14,18 @@ const { uploadToCloud, saveLocal, safeFilename, isCloudEnabled } = require('../s
 
 // ── MIME → extension allow-list ──
 const ALLOWED_TYPES = {
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'image/png': ['.png'],
-  'image/gif': ['.gif'],
-  'image/webp': ['.webp'],
-  'video/mp4': ['.mp4'],
-  'video/webm': ['.webm'],
-  'video/quicktime': ['.mov']
+  'image/jpeg':  ['.jpg', '.jpeg', '.jfif'],
+  'image/pjpeg': ['.jpg', '.jpeg', '.jfif'],
+  'image/png':   ['.png'],
+  'image/gif':   ['.gif'],
+  'image/webp':  ['.webp'],
+  'image/avif':  ['.avif'],
+  'image/heic':  ['.heic'],
+  'image/heif':  ['.heif'],
+  'video/mp4':      ['.mp4'],
+  'video/webm':     ['.webm'],
+  'video/quicktime':['.mov'],
+  'video/x-msvideo':['.avi']
 };
 
 const fileFilter = (_req, file, cb) => {
