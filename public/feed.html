@@ -6646,17 +6646,25 @@ function escapeHtml(text) {
     const userKey = getUserKey(user);
     const dismissKey = 'spopeer_first_post_prompt_dismissed_' + userKey;
 
-    const hasPhoto = !!(user.avatarUrl || user.avatar);
-    const hasBio = !!(user.bio && String(user.bio).trim().length >= 8);
+    let freshProfile = null;
+    try {
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.getCurrentProfile === 'function') {
+        const profileRes = await window.SpopeerAPI.getCurrentProfile();
+        freshProfile = profileRes?.payload || profileRes?.data?.payload || profileRes?.data || null;
+      }
+    } catch (e) {
+      freshProfile = null;
+    }
+
+    const profileForChecks = (freshProfile && typeof freshProfile === 'object') ? freshProfile : user;
+    const hasPhoto = !!(profileForChecks.avatarUrl || profileForChecks.avatar);
+    const hasBio = !!(profileForChecks.bio && String(profileForChecks.bio).trim().length >= 8);
     const hasPosted = Number(user.postsCount || 0) > 0 || !!document.querySelector('.post-card[data-post-id]');
-    const followingCount = await getFollowingCount(user);
-    const hasFollowed3 = followingCount >= 3;
 
     const checks = [
       { label: 'Add a profile photo', done: hasPhoto },
       { label: 'Write a short bio', done: hasBio },
-      { label: 'Make your first post', done: hasPosted },
-      { label: 'Follow 3 people', done: hasFollowed3 }
+      { label: 'Make your first post', done: hasPosted }
     ];
 
     const doneCount = checks.filter((x) => x.done).length;
@@ -6678,10 +6686,10 @@ function escapeHtml(text) {
 
     const onboardingFollowCount = document.getElementById('onboardingFollowCount');
     if (onboardingFollowCount) {
-      onboardingFollowCount.textContent = Math.min(followingCount, 3) + ' / 3 followed';
+      onboardingFollowCount.style.display = 'none';
     }
 
-    return { hasPhoto, hasBio, hasFollowed3, followingCount };
+    return { hasPhoto, hasBio, hasPosted };
   }
 
   window.refreshFeedOnboarding = refreshOnboardingCards;
@@ -6764,7 +6772,7 @@ function escapeHtml(text) {
 
     async function validateStep3() {
       const info = await refreshOnboardingCards();
-      return !!(info && info.hasFollowed3);
+      return !!(info && info.hasPosted);
     }
 
     function openModal() {
