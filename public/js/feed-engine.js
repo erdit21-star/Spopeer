@@ -54,27 +54,33 @@
   }
 
   async function getFollowingFeed() {
-    return getForYouFeed();
+    try {
+      const result = await window.SpopeerAPI.getFollowingFeed();
+      return unwrapPosts(result);
+    } catch (err) {
+      console.error('[Spopeer] Following feed failed:', err);
+      return [];
+    }
   }
 
   async function getSportFeed(selectedSport) {
     try {
-      const result = await window.SpopeerAPI.listPosts({
-        limit: 50,
-        page: 1,
-        sport: selectedSport || "",
-        _: Date.now(),
-      });
-
+      const result = await window.SpopeerAPI.getSportFeed(selectedSport);
       return unwrapPosts(result);
     } catch (err) {
-      console.error("[Spopeer] Sport feed failed:", err);
+      console.error('[Spopeer] Sport feed failed:', err);
       return [];
     }
   }
 
   async function getTrendingFeed() {
-    return getForYouFeed();
+    try {
+      const result = await window.SpopeerAPI.getTrendingFeed();
+      return unwrapPosts(result);
+    } catch (err) {
+      console.error('[Spopeer] Trending feed failed:', err);
+      return [];
+    }
   }
 
   async function createPost(payload) {

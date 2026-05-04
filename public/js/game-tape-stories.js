@@ -147,11 +147,18 @@
   }
 
   function normalizeStory(story) {
+    const author = story.author || {};
+    const firstName = author.firstName || '';
+    const lastName  = author.lastName  || '';
+    const fullName  = story.userName || story.name ||
+                      [firstName, lastName].filter(Boolean).join(' ') || 'User';
+    const initials  = story.userInitials || story.avatarInitials ||
+                      (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'U';
     return {
       id: story.id,
-      userName: story.userName || story.name || 'User',
-      userInitials: story.userInitials || story.avatarInitials || 'U',
-      sport: story.sport || 'Sport',
+      userName: fullName,
+      userInitials: initials,
+      sport: story.sport || author.sport || 'Sport',
       mediaType: story.mediaType || story.type || 'image',
       mediaUrl: story.mediaUrl || story.thumbnailUrl || '',
       thumbnailUrl: story.thumbnailUrl || story.mediaUrl || '',
@@ -238,16 +245,34 @@
   }
 
   function openStoryComposerPlaceholder() {
-    const composeBtn = document.querySelector('.compose-btn');
-    if (composeBtn) {
-      composeBtn.click();
+    var isLoggedIn = localStorage.getItem('spopeer_loggedIn') === 'true';
+    if (!isLoggedIn) {
+      if (window.showToast) window.showToast('Please log in to share a story.', 'info');
       return;
     }
-    if (window.showToast) {
-      window.showToast('Story composer will be connected after backend stories are enabled.', 'info');
-    } else {
-      alert('Story composer will be connected after backend stories are enabled.');
-    }
+
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/*';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
+    input.addEventListener('change', async function () {
+      var file = input.files[0];
+      document.body.removeChild(input);
+      if (!file) return;
+
+      if (window.showToast) window.showToast('Uploading your story...', 'info');
+      try {
+        await window.GameTapeStoriesManager.createStory(file, '', '', false, '');
+        if (window.showToast) window.showToast('Story posted!', 'success');
+        window.GameTapeStories.loadStories();
+      } catch (err) {
+        if (window.showToast) window.showToast('Could not post story. Try again.', 'error');
+      }
+    });
+
+    input.click();
   }
 
   async function createStory(mediaFile, sport, caption, isLive, metricValue) {
@@ -257,14 +282,21 @@
     formData.append('caption', caption || '');
     formData.append('isLive', String(!!isLive));
     formData.append('metrics', JSON.stringify({
-      primary: { value: metricValue }
+      primary: { value: metricValue || '' }
     }));
 
-    await fetch('/api/stories', {
+    const res = await fetch('/api/stories', {
       method: 'POST',
       credentials: 'include',
       body: formData
     });
+
+    if (!res.ok) {
+      const json = await res.json().catch(function () { return {}; });
+      throw new Error((json.error && json.error.message) || 'Failed to create story.');
+    }
+
+    return res.json();
   }
 
   function openViewer(index) {
@@ -274,6 +306,14 @@
     currentIndex = index;
     story.isViewedByCurrentUser = true;
     renderStrip();
+
+    // Register view in backend (non-blocking, best-effort)
+    if (story.id && !String(story.id).startsWith('demo-')) {
+      fetch('/api/stories/' + encodeURIComponent(story.id) + '/view', {
+        method: 'POST',
+        credentials: 'include'
+      }).catch(function () {});
+    }
 
     const viewer = document.getElementById('gameStoryViewer');
     const avatar = document.getElementById('viewerAvatar');
@@ -366,11 +406,32 @@
     });
   }
 
-  function toggleLike(story) {
+  async function toggleLike(story) {
+    // Optimistic update
     story.isLikedByCurrentUser = !story.isLikedByCurrentUser;
     story.likesCount += story.isLikedByCurrentUser ? 1 : -1;
     renderViewerStats(story);
     renderStrip();
+
+    try {
+      const res = await fetch('/api/stories/' + encodeURIComponent(story.id) + '/like', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const json = await res.json();
+      if (json && json.data && typeof json.data.likesCount === 'number') {
+        story.likesCount = json.data.likesCount;
+        renderViewerStats(story);
+        renderStrip();
+      }
+    } catch (err) {
+      // Roll back on network error
+      story.isLikedByCurrentUser = !story.isLikedByCurrentUser;
+      story.likesCount += story.isLikedByCurrentUser ? 1 : -1;
+      renderViewerStats(story);
+      renderStrip();
+      if (window.showToast) window.showToast('Could not like story. Try again.', 'error');
+    }
   }
 
   function toggleReplyComposer() {

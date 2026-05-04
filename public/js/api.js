@@ -341,7 +341,7 @@
       return request("/api/profile/" + encodeURIComponent(identifier));
     },
     getPublicProfileByEmail: function (email) {
-      return request("/api/profiles/profile/" + encodeURIComponent(email));
+      return request("/api/profile/" + encodeURIComponent(email));
     },
     getForYouFeed: function () {
       return request("/api/posts?limit=50&page=1&_=" + Date.now());
