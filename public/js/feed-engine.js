@@ -250,9 +250,19 @@
       #sp-inline-post-content::placeholder{color:#b8b8b8}
       #sp-inline-post-content:focus{border-color:#1a6bff;box-shadow:0 0 0 3px rgba(26,107,255,.08)}
       .sp-inline-composer-actions{
-        display:flex;align-items:center;justify-content:flex-end;
-        gap:8px;padding-top:16px;border-top:1px solid var(--border,#ebebe7);flex-wrap:wrap;
+        display:flex;align-items:center;justify-content:space-between;
+        gap:10px;padding-top:16px;border-top:1px solid var(--border,#ebebe7);flex-wrap:wrap;
       }
+      .sp-inline-tool-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+      .sp-inline-tool-btn{
+        width:36px;height:36px;border-radius:999px;
+        border:1.5px solid var(--border,#ebebe7);
+        background:#fff;color:#7a7a7a;
+        display:inline-flex;align-items:center;justify-content:center;
+        cursor:pointer;transition:all .15s ease;
+      }
+      .sp-inline-tool-btn:hover{background:#f3f3ef;color:#111111;border-color:#d9d9d4}
+      .sp-inline-tool-btn i{font-size:14px}
       #sp-inline-post-submit{
         border:0;border-radius:999px;padding:10px 28px;
         background:var(--accent,#001233);color:#fff;
@@ -268,6 +278,7 @@
       @media(max-width:640px){
         #sp-inline-composer{border-radius:18px;padding:16px}
         .sp-inline-composer-row{gap:10px}
+        .sp-inline-tool-group{width:100%;justify-content:flex-start}
         #sp-inline-post-submit{width:100%;justify-content:center}
       }
     `;
@@ -290,6 +301,12 @@
         <div class="sp-inline-composer-body">
           <textarea id="sp-inline-post-content" rows="3" maxlength="5000" placeholder="Tell the sports world what’s happening."></textarea>
           <div class="sp-inline-composer-actions">
+            <div class="sp-inline-tool-group" aria-label="Post tools">
+              <button type="button" class="sp-inline-tool-btn" data-inline-tool="photo" title="Add image" aria-label="Add image"><i class="fa-solid fa-image"></i></button>
+              <button type="button" class="sp-inline-tool-btn" data-inline-tool="video" title="Add video" aria-label="Add video"><i class="fa-solid fa-video"></i></button>
+              <button type="button" class="sp-inline-tool-btn" data-inline-tool="poll" title="Create poll" aria-label="Create poll"><i class="fa-solid fa-chart-bar"></i></button>
+              <button type="button" class="sp-inline-tool-btn" data-inline-tool="event" title="Create event" aria-label="Create event"><i class="fa-solid fa-calendar-days"></i></button>
+            </div>
             <button id="sp-inline-post-submit" type="button"><i class="fa-solid fa-paper-plane"></i> Post</button>
           </div>
           <div id="sp-inline-composer-status" class="sp-inline-composer-status" aria-live="polite"></div>
@@ -333,6 +350,7 @@
     const textarea = composer.querySelector("#sp-inline-post-content");
     const button = composer.querySelector("#sp-inline-post-submit");
     const status = composer.querySelector("#sp-inline-composer-status");
+    const toolButtons = composer.querySelectorAll("[data-inline-tool]");
 
     function setStatus(message, tone) {
       status.textContent = message || "";
@@ -376,6 +394,38 @@
         event.preventDefault();
         submitInlinePost();
       }
+    });
+
+    function openModalTool(toolType) {
+      const modal = document.getElementById("postComposerModal");
+      if (!modal) return;
+
+      modal.classList.add("visible");
+      const contentInput = document.getElementById("postContent");
+      if (contentInput) contentInput.focus();
+
+      const modalTool = modal.querySelector('.composer-tool-icon[data-tool="' + toolType + '"]');
+      if (modalTool && typeof modalTool.click === "function") {
+        modalTool.click();
+        return;
+      }
+
+      if (toolType === "photo") {
+        const photoInput = document.getElementById("photoInput");
+        if (photoInput && typeof photoInput.click === "function") photoInput.click();
+      } else if (toolType === "video") {
+        const videoInput = document.getElementById("videoInput");
+        if (videoInput && typeof videoInput.click === "function") videoInput.click();
+      }
+    }
+
+    toolButtons.forEach(function (toolBtn) {
+      toolBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        const toolType = toolBtn.getAttribute("data-inline-tool");
+        if (!toolType) return;
+        openModalTool(toolType);
+      });
     });
 
     document.querySelectorAll('.compose-btn, [data-open-post-modal], [data-action="create-post"], a[href$="create-post.html"]').forEach(function (trigger) {
