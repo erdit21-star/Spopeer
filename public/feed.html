@@ -2472,29 +2472,6 @@
     }
 
     .poll-options {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .poll-option {
-      padding: 10px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--rS);
-      font-family: var(--fB);
-      font-size: 13px;
-      color: var(--ink);
-      background: var(--white);
-      transition: .2s;
-    }
-
-    .poll-option:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .poll-options {
       display: grid;
       gap: 8px;
       margin-top: 10px;
@@ -2523,12 +2500,23 @@
       cursor: pointer;
     }
     .add-poll-option-btn {
-      background: var(--surface);
-      border-radius: var(--rM);
+      align-self: flex-start;
+      padding: 6px 12px;
       border: 1.5px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      border-radius: var(--pill);
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--fB);
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .add-poll-option-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-lt);
     }
 
     .event-input {
@@ -4997,23 +4985,29 @@
   // Add poll option
   let pollOptionsCount = 2;
 
-  window.addPollOption = function () {
+  function addPollOption() {
     pollOptionsCount += 1;
-    const container = document.getElementById('pollOptionsContainer');
-    if (!container) return;
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'poll-option-input';
-    input.placeholder = 'Option ' + pollOptionsCount;
-    input.dataset.pollOption = 'true';
+
+    const container = document.getElementById("pollOptionsContainer");
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "poll-option-input";
+    input.placeholder = "Option " + pollOptionsCount;
+    input.dataset.pollOption = "true";
+
     container.appendChild(input);
-  };
+  }
 
   function collectPollOptions() {
-    return Array.from(document.querySelectorAll("[data-poll-option='true']"))
-      .map(function (i) { return i.value.trim(); })
-      .filter(function (v) { return v.length > 0; });
+    const inputs = document.querySelectorAll("[data-poll-option='true']");
+
+    return Array.from(inputs)
+      .map((input) => input.value.trim())
+      .filter((value) => value.length > 0);
   }
+
+  window.addPollOption = addPollOption;
 
   // Photo input handler
   photoInput?.addEventListener('change', (e) => {
@@ -5073,131 +5067,41 @@
     composerState.media.push({ src, type, file });
   }
 
-  // Submit post
-  submitComposer?.addEventListener('click', async () => {
-    const content = postContent.value.trim();
-    const visibility = document.getElementById('postVisibility').value;
-    const userData = getCurrentUserData();
+  async function submitPost() {
+    const content = document.getElementById("postContent")?.value.trim() || "";
+    const sport = document.getElementById("postSport")?.value || "General";
+    const file = document.getElementById("postFile")?.files?.[0] || null;
+    const activeType = document.querySelector(".post-type-btn.active")?.dataset.type || "post";
 
-    // Backend currently requires text content.
-    if (!content) {
-      if (window.SpopeerToast) window.SpopeerToast.warning('Write something before posting.');
-      return;
+    const formData = new FormData();
+
+    formData.append("content", content);
+    formData.append("sport", sport);
+    formData.append("type", activeType);
+
+    if (file) {
+      formData.append("image", file);
     }
 
-    // Capture poll data if poll is active
-    if (pollCreator.style.display !== 'none') {
-      const pollQuestion = document.getElementById('pollQuestion').value.trim();
-      const pollOptions = collectPollOptions();
+    if (activeType === "poll") {
+      const options = collectPollOptions();
 
-      if (!pollQuestion || pollOptions.length < 2) {
-        if (window.SpopeerToast) window.SpopeerToast.warning('Poll needs a question and at least 2 options');
+      if (options.length < 2) {
+        window.SpopeerAPI.showNotification("Poll needs at least 2 options.", "warning");
         return;
       }
 
-      composerState.poll = {
-        question: pollQuestion,
-        options: pollOptions
-      };
+      formData.append("pollOptions", JSON.stringify(options));
     }
 
-    // Capture event data if event is active
-    if (eventCreator.style.display !== 'none') {
-      const eventTitle = document.getElementById('eventTitle').value.trim();
-      const eventDateTime = document.getElementById('eventDateTime').value;
-      const eventLocation = document.getElementById('eventLocation').value.trim();
-      const eventDescription = document.getElementById('eventDescription').value.trim();
+    await window.SpopeerFeedEngine.createPost(formData);
 
-      if (!eventTitle || !eventDateTime || !eventLocation) {
-        if (window.SpopeerToast) window.SpopeerToast.warning('Event needs a title, date/time, and location');
-        return;
-      }
-
-      composerState.event = {
-        title: eventTitle,
-        dateTime: eventDateTime,
-        location: eventLocation,
-        description: eventDescription
-      };
+    if (typeof window.loadFeed === "function") {
+      await window.loadFeed();
     }
+  }
 
-    try {
-      submitComposer.disabled = true;
-      submitComposer.textContent = 'Posting...';
-
-      const sport = userData.primarySport || userData.sport || 'General';
-      const firstMediaFile = composerState.media && composerState.media[0] ? composerState.media[0].file : null;
-      let postPayload;
-      if (firstMediaFile) {
-        postPayload = new FormData();
-        postPayload.append('content', content);
-        postPayload.append('sport', sport);
-        postPayload.append('image', firstMediaFile);
-      } else {
-        postPayload = {
-          content: content,
-          visibility: visibility,
-          sport: sport
-        };
-      }
-
-      // Reset composer
-      postContent.value = '';
-      mediaPreview.innerHTML = '';
-      document.getElementById('pollQuestion').value = '';
-      pollOptionsCount = 2;
-      const pollContainer = document.getElementById('pollOptionsContainer');
-      if (pollContainer) {
-        pollContainer.innerHTML =
-          '<input type="text" class="poll-option-input" data-poll-option="true" placeholder="Option 1">' +
-          '<input type="text" class="poll-option-input" data-poll-option="true" placeholder="Option 2">';
-      }
-      document.getElementById('eventTitle').value = '';
-      document.getElementById('eventDateTime').value = '';
-      document.getElementById('eventLocation').value = '';
-      document.getElementById('eventDescription').value = '';
-      pollCreator.style.display = 'none';
-      eventCreator.style.display = 'none';
-      composerState = { media: [], poll: null, event: null, type: 'text' };
-
-      if (window.SpopeerFeedEngine && typeof window.SpopeerFeedEngine.createPost === 'function') {
-        await window.SpopeerFeedEngine.createPost(postPayload);
-      } else {
-        await API.createPost(postPayload);
-      }
-
-      // Reload feed to show new post at top using the active tab renderer.
-      if (typeof renderCurrentTab === 'function') {
-        await renderCurrentTab();
-      } else {
-        await loadAllPosts();
-      }
-
-      // Refresh sidebar stats from backend
-      if (window.SpopeerStatsManager) {
-        window.SpopeerStatsManager.syncSidebarStats();
-      }
-
-      if (typeof window.refreshFeedOnboarding === 'function') {
-        window.refreshFeedOnboarding();
-      }
-      
-      // Reattach listeners to newly loaded posts
-      attachLikeListeners();
-
-      // Close modal
-      closeComposerModal();
-
-      submitComposer.textContent = 'Post';
-      submitComposer.disabled = false;
-
-    } catch (error) {
-      console.error('Error creating post:', error);
-      if (window.SpopeerToast) window.SpopeerToast.error('Error creating post. Please try again.');
-      submitComposer.textContent = 'Post';
-      submitComposer.disabled = false;
-    }
-  });
+  submitComposer?.addEventListener('click', submitPost);
 
   // Helper function to extract hashtags
   function extractHashtags(text) {
@@ -5453,20 +5357,27 @@
   }
 
   function renderPoll(post) {
-    var options = [];
+    let options = [];
+
     try {
-      options = typeof post.pollOptions === 'string'
+      options = typeof post.pollOptions === "string"
         ? JSON.parse(post.pollOptions)
-        : (post.pollOptions || []);
-    } catch (e) {
+        : post.pollOptions || [];
+    } catch {
       options = [];
     }
-    if (!options.length) return '';
-    return '<div class="poll-box">' +
-      options.map(function (option, index) {
-        return '<button class="poll-option" onclick="votePoll(' + post.id + ',' + index + ')">' + escapeHtml(String(option)) + '</button>';
-      }).join('') +
-      '</div>';
+
+    if (!options.length) return "";
+
+    return `
+      <div class="poll-box">
+        ${options.map((option, index) => `
+          <button class="poll-option" onclick="votePoll(${post.id}, ${index})">
+            ${option}
+          </button>
+        `).join("")}
+      </div>
+    `;
   }
 
   function renderPostCard(post) {
