@@ -4898,8 +4898,10 @@
       } else if (toolType === 'event') {
         toggleEventCreator();
       } else if (toolType === 'photo') {
+        photoInput.value = '';
         photoInput.click();
       } else if (toolType === 'video') {
+        videoInput.value = '';
         videoInput.click();
       }
     });
@@ -4915,8 +4917,10 @@
       } else if (toolType === 'event') {
         toggleEventCreator();
       } else if (toolType === 'photo') {
+        photoInput.value = '';
         photoInput.click();
       } else if (toolType === 'video') {
+        videoInput.value = '';
         videoInput.click();
       }
     });
@@ -4932,9 +4936,20 @@
     openComposer();
   };
 
+  function resetComposerState() {
+    if (postContent) postContent.value = '';
+    mediaPreview.innerHTML = '';
+    photoInput.value = '';
+    videoInput.value = '';
+    pollCreator.style.display = 'none';
+    eventCreator.style.display = 'none';
+    composerState = { media: [], poll: null, event: null, type: 'text' };
+  }
+
   // Close composer modal
   function closeComposerModal() {
     postComposerModal.classList.remove('visible');
+    resetComposerState();
   }
 
   closeComposer?.addEventListener('click', closeComposerModal);
@@ -5030,6 +5045,10 @@
 
   // Add media preview
   function addMediaPreview(src, type, file) {
+    // Composer currently supports one media attachment; replace any stale file.
+    mediaPreview.innerHTML = '';
+    composerState.media = [];
+
     const mediaItem = document.createElement('div');
     mediaItem.className = 'media-preview-item';
     
@@ -5049,6 +5068,11 @@
       e.preventDefault();
       mediaItem.remove();
       composerState.media = composerState.media.filter(m => m.file !== file);
+      if (type === 'image') {
+        photoInput.value = '';
+      } else if (type === 'video') {
+        videoInput.value = '';
+      }
       if (composerState.media.length === 0) {
         composerState.type = 'text';
       }
@@ -5128,13 +5152,6 @@
         await window.loadFeed();
       }
 
-      if (contentInput) contentInput.value = "";
-      mediaPreview.innerHTML = "";
-      photoInput.value = "";
-      videoInput.value = "";
-      pollCreator.style.display = "none";
-      eventCreator.style.display = "none";
-      composerState = { media: [], poll: null, event: null, type: 'text' };
       closeComposerModal();
       window.SpopeerAPI.showNotification("Post published.", "success");
     } catch (error) {

@@ -412,10 +412,16 @@
 
       if (toolType === "photo") {
         const photoInput = document.getElementById("photoInput");
-        if (photoInput && typeof photoInput.click === "function") photoInput.click();
+        if (photoInput && typeof photoInput.click === "function") {
+          photoInput.value = "";
+          photoInput.click();
+        }
       } else if (toolType === "video") {
         const videoInput = document.getElementById("videoInput");
-        if (videoInput && typeof videoInput.click === "function") videoInput.click();
+        if (videoInput && typeof videoInput.click === "function") {
+          videoInput.value = "";
+          videoInput.click();
+        }
       }
     }
 
