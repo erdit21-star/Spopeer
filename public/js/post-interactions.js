@@ -4,9 +4,10 @@
   }
 
   function setCount(button, count) {
-    button.dataset.count = String(Math.max(0, count));
+    const safeCount = Math.max(0, Number(count || 0));
+    button.dataset.count = String(safeCount);
     const countEl = button.querySelector(".action-count");
-    if (countEl) countEl.textContent = String(Math.max(0, count));
+    if (countEl) countEl.textContent = String(safeCount);
   }
 
   async function likePost(postId) {
@@ -81,9 +82,9 @@
 
         return `
           <div class="comment-item">
-            <div class="comment-avatar">${author.charAt(0).toUpperCase()}</div>
+            <div class="comment-avatar">${escapeHtml(author.charAt(0).toUpperCase())}</div>
             <div class="comment-body">
-              <strong>${author}</strong>
+              <strong>${escapeHtml(author)}</strong>
               <p>${escapeHtml(comment.content || "")}</p>
             </div>
           </div>
@@ -123,18 +124,39 @@
 
   async function repostPost(postId) {
     try {
-      await window.SpopeerAPI.repostPost(postId);
+      const result = await window.SpopeerAPI.repostPost(postId);
+      const data = result && result.data ? result.data : result;
+
+      const button = document.querySelector(`[data-repost-button="${postId}"]`);
+      if (button && data && typeof data.repostsCount === "number") {
+        setCount(button, data.repostsCount);
+      }
+
       window.SpopeerAPI.showNotification("Post reposted.", "success");
-      if (typeof window.loadFeed === "function") await window.loadFeed();
+
+      if (typeof window.loadFeed === "function") {
+        await window.loadFeed();
+      }
     } catch (error) {
       window.SpopeerAPI.showNotification(error.message || "Could not repost.", "error");
     }
   }
 
   async function savePost(postId) {
+    const button = document.querySelector(`[data-save-button="${postId}"]`);
+
     try {
-      await window.SpopeerAPI.savePost(postId);
-      window.SpopeerAPI.showNotification("Saved.", "success");
+      const result = await window.SpopeerAPI.savePost(postId);
+      const data = result && result.data ? result.data : result;
+      const saved = data && data.saved;
+
+      if (button) {
+        button.classList.toggle("active", !!saved);
+        const label = button.querySelector(".action-label");
+        if (label) label.textContent = saved ? "Saved" : "Save";
+      }
+
+      window.SpopeerAPI.showNotification(saved ? "Post saved." : "Post unsaved.", "success");
     } catch (error) {
       window.SpopeerAPI.showNotification(error.message || "Could not save post.", "error");
     }

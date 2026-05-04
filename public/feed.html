@@ -5431,12 +5431,22 @@
               <span>💬</span>
               <span class="action-count">${post.commentsCount || 0}</span>
             </button>
-            <button type="button" class="post-action-btn" onclick="repostPost(${post.id})">
+            <button
+              type="button"
+              class="post-action-btn"
+              data-repost-button="${post.id}"
+              data-count="${post.repostsCount || 0}"
+              onclick="repostPost(${post.id})">
               <span>↻</span>
-              <span>${post.repostsCount || 0}</span>
+              <span class="action-count">${post.repostsCount || 0}</span>
             </button>
-            <button type="button" class="post-action-btn" onclick="savePost(${post.id})">
+            <button
+              type="button"
+              class="post-action-btn"
+              data-save-button="${post.id}"
+              onclick="savePost(${post.id})">
               <span>🔖</span>
+              <span class="action-label">Save</span>
             </button>
           </div>
           <div class="comments-panel" data-comments-panel="${post.id}">

@@ -245,30 +245,25 @@
   }
 
   function openStoryComposerPlaceholder() {
-    var isLoggedIn = localStorage.getItem('spopeer_loggedIn') === 'true';
-    if (!isLoggedIn) {
-      if (window.showToast) window.showToast('Please log in to share a story.', 'info');
-      return;
-    }
-
-    var input = document.createElement('input');
+    const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*,video/*';
     input.style.display = 'none';
     document.body.appendChild(input);
 
     input.addEventListener('change', async function () {
-      var file = input.files[0];
+      const file = input.files && input.files[0];
       document.body.removeChild(input);
       if (!file) return;
 
-      if (window.showToast) window.showToast('Uploading your story...', 'info');
       try {
-        await window.GameTapeStoriesManager.createStory(file, '', '', false, '');
+        if (window.showToast) window.showToast('Uploading your story...', 'info');
+        await createStory(file, 'General', '', false, '');
         if (window.showToast) window.showToast('Story posted!', 'success');
-        window.GameTapeStories.loadStories();
+        if (typeof loadStories === 'function') await loadStories();
       } catch (err) {
-        if (window.showToast) window.showToast('Could not post story. Try again.', 'error');
+        if (window.showToast) window.showToast(err.message || 'Could not post story.', 'error');
+        else alert(err.message || 'Could not post story.');
       }
     });
 
@@ -282,7 +277,7 @@
     formData.append('caption', caption || '');
     formData.append('isLive', String(!!isLive));
     formData.append('metrics', JSON.stringify({
-      primary: { value: metricValue || '' }
+      primary: { value: metricValue || '', unit: '', label: 'Performance' }
     }));
 
     const res = await fetch('/api/stories', {
@@ -291,12 +286,13 @@
       body: formData
     });
 
+    const json = await res.json().catch(function () { return {}; });
+
     if (!res.ok) {
-      const json = await res.json().catch(function () { return {}; });
       throw new Error((json.error && json.error.message) || 'Failed to create story.');
     }
 
-    return res.json();
+    return json;
   }
 
   function openViewer(index) {
@@ -407,30 +403,46 @@
   }
 
   async function toggleLike(story) {
-    // Optimistic update
-    story.isLikedByCurrentUser = !story.isLikedByCurrentUser;
-    story.likesCount += story.isLikedByCurrentUser ? 1 : -1;
+    if (!story) return;
+
+    const previousLiked = story.isLikedByCurrentUser;
+    const previousCount = story.likesCount;
+
+    story.isLikedByCurrentUser = !previousLiked;
+    story.likesCount = Math.max(0, previousCount + (story.isLikedByCurrentUser ? 1 : -1));
     renderViewerStats(story);
     renderStrip();
+
+    if (String(story.id).startsWith('demo-')) return;
 
     try {
       const res = await fetch('/api/stories/' + encodeURIComponent(story.id) + '/like', {
         method: 'POST',
         credentials: 'include'
       });
+
       const json = await res.json();
-      if (json && json.data && typeof json.data.likesCount === 'number') {
-        story.likesCount = json.data.likesCount;
-        renderViewerStats(story);
-        renderStrip();
+
+      if (!res.ok) {
+        throw new Error((json.error && json.error.message) || 'Could not like story.');
       }
-    } catch (err) {
-      // Roll back on network error
-      story.isLikedByCurrentUser = !story.isLikedByCurrentUser;
-      story.likesCount += story.isLikedByCurrentUser ? 1 : -1;
+
+      if (json.data && typeof json.data.likesCount === 'number') {
+        story.likesCount = json.data.likesCount;
+      }
+
+      if (json.data && typeof json.data.liked === 'boolean') {
+        story.isLikedByCurrentUser = json.data.liked;
+      }
+
       renderViewerStats(story);
       renderStrip();
-      if (window.showToast) window.showToast('Could not like story. Try again.', 'error');
+    } catch (err) {
+      story.isLikedByCurrentUser = previousLiked;
+      story.likesCount = previousCount;
+      renderViewerStats(story);
+      renderStrip();
+      if (window.showToast) window.showToast(err.message || 'Could not like story.', 'error');
     }
   }
 
