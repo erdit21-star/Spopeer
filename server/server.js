@@ -1,7 +1,6 @@
 // Updated
 /**
  * Spopeer Backend Server
- * Entry point — imports the Express app and starts the HTTP listener.
  */
 const { validate: validateEnv, config: env } = require('./config/env');
 validateEnv();
@@ -11,31 +10,26 @@ const app = require('./app');
 const { sequelize, testConnection } = require('./config/database');
 const { initSocket } = require('./services/socket');
 const { assertEmailReady } = require('./services/email');
+const { runDatabaseRepairs } = require('./services/databaseRepair');
 
 const server = http.createServer(app);
 const PORT = env.port;
 
-// Initialize Socket.io
 initSocket(server);
 
-// ─── START SERVER ───
 async function startServer() {
   try {
-    // Validate email config — non-blocking for Phase 1 (email is Phase 2)
-    try { assertEmailReady(); } catch (e) { console.warn('⚠️  Email not configured:', e.message); }
+    try { assertEmailReady(); } catch (e) { console.warn('⚠️ Email not configured:', e.message); }
+
+    // 🔥 CRITICAL FIX: ensure DB schema is correct before handling requests
+    await runDatabaseRepairs(sequelize);
 
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`\n🚀 Spopeer Server running on http://0.0.0.0:${PORT}`);
-      console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
-      console.log(`🔌 API Base: http://localhost:${PORT}/api`);
-      console.log(`💬 Socket.io: ws://localhost:${PORT}`);
-      console.log(`🌐 Frontend: http://localhost:${PORT}\n`);
     });
 
-    // Test database connection after port bind so health checks can pass even
-    // during temporary database saturation.
     testConnection().catch((error) => {
-      console.warn('⚠️ Database connection check failed after server start:', error && error.message ? error.message : error);
+      console.warn('⚠️ Database connection check failed:', error && error.message ? error.message : error);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
@@ -43,25 +37,4 @@ async function startServer() {
   }
 }
 
-// ─── GRACEFUL SHUTDOWN ───
-function gracefulShutdown(signal) {
-  console.log(`\n⏳ ${signal} received — shutting down gracefully...`);
-  server.close(async () => {
-    try {
-      await sequelize.close();
-      console.log('✅ Database connections closed.');
-    } catch (err) {
-      console.error('Error closing database:', err);
-    }
-    process.exit(0);
-  });
-  setTimeout(() => {
-    console.error('⚠️  Forced shutdown after timeout.');
-    process.exit(1);
-  }, 10_000).unref();
-}
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
 startServer();
-
