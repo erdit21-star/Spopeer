@@ -5015,36 +5015,86 @@
   }
 
   async function submitPost() {
-    const content = document.getElementById("postContent")?.value.trim() || "";
-    const sport = document.getElementById("postSport")?.value || "General";
-    const file = document.getElementById("postFile")?.files?.[0] || null;
-    const activeType = document.querySelector(".post-type-btn.active")?.dataset.type || "post";
+    const contentInput = document.getElementById("postContent");
+    const content = contentInput ? contentInput.value.trim() : "";
+    const user = getCurrentUserData ? getCurrentUserData() : {};
+    const sport = (user && (user.primarySport || user.sport)) || "General";
+    const mediaFile = composerState.media && composerState.media[0] ? composerState.media[0].file : null;
+    const mediaType = composerState.media && composerState.media[0] ? composerState.media[0].type : null;
+    const activeType = composerState.type || "text";
 
     const formData = new FormData();
+    let finalContent = content;
 
-    formData.append("content", content);
     formData.append("sport", sport);
-    formData.append("type", activeType);
 
-    if (file) {
-      formData.append("image", file);
+    if (mediaFile) {
+      formData.append("image", mediaFile);
+      if (mediaType === "video") {
+        formData.append("type", "video");
+      }
     }
 
     if (activeType === "poll") {
       const options = collectPollOptions();
+      const pollQuestion = (document.getElementById("pollQuestion")?.value || "").trim();
 
       if (options.length < 2) {
         window.SpopeerAPI.showNotification("Poll needs at least 2 options.", "warning");
         return;
       }
 
+      formData.append("type", "poll");
       formData.append("pollOptions", JSON.stringify(options));
+      finalContent = pollQuestion || content || "Poll";
+    } else if (activeType === "event") {
+      const title = (document.getElementById("eventTitle")?.value || "").trim();
+      const dateTime = (document.getElementById("eventDateTime")?.value || "").trim();
+      const location = (document.getElementById("eventLocation")?.value || "").trim();
+      const description = (document.getElementById("eventDescription")?.value || "").trim();
+
+      const eventParts = [
+        title ? "Event: " + title : "",
+        dateTime ? "When: " + dateTime : "",
+        location ? "Where: " + location : "",
+        description ? "Details: " + description : ""
+      ].filter(Boolean);
+
+      if (eventParts.length) {
+        finalContent = [content, eventParts.join("\n")].filter(Boolean).join("\n\n");
+      }
     }
 
-    await window.SpopeerFeedEngine.createPost(formData);
+    if (!finalContent && !mediaFile) {
+      window.SpopeerAPI.showNotification("Write text or add an image/video.", "warning");
+      contentInput?.focus();
+      return;
+    }
 
-    if (typeof window.loadFeed === "function") {
-      await window.loadFeed();
+    formData.append("content", finalContent);
+
+    try {
+      submitComposer.disabled = true;
+      await window.SpopeerFeedEngine.createPost(formData);
+
+      if (typeof window.loadFeed === "function") {
+        await window.loadFeed();
+      }
+
+      if (contentInput) contentInput.value = "";
+      mediaPreview.innerHTML = "";
+      photoInput.value = "";
+      videoInput.value = "";
+      pollCreator.style.display = "none";
+      eventCreator.style.display = "none";
+      composerState = { media: [], poll: null, event: null, type: 'text' };
+      closeComposerModal();
+      window.SpopeerAPI.showNotification("Post published.", "success");
+    } catch (error) {
+      console.error("Post publish failed:", error);
+      window.SpopeerAPI.showNotification(error.message || "Failed to publish post.", "error");
+    } finally {
+      submitComposer.disabled = false;
     }
   }
 
@@ -5330,6 +5380,10 @@
   function renderPostCard(post) {
     var imageUrl = post.image || null;
     var videoUrl = post.video || null;
+    if (!videoUrl && imageUrl && (post.type === 'video' || /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(String(imageUrl)))) {
+      videoUrl = imageUrl;
+      imageUrl = null;
+    }
     var mediaHtml = '';
     if (imageUrl) {
       mediaHtml += '<div class="post-media"><img src="' + escapeHtml(imageUrl) + '" alt="Post image" loading="lazy"></div>';
@@ -6265,8 +6319,12 @@ function generatePostHTML(post) {
   const role = roleMap[post.authorType] || roleMap.athlete;
   const timeAgo = formatTimeAgo(new Date(post.timestamp));
   const mediaItems = Array.isArray(post.media) ? post.media : [];
-  const imageUrl = post.image || mediaItems.find((m) => m.type === 'image')?.url || null;
-  const videoUrl = mediaItems.find((m) => m.type === 'video')?.url || null;
+  let imageUrl = post.image || mediaItems.find((m) => m.type === 'image')?.url || null;
+  let videoUrl = mediaItems.find((m) => m.type === 'video')?.url || null;
+  if (!videoUrl && imageUrl && (post.type === 'video' || /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(String(imageUrl)))) {
+    videoUrl = imageUrl;
+    imageUrl = null;
+  }
 
   let mediaHTML = '';
   if (imageUrl) {

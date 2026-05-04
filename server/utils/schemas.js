@@ -70,8 +70,10 @@ const profileUpdateSchema = z.object({
 const createPostSchema = z.object({
   content: z.string().max(5000).optional().or(z.literal('')),
   sport: z.string().max(100).optional(),
-  image: z.string().max(500).optional()
-});
+  image: z.string().max(500).optional(),
+  type: z.string().max(30).optional(),
+  pollOptions: z.string().max(5000).optional()
+}).passthrough();
 
 // ─── MESSAGES ───
 
