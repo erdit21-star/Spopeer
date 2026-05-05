@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null };
+  const app = { route: 'feed', user: null, selectedPost: null, activeConversationId: null };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -42,6 +42,37 @@
 
   function unwrapUser(result) {
     return (result && result.data && result.data.user) || (result && result.user) || (result && result.data) || result || null;
+  }
+
+  function unwrapSearchUsers(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.users)) return result.users;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.users)) return result.data.users;
+    if (result.payload && Array.isArray(result.payload)) return result.payload;
+    return [];
+  }
+
+  function unwrapConversations(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.conversations)) return result.conversations;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.conversations)) return result.data.conversations;
+    return [];
+  }
+
+  function unwrapConversationDetails(result) {
+    return (result && result.data) || result || {};
+  }
+
+  function displayNameFromUser(user) {
+    return user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || 'Spopeer member';
+  }
+
+  function initialForName(name) {
+    return String(name || 'S').charAt(0).toUpperCase();
   }
 
   function formatTime(value) {
@@ -322,16 +353,149 @@
       };
     },
 
-    search: function () {
+    search: async function () {
       setTitle('Search', 'Discover people');
-      $('#spmScreen').classList.remove('spm-snap-feed');
-      $('#spmScreen').innerHTML = '<input class="spm-search" placeholder="Search athletes, coaches, clubs..."><div class="spm-list"><div class="spm-list-item">Athletes <span>›</span></div><div class="spm-list-item">Coaches <span>›</span></div><div class="spm-list-item">Clubs <span>›</span></div></div>';
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = `
+        <input id="spmSearchInput" class="spm-search" placeholder="Search athletes, coaches, clubs...">
+        <div id="spmSearchResults" class="spm-list"><div class="spm-empty">Loading suggestions...</div></div>`;
+
+      var input = document.getElementById('spmSearchInput');
+      var box = document.getElementById('spmSearchResults');
+      var timer = null;
+
+      function renderUsers(users) {
+        box.innerHTML = '';
+        if (!users.length) {
+          box.innerHTML = '<div class="spm-empty">No profiles found.</div>';
+          return;
+        }
+        users.slice(0, 20).forEach(function (user) {
+          var name = displayNameFromUser(user);
+          var item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'spm-search-user';
+          item.innerHTML = `
+            <span class="spm-search-avatar">${html(initialForName(name))}</span>
+            <span class="spm-search-meta"><strong>${html(name)}</strong><small>${html(user.role || 'Member')} · ${html(user.sport || 'Sport')}</small></span>
+            <span class="spm-search-arrow">›</span>`;
+          item.addEventListener('click', async function () {
+            try {
+              var convo = await window.SpopeerAPI.createConversation(user.id || user.userId || user.email);
+              var convoId = (convo && convo.data && convo.data.id) || convo.id;
+              app.activeConversationId = convoId || null;
+              app.route = 'messages';
+              render();
+            } catch (error) {
+              console.error('[mobile] create conversation failed', error);
+              app.route = 'messages';
+              render();
+            }
+          });
+          box.appendChild(item);
+        });
+      }
+
+      async function runSearch(term) {
+        try {
+          var result = await window.SpopeerAPI.searchUsers({ term: term || '', pageSize: 20 });
+          renderUsers(unwrapSearchUsers(result));
+        } catch (error) {
+          box.innerHTML = '<div class="spm-empty">Search is unavailable right now.</div>';
+        }
+      }
+
+      input.addEventListener('input', function () {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(function () {
+          runSearch(input.value.trim());
+        }, 260);
+      });
+
+      runSearch('');
     },
 
-    messages: function () {
-      setTitle('Messages', 'Conversation');
-      $('#spmScreen').classList.remove('spm-snap-feed');
-      $('#spmScreen').innerHTML = '<div class="spm-chat"><div class="spm-chat-body"><div class="spm-bubble">Hey, ready for training?</div><div class="spm-bubble me">Yes, let’s go!</div></div><div class="spm-chat-input"><input placeholder="Type message"><button>Send</button></div></div>';
+    messages: async function () {
+      setTitle('Messages', 'Your conversations');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading messages...</div>';
+
+      try {
+        var result = await window.SpopeerAPI.listConversations();
+        var conversations = unwrapConversations(result);
+
+        if (!app.activeConversationId) {
+          screen.innerHTML = '<div id="spmConvoList" class="spm-list"></div>';
+          var list = document.getElementById('spmConvoList');
+          if (!conversations.length) {
+            list.innerHTML = '<div class="spm-empty">No conversations yet. Start from Search.</div>';
+            return;
+          }
+          conversations.forEach(function (conversation) {
+            var item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'spm-convo-item';
+            item.innerHTML = `
+              <span class="spm-convo-avatar">${html(initialForName(conversation.otherName || 'S'))}</span>
+              <span class="spm-convo-main"><strong>${html(conversation.otherName || 'Conversation')}</strong><small>${html(conversation.lastMessage || 'Say hello')}</small></span>
+              <span class="spm-convo-side">${conversation.unread ? '<i>' + html(String(conversation.unread)) + '</i>' : html(formatTime(conversation.lastAt))}</span>`;
+            item.addEventListener('click', function () {
+              app.activeConversationId = conversation.id;
+              render();
+            });
+            list.appendChild(item);
+          });
+          return;
+        }
+
+        var detailsResult = await window.SpopeerAPI.getConversation(app.activeConversationId);
+        var details = unwrapConversationDetails(detailsResult);
+        var messages = Array.isArray(details.messages) ? details.messages : [];
+
+        screen.innerHTML = `
+          <div class="spm-chat">
+            <div class="spm-chat-head"><button id="spmBackToConvos" class="spm-chat-back" type="button">← Back</button></div>
+            <div id="spmChatBody" class="spm-chat-body"></div>
+            <div class="spm-chat-input"><input id="spmChatText" placeholder="Type message"><button id="spmSendMsg">Send</button></div>
+          </div>`;
+
+        document.getElementById('spmBackToConvos').addEventListener('click', function () {
+          app.activeConversationId = null;
+          render();
+        });
+
+        var body = document.getElementById('spmChatBody');
+        if (!messages.length) {
+          body.innerHTML = '<div class="spm-empty">No messages yet. Say hello.</div>';
+        } else {
+          body.innerHTML = '';
+          messages.forEach(function (message) {
+            var bubble = document.createElement('div');
+            var isMine = Number(message.senderId || message.fromId) === Number(app.user && app.user.id);
+            bubble.className = 'spm-bubble' + (isMine ? ' me' : '');
+            bubble.textContent = message.body || message.text || message.content || '';
+            body.appendChild(bubble);
+          });
+          body.scrollTop = body.scrollHeight;
+        }
+
+        document.getElementById('spmSendMsg').addEventListener('click', async function () {
+          var input = document.getElementById('spmChatText');
+          var text = input.value.trim();
+          if (!text) return;
+          input.value = '';
+          try {
+            await window.SpopeerAPI.sendConversationMessage(app.activeConversationId, text);
+            render();
+          } catch (error) {
+            alert(error.message || 'Could not send message.');
+          }
+        });
+      } catch (error) {
+        screen.innerHTML = '<div class="spm-empty">Could not load messages.</div>';
+      }
     },
 
     notifications: function () {

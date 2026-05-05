@@ -444,6 +444,31 @@
     removeBookmark: function (bookmarkId) {
       return request("/api/bookmarks/" + encodeURIComponent(bookmarkId), { method: "DELETE" });
     },
+    searchUsers: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request('/api/search' + qs);
+    },
+    createConversation: function (participantId) {
+      return request('/api/messages/conversations', {
+        method: 'POST',
+        body: JSON.stringify({ participantId: participantId })
+      });
+    },
+    listConversations: function () {
+      return request('/api/messages/conversations');
+    },
+    getConversation: function (conversationId) {
+      return request('/api/messages/conversations/' + encodeURIComponent(conversationId));
+    },
+    sendConversationMessage: function (conversationId, text) {
+      return request('/api/messages/conversations/' + encodeURIComponent(conversationId) + '/messages', {
+        method: 'POST',
+        body: JSON.stringify({ text: text })
+      });
+    },
+    getUnreadMessageCount: function () {
+      return request('/api/messages/unread-count');
+    },
     listEvents: function () { return request("/api/events"); },
     createEvent: function (payload) {
       return request("/api/events", { method: "POST", body: JSON.stringify(payload) });
