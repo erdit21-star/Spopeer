@@ -3046,7 +3046,7 @@
   <!-- LEFT SIDEBAR -->
   <aside class="sidebar-left" id="leftSidebar">
     <!-- Toggle button on right edge -->
-    <button class="sidebar-toggle-btn" id="sidebarToggle" type="button" title="Collapse sidebar" aria-label="Collapse sidebar">
+    <button class="sidebar-toggle-btn" id="sidebarToggle" type="button" aria-label="Collapse sidebar">
       <i class="fa-solid fa-chevron-left"></i>
     </button>
 
@@ -7281,7 +7281,6 @@ document.addEventListener('DOMContentLoaded', function () {
   if (localStorage.getItem('spopeer_left_sidebar_collapsed') === '1') {
     layout.classList.add('left-sidebar-collapsed');
     toggle.setAttribute('aria-label', 'Expand sidebar');
-    toggle.title = 'Expand sidebar';
   }
 
   toggle.addEventListener('click', function () {
@@ -7298,7 +7297,6 @@ document.addEventListener('DOMContentLoaded', function () {
       'aria-label',
       isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
     );
-    toggle.title = isCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
   });
 });
 </script>
