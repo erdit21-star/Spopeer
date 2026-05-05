@@ -32,10 +32,11 @@
   .ms-btn-google svg{flex-shrink:0}
   .ms-footer{margin-top:20px;text-align:center;font-size:13px;font-weight:600;color:#64748b}
   .ms-footer a{color:#1a6bff;font-weight:800;text-decoration:none}
-  #msError{display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:10px 14px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:12px}
+  #signupError{display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:10px 14px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:12px}
   #msSuccess{display:none;background:#dcfce7;border:1px solid #86efac;border-radius:12px;padding:10px 14px;color:#166534;font-size:13px;font-weight:600;margin-bottom:12px}
 </style>
 <script src="/js/api.js"></script>
+<script src="/js/google-auth-init.js" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -50,7 +51,7 @@
 
   <div class="ms-body">
     <h2>Create Account</h2>
-    <div id="msError"></div>
+    <div id="signupError"></div>
     <div id="msSuccess"></div>
 
     <div id="g_id_onload"
@@ -103,7 +104,7 @@ function setMessage(elId, msg) {
 }
 
 async function handleGoogleCredential(response) {
-  setMessage('msError', '');
+  setMessage('signupError', '');
   setMessage('msSuccess', '');
   try {
     const res = await fetch('/api/auth/google', {
@@ -130,12 +131,12 @@ async function handleGoogleCredential(response) {
     if (window.Auth) window.Auth.login(userData);
     window.location.assign('/mobile.html');
   } catch (err) {
-    setMessage('msError', (err && err.message) || 'Google sign-up failed. Please try email signup.');
+    setMessage('signupError', (err && err.message) || 'Google sign-up failed. Please try email signup.');
   }
 }
 
 document.getElementById('signupBtn').onclick = async function() {
-  setMessage('msError', '');
+  setMessage('signupError', '');
   setMessage('msSuccess', '');
   var payload = {
     firstName: document.getElementById('firstName').value.trim(),
@@ -145,7 +146,7 @@ document.getElementById('signupBtn').onclick = async function() {
   };
 
   if (!payload.firstName || !payload.lastName || !payload.email || !payload.password) {
-    setMessage('msError', 'Please fill all fields.');
+    setMessage('signupError', 'Please fill all fields.');
     return;
   }
 
@@ -159,24 +160,9 @@ document.getElementById('signupBtn').onclick = async function() {
     }
     setMessage('msSuccess', 'Account created. Please check your email to verify, then sign in.');
   } catch (e) {
-    setMessage('msError', (e && e.message) || 'Signup failed.');
+    setMessage('signupError', (e && e.message) || 'Signup failed.');
   }
 };
-
-(function wireGoogle() {
-  function init() {
-    if (!window.google || !window.google.accounts) return;
-    window.google.accounts.id.initialize({
-      client_id: '527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com',
-      callback: handleGoogleCredential
-    });
-    document.getElementById('signupGoogleBtn').addEventListener('click', function() {
-      window.google.accounts.id.prompt();
-    });
-  }
-  if (window.google && window.google.accounts) init();
-  else window.onGoogleLibraryLoad = init;
-})();
 </script>
 
 </body>

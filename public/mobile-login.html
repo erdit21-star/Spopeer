@@ -50,9 +50,10 @@
   .ml-footer{margin-top:24px;text-align:center;font-size:13px;font-weight:600;color:#64748b}
   .ml-footer a{color:#1a6bff;font-weight:800;text-decoration:none}
 
-  #mlError{display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:10px 14px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:14px}
+  #loginError{display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:10px 14px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:14px}
 </style>
 <script src="/js/api.js"></script>
+<script src="/js/google-auth-init.js" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -72,7 +73,7 @@
   <div class="ml-body">
     <h2>Sign In</h2>
 
-    <div id="mlError"></div>
+    <div id="loginError"></div>
 
     <!-- Google button FIRST — prominent -->
     <div id="g_id_onload"
@@ -101,7 +102,7 @@
       <input id="password" type="password" placeholder="Password" autocomplete="current-password">
     </div>
 
-    <a href="#" class="ml-forgot">Forgot password?</a>
+    <a href="/mobile-forgot-password.html" class="ml-forgot">Forgot password?</a>
 
     <button id="loginBtn" class="ml-btn-primary">Sign In</button>
 
@@ -112,7 +113,7 @@
 
 <script>
 async function handleGoogleCredential(response) {
-  const errBox = document.getElementById('mlError');
+  const errBox = document.getElementById('loginError');
   try {
     const res = await fetch('/api/auth/google', {
       method: 'POST',
@@ -149,7 +150,7 @@ async function handleGoogleCredential(response) {
 document.getElementById('loginBtn').onclick = async function() {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
-  const errBox = document.getElementById('mlError');
+  const errBox = document.getElementById('loginError');
   errBox.style.display = 'none';
   if (!email || !password) { errBox.textContent = 'Please enter your email and password.'; errBox.style.display = 'block'; return; }
   try {
@@ -164,22 +165,6 @@ document.getElementById('loginBtn').onclick = async function() {
     errBox.style.display = 'block';
   }
 };
-
-// Wire Google button after GSI loads
-(function wireGoogle() {
-  function init() {
-    if (!window.google || !window.google.accounts) return;
-    window.google.accounts.id.initialize({
-      client_id: '527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com',
-      callback: handleGoogleCredential
-    });
-    document.getElementById('loginGoogleBtn').addEventListener('click', function() {
-      window.google.accounts.id.prompt();
-    });
-  }
-  if (window.google && window.google.accounts) { init(); }
-  else { window.onGoogleLibraryLoad = init; }
-})();
 </script>
 
 </body>
