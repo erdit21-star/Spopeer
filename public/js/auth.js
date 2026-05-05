@@ -167,7 +167,7 @@ const Auth = {
     if (!window.SpopeerAPI) return;
     try {
       await window.SpopeerAPI.me();
-      window.location.href = "/feed.html";
+      window.location.href = "/app.html";
     } catch (err) {
       console.debug("redirectIfLoggedInToUserApp check failed", err);
       // Not authenticated — stay on page

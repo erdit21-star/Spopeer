@@ -7,7 +7,7 @@
       id: 'homeBtn',
       legacyId: null,
       title: 'Home',
-      path: '/feed.html',
+      path: '/app.html',
       iconClass: 'fa-solid fa-house'
     },
     {
@@ -63,7 +63,7 @@
   function getActiveKey(pathname) {
     var path = normalizePath(pathname);
 
-    if (path === '/feed.html' || path === '/' || path === '/index.html') return 'home';
+    if (path === '/app.html' || path === '/feed.html' || path === '/' || path === '/index.html') return 'home';
     if (path.indexOf('/pages/search/') === 0 || path === '/search.html') return 'search';
     if (path === '/articles.html' || path.indexOf('/pages/company/blog') === 0) return 'articles';
     if (path.indexOf('/pages/marketplace/') === 0) return 'marketplace';

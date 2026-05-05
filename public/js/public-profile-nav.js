@@ -29,7 +29,7 @@
   });
 
   // Nav icon buttons
-  document.getElementById('feedBtn')?.addEventListener('click', () => window.location.href = '/feed.html');
+  document.getElementById('feedBtn')?.addEventListener('click', () => window.location.href = '/app.html');
   document.getElementById('exploreBtn')?.addEventListener('click', () => window.location.href = '../search/search.html');
   document.getElementById('messagesBtn')?.addEventListener('click', () => window.location.href = '../messaging/inbox.html');
 

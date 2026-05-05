@@ -23,7 +23,7 @@
   }
 
   function goToUserApp() {
-    window.location.href = "/feed.html";
+    window.location.href = "/app.html";
   }
 
   function requireUser() {
@@ -41,7 +41,7 @@
     const user = getUser();
 
     if (!isAdmin(user)) {
-      window.location.href = "/feed.html";
+      window.location.href = "/app.html";
     }
   }
 

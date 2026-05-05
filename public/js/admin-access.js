@@ -26,7 +26,7 @@
 
     if (!isAdmin(user)) {
       if (window.SpopeerToast) window.SpopeerToast.error("You do not have admin access.");
-      window.location.href = "/feed.html";
+      window.location.href = "/app.html";
     }
   }
 

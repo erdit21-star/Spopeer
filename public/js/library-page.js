@@ -100,7 +100,7 @@
       title: pickTitleFromPost(post),
       description: String(post.content || ""),
       sport: post.sport || "",
-      href: "/feed.html"
+      href: "/app.html"
     };
 
     items.push(Object.assign({}, base, { itemType: "posts" }));
