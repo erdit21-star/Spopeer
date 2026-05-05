@@ -469,6 +469,26 @@
     getUnreadMessageCount: function () {
       return request('/api/messages/unread-count');
     },
+    listNotifications: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request('/api/notifications' + qs);
+    },
+    markAllNotificationsRead: function () {
+      return request('/api/notifications/read', { method: 'PATCH' });
+    },
+    markNotificationRead: function (notificationId) {
+      return request('/api/notifications/' + encodeURIComponent(notificationId) + '/read', { method: 'PATCH' });
+    },
+    listMarketplaceListings: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request('/api/marketplace/listings' + qs);
+    },
+    listSavedMarketplaceListings: function () {
+      return request('/api/marketplace/saved');
+    },
+    listMyMarketplaceListings: function () {
+      return request('/api/marketplace/my-listings');
+    },
     listEvents: function () { return request("/api/events"); },
     createEvent: function (payload) {
       return request("/api/events", { method: "POST", body: JSON.stringify(payload) });

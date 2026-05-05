@@ -63,6 +63,33 @@
     return [];
   }
 
+  function unwrapNotifications(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.notifications)) return result.notifications;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.notifications)) return result.data.notifications;
+    return [];
+  }
+
+  function unreadNotificationsCount(result) {
+    if (!result) return 0;
+    if (result.meta && typeof result.meta.unreadCount === 'number') return result.meta.unreadCount;
+    if (result.data && result.data.meta && typeof result.data.meta.unreadCount === 'number') return result.data.meta.unreadCount;
+    if (Array.isArray(result.data)) return result.data.filter(function (item) { return item && item.isRead === false; }).length;
+    return 0;
+  }
+
+  function unwrapMarketplaceListings(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.listings)) return result.listings;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.listings)) return result.data.listings;
+    if (result.data && result.data.payload && Array.isArray(result.data.payload)) return result.data.payload;
+    return [];
+  }
+
   function unwrapConversationDetails(result) {
     return (result && result.data) || result || {};
   }
@@ -105,8 +132,16 @@
     $('#spmSubtitle').textContent = subtitle || 'Sports network';
   }
 
+  function postImageUrl(post) {
+    return post.image || post.imageUrl || post.mediaUrl || '';
+  }
+
+  function hasPostImage(post) {
+    return Boolean(postImageUrl(post));
+  }
+
   function imageForPost(post) {
-    return post.image || post.imageUrl || post.mediaUrl || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900';
+    return postImageUrl(post);
   }
 
   function authorName(post) {
@@ -152,6 +187,9 @@
   function renderFeedPostCard(post) {
     var card = document.createElement('article');
     card.className = 'spm-feed-card';
+    var imageMarkup = hasPostImage(post)
+      ? '<div class="spm-feed-image" style="background-image:url(\'' + html(imageForPost(post)) + '\')"></div>'
+      : '';
     card.innerHTML = `
       <div class="spm-feed-head">
         <div class="spm-mini-avatar"></div>
@@ -160,7 +198,7 @@
           <small>${html(formatTime(post.createdAt || post.created_at))}</small>
         </div>
       </div>
-      <div class="spm-feed-image" style="background-image:url('${html(imageForPost(post))}')"></div>
+      ${imageMarkup}
       <p class="spm-feed-copy">${html(post.content || 'Shared a sports update.')}</p>
       <div class="spm-feed-meta">
         <button class="spm-feed-chip" type="button" data-like="${html(post.id)}">❤️ ${Number(post.likesCount || 0)}</button>
@@ -205,9 +243,73 @@
     return item.title || item.company || item.organization || item.role || 'Recommended opportunity';
   }
 
+  function looksLikeArticlePost(post) {
+    var type = String(post.type || '').toLowerCase();
+    if (type === 'article') return true;
+    var content = String(post.content || '').toLowerCase();
+    if (content.length >= 280) return true;
+    if (content.indexOf('article') >= 0 || content.indexOf('read:') >= 0) return true;
+    return /https?:\/\/[^\s)]+/.test(content);
+  }
+
+  function listingTitle(item) {
+    return item.title || item.name || item.category || 'Marketplace listing';
+  }
+
+  function listingPrice(item) {
+    if (item.price === 0) return 'Free';
+    if (item.price) return '$' + Number(item.price).toLocaleString();
+    return item.status || 'Available';
+  }
+
+  function setBadge(id, count) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var value = Number(count || 0);
+    if (value > 0) {
+      el.classList.remove('spm-hidden');
+      el.textContent = value > 99 ? '99+' : String(value);
+    } else {
+      el.classList.add('spm-hidden');
+      el.textContent = '0';
+    }
+  }
+
+  async function refreshTopbarStats() {
+    if (!window.SpopeerAPI) return;
+    try {
+      var responses = await Promise.allSettled([
+        window.SpopeerAPI.listNotifications({ page: 1, limit: 10 }),
+        window.SpopeerAPI.listPosts({ limit: 60, page: 1 }),
+        window.SpopeerAPI.listMarketplaceListings({ limit: 1, page: 1, status: 'active' })
+      ]);
+
+      var notifCount = responses[0].status === 'fulfilled' ? unreadNotificationsCount(responses[0].value) : 0;
+      var posts = responses[1].status === 'fulfilled' ? unwrapPosts(responses[1].value) : [];
+      var articleCount = Array.isArray(posts) ? posts.filter(looksLikeArticlePost).length : 0;
+
+      var marketplaceCount = 0;
+      if (responses[2].status === 'fulfilled') {
+        var marketResponse = responses[2].value;
+        var marketItems = unwrapMarketplaceListings(marketResponse);
+        if (marketResponse && marketResponse.meta && marketResponse.meta.pagination && typeof marketResponse.meta.pagination.total === 'number') {
+          marketplaceCount = marketResponse.meta.pagination.total;
+        } else if (marketResponse && marketResponse.data && marketResponse.data.meta && marketResponse.data.meta.pagination && typeof marketResponse.data.meta.pagination.total === 'number') {
+          marketplaceCount = marketResponse.data.meta.pagination.total;
+        } else {
+          marketplaceCount = marketItems.length;
+        }
+      }
+
+      setBadge('spmNotifBadge', notifCount);
+      setBadge('spmArticlesBadge', articleCount);
+      setBadge('spmMarketplaceBadge', marketplaceCount);
+    } catch (_error) {}
+  }
+
   const screens = {
     feed: async function () {
-      setTitle('Feed', 'AI Agent Center');
+      setTitle('', '');
       const container = $('#spmScreen');
       container.classList.remove('spm-snap-feed');
       container.innerHTML = '<div class="spm-empty">Loading your feed...</div>';
@@ -229,7 +331,6 @@
           <section class="spm-ai-card">
             <div class="spm-ai-head">
               <strong>AI Sports Agent</strong>
-              <button id="spmThemeToggle" class="spm-theme-toggle" type="button" aria-label="Toggle dark mode">🌓</button>
             </div>
             <p>Ask me to find athletes, write an article, manage messages, or surface opportunities in your network.</p>
             <div class="spm-chip-row">
@@ -238,9 +339,6 @@
               <span class="spm-chip">Journalist</span>
             </div>
           </section>`;
-
-        var themeButton = document.getElementById('spmThemeToggle');
-        if (themeButton) themeButton.addEventListener('click', toggleTheme);
 
         if (topEvent) {
           var eventCard = document.createElement('article');
@@ -501,7 +599,97 @@
     notifications: function () {
       setTitle('Notifications', 'Latest activity');
       $('#spmScreen').classList.remove('spm-snap-feed');
-      $('#spmScreen').innerHTML = '<div class="spm-timeline"><div class="spm-timeline-item"><span class="spm-dot"></span><div><strong>New follower</strong><p>2 min ago</p></div></div><div class="spm-timeline-item"><span class="spm-dot"></span><div><strong>Post liked</strong><p>10 min ago</p></div></div></div>';
+      $('#spmScreen').innerHTML = '<div id="spmNotificationsList" class="spm-list"><div class="spm-empty">Loading notifications...</div></div>';
+      var box = document.getElementById('spmNotificationsList');
+
+      window.SpopeerAPI.listNotifications({ page: 1, limit: 30 }).then(function (result) {
+        var notifications = unwrapNotifications(result);
+        if (!notifications.length) {
+          box.innerHTML = '<div class="spm-empty">No notifications yet.</div>';
+          return;
+        }
+        box.innerHTML = '';
+        notifications.forEach(function (notification) {
+          var item = document.createElement('div');
+          item.className = 'spm-list-item';
+          item.innerHTML = '<strong>' + html(notification.type || 'Activity') + '</strong><div>' + html(notification.message || 'You have a new notification.') + '</div><small>' + html(formatTime(notification.createdAt)) + '</small>';
+          box.appendChild(item);
+        });
+      }).catch(function () {
+        box.innerHTML = '<div class="spm-empty">Could not load notifications.</div>';
+      });
+    },
+
+    articles: async function () {
+      setTitle('Articles', 'Latest from the network');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading articles...</div>';
+
+      try {
+        var result = await window.SpopeerAPI.listPosts({ limit: 60, page: 1, _: Date.now() });
+        var posts = unwrapPosts(result).filter(looksLikeArticlePost);
+
+        if (!posts.length) {
+          screen.innerHTML = '<div class="spm-empty">No articles found yet.</div>';
+          return;
+        }
+
+        screen.innerHTML = '';
+        posts.slice(0, 20).forEach(function (post) {
+          var card = document.createElement('article');
+          card.className = 'spm-feed-card';
+          card.innerHTML = `
+            <div class="spm-feed-head">
+              <div class="spm-mini-avatar"></div>
+              <div class="spm-feed-title-wrap">
+                <strong>${html(authorName(post))}</strong>
+                <small>${html(formatTime(post.createdAt || post.created_at))}</small>
+              </div>
+            </div>
+            <p class="spm-feed-copy">${html(post.content || 'Article update')}</p>
+            <div class="spm-feed-meta"><span class="spm-feed-chip static">Article</span><span class="spm-feed-chip static">${html(post.sport || 'Sports')}</span></div>`;
+          screen.appendChild(card);
+        });
+      } catch (_error) {
+        screen.innerHTML = '<div class="spm-empty">Could not load articles.</div>';
+      }
+    },
+
+    marketplace: async function () {
+      setTitle('Marketplace', 'Live listings');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading marketplace...</div>';
+
+      try {
+        var result = await window.SpopeerAPI.listMarketplaceListings({ page: 1, limit: 20, status: 'active' });
+        var listings = unwrapMarketplaceListings(result);
+
+        if (!listings.length) {
+          screen.innerHTML = '<div class="spm-empty">No active listings right now.</div>';
+          return;
+        }
+
+        screen.innerHTML = '';
+        listings.forEach(function (listing) {
+          var card = document.createElement('article');
+          card.className = 'spm-feed-card';
+          card.innerHTML = `
+            <div class="spm-feed-head">
+              <div class="spm-mini-avatar"></div>
+              <div class="spm-feed-title-wrap">
+                <strong>${html(listingTitle(listing))}</strong>
+                <small>${html(formatTime(listing.createdAt))}</small>
+              </div>
+            </div>
+            <p class="spm-feed-copy">${html(listing.description || listing.category || 'Marketplace opportunity')}</p>
+            <div class="spm-feed-meta"><span class="spm-feed-chip static">${html(listingPrice(listing))}</span><span class="spm-feed-chip static">${html(listing.sport || listing.category || 'Listing')}</span></div>`;
+          screen.appendChild(card);
+        });
+      } catch (_error) {
+        screen.innerHTML = '<div class="spm-empty">Could not load marketplace listings.</div>';
+      }
     },
 
     profile: async function () {
@@ -540,7 +728,9 @@
   function render() {
     const screen = screens[app.route] || screens.feed;
     document.querySelectorAll('.spm-tabbar button').forEach(function (button) { button.classList.toggle('active', button.dataset.route === app.route); });
-    screen();
+    Promise.resolve(screen()).finally(function () {
+      refreshTopbarStats();
+    });
   }
 
   function bindNav() {
@@ -557,6 +747,13 @@
       drawer.querySelectorAll('[data-route]').forEach(function (item) {
         item.addEventListener('click', function () { app.route = item.dataset.route; closeDrawer(); render(); });
       });
+      var drawerThemeToggle = document.getElementById('spmDrawerThemeToggle');
+      if (drawerThemeToggle) {
+        drawerThemeToggle.addEventListener('click', function () {
+          toggleTheme();
+          closeDrawer();
+        });
+      }
       var drawerSignOut = document.getElementById('spmDrawerSignOut');
       if (drawerSignOut) {
         drawerSignOut.addEventListener('click', async function () {
@@ -591,6 +788,7 @@
         app.user = unwrapUser(result);
         revealTarget('#spmShell');
         render();
+        refreshTopbarStats();
       } catch (_error) {
         revealTarget('#spmAuth');
       }
