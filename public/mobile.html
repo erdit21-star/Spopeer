@@ -42,8 +42,34 @@
       <header class="spm-topbar">
         <button class="spm-icon-btn" data-back><i class="fa-solid fa-chevron-left"></i></button>
         <div><strong id="spmTitle">Feed</strong><span id="spmSubtitle">Sports network</span></div>
-        <button class="spm-icon-btn" data-route="notifications"><i class="fa-regular fa-bell"></i></button>
+        <div style="display:flex;gap:6px">
+          <button class="spm-icon-btn" data-route="notifications"><i class="fa-regular fa-bell"></i></button>
+          <button class="spm-icon-btn" id="spmMenuBtn" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+        </div>
       </header>
+
+      <!-- Slide-in drawer -->
+      <div id="spmDrawerOverlay" class="spm-drawer-overlay"></div>
+      <nav id="spmDrawer" class="spm-drawer">
+        <div class="spm-drawer-header">
+          <span class="spm-drawer-logo"><i class="fa-solid fa-bolt"></i> Spopeer</span>
+          <button class="spm-icon-btn" id="spmMenuClose" onclick="document.getElementById('spmDrawer').classList.remove('spm-drawer-open');document.getElementById('spmDrawerOverlay').classList.remove('spm-drawer-open')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="spm-drawer-section">Main</div>
+        <a class="spm-drawer-item" data-route="feed"><i class="fa-solid fa-house"></i> Home Feed</a>
+        <a class="spm-drawer-item" data-route="search"><i class="fa-solid fa-magnifying-glass"></i> Search</a>
+        <a class="spm-drawer-item" data-route="create"><i class="fa-solid fa-plus"></i> Create Post</a>
+        <a class="spm-drawer-item" data-route="messages"><i class="fa-regular fa-comment-dots"></i> Messages</a>
+        <a class="spm-drawer-item" data-route="notifications"><i class="fa-regular fa-bell"></i> Notifications</a>
+        <div class="spm-drawer-section">Discover</div>
+        <a class="spm-drawer-item" href="/public/pages/community/index.html"><i class="fa-solid fa-users"></i> Community</a>
+        <a class="spm-drawer-item" href="/articles.html"><i class="fa-regular fa-newspaper"></i> Articles</a>
+        <a class="spm-drawer-item" href="/search.html"><i class="fa-solid fa-person-running"></i> Athletes</a>
+        <a class="spm-drawer-item" href="/connections.html"><i class="fa-solid fa-link"></i> Connections</a>
+        <div class="spm-drawer-section">Account</div>
+        <a class="spm-drawer-item" data-route="profile"><i class="fa-regular fa-user"></i> My Profile</a>
+        <a class="spm-drawer-item spm-drawer-signout" id="spmDrawerSignOut"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a>
+      </nav>
       <section id="spmScreen" class="spm-screen"></section>
       <nav class="spm-tabbar">
         <button class="active" data-route="feed"><i class="fa-solid fa-house"></i><span>Home</span></button>

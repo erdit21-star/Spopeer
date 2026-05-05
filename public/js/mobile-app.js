@@ -178,7 +178,25 @@
       try { const result = await window.SpopeerAPI.getProfile(); app.user = unwrapUser(result) || app.user || {}; } catch (_error) {}
       const user = app.user || {};
       const name = user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Spopeer member';
-      $('#spmScreen').innerHTML = `<div class="spm-profile-hero"><div style="background-image:url('${html(user.coverUrl || user.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900')}')"></div></div><div class="spm-profile-panel"><h2>${html(name)}</h2><p>${html(user.role || 'Sports profile')} · ${html(user.sport || user.primarySport || 'Sport')}</p></div><div class="spm-grid" style="margin-top:12px"><div class="spm-grid-card">Posts</div><div class="spm-grid-card">Followers</div><div class="spm-grid-card">Following</div><div class="spm-grid-card">Settings</div></div>`;
+      $('#spmScreen').innerHTML = `
+        <div class="spm-profile-hero"><div style="background-image:url('${html(user.coverUrl || user.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900')}')"></div></div>
+        <div class="spm-profile-panel">
+          <h2>${html(name)}</h2>
+          <p>${html(user.role || 'Sports profile')} · ${html(user.sport || user.primarySport || 'Sport')}</p>
+        </div>
+        <div class="spm-grid" style="margin-top:12px">
+          <div class="spm-grid-card">Posts</div>
+          <div class="spm-grid-card">Followers</div>
+          <div class="spm-grid-card">Following</div>
+          <div class="spm-grid-card">Settings</div>
+        </div>
+        <button id="spmSignOutBtn" style="width:100%;margin-top:20px;height:50px;border-radius:999px;background:#fff;border:1.5px solid #ef4444;color:#ef4444;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box">
+          <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+        </button>`;
+      document.getElementById('spmSignOutBtn').addEventListener('click', function () {
+        ['token','user','session','sb-auth-token','supabase.auth.token'].forEach(function(k){ localStorage.removeItem(k); });
+        window.location.href = '/mobile.html';
+      });
     }
   };
 
@@ -192,6 +210,24 @@
     document.querySelectorAll('[data-route]').forEach(function (button) { button.addEventListener('click', function () { app.route = button.dataset.route; render(); }); });
     const back = $('[data-back]');
     if (back) back.addEventListener('click', function () { app.route = 'feed'; render(); });
+    const menuBtn = $('#spmMenuBtn');
+    const drawer = $('#spmDrawer');
+    const drawerOverlay = $('#spmDrawerOverlay');
+    function closeDrawer() { if (drawer) drawer.classList.remove('spm-drawer-open'); if (drawerOverlay) drawerOverlay.classList.remove('spm-drawer-open'); }
+    if (menuBtn && drawer) {
+      menuBtn.addEventListener('click', function () { drawer.classList.toggle('spm-drawer-open'); drawerOverlay.classList.toggle('spm-drawer-open'); });
+      drawerOverlay.addEventListener('click', closeDrawer);
+      drawer.querySelectorAll('[data-route]').forEach(function (item) {
+        item.addEventListener('click', function () { app.route = item.dataset.route; closeDrawer(); render(); });
+      });
+      var drawerSignOut = document.getElementById('spmDrawerSignOut');
+      if (drawerSignOut) {
+        drawerSignOut.addEventListener('click', function () {
+          ['token','user','session','sb-auth-token','supabase.auth.token'].forEach(function(k){ localStorage.removeItem(k); });
+          window.location.href = '/mobile.html';
+        });
+      }
+    }
   }
 
   async function init() {
@@ -207,7 +243,7 @@
         $('#spmSplash').classList.add('spm-hidden');
         $('#spmAuth').classList.remove('spm-hidden');
       }
-    }, 900);
+    }, 2900);
   }
 
   document.addEventListener('DOMContentLoaded', init);
