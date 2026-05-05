@@ -3044,9 +3044,9 @@
 <div class="app-layout">
 
   <!-- LEFT SIDEBAR -->
-  <aside class="sidebar-left">
+  <aside class="sidebar-left" id="leftSidebar">
     <!-- Toggle button on right edge -->
-    <button class="sidebar-toggle-btn" id="sidebarToggleBtn" type="button" title="Collapse sidebar" aria-label="Toggle sidebar">
+    <button class="sidebar-toggle-btn" id="sidebarToggle" type="button" title="Collapse sidebar" aria-label="Collapse sidebar">
       <i class="fa-solid fa-chevron-left"></i>
     </button>
 
@@ -7272,34 +7272,35 @@ function escapeHtml(text) {
 </script>
 
 <script>
-// ── LEFT SIDEBAR COLLAPSE TOGGLE ──────────────────────────────────────
-(function () {
-  var STORAGE_KEY = 'spopeer_sidebar_collapsed';
-  var layout = document.querySelector('.app-layout');
-  var btn    = document.getElementById('sidebarToggleBtn');
-  if (!layout || !btn) return;
+document.addEventListener('DOMContentLoaded', function () {
+  const layout = document.querySelector('.app-layout');
+  const toggle = document.getElementById('sidebarToggle');
 
-  function applyState(collapsed) {
-    if (collapsed) {
-      layout.classList.add('left-sidebar-collapsed');
-      btn.title = 'Expand sidebar';
-      btn.setAttribute('aria-label', 'Expand sidebar');
-    } else {
-      layout.classList.remove('left-sidebar-collapsed');
-      btn.title = 'Collapse sidebar';
-      btn.setAttribute('aria-label', 'Collapse sidebar');
-    }
+  if (!layout || !toggle) return;
+
+  if (localStorage.getItem('spopeer_left_sidebar_collapsed') === '1') {
+    layout.classList.add('left-sidebar-collapsed');
+    toggle.setAttribute('aria-label', 'Expand sidebar');
+    toggle.title = 'Expand sidebar';
   }
 
-  // Restore saved state
-  applyState(localStorage.getItem(STORAGE_KEY) === '1');
+  toggle.addEventListener('click', function () {
+    layout.classList.toggle('left-sidebar-collapsed');
 
-  btn.addEventListener('click', function () {
-    var isCollapsed = layout.classList.contains('left-sidebar-collapsed');
-    applyState(!isCollapsed);
-    localStorage.setItem(STORAGE_KEY, isCollapsed ? '0' : '1');
+    const isCollapsed = layout.classList.contains('left-sidebar-collapsed');
+
+    localStorage.setItem(
+      'spopeer_left_sidebar_collapsed',
+      isCollapsed ? '1' : '0'
+    );
+
+    toggle.setAttribute(
+      'aria-label',
+      isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+    );
+    toggle.title = isCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
   });
-})();
+});
 </script>
 </body>
 </html>
