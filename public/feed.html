@@ -71,6 +71,10 @@
       grid-template-columns: 248px minmax(0, 1fr) 288px;
       gap: 20px;
       align-items: start;
+      transition: grid-template-columns .28s cubic-bezier(.4,0,.2,1);
+    }
+    .app-layout.left-sidebar-collapsed {
+      grid-template-columns: 40px minmax(0, 1fr) 288px;
     }
 
     /* ================================================================================================
@@ -80,6 +84,70 @@
       position: sticky; top: calc(var(--nav-h) + 16px);
       display: flex; flex-direction: column; gap: 4px;
       overflow: hidden;
+      /* independent scroll */
+      max-height: calc(100vh - var(--nav-h) - 32px);
+      overflow-y: auto;
+      /* hide scrollbar by default, show on hover */
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+      transition: scrollbar-color .2s;
+    }
+    .sidebar-left:hover {
+      scrollbar-color: rgba(0,0,0,.18) transparent;
+    }
+    .sidebar-left::-webkit-scrollbar {
+      width: 4px;
+    }
+    .sidebar-left::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .sidebar-left::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 4px;
+      transition: background .2s;
+    }
+    .sidebar-left:hover::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,.18);
+    }
+
+    /* ── COLLAPSE TOGGLE BUTTON ── */
+    .sidebar-toggle-btn {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      align-self: flex-end;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      background: var(--white);
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      transition: background .2s, color .2s, border-color .2s, transform .28s;
+      flex-shrink: 0;
+      margin-bottom: 4px;
+    }
+    .sidebar-toggle-btn:hover {
+      background: var(--accent-lt);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Collapsed state */
+    .app-layout.left-sidebar-collapsed .sidebar-left {
+      overflow: hidden;
+    }
+    .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-collapse-content {
+      display: none;
+    }
+    .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-toggle-btn {
+      transform: rotate(180deg);
+      align-self: center;
     }
 
     /* user mini-card */
@@ -1266,10 +1334,7 @@
       content: ''; flex: 1; height: 1px; background: var(--border);
     }
 
-    /* sidebar no longer scrollable - uses main page scroll */
-    .sidebar-left {
-      display: flex; flex-direction: column; gap: 4px;
-    }
+    /* sidebar uses its own scroll column */
 
     .sidebar-divider { height: 1px; background: var(--border); margin: 8px 0; }
 
@@ -2971,6 +3036,11 @@
 
   <!-- LEFT SIDEBAR -->
   <aside class="sidebar-left">
+    <!-- Collapse / Expand toggle -->
+    <button class="sidebar-toggle-btn" id="sidebarToggleBtn" type="button" title="Hide sidebar" aria-label="Toggle sidebar">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <div class="sidebar-collapse-content">
     <!-- SIDEBAR PROFILE CARD -->
     <div class="profile-card-variant active" data-variant="card-stack" id="feedCardVariantStack">
     <div class="sidebar-profile sp2-card">
@@ -3213,6 +3283,7 @@
       </div>
     </details>
 
+    </div><!-- /.sidebar-collapse-content -->
   </aside>
 
   <!-- MAIN FEED -->
@@ -7177,6 +7248,37 @@ function escapeHtml(text) {
   } else {
     initAgentHub();
   }
+})();
+</script>
+
+<script>
+// ── LEFT SIDEBAR COLLAPSE TOGGLE ──────────────────────────────────────
+(function () {
+  var STORAGE_KEY = 'spopeer_sidebar_collapsed';
+  var layout = document.querySelector('.app-layout');
+  var btn    = document.getElementById('sidebarToggleBtn');
+  if (!layout || !btn) return;
+
+  function applyState(collapsed) {
+    if (collapsed) {
+      layout.classList.add('left-sidebar-collapsed');
+      btn.title = 'Show sidebar';
+      btn.setAttribute('aria-label', 'Expand sidebar');
+    } else {
+      layout.classList.remove('left-sidebar-collapsed');
+      btn.title = 'Hide sidebar';
+      btn.setAttribute('aria-label', 'Collapse sidebar');
+    }
+  }
+
+  // Restore saved state
+  applyState(localStorage.getItem(STORAGE_KEY) === '1');
+
+  btn.addEventListener('click', function () {
+    var isCollapsed = layout.classList.contains('left-sidebar-collapsed');
+    applyState(!isCollapsed);
+    localStorage.setItem(STORAGE_KEY, isCollapsed ? '0' : '1');
+  });
 })();
 </script>
 </body>
