@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login - Spopeer</title>
+<link rel="stylesheet" href="/css/mobile-app.css">
+<script src="/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<div class="spm-app" style="padding:20px">
+
+<h2>Login</h2>
+
+<input id="email" placeholder="Email" style="width:100%;margin:10px 0;padding:10px">
+<input id="password" type="password" placeholder="Password" style="width:100%;margin:10px 0;padding:10px">
+
+<button id="loginBtn" class="spm-primary-action">Login</button>
+
+<br><br>
+
+<button id="googleBtn" class="spm-primary-action">Continue with Google</button>
+
+</div>
+
+<script>
+document.getElementById("loginBtn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    const res = await window.SpopeerAPI.login({ email, password });
+
+    const token = res.token || res.data?.token;
+    if (token) localStorage.setItem("token", token);
+
+    window.location.href = "/mobile.html";
+  } catch (e) {
+    alert("Login failed");
+  }
+};
+
+function handleGoogleCredential(response) {
+  fetch('/api/auth/google', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ credential: response.credential })
+  })
+  .then(res=>res.json())
+  .then(()=>{
+    window.location.href="/mobile.html";
+  });
+}
+
+google.accounts.id.initialize({
+  client_id: "YOUR_GOOGLE_CLIENT_ID",
+  callback: handleGoogleCredential
+});
+
+document.getElementById("googleBtn").onclick = () => {
+  google.accounts.id.prompt();
+};
+</script>
+
+</body>
+</html>

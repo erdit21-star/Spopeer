@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signup - Spopeer</title>
+<link rel="stylesheet" href="/css/mobile-app.css">
+<script src="/js/api.js"></script>
+</head>
+<body>
+
+<div class="spm-app" style="padding:20px">
+
+<h2>Sign Up</h2>
+
+<input id="firstName" placeholder="First Name">
+<input id="lastName" placeholder="Last Name">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button id="signupBtn" class="spm-primary-action">Create Account</button>
+
+</div>
+
+<script>
+document.getElementById("signupBtn").onclick = async () => {
+  try {
+    await window.SpopeerAPI.signup({
+      firstName: firstName.value,
+      lastName: lastName.value,
+      email: email.value,
+      password: password.value
+    });
+
+    window.location.href="/mobile.html";
+  } catch (e) {
+    alert("Signup failed");
+  }
+};
+</script>
+
+</body>
+</html>
