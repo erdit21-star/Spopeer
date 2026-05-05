@@ -125,6 +125,26 @@ async function postGoogleCredential(credential) {
   });
 }
 
+function completeAuthNavigation(path) {
+  var targetPath = path || '/mobile.html';
+  try {
+    if (window.opener && !window.opener.closed) {
+      window.opener.location.assign(targetPath);
+      window.close();
+      return;
+    }
+  } catch (_error) {}
+
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.location.assign(targetPath);
+      return;
+    }
+  } catch (_error) {}
+
+  window.location.assign(targetPath);
+}
+
 async function handleGoogleCredential(response) {
   const errBox = document.getElementById('loginError');
   errBox.style.display = 'none';
@@ -150,7 +170,7 @@ async function handleGoogleCredential(response) {
     }
 
     if (window.Auth) window.Auth.login(userData);
-    window.location.assign('/mobile.html');
+    completeAuthNavigation('/mobile.html');
   } catch (err) {
     errBox.textContent = (err && err.message) || 'Google sign-in failed. Please try again.';
     errBox.style.display = 'block';

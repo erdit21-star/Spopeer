@@ -109,6 +109,26 @@ async function postGoogleCredential(credential) {
   });
 }
 
+function completeAuthNavigation(path) {
+  var targetPath = path || '/mobile.html';
+  try {
+    if (window.opener && !window.opener.closed) {
+      window.opener.location.assign(targetPath);
+      window.close();
+      return;
+    }
+  } catch (_error) {}
+
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.location.assign(targetPath);
+      return;
+    }
+  } catch (_error) {}
+
+  window.location.assign(targetPath);
+}
+
 function setMessage(elId, msg) {
   var el = document.getElementById(elId);
   if (!el) return;
@@ -138,7 +158,7 @@ async function handleGoogleCredential(response) {
 
     if (!userData) throw new Error('Google sign-up finished, but profile could not be loaded.');
     if (window.Auth) window.Auth.login(userData);
-    window.location.assign('/mobile.html');
+    completeAuthNavigation('/mobile.html');
   } catch (err) {
     setMessage('signupError', (err && err.message) || 'Google sign-up failed. Please try email signup.');
   }
