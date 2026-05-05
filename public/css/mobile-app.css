@@ -34,6 +34,8 @@
 @keyframes spmLogoIn{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
 
 .spm-splash{position:relative;overflow:hidden}
+.spm-splash{transition:opacity .32s ease,transform .32s ease,filter .32s ease}
+.spm-splash.spm-splash-exit{opacity:0;transform:scale(1.015);filter:blur(2px)}
 .spm-splash-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800') center/cover no-repeat;opacity:.07;pointer-events:none}
 .spm-ring{position:absolute;width:190px;height:190px;border-radius:50%;border:2px solid rgba(255,255,255,.28);animation:spmPulseRing 2s ease-out infinite}
 .spm-ring::after{content:'';position:absolute;inset:-24px;border-radius:50%;border:1px solid rgba(255,255,255,.12);animation:spmPulseRing 2s .7s ease-out infinite}

@@ -3,48 +3,36 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>Blog - Spopeer Mobile</title>
+  <title>Spopeer | Blog</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-  <style>
-    *{box-sizing:border-box} body{margin:0;background:#eef3fb;font-family:'Plus Jakarta Sans',sans-serif;color:#0f172a}
-    .wrap{max-width:520px;min-height:100vh;margin:0 auto;background:#fff;display:flex;flex-direction:column}
-    .hero{padding:22px 18px;background:linear-gradient(145deg,#001f3f,#1a6bff);color:#fff}
-    .back{display:inline-flex;align-items:center;gap:8px;color:#dbeafe;text-decoration:none;font-weight:700;font-size:13px;margin-bottom:16px}
-    .hero h1{font-family:Syne,sans-serif;font-size:28px;line-height:1.15;margin:0 0 8px}
-    .hero p{margin:0;opacity:.9;font-weight:600;font-size:13px;line-height:1.5}
-    .card{margin:16px;border:1px solid #e2e8f0;border-radius:16px;background:#fff;padding:16px}
-    .card h2{margin:0 0 10px;font-family:Syne,sans-serif;font-size:20px}
-    .card ul{margin:0;padding-left:18px;display:grid;gap:8px}
-    .card li{font-size:14px;color:#334155;line-height:1.55}
-    .cta{display:flex;gap:10px;flex-direction:column;margin-top:14px}
-    .btn{height:48px;border-radius:999px;border:1px solid #dbeafe;display:flex;align-items:center;justify-content:center;text-decoration:none;font-weight:800;font-size:14px}
-    .btn.primary{background:#1a6bff;color:#fff;border-color:#1a6bff}
-    .btn.secondary{background:#fff;color:#1a6bff}
-  </style>
+  <link rel="stylesheet" href="/css/spopeer-pages.css">
 </head>
 <body>
-  <div class="wrap">
-    <section class="hero">
-      <a class="back" href="/mobile.html">Back to Mobile Home</a>
-      <h1>Spopeer Blog</h1>
-      <p>Highlights from the main Blog page.</p>
-    </section>
-    <section class="card">
-      <h2>What you can do</h2>
-      <ul>
-          <li>Read product updates and platform improvements.</li>
-          <li>Discover sports community stories and best practices.</li>
-          <li>Follow announcements, launches, and roadmap insights.</li>
-          <li>Stay current with Spopeer developments.</li>
-      </ul>
-      <div class="cta">
-        <a class="btn primary" href="/pages/company/blog.html">Open Full Page</a>
-        <a class="btn secondary" href="/mobile.html">Return to Spopeer Mobile</a>
-      </div>
-    </section>
+  <div class="page-wrap">
+    <header class="hero">
+      <a class="back-link" href="/mobile.html">Back to Home</a>
+      <span class="pill">Spopeer</span>
+      <h1 class="page-title">Blog</h1>
+      <p class="page-sub">Highlights and updates from the Spopeer team.</p>
+    </header>
+    <main class="content">
+      <section class="card">
+        <h2>Overview</h2>
+        <ul class="list">
+            <li>Read platform announcements and product updates.</li>
+            <li>Explore sports-community stories and insights.</li>
+            <li>Track improvements and feature launches.</li>
+            <li>Stay informed about roadmap direction.</li>
+        </ul>
+      </section>
+      <section class="card stack">
+        <a class="btn btn-primary" href="/pages/company/blog.html">Open Full Page</a>
+        <a class="btn btn-secondary" href="/mobile.html">Return to Home</a>
+      </section>
+    </main>
   </div>
 </body>
 </html>

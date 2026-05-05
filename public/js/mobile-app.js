@@ -243,17 +243,25 @@
   async function init() {
     bindNav();
     window.setTimeout(async function () {
+      var splash = $('#spmSplash');
+      function revealTarget(targetSelector) {
+        if (!splash) return;
+        splash.classList.add('spm-splash-exit');
+        window.setTimeout(function () {
+          splash.classList.add('spm-hidden');
+          var target = $(targetSelector);
+          if (target) target.classList.remove('spm-hidden');
+        }, 320);
+      }
       try {
         const result = await window.SpopeerAPI.me();
         app.user = unwrapUser(result);
-        $('#spmSplash').classList.add('spm-hidden');
-        $('#spmShell').classList.remove('spm-hidden');
+        revealTarget('#spmShell');
         render();
       } catch (_error) {
-        $('#spmSplash').classList.add('spm-hidden');
-        $('#spmAuth').classList.remove('spm-hidden');
+        revealTarget('#spmAuth');
       }
-    }, 2900);
+    }, 1650);
   }
 
   document.addEventListener('DOMContentLoaded', init);
