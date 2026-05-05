@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Spopeer Mobile</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/mobile-app.css">
+  <script src="/js/auth.js"></script>
+  <script src="/js/sanitize.js"></script>
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/api.js"></script>
+</head>
+<body>
+  <div id="spmApp" class="spm-app">
+    <section id="spmSplash" class="spm-splash">
+      <div class="spm-ring"></div>
+      <div class="spm-brand-mark"><i class="fa-solid fa-bolt"></i></div>
+      <h1>Spopeer</h1>
+      <p>Your global sports network</p>
+      <div class="spm-dots"><i></i><i></i><i></i></div>
+    </section>
+
+    <section id="spmAuth" class="spm-auth spm-hidden">
+      <div class="spm-auth-hero">
+        <div class="spm-brand-mark small"><i class="fa-solid fa-bolt"></i></div>
+        <h1>Spopeer</h1>
+        <p>Connect with athletes, coaches, clubs and the sports world.</p>
+      </div>
+      <div class="spm-auth-panel">
+        <a class="spm-btn primary" href="/pages/auth/login.html">Sign In</a>
+        <a class="spm-btn secondary" href="/pages/auth/signup.html">Sign Up</a>
+      </div>
+    </section>
+
+    <main id="spmShell" class="spm-shell spm-hidden">
+      <header class="spm-topbar">
+        <button class="spm-icon-btn" data-back><i class="fa-solid fa-chevron-left"></i></button>
+        <div><strong id="spmTitle">Feed</strong><span id="spmSubtitle">Sports network</span></div>
+        <button class="spm-icon-btn" data-route="notifications"><i class="fa-regular fa-bell"></i></button>
+      </header>
+      <section id="spmScreen" class="spm-screen"></section>
+      <nav class="spm-tabbar">
+        <button class="active" data-route="feed"><i class="fa-solid fa-house"></i><span>Home</span></button>
+        <button data-route="search"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></button>
+        <button class="create" data-route="create"><i class="fa-solid fa-plus"></i><span>Post</span></button>
+        <button data-route="messages"><i class="fa-regular fa-comment-dots"></i><span>Chat</span></button>
+        <button data-route="profile"><i class="fa-regular fa-user"></i><span>Profile</span></button>
+      </nav>
+    </main>
+  </div>
+  <script src="/js/mobile-app.js"></script>
+</body>
+</html>
