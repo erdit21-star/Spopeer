@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spopeer Â· Media Vault</title>
+  <title>Spopeer · Media Vault</title>
   <script src="../../js/auth.js"></script>
   <script src="../../js/api.js"></script>
   <script>window.Auth.requireAuth();</script>
@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="/css/shared-tokens.css" />
   <link rel="stylesheet" href="/css/shared-nav.css" />
   <style>
-    /* â”€â”€ layout â”€â”€ */
+    /* ── layout ── */
     .app-layout {
       max-width: 1280px;
       margin: 0 auto;
@@ -46,7 +46,7 @@
     .nav-item:hover { background: var(--surface); color: var(--ink); text-decoration: none; }
     .nav-item.active { background: var(--accent-lt); color: var(--accent); font-weight: 700; }
 
-    /* â”€â”€ main â”€â”€ */
+    /* ── main ── */
     .vault-main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 
     .page-head {
@@ -94,7 +94,7 @@
     .btn-danger { background: #fef2f2; color: #dc2626; border: 1.5px solid #fca5a5; }
     .btn-danger:hover { background: #dc2626; color: #fff; }
 
-    /* â”€â”€ upload zone â”€â”€ */
+    /* ── upload zone ── */
     .upload-zone {
       background: var(--white);
       border: 2px dashed var(--border);
@@ -113,7 +113,7 @@
     .upload-zone small { color: var(--muted); font-size: 12px; }
     #vaultFileInput { display: none; }
 
-    /* â”€â”€ progress bar â”€â”€ */
+    /* ── progress bar ── */
     .upload-progress-bar {
       display: none;
       height: 4px;
@@ -130,7 +130,7 @@
       transition: width .3s;
     }
 
-    /* â”€â”€ tabs â”€â”€ */
+    /* ── tabs ── */
     .vault-tabs {
       display: flex;
       gap: 8px;
@@ -167,7 +167,7 @@
       color: var(--ink-2);
     }
 
-    /* â”€â”€ storage bar â”€â”€ */
+    /* ── storage bar ── */
     .storage-bar-card {
       background: var(--white);
       border: 1.5px solid var(--border);
@@ -190,7 +190,7 @@
     .storage-bar-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .5s; }
     .storage-bar-used { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; }
 
-    /* â”€â”€ media grid â”€â”€ */
+    /* ── media grid ── */
     .media-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -303,7 +303,7 @@
     }
     .media-item.file-item .file-size { font-size: 10px; color: var(--muted); }
 
-    /* â”€â”€ empty state â”€â”€ */
+    /* ── empty state ── */
     .empty-state {
       background: var(--white);
       border: 2px dashed var(--border);
@@ -316,10 +316,10 @@
     .empty-state h3 { margin: 0 0 8px; color: var(--ink); font-size: 18px; }
     .empty-state p { margin: 0 0 18px; font-size: 14px; }
 
-    /* â”€â”€ load more â”€â”€ */
+    /* ── load more ── */
     .load-more-row { text-align: center; padding: 8px 0; }
 
-    /* â”€â”€ lightbox â”€â”€ */
+    /* ── lightbox ── */
     .lightbox-overlay {
       position: fixed;
       inset: 0;
@@ -390,7 +390,7 @@
     #lightboxPrev { left: 16px; }
     #lightboxNext { right: 16px; }
 
-    /* â”€â”€ caption edit modal â”€â”€ */
+    /* ── caption edit modal ── */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -425,7 +425,7 @@
     .modal-box textarea:focus { border-color: var(--accent); }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
-    /* â”€â”€ toast â”€â”€ */
+    /* ── toast ── */
     .vault-toast {
       position: fixed;
       bottom: 24px;
@@ -467,7 +467,7 @@
       <div class="nav-right">
         <div class="user-chip" id="userChip" data-user-chip>
           <span class="chip-avatar" data-user-chip-avatar>?</span>
-          <span class="chip-name" data-user-chip-name>Loadingâ€¦</span>
+          <span class="chip-name" data-user-chip-name>Loading…</span>
           <i class="fa-solid fa-chevron-down chip-caret"></i>
         </div>
         <div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">
@@ -529,7 +529,7 @@
 
   <main class="app-layout">
     <aside class="sidebar-left">
-      <a href="../../feed.html" class="nav-item"><i class="fa-solid fa-house"></i> Feed</a>
+      <a href="/app.html#feed" class="nav-item"><i class="fa-solid fa-house"></i> Feed</a>
       <a href="index.html" class="nav-item"><i class="fa-solid fa-bookmark"></i> Library</a>
       <a href="media.html" class="nav-item active"><i class="fa-solid fa-photo-film"></i> Media Vault</a>
       <a href="../events/event.html" class="nav-item"><i class="fa-regular fa-calendar"></i> Events</a>
@@ -563,7 +563,7 @@
         <input type="file" id="vaultFileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
         <i class="fa-solid fa-cloud-arrow-up"></i>
         <p>Drag files here or click to browse</p>
-        <small>Photos, videos, PDFs and documents â€” max 100 MB per file</small>
+        <small>Photos, videos, PDFs and documents — max 100 MB per file</small>
       </div>
       <div class="upload-progress-bar" id="uploadProgressBar">
         <div class="upload-progress-fill" id="uploadProgressFill"></div>
@@ -613,7 +613,7 @@
   <div class="modal-overlay" id="captionModal">
     <div class="modal-box">
       <h3>Edit caption</h3>
-      <textarea id="captionInput" placeholder="Add a captionâ€¦" rows="3"></textarea>
+      <textarea id="captionInput" placeholder="Add a caption…" rows="3"></textarea>
       <div class="modal-actions">
         <button class="btn btn-secondary btn-sm" id="captionCancelBtn">Cancel</button>
         <button class="btn btn-primary btn-sm" id="captionSaveBtn">Save</button>
@@ -638,7 +638,7 @@
   (function () {
     'use strict';
 
-    // â”€â”€ state â”€â”€
+    // ── state ──
     let _items = [];
     let _activeTab = 'all';
     let _page = 1;
@@ -646,7 +646,7 @@
     let _lightboxIndex = 0;
     let _editingId = null;
 
-    // â”€â”€ DOM refs â”€â”€
+    // ── DOM refs ──
     const grid = document.getElementById('mediaGrid');
     const loadMoreRow = document.getElementById('loadMoreRow');
     const loadMoreBtn = document.getElementById('loadMoreBtn');
@@ -674,7 +674,7 @@
     const captionSaveBtn = document.getElementById('captionSaveBtn');
     const captionCancelBtn = document.getElementById('captionCancelBtn');
 
-    // â”€â”€ toast helper â”€â”€
+    // ── toast helper ──
     let _toastTimer;
     function showToast(msg, ms = 3000) {
       toast.textContent = msg;
@@ -683,7 +683,7 @@
       _toastTimer = setTimeout(() => toast.classList.remove('show'), ms);
     }
 
-    // â”€â”€ format helpers â”€â”€
+    // ── format helpers ──
     function fmtBytes(bytes) {
       if (bytes < 1024) return bytes + ' B';
       if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
@@ -704,7 +704,7 @@
       return 'fa-regular fa-file';
     }
 
-    // â”€â”€ tab counts â”€â”€
+    // ── tab counts ──
     function updateTabCounts(items) {
       document.getElementById('tabCountAll').textContent = items.length;
       document.getElementById('tabCountPhoto').textContent = items.filter(i => mediaType(i.mimeType) === 'photo').length;
@@ -712,7 +712,7 @@
       document.getElementById('tabCountFile').textContent = items.filter(i => mediaType(i.mimeType) === 'file').length;
     }
 
-    // â”€â”€ storage bar â”€â”€
+    // ── storage bar ──
     function updateStorageBar(items) {
       const total = items.reduce((s, i) => s + (i.size || 0), 0);
       const limit = 5 * 1024 * 1024 * 1024; // 5 GB display cap
@@ -721,7 +721,7 @@
       storageUsed.textContent = fmtBytes(total) + ' used';
     }
 
-    // â”€â”€ render items â”€â”€
+    // ── render items ──
     function renderItems(items, append = false) {
       if (!append) grid.innerHTML = '';
 
@@ -800,7 +800,7 @@
       });
     }
 
-    // â”€â”€ fetch â”€â”€
+    // ── fetch ──
     async function loadMedia(tab = 'all', page = 1, append = false) {
       try {
         const res = await fetch(`/api/media/my?type=${tab}&page=${page}&limit=48`, { credentials: 'include' });
@@ -823,7 +823,7 @@
       }
     }
 
-    // â”€â”€ tabs â”€â”€
+    // ── tabs ──
     document.querySelectorAll('[data-vault-tab]').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('[data-vault-tab]').forEach(b => b.classList.remove('active'));
@@ -834,10 +834,10 @@
       });
     });
 
-    // â”€â”€ load more â”€â”€
+    // ── load more ──
     loadMoreBtn.addEventListener('click', () => loadMedia(_activeTab, _page + 1, true));
 
-    // â”€â”€ upload â”€â”€
+    // ── upload ──
     uploadBtn.addEventListener('click', () => {
       const showing = uploadZone.style.display !== 'none';
       uploadZone.style.display = showing ? 'none' : 'block';
@@ -864,7 +864,7 @@
       let done = 0;
       for (const file of files) {
         if (file.size > 100 * 1024 * 1024) {
-          showToast(`"${file.name}" exceeds 100 MB â€” skipped.`);
+          showToast(`"${file.name}" exceeds 100 MB — skipped.`);
           done++;
           progressFill.style.width = Math.round((done / files.length) * 100) + '%';
           continue;
@@ -889,7 +889,7 @@
       }, 600);
     }
 
-    // â”€â”€ delete â”€â”€
+    // ── delete ──
     async function confirmDelete(id) {
       if (!confirm('Delete this file permanently?')) return;
       try {
@@ -906,7 +906,7 @@
       }
     }
 
-    // â”€â”€ caption modal â”€â”€
+    // ── caption modal ──
     function openCaptionModal(item) {
       _editingId = item.id;
       captionInput.value = item.caption || '';
@@ -938,7 +938,7 @@
       }
     });
 
-    // â”€â”€ lightbox â”€â”€
+    // ── lightbox ──
     function lightboxItems() {
       return _items.filter(i => mediaType(i.mimeType) !== 'file');
     }
@@ -988,7 +988,7 @@
       if (e.key === 'ArrowRight') showLightboxAt(_lightboxIndex + 1);
     });
 
-    // â”€â”€ init â”€â”€
+    // ── init ──
     loadMedia('all', 1);
   })();
   </script>
