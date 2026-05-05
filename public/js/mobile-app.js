@@ -193,8 +193,13 @@
         <button id="spmSignOutBtn" style="width:100%;margin-top:20px;height:50px;border-radius:999px;background:#fff;border:1.5px solid #ef4444;color:#ef4444;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box">
           <i class="fa-solid fa-right-from-bracket"></i> Sign Out
         </button>`;
-      document.getElementById('spmSignOutBtn').addEventListener('click', function () {
-        ['token','user','session','sb-auth-token','supabase.auth.token'].forEach(function(k){ localStorage.removeItem(k); });
+      document.getElementById('spmSignOutBtn').addEventListener('click', async function () {
+        if (window.Auth && typeof window.Auth.logout === 'function') {
+          await window.Auth.logout();
+        } else {
+          ['token','user','session','sb-auth-token','supabase.auth.token','spopeer_loggedIn','spopeer_user','spopeer_token'].forEach(function(k){ localStorage.removeItem(k); });
+          sessionStorage.clear();
+        }
         window.location.href = '/mobile.html';
       });
     }
@@ -222,8 +227,13 @@
       });
       var drawerSignOut = document.getElementById('spmDrawerSignOut');
       if (drawerSignOut) {
-        drawerSignOut.addEventListener('click', function () {
-          ['token','user','session','sb-auth-token','supabase.auth.token'].forEach(function(k){ localStorage.removeItem(k); });
+        drawerSignOut.addEventListener('click', async function () {
+          if (window.Auth && typeof window.Auth.logout === 'function') {
+            await window.Auth.logout();
+          } else {
+            ['token','user','session','sb-auth-token','supabase.auth.token','spopeer_loggedIn','spopeer_user','spopeer_token'].forEach(function(k){ localStorage.removeItem(k); });
+            sessionStorage.clear();
+          }
           window.location.href = '/mobile.html';
         });
       }
