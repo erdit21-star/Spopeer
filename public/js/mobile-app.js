@@ -735,6 +735,18 @@
 
   function bindNav() {
     document.querySelectorAll('[data-route]').forEach(function (button) { button.addEventListener('click', function () { app.route = button.dataset.route; render(); }); });
+    var articlesBtn = document.getElementById('spmArticlesBtn');
+    if (articlesBtn) {
+      articlesBtn.addEventListener('click', function () {
+        window.location.href = '/articles.html';
+      });
+    }
+    var marketplaceBtn = document.getElementById('spmMarketplaceBtn');
+    if (marketplaceBtn) {
+      marketplaceBtn.addEventListener('click', function () {
+        window.location.href = '/pages/marketplace/marketplace.html';
+      });
+    }
     const back = $('[data-back]');
     if (back) back.addEventListener('click', function () { app.route = 'feed'; render(); });
     const menuBtn = $('#spmMenuBtn');
