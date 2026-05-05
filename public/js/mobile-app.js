@@ -132,8 +132,25 @@
     $('#spmSubtitle').textContent = subtitle || 'Sports network';
   }
 
+  function mediaUrlForPost(post) {
+    return post.video || post.videoUrl || post.mediaUrl || post.image || post.imageUrl || '';
+  }
+
+  function isVideoMediaUrl(url) {
+    return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(String(url || ''));
+  }
+
+  function postMediaType(post) {
+    var type = String(post.type || '').toLowerCase();
+    if (type === 'video') return 'video';
+    var media = mediaUrlForPost(post);
+    if (!media) return null;
+    return isVideoMediaUrl(media) ? 'video' : 'image';
+  }
+
   function postImageUrl(post) {
-    return post.image || post.imageUrl || post.mediaUrl || '';
+    var type = postMediaType(post);
+    return type === 'image' ? mediaUrlForPost(post) : '';
   }
 
   function hasPostImage(post) {
@@ -142,6 +159,10 @@
 
   function imageForPost(post) {
     return postImageUrl(post);
+  }
+
+  function postVideoUrl(post) {
+    return postMediaType(post) === 'video' ? mediaUrlForPost(post) : '';
   }
 
   function authorName(post) {
@@ -187,9 +208,13 @@
   function renderFeedPostCard(post) {
     var card = document.createElement('article');
     card.className = 'spm-feed-card';
-    var imageMarkup = hasPostImage(post)
-      ? '<div class="spm-feed-image" style="background-image:url(\'' + html(imageForPost(post)) + '\')"></div>'
-      : '';
+    var mediaType = postMediaType(post);
+    var mediaMarkup = '';
+    if (mediaType === 'video') {
+      mediaMarkup = '<video class="spm-feed-video" controls playsinline preload="metadata" src="' + html(postVideoUrl(post)) + '"></video>';
+    } else if (hasPostImage(post)) {
+      mediaMarkup = '<div class="spm-feed-image" style="background-image:url(\'' + html(imageForPost(post)) + '\')"></div>';
+    }
     card.innerHTML = `
       <div class="spm-feed-head">
         <div class="spm-mini-avatar"></div>
@@ -198,7 +223,7 @@
           <small>${html(formatTime(post.createdAt || post.created_at))}</small>
         </div>
       </div>
-      ${imageMarkup}
+      ${mediaMarkup}
       <p class="spm-feed-copy">${html(post.content || 'Shared a sports update.')}</p>
       <div class="spm-feed-meta">
         <button class="spm-feed-chip" type="button" data-like="${html(post.id)}">❤️ ${Number(post.likesCount || 0)}</button>
@@ -260,6 +285,29 @@
     if (item.price === 0) return 'Free';
     if (item.price) return '$' + Number(item.price).toLocaleString();
     return item.status || 'Available';
+  }
+
+  function renderStoriesRail(posts) {
+    var mediaPosts = posts.filter(function (post) { return Boolean(postMediaType(post)); });
+    if (!mediaPosts.length) return '';
+
+    var seen = {};
+    var items = mediaPosts.filter(function (post) {
+      var author = post.author || post.user || {};
+      var key = String(author.id || author.email || authorName(post));
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    }).slice(0, 12);
+
+    if (!items.length) return '';
+
+    var storiesHtml = items.map(function (post) {
+      var author = authorName(post);
+      return '<button class="spm-story-item" type="button" data-story-post="' + html(post.id) + '"><span class="spm-story-ring"><span class="spm-story-avatar">' + html(initialForName(author)) + '</span></span><span class="spm-story-name">' + html(author.split(' ')[0] || author) + '</span></button>';
+    }).join('');
+
+    return '<section class="spm-stories"><div class="spm-stories-head"><strong>Stories</strong><small>Latest media updates</small></div><div class="spm-stories-row">' + storiesHtml + '</div></section>';
   }
 
   function setBadge(id, count) {
@@ -327,18 +375,17 @@
         var topEvent = events[0] || null;
         var topOpportunity = opportunities[0] || null;
 
-        container.innerHTML = `
-          <section class="spm-ai-card">
-            <div class="spm-ai-head">
-              <strong>AI Sports Agent</strong>
-            </div>
-            <p>Ask me to find athletes, write an article, manage messages, or surface opportunities in your network.</p>
-            <div class="spm-chip-row">
-              <span class="spm-chip">Secretary</span>
-              <span class="spm-chip">Manager</span>
-              <span class="spm-chip">Journalist</span>
-            </div>
-          </section>`;
+        container.innerHTML = renderStoriesRail(posts);
+        container.querySelectorAll('[data-story-post]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            var postId = String(button.dataset.storyPost || '');
+            var selected = posts.find(function (post) { return String(post.id) === postId; });
+            if (!selected) return;
+            app.selectedPost = selected;
+            app.route = 'post';
+            render();
+          });
+        });
 
         if (topEvent) {
           var eventCard = document.createElement('article');
@@ -422,8 +469,14 @@
       $('#spmScreen').classList.remove('spm-snap-feed');
       const post = app.selectedPost;
       if (!post) { app.route = 'feed'; return render(); }
+      var mediaType = postMediaType(post);
+      var postMedia = mediaType === 'video'
+        ? '<video class="spm-post-video" controls playsinline preload="metadata" src="' + html(postVideoUrl(post)) + '"></video>'
+        : (mediaType === 'image'
+          ? '<div class="spm-profile-hero"><div style="background-image:url(\'' + html(imageForPost(post)) + '\')"></div></div>'
+          : '');
       $('#spmScreen').innerHTML = `
-        <div class="spm-profile-hero"><div style="background-image:url('${html(imageForPost(post))}')"></div></div>
+        ${postMedia}
         <div class="spm-card"><strong>${html(authorName(post))}</strong><p>${html(post.content)}</p></div>
         <div id="spmComments" class="spm-list"><div class="spm-empty">Loading comments...</div></div>
         <div class="spm-chat-input"><input id="spmCommentText" placeholder="Comment..."><button id="spmSendComment">Send</button></div>`;
@@ -735,20 +788,6 @@
 
   function bindNav() {
     document.querySelectorAll('[data-route]').forEach(function (button) { button.addEventListener('click', function () { app.route = button.dataset.route; render(); }); });
-    var articlesBtn = document.getElementById('spmArticlesBtn');
-    if (articlesBtn) {
-      articlesBtn.addEventListener('click', function () {
-        window.location.href = '/articles.html';
-      });
-    }
-    var marketplaceBtn = document.getElementById('spmMarketplaceBtn');
-    if (marketplaceBtn) {
-      marketplaceBtn.addEventListener('click', function () {
-        window.location.href = '/pages/marketplace/marketplace.html';
-      });
-    }
-    const back = $('[data-back]');
-    if (back) back.addEventListener('click', function () { app.route = 'feed'; render(); });
     const menuBtn = $('#spmMenuBtn');
     const drawer = $('#spmDrawer');
     const drawerOverlay = $('#spmDrawerOverlay');
