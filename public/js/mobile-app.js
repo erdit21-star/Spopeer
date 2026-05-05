@@ -18,8 +18,55 @@
     return [];
   }
 
+  function unwrapEvents(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.events)) return result.events;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.events)) return result.data.events;
+    if (result.data && Array.isArray(result.data.rows)) return result.data.rows;
+    if (result.data && Array.isArray(result.data.items)) return result.data.items;
+    return [];
+  }
+
+  function unwrapSponsorships(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.sponsorships)) return result.sponsorships;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.sponsorships)) return result.data.sponsorships;
+    if (result.data && Array.isArray(result.data.rows)) return result.data.rows;
+    if (result.data && Array.isArray(result.data.items)) return result.data.items;
+    return [];
+  }
+
   function unwrapUser(result) {
     return (result && result.data && result.data.user) || (result && result.user) || (result && result.data) || result || null;
+  }
+
+  function formatTime(value) {
+    var date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) return 'Just now';
+    var diffMs = Date.now() - date.getTime();
+    var diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'Just now';
+    if (diffMin < 60) return diffMin + 'm ago';
+    var diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return diffHr + 'h ago';
+    var diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 7) return diffDay + 'd ago';
+    return date.toLocaleDateString();
+  }
+
+  function applyStoredTheme() {
+    var dark = localStorage.getItem('spopeerDarkMode') === 'enabled';
+    document.body.classList.toggle('spm-dark-mode', dark);
+  }
+
+  function toggleTheme() {
+    var enabled = !document.body.classList.contains('spm-dark-mode');
+    document.body.classList.toggle('spm-dark-mode', enabled);
+    localStorage.setItem('spopeerDarkMode', enabled ? 'enabled' : 'disabled');
   }
 
   function setTitle(title, subtitle) {
@@ -71,21 +118,142 @@
     return card;
   }
 
+  function renderFeedPostCard(post) {
+    var card = document.createElement('article');
+    card.className = 'spm-feed-card';
+    card.innerHTML = `
+      <div class="spm-feed-head">
+        <div class="spm-mini-avatar"></div>
+        <div class="spm-feed-title-wrap">
+          <strong>${html(authorName(post))}</strong>
+          <small>${html(formatTime(post.createdAt || post.created_at))}</small>
+        </div>
+      </div>
+      <div class="spm-feed-image" style="background-image:url('${html(imageForPost(post))}')"></div>
+      <p class="spm-feed-copy">${html(post.content || 'Shared a sports update.')}</p>
+      <div class="spm-feed-meta">
+        <button class="spm-feed-chip" type="button" data-like="${html(post.id)}">❤️ ${Number(post.likesCount || 0)}</button>
+        <button class="spm-feed-chip" type="button" data-comments="${html(post.id)}">💬 ${Number(post.commentsCount || 0)}</button>
+        <span class="spm-feed-chip static">${html(post.sport || 'Sport')}</span>
+      </div>`;
+
+    var likeButton = card.querySelector('[data-like]');
+    var commentButton = card.querySelector('[data-comments]');
+
+    likeButton.addEventListener('click', async function () {
+      try {
+        await window.SpopeerAPI.toggleLike(post.id);
+        likeButton.textContent = '❤️ ' + (Number(post.likesCount || 0) + 1);
+      } catch (error) {
+        alert(error.message || 'Could not like post');
+      }
+    });
+
+    commentButton.addEventListener('click', function () {
+      app.selectedPost = post;
+      app.route = 'post';
+      render();
+    });
+
+    return card;
+  }
+
+  function eventTitle(event) {
+    return event.title || event.name || event.eventName || 'Upcoming sports event';
+  }
+
+  function eventDate(event) {
+    var value = event.startDate || event.startsAt || event.date || event.createdAt;
+    if (!value) return 'Date to be announced';
+    var parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return String(value);
+    return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function sponsorshipTitle(item) {
+    return item.title || item.company || item.organization || item.role || 'Recommended opportunity';
+  }
+
   const screens = {
     feed: async function () {
-      setTitle('For You', 'Swipe sports updates');
+      setTitle('Feed', 'AI Agent Center');
       const container = $('#spmScreen');
-      container.innerHTML = '<div class="spm-empty">Loading feed...</div>';
+      container.classList.remove('spm-snap-feed');
+      container.innerHTML = '<div class="spm-empty">Loading your feed...</div>';
       try {
-        const result = await window.SpopeerAPI.listPosts({ limit: 20, page: 1, _: Date.now() });
-        const posts = unwrapPosts(result);
-        container.innerHTML = '';
-        container.classList.add('spm-snap-feed');
+        var responses = await Promise.allSettled([
+          window.SpopeerAPI.listPosts({ limit: 12, page: 1, _: Date.now() }),
+          window.SpopeerAPI.listEvents(),
+          window.SpopeerAPI.listSponsorships({ limit: 5 })
+        ]);
+
+        var posts = responses[0].status === 'fulfilled' ? unwrapPosts(responses[0].value) : [];
+        var events = responses[1].status === 'fulfilled' ? unwrapEvents(responses[1].value) : [];
+        var opportunities = responses[2].status === 'fulfilled' ? unwrapSponsorships(responses[2].value) : [];
+
+        var topEvent = events[0] || null;
+        var topOpportunity = opportunities[0] || null;
+
+        container.innerHTML = `
+          <section class="spm-ai-card">
+            <div class="spm-ai-head">
+              <strong>AI Sports Agent</strong>
+              <button id="spmThemeToggle" class="spm-theme-toggle" type="button" aria-label="Toggle dark mode">🌓</button>
+            </div>
+            <p>Ask me to find athletes, write an article, manage messages, or surface opportunities in your network.</p>
+            <div class="spm-chip-row">
+              <span class="spm-chip">Secretary</span>
+              <span class="spm-chip">Manager</span>
+              <span class="spm-chip">Journalist</span>
+            </div>
+          </section>`;
+
+        var themeButton = document.getElementById('spmThemeToggle');
+        if (themeButton) themeButton.addEventListener('click', toggleTheme);
+
+        if (topEvent) {
+          var eventCard = document.createElement('article');
+          eventCard.className = 'spm-feed-card';
+          eventCard.innerHTML = `
+            <div class="spm-feed-head">
+              <div class="spm-mini-avatar"></div>
+              <div class="spm-feed-title-wrap">
+                <strong>${html(eventTitle(topEvent))}</strong>
+                <small>${html(eventDate(topEvent))}</small>
+              </div>
+            </div>
+            <p class="spm-feed-copy">${html(topEvent.description || topEvent.details || 'New event available in your sports network.')}</p>
+            <div class="spm-feed-meta"><span class="spm-feed-chip static">Event</span><span class="spm-feed-chip static">${html(topEvent.location || topEvent.venue || 'Online / TBD')}</span></div>`;
+          container.appendChild(eventCard);
+        }
+
+        if (topOpportunity) {
+          var opportunityCard = document.createElement('article');
+          opportunityCard.className = 'spm-feed-card';
+          opportunityCard.innerHTML = `
+            <div class="spm-feed-head">
+              <div class="spm-mini-avatar"></div>
+              <div class="spm-feed-title-wrap">
+                <strong>${html(sponsorshipTitle(topOpportunity))}</strong>
+                <small>Opportunity</small>
+              </div>
+            </div>
+            <p class="spm-feed-copy">${html(topOpportunity.description || topOpportunity.summary || 'A new sponsorship or collaboration option is available for your profile.')}</p>
+            <div class="spm-feed-meta"><span class="spm-feed-chip static">${html(topOpportunity.sport || 'Sports')}</span><span class="spm-feed-chip static">${html(topOpportunity.budget || topOpportunity.type || 'Open')}</span></div>`;
+          container.appendChild(opportunityCard);
+        }
+
         if (!posts.length) {
-          container.innerHTML = '<div class="spm-empty">No posts yet. Create the first post.</div>';
+          var empty = document.createElement('div');
+          empty.className = 'spm-empty';
+          empty.textContent = 'No posts yet. Create the first post.';
+          container.appendChild(empty);
           return;
         }
-        posts.forEach(function (post) { container.appendChild(renderPostCard(post)); });
+
+        posts.slice(0, 8).forEach(function (post) {
+          container.appendChild(renderFeedPostCard(post));
+        });
       } catch (error) {
         container.innerHTML = '<div class="spm-empty">Could not load feed.</div>';
         console.error('[mobile] feed error', error);
@@ -241,6 +409,7 @@
   }
 
   async function init() {
+    applyStoredTheme();
     bindNav();
     window.setTimeout(async function () {
       var splash = $('#spmSplash');
