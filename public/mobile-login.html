@@ -46,6 +46,8 @@
   .ml-btn-google:hover{border-color:#4285F4;box-shadow:0 2px 12px rgba(66,133,244,.15)}
   .ml-btn-google:active{transform:scale(.98)}
   .ml-btn-google svg{flex-shrink:0}
+  .ml-google-host{min-height:52px;display:flex;justify-content:center;align-items:center}
+  .ml-google-host > div{width:100%!important;display:flex;justify-content:center}
 
   .ml-footer{margin-top:24px;text-align:center;font-size:13px;font-weight:600;color:#64748b}
   .ml-footer a{color:#1a6bff;font-weight:800;text-decoration:none}
@@ -81,15 +83,7 @@
       data-callback="handleGoogleCredential"
       data-auto_prompt="false">
     </div>
-    <button type="button" id="loginGoogleBtn" class="ml-btn-google">
-      <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-        <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
-        <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/>
-        <path fill="#FBBC05" d="M10.6 28.1A14.7 14.7 0 0 1 9.5 24c0-1.4.2-2.8.6-4.1l-6.9-5.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l8-6.6z"/>
-        <path fill="#34A853" d="M24 47c5.4 0 9.9-1.8 13.2-4.8l-7.5-5.8c-1.8 1.2-4.2 2-5.7 2-6.4 0-11.8-4.3-13.7-10.1l-8 6.6C7 41.3 14.8 47 24 47z"/>
-      </svg>
-      Continue with Google
-    </button>
+    <div id="loginGoogleButton" class="ml-google-host" aria-label="Continue with Google"></div>
 
     <div class="ml-divider">or sign in with email</div>
 
@@ -165,8 +159,8 @@ async function handleGoogleCredential(response) {
 
 function initGoogleLoginButton() {
   var errBox = document.getElementById('loginError');
-  var btn = document.getElementById('loginGoogleBtn');
-  if (!btn) return;
+  var host = document.getElementById('loginGoogleButton');
+  if (!host) return;
 
   function wire() {
     if (!window.google || !window.google.accounts || !window.google.accounts.id) return false;
@@ -174,14 +168,13 @@ function initGoogleLoginButton() {
       client_id: '527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com',
       callback: handleGoogleCredential
     });
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      errBox.style.display = 'none';
-      try {
-        window.google.accounts.id.prompt();
-      } catch (_error) {
-        window.location.href = '/pages/auth/login.html';
-      }
+    host.innerHTML = '';
+    window.google.accounts.id.renderButton(host, {
+      theme: 'outline',
+      size: 'large',
+      text: 'continue_with',
+      shape: 'pill',
+      width: Math.max(260, Math.min(440, host.clientWidth || 320))
     });
     return true;
   }

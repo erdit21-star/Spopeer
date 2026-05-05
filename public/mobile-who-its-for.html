@@ -9,27 +9,50 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/spopeer-pages.css">
+  <style>
+    .role-grid{display:grid;gap:12px}
+    .role-card{border:1px solid #dbeafe;background:linear-gradient(180deg,#ffffff,#f8fbff);border-radius:16px;padding:14px 14px 13px}
+    .role-card h3{margin:0 0 7px;font-family:Syne,sans-serif;font-size:18px;color:#0f172a}
+    .role-card p{margin:0;color:#475569;font-size:13px;line-height:1.6;font-weight:600}
+    .role-badge{display:inline-flex;margin-bottom:9px;padding:5px 10px;border-radius:999px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    .who-note{font-size:12px;color:#64748b;font-weight:600;line-height:1.6;margin-top:2px}
+  </style>
 </head>
 <body>
   <div class="page-wrap">
     <header class="hero">
-      <a class="back-link" href="/mobile.html">Back to Home</a>
-      <span class="pill">Spopeer</span>
+      <span class="pill">Community</span>
       <h1 class="page-title">Who It's For</h1>
-      <p class="page-sub">Designed from the core Spopeer experience for all roles in sports.</p>
+      <p class="page-sub">Built for every role shaping the world of sports.</p>
     </header>
     <main class="content">
       <section class="card">
-        <h2>Overview</h2>
-        <ul class="list">
-            <li>Athletes build credibility and showcase progress.</li>
-            <li>Coaches discover, evaluate, and connect with talent.</li>
-            <li>Clubs publish opportunities and recruit with clarity.</li>
-            <li>Supportive professionals collaborate across the ecosystem.</li>
-        </ul>
+        <h2>Your Role, Your Path</h2>
+        <div class="role-grid">
+          <article class="role-card">
+            <span class="role-badge">Athletes</span>
+            <h3>Showcase Your Journey</h3>
+            <p>Create a profile that highlights performance, milestones, and goals to attract the right opportunities.</p>
+          </article>
+          <article class="role-card">
+            <span class="role-badge">Coaches</span>
+            <h3>Find and Develop Talent</h3>
+            <p>Discover promising players, connect with communities, and build stronger coaching networks.</p>
+          </article>
+          <article class="role-card">
+            <span class="role-badge">Clubs</span>
+            <h3>Grow Your Organization</h3>
+            <p>Promote programs, recruit more effectively, and connect with athletes and professionals in one place.</p>
+          </article>
+          <article class="role-card">
+            <span class="role-badge">Professionals</span>
+            <h3>Support the Ecosystem</h3>
+            <p>Agents, scouts, medical and performance experts can collaborate and provide value across the sports chain.</p>
+          </article>
+        </div>
+        <p class="who-note">Spopeer is designed so every role can discover, connect, and grow with confidence.</p>
       </section>
       <section class="card stack">
-        <a class="btn btn-primary" href="/index.html#user-types">Open Full Page</a>
         <a class="btn btn-secondary" href="/mobile.html">Return to Home</a>
       </section>
     </main>
