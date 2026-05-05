@@ -10,3 +10,21 @@
 .spm-media-card {
   scroll-snap-align: start;
 }
+
+/* === SCREEN 1: SPLASH === */
+@keyframes spmPulseRing{0%{transform:scale(1);opacity:.55}100%{transform:scale(2.1);opacity:0}}
+@keyframes spmFadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spmDotBounce{0%,80%,100%{transform:scale(0);opacity:0}40%{transform:scale(1);opacity:1}}
+@keyframes spmLogoIn{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+
+.spm-splash{position:relative;overflow:hidden}
+.spm-splash-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800') center/cover no-repeat;opacity:.07;pointer-events:none}
+.spm-ring{position:absolute;width:190px;height:190px;border-radius:50%;border:2px solid rgba(255,255,255,.28);animation:spmPulseRing 2s ease-out infinite}
+.spm-ring::after{content:'';position:absolute;inset:-24px;border-radius:50%;border:1px solid rgba(255,255,255,.12);animation:spmPulseRing 2s .7s ease-out infinite}
+.spm-brand-mark{animation:spmLogoIn .55s .1s cubic-bezier(.34,1.56,.64,1) both}
+.spm-splash h1{animation:spmFadeUp .5s .35s ease both}
+.spm-splash p{animation:spmFadeUp .5s .55s ease both}
+.spm-dots{position:absolute;bottom:52px;display:flex;gap:10px}
+.spm-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.85);display:block;font-style:normal;animation:spmDotBounce 1.4s ease infinite}
+.spm-dots i:nth-child(2){animation-delay:.18s}
+.spm-dots i:nth-child(3){animation-delay:.36s}
