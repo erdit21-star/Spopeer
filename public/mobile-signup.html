@@ -1,41 +1,182 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Signup - Spopeer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sign Up - Spopeer</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="/css/mobile-app.css">
+<script src="/js/auth.js"></script>
+<style>
+  .ms-wrap{min-height:100vh;display:flex;flex-direction:column;background:#fff;max-width:520px;margin:0 auto}
+  .ms-hero{flex:0 0 39vh;background:linear-gradient(145deg,#001f3f 0%,#0a3575 60%,#1a6bff 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:0 24px}
+  .ms-hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800') center/cover no-repeat;opacity:.08;pointer-events:none}
+  .ms-logo{width:62px;height:62px;border-radius:20px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;font-size:24px;color:#fff;margin-bottom:14px}
+  .ms-hero h1{font-family:Syne,sans-serif;font-size:28px;color:#fff;margin:0 0 8px;letter-spacing:-.3px}
+  .ms-hero p{color:rgba(255,255,255,.8);font-size:13px;font-weight:600;margin:0;text-align:center;line-height:1.5}
+  .ms-body{flex:1;padding:24px 22px 36px}
+  .ms-body h2{font-family:Syne,sans-serif;font-size:20px;color:#0f172a;margin:0 0 18px;letter-spacing:-.2px}
+  .ms-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ms-field{position:relative;margin-bottom:12px}
+  .ms-field i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;pointer-events:none}
+  .ms-field input{width:100%;height:48px;border:1.5px solid #e2e8f0;border-radius:13px;padding:0 12px 0 36px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:#0f172a;background:#f8fafc;outline:none;transition:border-color .18s,box-shadow .18s;box-sizing:border-box}
+  .ms-field input:focus{border-color:#1a6bff;box-shadow:0 0 0 3px rgba(26,107,255,.1);background:#fff}
+  .ms-btn-primary{height:50px;background:#1a6bff;color:#fff;border:none;border-radius:999px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;width:100%;cursor:pointer;margin-top:2px}
+  .ms-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:#94a3b8;font-size:12px;font-weight:700}
+  .ms-divider::before,.ms-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+  .ms-btn-google{height:50px;background:#fff;border:1.5px solid #e2e8f0;border-radius:999px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;color:#0f172a;width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+  .ms-btn-google svg{flex-shrink:0}
+  .ms-footer{margin-top:20px;text-align:center;font-size:13px;font-weight:600;color:#64748b}
+  .ms-footer a{color:#1a6bff;font-weight:800;text-decoration:none}
+  #msError{display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:10px 14px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:12px}
+  #msSuccess{display:none;background:#dcfce7;border:1px solid #86efac;border-radius:12px;padding:10px 14px;color:#166534;font-size:13px;font-weight:600;margin-bottom:12px}
+</style>
 <script src="/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
-<div class="spm-app" style="padding:20px">
+<div class="ms-wrap">
+  <div class="ms-hero">
+    <div class="ms-hero-bg"></div>
+    <div class="ms-logo"><i class="fa-solid fa-bolt"></i></div>
+    <h1>Join Spopeer</h1>
+    <p>Build your sports identity and unlock opportunities globally.</p>
+  </div>
 
-<h2>Sign Up</h2>
+  <div class="ms-body">
+    <h2>Create Account</h2>
+    <div id="msError"></div>
+    <div id="msSuccess"></div>
 
-<input id="firstName" placeholder="First Name">
-<input id="lastName" placeholder="Last Name">
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+    <div id="g_id_onload"
+      data-client_id="527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com"
+      data-callback="handleGoogleCredential"
+      data-auto_prompt="false">
+    </div>
+    <button type="button" id="signupGoogleBtn" class="ms-btn-google">
+      <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/>
+        <path fill="#FBBC05" d="M10.6 28.1A14.7 14.7 0 0 1 9.5 24c0-1.4.2-2.8.6-4.1l-6.9-5.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l8-6.6z"/>
+        <path fill="#34A853" d="M24 47c5.4 0 9.9-1.8 13.2-4.8l-7.5-5.8c-1.8 1.2-4.2 2-5.7 2-6.4 0-11.8-4.3-13.7-10.1l-8 6.6C7 41.3 14.8 47 24 47z"/>
+      </svg>
+      Continue with Google
+    </button>
 
-<button id="signupBtn" class="spm-primary-action">Create Account</button>
+    <div class="ms-divider">or create with email</div>
 
+    <div class="ms-row">
+      <div class="ms-field">
+        <i class="fa-regular fa-user"></i>
+        <input id="firstName" placeholder="First Name" autocomplete="given-name">
+      </div>
+      <div class="ms-field">
+        <i class="fa-regular fa-user"></i>
+        <input id="lastName" placeholder="Last Name" autocomplete="family-name">
+      </div>
+    </div>
+    <div class="ms-field">
+      <i class="fa-regular fa-envelope"></i>
+      <input id="email" type="email" placeholder="Email" autocomplete="email">
+    </div>
+    <div class="ms-field">
+      <i class="fa-solid fa-lock"></i>
+      <input id="password" type="password" placeholder="Password" autocomplete="new-password">
+    </div>
+
+    <button id="signupBtn" class="ms-btn-primary">Create Account</button>
+    <p class="ms-footer">Already have an account? <a href="/mobile-login.html">Sign In</a></p>
+  </div>
 </div>
 
 <script>
-document.getElementById("signupBtn").onclick = async () => {
-  try {
-    await window.SpopeerAPI.signup({
-      firstName: firstName.value,
-      lastName: lastName.value,
-      email: email.value,
-      password: password.value
-    });
+function setMessage(elId, msg) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = msg || '';
+  el.style.display = msg ? 'block' : 'none';
+}
 
-    window.location.href="/mobile.html";
+async function handleGoogleCredential(response) {
+  setMessage('msError', '');
+  setMessage('msSuccess', '');
+  try {
+    const res = await fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: response.credential })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const errMsg = (data.error && data.error.message) || 'Google sign-up failed.';
+      throw new Error(errMsg);
+    }
+
+    let userData = (data.data && data.data.user) || data.user || null;
+    const accessToken = data.data && data.data.accessToken;
+    if (accessToken) localStorage.setItem('spopeerToken', accessToken);
+
+    if (!userData && window.SpopeerAPI && typeof window.SpopeerAPI.me === 'function') {
+      const me = await window.SpopeerAPI.me();
+      userData = (me && (me.user || (me.data && me.data.user) || me.payload || (me.payload && me.payload.user))) || null;
+    }
+
+    if (!userData) throw new Error('Google sign-up finished, but profile could not be loaded.');
+    if (window.Auth) window.Auth.login(userData);
+    window.location.assign('/mobile.html');
+  } catch (err) {
+    setMessage('msError', (err && err.message) || 'Google sign-up failed. Please try email signup.');
+  }
+}
+
+document.getElementById('signupBtn').onclick = async function() {
+  setMessage('msError', '');
+  setMessage('msSuccess', '');
+  var payload = {
+    firstName: document.getElementById('firstName').value.trim(),
+    lastName: document.getElementById('lastName').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    password: document.getElementById('password').value
+  };
+
+  if (!payload.firstName || !payload.lastName || !payload.email || !payload.password) {
+    setMessage('msError', 'Please fill all fields.');
+    return;
+  }
+
+  try {
+    const result = await window.SpopeerAPI.signup(payload);
+    const user = (result.data && result.data.user) || result.user || null;
+    if (user && window.Auth) {
+      window.Auth.login(user);
+      window.location.assign('/mobile.html');
+      return;
+    }
+    setMessage('msSuccess', 'Account created. Please check your email to verify, then sign in.');
   } catch (e) {
-    alert("Signup failed");
+    setMessage('msError', (e && e.message) || 'Signup failed.');
   }
 };
+
+(function wireGoogle() {
+  function init() {
+    if (!window.google || !window.google.accounts) return;
+    window.google.accounts.id.initialize({
+      client_id: '527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com',
+      callback: handleGoogleCredential
+    });
+    document.getElementById('signupGoogleBtn').addEventListener('click', function() {
+      window.google.accounts.id.prompt();
+    });
+  }
+  if (window.google && window.google.accounts) init();
+  else window.onGoogleLibraryLoad = init;
+})();
 </script>
 
 </body>

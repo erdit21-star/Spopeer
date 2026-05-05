@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="/css/mobile-app.css">
+<script src="/js/auth.js"></script>
 <style>
   .ml-wrap{min-height:100vh;display:flex;flex-direction:column;background:#fff;max-width:520px;margin:0 auto}
 
@@ -110,23 +111,39 @@
 </div>
 
 <script>
-function handleGoogleCredential(response) {
+async function handleGoogleCredential(response) {
   const errBox = document.getElementById('mlError');
-  fetch('/api/auth/google', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ credential: response.credential })
-  })
-  .then(function(res) { return res.json(); })
-  .then(function(data) {
-    const token = (data && (data.token || (data.data && data.data.token)));
-    if (token) localStorage.setItem('token', token);
-    window.location.href = '/mobile.html';
-  })
-  .catch(function() {
-    errBox.textContent = 'Google sign-in failed. Please try again.';
+  try {
+    const res = await fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: response.credential })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const errMsg = (data.error && data.error.message) || 'Google sign-in failed.';
+      throw new Error(errMsg);
+    }
+
+    let userData = (data.data && data.data.user) || data.user || null;
+    const accessToken = data.data && data.data.accessToken;
+    if (accessToken) localStorage.setItem('spopeerToken', accessToken);
+
+    if (!userData && window.SpopeerAPI && typeof window.SpopeerAPI.me === 'function') {
+      const me = await window.SpopeerAPI.me();
+      userData = (me && (me.user || (me.data && me.data.user) || me.payload || (me.payload && me.payload.user))) || null;
+    }
+
+    if (!userData) {
+      throw new Error('Google sign-in finished, but your profile could not be loaded. Please try again.');
+    }
+
+    if (window.Auth) window.Auth.login(userData);
+    window.location.assign('/mobile.html');
+  } catch (err) {
+    errBox.textContent = (err && err.message) || 'Google sign-in failed. Please try again.';
     errBox.style.display = 'block';
-  });
+  }
 }
 
 document.getElementById('loginBtn').onclick = async function() {
@@ -137,9 +154,11 @@ document.getElementById('loginBtn').onclick = async function() {
   if (!email || !password) { errBox.textContent = 'Please enter your email and password.'; errBox.style.display = 'block'; return; }
   try {
     const res = await window.SpopeerAPI.login({ email, password });
+    const user = (res.data && res.data.user) || res.user || null;
     const token = res.token || (res.data && res.data.token);
     if (token) localStorage.setItem('token', token);
-    window.location.href = '/mobile.html';
+    if (user && window.Auth) window.Auth.login(user);
+    window.location.assign('/mobile.html');
   } catch(e) {
     errBox.textContent = (e && e.message) || 'Login failed. Check your credentials.';
     errBox.style.display = 'block';
