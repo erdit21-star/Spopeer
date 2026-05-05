@@ -31,6 +31,7 @@ const {
 } = require('../utils/validation');
 const { sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail, sendSecurityAlertEmail } = require('../services/email');
 const { Op } = require('sequelize');
+const { config: env } = require('../config/env');
 const { issueCsrfToken, csrfProtection } = require('../middleware/csrf');
 const { verifyCaptchaMiddleware } = require('../middleware/captcha');
 // Test flag (used to relax middleware in tests)
@@ -173,6 +174,14 @@ router.use((req, res, next) => {
 router.get('/csrf', (req, res) => {
   const token = issueCsrfToken(req, res);
   return ok(res, { csrfToken: token });
+});
+
+// ─── PUBLIC AUTH CONFIG ───
+router.get('/google-config', (_req, res) => {
+  return ok(res, {
+    enabled: !!env.googleClientId,
+    clientId: env.googleClientId || ''
+  });
 });
 
 // ─── SIGNUP ───

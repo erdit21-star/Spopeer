@@ -91,6 +91,23 @@ function getCookieValue(name) {
   return match ? decodeURIComponent(match[2]) : '';
 }
 
+let _mobileGoogleClientId = null;
+
+async function getMobileGoogleClientId() {
+  if (typeof _mobileGoogleClientId === 'string') return _mobileGoogleClientId;
+
+  try {
+    const res = await fetch('/api/auth/google-config', { credentials: 'include' });
+    const payload = await res.json().catch(function () { return {}; });
+    const data = (payload && payload.data) || payload || {};
+    _mobileGoogleClientId = String(data.clientId || '').trim();
+  } catch (_err) {
+    _mobileGoogleClientId = '';
+  }
+
+  return _mobileGoogleClientId;
+}
+
 async function postGoogleCredential(credential) {
   await fetch('/api/auth/csrf', { method: 'GET', credentials: 'include' }).catch(function () {});
   var csrf = getCookieValue('csrf_token');
@@ -188,10 +205,17 @@ function initGoogleSignupButton() {
   var host = document.getElementById('signupGoogleButton');
   if (!host) return;
 
-  function wire() {
+  async function wire() {
     if (!window.google || !window.google.accounts || !window.google.accounts.id) return false;
+
+    var clientId = await getMobileGoogleClientId();
+    if (!clientId) {
+      setMessage('signupError', 'Google sign-up is not configured for this environment. Please use email signup for now.');
+      return false;
+    }
+
     window.google.accounts.id.initialize({
-      client_id: '527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com',
+      client_id: clientId,
       callback: handleGoogleCredential
     });
     host.innerHTML = '';
@@ -202,20 +226,42 @@ function initGoogleSignupButton() {
       shape: 'pill',
       width: Math.max(260, Math.min(440, host.clientWidth || 320))
     });
+
+    try {
+      window.google.accounts.id.prompt(function (notification) {
+        var isNotDisplayed = notification && typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed();
+        var reason = notification && typeof notification.getNotDisplayedReason === 'function'
+          ? notification.getNotDisplayedReason()
+          : '';
+        if (isNotDisplayed && reason === 'unregistered_origin') {
+          setMessage('signupError', 'Google sign-up is blocked: this domain is not authorized in Google OAuth settings.');
+        }
+      });
+    } catch (_err) {}
+
     return true;
   }
 
-  if (wire()) return;
+  wire().then(function (ok) {
+    if (ok) return;
+  });
+
   var attempts = 0;
   var timer = window.setInterval(function () {
     attempts += 1;
-    if (wire() || attempts > 20) {
-      window.clearInterval(timer);
-      if (attempts > 20) {
-        setMessage('signupError', 'Google sign-up is unavailable on this browser. Please use email sign-up.');
+    wire().then(function (ok) {
+      if (ok || attempts > 80) {
+        window.clearInterval(timer);
+        if (!ok && attempts > 80) {
+          setMessage('signupError', 'Google sign-up is unavailable on this browser. Please use email sign-up.');
+        }
       }
-    }
+    });
   }, 250);
+
+  window.addEventListener('load', function () {
+    wire().catch(function () {});
+  }, { once: true });
 }
 
 document.getElementById('signupBtn').onclick = async function() {
