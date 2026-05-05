@@ -9,24 +9,46 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/spopeer-pages.css">
+  <style>
+    .priv-grid{display:grid;gap:12px}
+    .priv-card{border:1px solid #dbeafe;background:linear-gradient(180deg,#ffffff,#f8fbff);border-radius:18px;padding:15px}
+    .priv-card strong{display:block;margin-bottom:7px;color:#1d4ed8;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    .priv-card h3{margin:0 0 7px;font-family:Syne,sans-serif;font-size:18px;color:#0f172a}
+    .priv-card p{margin:0;color:#475569;font-size:13px;line-height:1.6;font-weight:600}
+    .priv-notice{border:1px solid #e2e8f0;border-radius:16px;padding:14px;background:#fff;margin-top:4px}
+    .priv-notice p{margin:0;color:#64748b;font-size:12px;line-height:1.7;font-weight:600}
+  </style>
 </head>
 <body>
   <div class="page-wrap">
     <header class="hero">
-      <a class="back-link" href="/mobile.html">Back to Home</a>
-      <span class="pill">Spopeer</span>
+      <span class="pill">Legal</span>
       <h1 class="page-title">Privacy Policy</h1>
-      <p class="page-sub">Summary from the official policy and data protection commitments.</p>
+      <p class="page-sub">Understand what data Spopeer holds, how it is used, and the controls available to you.</p>
     </header>
     <main class="content">
       <section class="card">
-        <h2>Overview</h2>
-        <ul class="list">
-            <li>What data is collected and why.</li>
-            <li>How Spopeer uses data to deliver services.</li>
-            <li>How data is protected and retained.</li>
-            <li>Your privacy controls and policy rights.</li>
-        </ul>
+        <h2>What Matters to You</h2>
+        <div class="priv-grid">
+          <article class="priv-card">
+            <strong>Collection</strong>
+            <h3>What is gathered and why</h3>
+            <p>Spopeer collects only what is needed to run the platform — account details, activity signals, and preferences that power the experience.</p>
+          </article>
+          <article class="priv-card">
+            <strong>Use &amp; Retention</strong>
+            <h3>How data works for the service</h3>
+            <p>Data is used to deliver and improve the platform, not sold. Retention follows the minimum needed to keep the experience working reliably.</p>
+          </article>
+          <article class="priv-card">
+            <strong>Your Rights</strong>
+            <h3>Control and access</h3>
+            <p>You can request access, correction, or deletion of your data. Privacy settings let you manage visibility across your profile and activity.</p>
+          </article>
+        </div>
+        <div class="priv-notice">
+          <p>The full policy contains all legal details, jurisdiction specifics, and contact paths for privacy-related requests.</p>
+        </div>
       </section>
       <section class="card stack">
         <a class="btn btn-primary" href="/pages/legal/privacy.html">Explore Details</a>

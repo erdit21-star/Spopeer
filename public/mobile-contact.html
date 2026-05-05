@@ -9,17 +9,22 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/spopeer-pages.css">
+  <style>
+    .contact-intro{border:1px solid #dbeafe;background:linear-gradient(135deg,#eff6ff,#ffffff);border-radius:18px;padding:14px;margin-bottom:4px}
+    .contact-intro p{margin:0;color:#334155;font-size:13px;line-height:1.7;font-weight:600}
+    .contact-intro strong{color:#1d4ed8}
+  </style>
 </head>
 <body>
   <div class="page-wrap">
     <header class="hero">
-      <a class="back-link" href="/mobile.html">Back to Home</a>
-      <span class="pill">Support</span>
+      <span class="pill">Get in Touch</span>
       <h1 class="page-title">Contact Us</h1>
-      <p class="page-sub">Send your message directly through the same backend endpoint used by the main contact page.</p>
+      <p class="page-sub">A question, a partnership idea, or feedback — send it directly and the team will respond.</p>
     </header>
     <main class="content">
       <section class="card">
+        <div class="contact-intro"><p>Fill in the form below and your message goes straight to <strong>the Spopeer team</strong>. We reply to every genuine inquiry.</p></div>
         <div id="contactError" class="error-box"></div>
         <div id="contactSuccess" class="success-box"></div>
         <div class="grid-2">
@@ -38,7 +43,6 @@
         </div>
         <div style="margin-top:10px"><label class="label" for="message">Message *</label><textarea class="textarea" id="message"></textarea></div>
         <button id="contactSubmit" class="btn btn-primary" style="width:100%;margin-top:12px">Send Message</button>
-        <p class="footer-note">Endpoint: POST /api/contact</p>
       </section>
     </main>
   </div>

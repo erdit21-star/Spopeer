@@ -9,17 +9,26 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/spopeer-pages.css">
+  <style>
+    .careers-intro{border:1px solid #dbeafe;background:linear-gradient(135deg,#eff6ff,#ffffff);border-radius:18px;padding:14px;margin-bottom:4px}
+    .careers-intro p{margin:0;color:#334155;font-size:13px;line-height:1.7;font-weight:600}
+    .careers-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .careers-tags span{padding:5px 10px;border-radius:999px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  </style>
 </head>
 <body>
   <div class="page-wrap">
     <header class="hero">
-      <a class="back-link" href="/mobile.html">Back to Home</a>
-      <span class="pill">Join the Team</span>
+      <span class="pill">Join Us</span>
       <h1 class="page-title">Careers at Spopeer</h1>
-      <p class="page-sub">Apply directly with the same API used on the main careers page.</p>
+      <p class="page-sub">Build the platform with us — bring your skills to a growing sports network.</p>
     </header>
     <main class="content">
       <section class="card">
+        <div class="careers-intro">
+          <p>We are looking for people who care about sports, community, and building things that matter. Send your application and we will reach out if there is a fit.</p>
+          <div class="careers-tags"><span>Engineering</span><span>Design</span><span>Product</span><span>Growth</span><span>Operations</span></div>
+        </div>
         <div id="careerError" class="error-box"></div>
         <div id="careerSuccess" class="success-box"></div>
         <div class="grid-2">
@@ -34,7 +43,6 @@
         <div style="margin-top:10px"><label class="label" for="portfolio">Portfolio URL</label><input class="input" id="portfolio"></div>
         <div style="margin-top:10px"><label class="label" for="coverLetter">Cover letter *</label><textarea class="textarea" id="coverLetter" required></textarea></div>
         <button id="careerSubmit" class="btn btn-primary" style="width:100%;margin-top:12px">Submit Application</button>
-        <p class="footer-note">Endpoint: POST /api/careers</p>
       </section>
     </main>
   </div>
