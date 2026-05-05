@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spopeer Mobile Design System</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Syne:wght@700&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#eef3fb;margin:0;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.card{background:white;border-radius:20px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.05)}
+h3{margin:0 0 10px;font-family:Syne}
+.screen{height:420px;border-radius:16px;background:linear-gradient(145deg,#001f3f,#1a6bff);color:white;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px}
+</style>
+</head>
+<body>
+<h1>Spopeer Mobile — 22 Screens</h1>
+<div class="grid">
+
+<script>
+const screens=[
+"Splash","Onboarding","Feed (TikTok)","Create Post","Profile","Search","Messages","Notifications","Post Detail","Connections","Articles","AI Agent","Reels","Ads","Edit Profile","Public Profile","Followers","Club Page","Analytics","Sponsor Dashboard","Admin","Moderation"
+];
+
+document.write(screens.map((s,i)=>`<div class='card'><h3>${i+1}. ${s}</h3><div class='screen'>${s} UI Preview</div></div>`).join(''));
+</script>
+
+</div>
+</body>
+</html>
