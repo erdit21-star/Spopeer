@@ -9,27 +9,55 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/spopeer-pages.css">
+  <style>
+    .hiw-flow{display:grid;gap:12px}
+    .hiw-step{position:relative;border:1px solid #dbeafe;background:linear-gradient(180deg,#fff,#f8fbff);border-radius:18px;padding:16px 16px 14px 56px}
+    .hiw-num{position:absolute;left:16px;top:16px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#1a6bff;color:#fff;font-size:12px;font-weight:800}
+    .hiw-step h3{margin:0 0 7px;font-family:Syne,sans-serif;font-size:18px;color:#0f172a}
+    .hiw-step p{margin:0;color:#475569;font-size:13px;line-height:1.6;font-weight:600}
+    .hiw-rail{height:56px;width:2px;background:linear-gradient(180deg,#93c5fd,#dbeafe);margin:0 auto;border-radius:999px}
+    .hiw-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+    .hiw-summary-card{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#fff}
+    .hiw-summary-card strong{display:block;font-size:12px;color:#1d4ed8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+    .hiw-summary-card span{display:block;font-size:13px;color:#334155;font-weight:700;line-height:1.5}
+  </style>
 </head>
 <body>
   <div class="page-wrap">
     <header class="hero">
-      <a class="back-link" href="/mobile.html">Back to Home</a>
-      <span class="pill">Spopeer</span>
+      <span class="pill">Journey</span>
       <h1 class="page-title">How It Works</h1>
-      <p class="page-sub">The same core journey from the main Spopeer platform.</p>
+      <p class="page-sub">A fast path from profile creation to real sports opportunities.</p>
     </header>
     <main class="content">
       <section class="card">
-        <h2>Overview</h2>
-        <ul class="list">
-            <li>Create your identity with your role and sport details.</li>
-            <li>Build your network with meaningful sports connections.</li>
-            <li>Share updates, engage, and grow your visibility.</li>
-            <li>Move between web and app experiences seamlessly.</li>
-        </ul>
+        <h2>Your Route Through Spopeer</h2>
+        <div class="hiw-flow">
+          <article class="hiw-step">
+            <span class="hiw-num">1</span>
+            <h3>Create your identity</h3>
+            <p>Build a profile with your sport, role, achievements, and goals so people immediately understand who you are.</p>
+          </article>
+          <div class="hiw-rail"></div>
+          <article class="hiw-step">
+            <span class="hiw-num">2</span>
+            <h3>Grow your network</h3>
+            <p>Connect with athletes, coaches, clubs, and professionals who matter to your next step.</p>
+          </article>
+          <div class="hiw-rail"></div>
+          <article class="hiw-step">
+            <span class="hiw-num">3</span>
+            <h3>Share and get discovered</h3>
+            <p>Post updates, show your journey, and increase visibility through real interactions on the platform.</p>
+          </article>
+        </div>
+        <div class="hiw-summary">
+          <div class="hiw-summary-card"><strong>Built for speed</strong><span>Set up fast and start connecting in minutes.</span></div>
+          <div class="hiw-summary-card"><strong>Built for growth</strong><span>Turn visibility into opportunities over time.</span></div>
+        </div>
       </section>
       <section class="card stack">
-        <a class="btn btn-primary" href="/index.html#how-it-works">Open Full Page</a>
+        <a class="btn btn-primary" href="/index.html#how-it-works">Explore Details</a>
         <a class="btn btn-secondary" href="/mobile.html">Return to Home</a>
       </section>
     </main>
