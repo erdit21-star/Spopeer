@@ -56,11 +56,6 @@
     <div id="signupError"></div>
     <div id="msSuccess"></div>
 
-    <div id="g_id_onload"
-      data-client_id="527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com"
-      data-callback="handleGoogleCredential"
-      data-auto_prompt="false">
-    </div>
     <div id="signupGoogleButton" class="ms-google-host" aria-label="Continue with Google"></div>
 
     <div class="ms-divider">or create with email</div>
@@ -111,22 +106,43 @@ async function postGoogleCredential(credential) {
 
 function completeAuthNavigation(path) {
   var targetPath = path || '/mobile.html';
+  var targetUrl = targetPath.indexOf('http') === 0
+    ? targetPath
+    : window.location.origin + targetPath;
+
+  try {
+    localStorage.setItem('spopeer_google_auth_complete', String(Date.now()));
+  } catch (_error) {}
+
   try {
     if (window.opener && !window.opener.closed) {
-      window.opener.location.assign(targetPath);
-      window.close();
+      window.opener.location.replace(targetUrl);
+      window.setTimeout(function () {
+        try {
+          window.close();
+        } catch (_closeErr) {
+          window.location.replace(targetUrl);
+        }
+      }, 120);
       return;
     }
   } catch (_error) {}
 
   try {
     if (window.parent && window.parent !== window) {
-      window.parent.location.assign(targetPath);
+      window.parent.location.replace(targetUrl);
       return;
     }
   } catch (_error) {}
 
-  window.location.assign(targetPath);
+  try {
+    if (window.top && window.top !== window) {
+      window.top.location.replace(targetUrl);
+      return;
+    }
+  } catch (_error) {}
+
+  window.location.replace(targetUrl);
 }
 
 function setMessage(elId, msg) {
@@ -140,15 +156,19 @@ async function handleGoogleCredential(response) {
   setMessage('signupError', '');
   setMessage('msSuccess', '');
   try {
+    if (!response || !response.credential) {
+      throw new Error('Google did not return a valid credential. Please try again.');
+    }
+
     const res = await postGoogleCredential(response.credential);
-    const data = await res.json();
+    const data = await res.json().catch(function () { return {}; });
     if (!res.ok) {
-      const errMsg = (data.error && data.error.message) || 'Google sign-up failed.';
+      const errMsg = (data && data.error && data.error.message) || data.error || 'Google sign-up failed.';
       throw new Error(errMsg);
     }
 
     let userData = (data.data && data.data.user) || data.user || null;
-    const accessToken = data.data && data.data.accessToken;
+    const accessToken = (data.data && data.data.accessToken) || data.token;
     if (accessToken) localStorage.setItem('spopeerToken', accessToken);
 
     if (!userData && window.SpopeerAPI && typeof window.SpopeerAPI.me === 'function') {
