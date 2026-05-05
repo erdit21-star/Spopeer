@@ -9,24 +9,47 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/spopeer-pages.css">
+  <style>
+    .blog-lead{border:1px solid #dbeafe;background:linear-gradient(135deg,#ffffff,#f8fbff);border-radius:18px;padding:16px}
+    .blog-lead h2{margin:0 0 8px}
+    .blog-lead p{margin:0;color:#475569;font-size:13px;line-height:1.7;font-weight:600}
+    .blog-grid{display:grid;gap:12px;margin-top:12px}
+    .blog-card{border:1px solid #e2e8f0;border-radius:16px;padding:14px;background:#fff}
+    .blog-tag{display:inline-flex;margin-bottom:9px;padding:5px 10px;border-radius:999px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    .blog-card h3{margin:0 0 7px;font-family:Syne,sans-serif;font-size:18px;color:#0f172a}
+    .blog-card p{margin:0;color:#475569;font-size:13px;line-height:1.6;font-weight:600}
+  </style>
 </head>
 <body>
   <div class="page-wrap">
     <header class="hero">
-      <a class="back-link" href="/mobile.html">Back to Home</a>
-      <span class="pill">Spopeer</span>
+      <span class="pill">Stories</span>
       <h1 class="page-title">Blog</h1>
-      <p class="page-sub">Highlights and updates from the Spopeer team.</p>
+      <p class="page-sub">The place for product updates, platform stories, and ideas shaping the next chapter.</p>
     </header>
     <main class="content">
       <section class="card">
-        <h2>Overview</h2>
-        <ul class="list">
-            <li>Read platform announcements and product updates.</li>
-            <li>Explore sports-community stories and insights.</li>
-            <li>Track improvements and feature launches.</li>
-            <li>Stay informed about roadmap direction.</li>
-        </ul>
+        <div class="blog-lead">
+          <h2>What You Will Find Here</h2>
+          <p>The blog is where Spopeer explains what is changing, what is launching, and what matters across the sports community using the platform.</p>
+        </div>
+        <div class="blog-grid">
+          <article class="blog-card">
+            <span class="blog-tag">Product</span>
+            <h3>Launches and improvements</h3>
+            <p>Follow major releases, quality improvements, and experience changes as the platform evolves.</p>
+          </article>
+          <article class="blog-card">
+            <span class="blog-tag">Community</span>
+            <h3>Stories from the ecosystem</h3>
+            <p>See how athletes, coaches, clubs, and professionals use visibility and connection to move forward.</p>
+          </article>
+          <article class="blog-card">
+            <span class="blog-tag">Direction</span>
+            <h3>Roadmap thinking</h3>
+            <p>Understand the priorities behind the next set of decisions instead of only seeing the final release notes.</p>
+          </article>
+        </div>
       </section>
       <section class="card stack">
         <a class="btn btn-primary" href="/pages/company/blog.html">Explore Details</a>

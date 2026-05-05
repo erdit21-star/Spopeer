@@ -9,24 +9,48 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/spopeer-pages.css">
+  <style>
+    .help-grid{display:grid;gap:12px}
+    .help-card{border:1px solid #dbeafe;background:linear-gradient(180deg,#ffffff,#f8fbff);border-radius:18px;padding:15px}
+    .help-card strong{display:block;margin-bottom:7px;color:#1d4ed8;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    .help-card h3{margin:0 0 7px;font-family:Syne,sans-serif;font-size:18px;color:#0f172a}
+    .help-card p{margin:0;color:#475569;font-size:13px;line-height:1.6;font-weight:600}
+    .help-note{border:1px solid #e2e8f0;border-radius:16px;padding:14px;background:#fff;margin-top:4px}
+    .help-note h3{margin:0 0 7px;font-family:Syne,sans-serif;font-size:17px;color:#0f172a}
+    .help-note p{margin:0;color:#475569;font-size:13px;line-height:1.6;font-weight:600}
+  </style>
 </head>
 <body>
   <div class="page-wrap">
     <header class="hero">
-      <a class="back-link" href="/mobile.html">Back to Home</a>
-      <span class="pill">Spopeer</span>
+      <span class="pill">Support</span>
       <h1 class="page-title">Help Center</h1>
-      <p class="page-sub">Support resources adapted from the official help center.</p>
+      <p class="page-sub">A direct path to answers, guidance, and the next action when something blocks you.</p>
     </header>
     <main class="content">
       <section class="card">
-        <h2>Overview</h2>
-        <ul class="list">
-            <li>Get answers for account and profile questions.</li>
-            <li>Follow troubleshooting guidance for common issues.</li>
-            <li>Understand safety, privacy, and platform policies.</li>
-            <li>Escalate to support channels when needed.</li>
-        </ul>
+        <h2>Where To Start</h2>
+        <div class="help-grid">
+          <article class="help-card">
+            <strong>Account</strong>
+            <h3>Access and sign-in issues</h3>
+            <p>Use the support guidance for login problems, password recovery, and profile access questions.</p>
+          </article>
+          <article class="help-card">
+            <strong>Profile</strong>
+            <h3>Identity and visibility support</h3>
+            <p>Find answers around profile setup, editing details, and improving how you appear across the platform.</p>
+          </article>
+          <article class="help-card">
+            <strong>Safety</strong>
+            <h3>Policies and reporting</h3>
+            <p>Review the rules, understand protection flows, and move quickly if something feels unsafe or abusive.</p>
+          </article>
+        </div>
+        <div class="help-note">
+          <h3>Need a deeper answer?</h3>
+          <p>The full help center contains the broader troubleshooting library and official support references when the quick path here is not enough.</p>
+        </div>
       </section>
       <section class="card stack">
         <a class="btn btn-primary" href="/pages/company/help-center.html">Explore Details</a>
