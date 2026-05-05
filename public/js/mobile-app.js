@@ -73,13 +73,14 @@
 
   const screens = {
     feed: async function () {
-      setTitle('Feed', 'For you');
+      setTitle('For You', 'Swipe sports updates');
       const container = $('#spmScreen');
       container.innerHTML = '<div class="spm-empty">Loading feed...</div>';
       try {
         const result = await window.SpopeerAPI.listPosts({ limit: 20, page: 1, _: Date.now() });
         const posts = unwrapPosts(result);
         container.innerHTML = '';
+        container.classList.add('spm-snap-feed');
         if (!posts.length) {
           container.innerHTML = '<div class="spm-empty">No posts yet. Create the first post.</div>';
           return;
@@ -93,6 +94,7 @@
 
     create: function () {
       setTitle('Create Post', 'Share your update');
+      $('#spmScreen').classList.remove('spm-snap-feed');
       $('#spmScreen').innerHTML = `
         <div class="spm-compose">
           <div class="spm-compose-head">
@@ -120,14 +122,12 @@
 
     post: async function () {
       setTitle('Post', 'Comments');
+      $('#spmScreen').classList.remove('spm-snap-feed');
       const post = app.selectedPost;
       if (!post) { app.route = 'feed'; return render(); }
       $('#spmScreen').innerHTML = `
         <div class="spm-profile-hero"><div style="background-image:url('${html(imageForPost(post))}')"></div></div>
-        <div class="spm-card">
-          <strong>${html(authorName(post))}</strong>
-          <p>${html(post.content)}</p>
-        </div>
+        <div class="spm-card"><strong>${html(authorName(post))}</strong><p>${html(post.content)}</p></div>
         <div id="spmComments" class="spm-list"><div class="spm-empty">Loading comments...</div></div>
         <div class="spm-chat-input"><input id="spmCommentText" placeholder="Comment..."><button id="spmSendComment">Send</button></div>`;
 
@@ -156,72 +156,40 @@
 
     search: function () {
       setTitle('Search', 'Discover people');
-      $('#spmScreen').innerHTML = `
-        <input class="spm-search" placeholder="Search athletes, coaches, clubs...">
-        <div class="spm-list">
-          <div class="spm-list-item">Athletes <span>›</span></div>
-          <div class="spm-list-item">Coaches <span>›</span></div>
-          <div class="spm-list-item">Clubs <span>›</span></div>
-        </div>`;
+      $('#spmScreen').classList.remove('spm-snap-feed');
+      $('#spmScreen').innerHTML = '<input class="spm-search" placeholder="Search athletes, coaches, clubs..."><div class="spm-list"><div class="spm-list-item">Athletes <span>›</span></div><div class="spm-list-item">Coaches <span>›</span></div><div class="spm-list-item">Clubs <span>›</span></div></div>';
     },
 
     messages: function () {
       setTitle('Messages', 'Conversation');
-      $('#spmScreen').innerHTML = `
-        <div class="spm-chat">
-          <div class="spm-chat-body">
-            <div class="spm-bubble">Hey, ready for training?</div>
-            <div class="spm-bubble me">Yes, let’s go!</div>
-          </div>
-          <div class="spm-chat-input"><input placeholder="Type message"><button>Send</button></div>
-        </div>`;
+      $('#spmScreen').classList.remove('spm-snap-feed');
+      $('#spmScreen').innerHTML = '<div class="spm-chat"><div class="spm-chat-body"><div class="spm-bubble">Hey, ready for training?</div><div class="spm-bubble me">Yes, let’s go!</div></div><div class="spm-chat-input"><input placeholder="Type message"><button>Send</button></div></div>';
     },
 
     notifications: function () {
       setTitle('Notifications', 'Latest activity');
-      $('#spmScreen').innerHTML = `
-        <div class="spm-timeline">
-          <div class="spm-timeline-item"><span class="spm-dot"></span><div><strong>New follower</strong><p>2 min ago</p></div></div>
-          <div class="spm-timeline-item"><span class="spm-dot"></span><div><strong>Post liked</strong><p>10 min ago</p></div></div>
-        </div>`;
+      $('#spmScreen').classList.remove('spm-snap-feed');
+      $('#spmScreen').innerHTML = '<div class="spm-timeline"><div class="spm-timeline-item"><span class="spm-dot"></span><div><strong>New follower</strong><p>2 min ago</p></div></div><div class="spm-timeline-item"><span class="spm-dot"></span><div><strong>Post liked</strong><p>10 min ago</p></div></div></div>';
     },
 
     profile: async function () {
       setTitle('Profile', 'Your sports identity');
-      try {
-        const result = await window.SpopeerAPI.getProfile();
-        app.user = unwrapUser(result) || app.user || {};
-      } catch (_error) {}
+      $('#spmScreen').classList.remove('spm-snap-feed');
+      try { const result = await window.SpopeerAPI.getProfile(); app.user = unwrapUser(result) || app.user || {}; } catch (_error) {}
       const user = app.user || {};
       const name = user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Spopeer member';
-      $('#spmScreen').innerHTML = `
-        <div class="spm-profile-hero"><div style="background-image:url('${html(user.coverUrl || user.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900')}')"></div></div>
-        <div class="spm-profile-panel">
-          <h2>${html(name)}</h2>
-          <p>${html(user.role || 'Sports profile')} · ${html(user.sport || user.primarySport || 'Sport')}</p>
-        </div>
-        <div class="spm-grid" style="margin-top:12px">
-          <div class="spm-grid-card">Posts</div><div class="spm-grid-card">Followers</div>
-          <div class="spm-grid-card">Following</div><div class="spm-grid-card">Settings</div>
-        </div>`;
+      $('#spmScreen').innerHTML = `<div class="spm-profile-hero"><div style="background-image:url('${html(user.coverUrl || user.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900')}')"></div></div><div class="spm-profile-panel"><h2>${html(name)}</h2><p>${html(user.role || 'Sports profile')} · ${html(user.sport || user.primarySport || 'Sport')}</p></div><div class="spm-grid" style="margin-top:12px"><div class="spm-grid-card">Posts</div><div class="spm-grid-card">Followers</div><div class="spm-grid-card">Following</div><div class="spm-grid-card">Settings</div></div>`;
     }
   };
 
   function render() {
     const screen = screens[app.route] || screens.feed;
-    document.querySelectorAll('.spm-tabbar button').forEach(function (button) {
-      button.classList.toggle('active', button.dataset.route === app.route);
-    });
+    document.querySelectorAll('.spm-tabbar button').forEach(function (button) { button.classList.toggle('active', button.dataset.route === app.route); });
     screen();
   }
 
   function bindNav() {
-    document.querySelectorAll('[data-route]').forEach(function (button) {
-      button.addEventListener('click', function () {
-        app.route = button.dataset.route;
-        render();
-      });
-    });
+    document.querySelectorAll('[data-route]').forEach(function (button) { button.addEventListener('click', function () { app.route = button.dataset.route; render(); }); });
     const back = $('[data-back]');
     if (back) back.addEventListener('click', function () { app.route = 'feed'; render(); });
   }
