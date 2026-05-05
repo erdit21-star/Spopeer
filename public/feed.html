@@ -3045,7 +3045,8 @@
 
   <!-- LEFT SIDEBAR -->
   <aside class="sidebar-left" id="leftSidebar">
-    <button class="sidebar-toggle-btn" id="sidebarToggle" type="button" aria-label="Collapse sidebar">
+
+    <button class="sidebar-toggle-btn" id="sidebarToggle" type="button">
       <i class="fa-solid fa-chevron-left"></i>
     </button>
 
@@ -7276,24 +7277,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (!layout || !toggle) return;
 
+  // Load saved state
   if (localStorage.getItem('spopeer_left_sidebar_collapsed') === '1') {
     layout.classList.add('left-sidebar-collapsed');
-    toggle.setAttribute('aria-label', 'Expand sidebar');
   }
 
   toggle.addEventListener('click', function () {
     layout.classList.toggle('left-sidebar-collapsed');
 
-    const isCollapsed = layout.classList.contains('left-sidebar-collapsed');
+    const collapsed = layout.classList.contains('left-sidebar-collapsed');
 
     localStorage.setItem(
       'spopeer_left_sidebar_collapsed',
-      isCollapsed ? '1' : '0'
-    );
-
-    toggle.setAttribute(
-      'aria-label',
-      isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+      collapsed ? '1' : '0'
     );
   });
 });
