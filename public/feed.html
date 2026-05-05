@@ -74,83 +74,86 @@
       transition: grid-template-columns .28s cubic-bezier(.4,0,.2,1);
     }
     .app-layout.left-sidebar-collapsed {
-      grid-template-columns: 0 minmax(0, 1fr) 288px;
+      grid-template-columns: 86px minmax(0, 1fr) 288px;
     }
 
     /* ================================================================================================
        LEFT SIDEBAR
     ================================================================================================ */
     .sidebar-left {
-      position: sticky; top: calc(var(--nav-h) + 16px);
-      display: flex; flex-direction: column; gap: 4px;
-      overflow: hidden;
-      /* independent scroll */
-      max-height: calc(100vh - var(--nav-h) - 32px);
-      overflow-y: auto;
-      /* hide scrollbar by default, show on hover */
-      scrollbar-width: thin;
-      scrollbar-color: transparent transparent;
-      transition: scrollbar-color .2s;
-    }
-    .sidebar-left:hover {
-      scrollbar-color: rgba(0,0,0,.18) transparent;
-    }
-    .sidebar-left::-webkit-scrollbar {
-      width: 4px;
-    }
-    .sidebar-left::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .sidebar-left::-webkit-scrollbar-thumb {
-      background: transparent;
-      border-radius: 4px;
-      transition: background .2s;
-    }
-    .sidebar-left:hover::-webkit-scrollbar-thumb {
-      background: rgba(0,0,0,.18);
-    }
-
-    /* ── COLLAPSE TOGGLE BUTTON ── */
-    .sidebar-toggle-btn {
       position: sticky;
-      top: 0;
-      z-index: 10;
-      align-self: flex-end;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
+      top: calc(var(--nav-h) + 16px);
+      max-height: calc(100vh - var(--nav-h) - 32px);
+      overflow: hidden;
+      background: var(--white);
       border: 1.5px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.07);
+      display: flex;
+      flex-direction: column;
+      transition: border-color .2s;
+    }
+    .sidebar-left:hover { border-color: #cbd5e1; }
+
+    /* Toggle button sits on the right edge of the sidebar */
+    .sidebar-toggle-btn {
+      position: absolute;
+      right: -14px;
+      top: 80px;
+      z-index: 30;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
+      border: 1.5px solid var(--border);
       background: var(--white);
       color: var(--muted);
       font-size: 12px;
+      display: grid;
+      place-items: center;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,.08);
-      transition: background .2s, color .2s, border-color .2s, transform .28s;
+      box-shadow: 0 8px 20px rgba(0,0,0,.13);
+      transition: color .2s, transform .25s;
       flex-shrink: 0;
-      margin-bottom: 4px;
     }
-    .sidebar-toggle-btn:hover {
-      background: var(--accent-lt);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
+    .sidebar-toggle-btn:hover { color: var(--accent); }
+    .app-layout.left-sidebar-collapsed .sidebar-toggle-btn { transform: rotate(180deg); }
 
-    /* Collapsed state */
-    .app-layout.left-sidebar-collapsed .sidebar-left {
-      overflow: visible;
+    /* Inner scrollable area */
+    .sidebar-inner {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
     }
-    .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-collapse-content {
+    .sidebar-inner:hover { scrollbar-color: rgba(0,0,0,.18) transparent; }
+    .sidebar-inner::-webkit-scrollbar { width: 4px; }
+    .sidebar-inner::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-inner::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
+    .sidebar-inner:hover::-webkit-scrollbar-thumb { background: rgba(0,0,0,.18); }
+
+    /* Collapsed state — icon-only mode */
+    .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-collapse-content,
+    .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-extras {
       display: none;
     }
-    .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-toggle-btn {
-      position: fixed;
-      left: 12px;
-      top: calc(var(--nav-h) + 20px);
-      transform: rotate(180deg);
-      align-self: flex-start;
+    /* Nav items become icon-only when collapsed */
+    .app-layout.left-sidebar-collapsed .sidebar-left .nav-item {
+      justify-content: center;
+      padding: 0;
+      width: 100%;
+    }
+    .app-layout.left-sidebar-collapsed .sidebar-left .nav-item .nav-label,
+    .app-layout.left-sidebar-collapsed .sidebar-left .nav-item .nav-badge {
+      display: none;
+    }
+    .app-layout.left-sidebar-collapsed .sidebar-left .nav-item i {
+      width: auto;
+      font-size: 17px;
     }
 
     /* user mini-card */
@@ -1337,7 +1340,7 @@
       content: ''; flex: 1; height: 1px; background: var(--border);
     }
 
-    /* sidebar uses its own scroll column */
+    /* sidebar uses inner scroll wrapper */
 
     .sidebar-divider { height: 1px; background: var(--border); margin: 8px 0; }
 
@@ -2858,7 +2861,7 @@
       align-items: start !important;
     }
     .app-layout.left-sidebar-collapsed {
-      grid-template-columns: 0 minmax(0, 1fr) 288px !important;
+      grid-template-columns: 86px minmax(0, 1fr) 288px !important;
     }
   
 .logo {
@@ -3042,10 +3045,15 @@
 
   <!-- LEFT SIDEBAR -->
   <aside class="sidebar-left">
-    <!-- Collapse / Expand toggle -->
-    <button class="sidebar-toggle-btn" id="sidebarToggleBtn" type="button" title="Hide sidebar" aria-label="Toggle sidebar">
+    <!-- Toggle button on right edge -->
+    <button class="sidebar-toggle-btn" id="sidebarToggleBtn" type="button" title="Collapse sidebar" aria-label="Toggle sidebar">
       <i class="fa-solid fa-chevron-left"></i>
     </button>
+
+    <!-- Inner scrollable wrapper -->
+    <div class="sidebar-inner">
+
+    <!-- Profile cards — hidden when collapsed -->
     <div class="sidebar-collapse-content">
     <!-- SIDEBAR PROFILE CARD -->
     <div class="profile-card-variant active" data-variant="card-stack" id="feedCardVariantStack">
@@ -3248,17 +3256,21 @@
       </div>
     </div>
     </div>
+    </div><!-- /.sidebar-collapse-content -->
 
-    <a class="nav-item active" href="/feed.html"><i class="fa-solid fa-house"></i> Home</a>
-    <a class="nav-item" href="/pages/library/index.html"><i class="fa-regular fa-bookmark"></i> Library</a>
-    <a class="nav-item" href="/pages/events/event.html"><i class="fa-regular fa-calendar"></i> Events <span class="nav-badge">3</span></a>
-    <a class="nav-item" href="/pages/sponsorship/sponsor.html"><i class="fa-solid fa-handshake-angle"></i> Sponsorship</a>
-    <a class="nav-item" href="/pages/profiles/edit-profile.html#section-training"><i class="fa-solid fa-dumbbell"></i> Training</a>
-    <a class="nav-item" href="/pages/community/community.html"><i class="fa-regular fa-hand-peace"></i> Community</a>
-    <a class="nav-item" href="/articles.html"><i class="fa-solid fa-newspaper"></i> Articles</a>
-    <a class="nav-item" href="/pages/marketplace/marketplace.html"><i class="fa-solid fa-store"></i> Marketplace</a>
-    <button class="nav-item" id="openAdminDashboardBtn" style="display:none;"><i class="fa-solid fa-shield-halved"></i> Admin Dashboard</button>
+    <!-- Nav items — always visible; icon-only when sidebar is collapsed -->
+    <a class="nav-item active" href="/feed.html"><i class="fa-solid fa-house"></i><span class="nav-label"> Home</span></a>
+    <a class="nav-item" href="/pages/library/index.html"><i class="fa-regular fa-bookmark"></i><span class="nav-label"> Library</span></a>
+    <a class="nav-item" href="/pages/events/event.html"><i class="fa-regular fa-calendar"></i><span class="nav-label"> Events </span><span class="nav-badge">3</span></a>
+    <a class="nav-item" href="/pages/sponsorship/sponsor.html"><i class="fa-solid fa-handshake-angle"></i><span class="nav-label"> Sponsorship</span></a>
+    <a class="nav-item" href="/pages/profiles/edit-profile.html#section-training"><i class="fa-solid fa-dumbbell"></i><span class="nav-label"> Training</span></a>
+    <a class="nav-item" href="/pages/community/community.html"><i class="fa-regular fa-hand-peace"></i><span class="nav-label"> Community</span></a>
+    <a class="nav-item" href="/articles.html"><i class="fa-solid fa-newspaper"></i><span class="nav-label"> Articles</span></a>
+    <a class="nav-item" href="/pages/marketplace/marketplace.html"><i class="fa-solid fa-store"></i><span class="nav-label"> Marketplace</span></a>
+    <button class="nav-item" id="openAdminDashboardBtn" style="display:none;"><i class="fa-solid fa-shield-halved"></i><span class="nav-label"> Admin Dashboard</span></button>
 
+    <!-- Divider + coming soon — hidden when collapsed -->
+    <div class="sidebar-extras">
     <div class="sidebar-divider"></div>
 
     <!-- ── COMING SOON (collapsed) ── -->
@@ -3289,7 +3301,9 @@
       </div>
     </details>
 
-    </div><!-- /.sidebar-collapse-content -->
+    </div><!-- /.sidebar-extras -->
+
+    </div><!-- /.sidebar-inner -->
   </aside>
 
   <!-- MAIN FEED -->
@@ -7268,11 +7282,11 @@ function escapeHtml(text) {
   function applyState(collapsed) {
     if (collapsed) {
       layout.classList.add('left-sidebar-collapsed');
-      btn.title = 'Show sidebar';
+      btn.title = 'Expand sidebar';
       btn.setAttribute('aria-label', 'Expand sidebar');
     } else {
       layout.classList.remove('left-sidebar-collapsed');
-      btn.title = 'Hide sidebar';
+      btn.title = 'Collapse sidebar';
       btn.setAttribute('aria-label', 'Collapse sidebar');
     }
   }
