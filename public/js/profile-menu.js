@@ -20,8 +20,20 @@
     return '/pages/profiles/public-profile.html?userId=' + encodeURIComponent(identifier);
   }
 
-  function navigateToProfile() { window.location.href = getProfileUrl(); }
-  function navigateToEditProfile() { window.location.href = getEditProfileUrl(); }
+  function navigateToProfile() {
+    if (window.SpaRouter) {
+      window.SpaRouter.navigate('profile');
+    } else {
+      window.location.href = getProfileUrl();
+    }
+  }
+  function navigateToEditProfile() {
+    if (window.SpaRouter) {
+      window.SpaRouter.navigate('settings');
+    } else {
+      window.location.href = getEditProfileUrl();
+    }
+  }
 
   /* ── Chip hydration ── */
   function refreshChip(profile) {
@@ -85,23 +97,40 @@
 
   /* ── Action dispatch ── */
   function handleMenuAction(action) {
+    function _spa(route, params, query) {
+      if (window.SpaRouter) {
+        window.SpaRouter.navigate(route, params, query);
+      } else {
+        var fallbacks = {
+          profile: '/app.html#profile',
+          settings: '/pages/dashboard/settings.html',
+          notifications: '/pages/dashboard/notifications.html',
+          messages: '/pages/messaging/inbox.html',
+          library: '/pages/library/index.html',
+          events: '/pages/events/event.html',
+          marketplace: '/pages/marketplace/marketplace.html'
+        };
+        window.location.href = fallbacks[route] || ('/app.html#' + route);
+      }
+    }
+
     switch (action) {
-      case 'view-profile': navigateToProfile(); break;
-      case 'edit-profile': navigateToEditProfile(); break;
-      case 'your-activity': window.location.href = '/pages/profiles/user-posts.html'; break;
-      case 'account-settings': window.location.href = '/pages/dashboard/settings.html'; break;
-      case 'notifications': window.location.href = '/pages/dashboard/notifications.html'; break;
+      case 'view-profile': _spa('profile'); break;
+      case 'edit-profile': _spa('settings'); break;
+      case 'your-activity': _spa('profile'); break;
+      case 'account-settings': _spa('settings'); break;
+      case 'notifications': _spa('notifications'); break;
       case 'privacy': window.location.href = '/pages/legal/privacy.html'; break;
-      case 'connections': window.location.href = '/pages/messaging/inbox.html'; break;
-      case 'library': window.location.href = '/pages/library/index.html'; break;
-      case 'media-vault': window.location.href = '/pages/library/media.html'; break;
-      case 'events': window.location.href = '/pages/events/event.html'; break;
+      case 'connections': _spa('messages'); break;
+      case 'library': _spa('library'); break;
+      case 'media-vault': _spa('library'); break;
+      case 'events': _spa('events'); break;
       case 'help': window.location.href = '/pages/company/help-center.html'; break;
       case 'report': window.location.href = '/pages/contact/index.html'; break;
       case 'changelog': window.location.href = '/pages/company/changelog.html'; break;
-      case 'my-analytics': window.location.href = '/pages/marketplace/analytics.html'; break;
-      case 'achievements': window.location.href = '/pages/profiles/user-posts.html'; break;
-      case 'my-sports': window.location.href = '/pages/profiles/edit-profile.html#section-sports'; break;
+      case 'my-analytics': _spa('marketplace'); break;
+      case 'achievements': _spa('profile'); break;
+      case 'my-sports': _spa('settings'); break;
       case 'invite-friends': window.location.href = '/pages/contact/index.html'; break;
       case 'download-data': downloadUserData(); break;
       case 'switch-account': window.location.href = '/pages/auth/login.html'; break;

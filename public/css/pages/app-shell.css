@@ -1,0 +1,81 @@
+.spa-outlet {
+  min-height: 60vh;
+  position: relative;
+}
+
+.spa-view-enter {
+  animation: spaViewIn 0.18s ease-out both;
+}
+
+@keyframes spaViewIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.spa-loading {
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.spa-skeleton {
+  height: 100px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, var(--surface) 0%, var(--border) 50%, var(--surface) 100%);
+  background-size: 200% 100%;
+  animation: spaSkeleton 1.5s ease-in-out infinite;
+}
+
+.spa-skeleton--medium {
+  height: 60px;
+}
+
+.spa-skeleton--short {
+  height: 40px;
+  width: 55%;
+}
+
+@keyframes spaSkeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.spa-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+  gap: 16px;
+  color: var(--muted);
+}
+
+.spa-error i {
+  font-size: 40px;
+  color: var(--border);
+}
+
+.spa-error p {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.spa-error button {
+  padding: 10px 24px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--pill);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+}

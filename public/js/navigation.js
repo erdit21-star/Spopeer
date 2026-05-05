@@ -5,7 +5,7 @@
   }
 
   function getHomeUrl() {
-    return isLoggedIn() ? "/feed.html" : "/index.html";
+    return isLoggedIn() ? "/app.html" : "/index.html";
   }
 
   function goHome() {
@@ -36,14 +36,14 @@
 
     if (!window.SpopeerAPI) {
       if (isLoggedIn()) {
-        window.location.href = "/feed.html";
+        window.location.href = "/app.html";
       }
       return;
     }
 
     try {
       await window.SpopeerAPI.me();
-      window.location.href = "/feed.html";
+      window.location.href = "/app.html";
     } catch (err) {
       console.debug('navigation: guest page auth check failed', err);
       // Not authenticated: stay on guest page.

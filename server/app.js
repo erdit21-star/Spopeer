@@ -356,6 +356,35 @@ app.get('/admin/{*rest}', authenticate, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'pages', 'admin', 'dashboard.html'));
 });
 
+// SPA redirects for legacy page URLs
+const SPA_REDIRECTS = {
+  '/feed.html': '/app.html#feed',
+  '/pages/dashboard/notifications.html': '/app.html#notifications',
+  '/pages/dashboard/settings.html': '/app.html#settings',
+  '/pages/messaging/inbox.html': '/app.html#messages',
+  '/pages/messaging/chat.html': '/app.html#messages',
+  '/messages.html': '/app.html#messages',
+  '/connections.html': '/app.html#connections',
+  '/search.html': '/app.html#search',
+  '/profile.html': '/app.html#profile',
+  '/pages/profiles/public-profile.html': '/app.html#public-profile',
+  '/pages/profiles/athlete-profile.html': '/app.html#profile',
+  '/pages/profiles/user-posts.html': '/app.html#profile',
+  '/pages/profiles/edit-profile.html': '/app.html#settings',
+  '/pages/profiles/followers.html': '/app.html#profile',
+  '/pages/events/event.html': '/app.html#events',
+  '/pages/library/index.html': '/app.html#library',
+  '/pages/library/media.html': '/app.html#library',
+  '/pages/marketplace/marketplace.html': '/app.html#marketplace',
+  '/pages/community/community.html': '/app.html#community',
+  '/pages/community/forums.html': '/app.html#community',
+  '/pages/sponsorship/sponsor.html': '/app.html#sponsorship'
+};
+
+app.get(Object.keys(SPA_REDIRECTS), (req, res) => {
+  res.redirect(302, SPA_REDIRECTS[req.path]);
+});
+
 // ─── CATCH-ALL: serve index.html for frontend routes ───
 app.get('{*path}', (req, res) => {
   if (req.path.startsWith('/api/')) {
