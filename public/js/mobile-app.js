@@ -837,6 +837,18 @@
     });
   }
 
+  function isAdminUser(user) {
+    if (!user) return false;
+    var role = String(user.role || user.userType || '').toLowerCase();
+    return user.isAdmin === true || role === 'admin' || role === 'superadmin';
+  }
+
+  function updateDrawerAccessByRole() {
+    var adminDashboardItem = document.getElementById('spmAdminDashboardItem');
+    if (!adminDashboardItem) return;
+    adminDashboardItem.classList.toggle('spm-hidden', !isAdminUser(app.user));
+  }
+
   function bindNav() {
     document.querySelectorAll('[data-route]').forEach(function (button) { button.addEventListener('click', function () { app.route = button.dataset.route; render(); }); });
     const menuBtn = $('#spmMenuBtn');
@@ -874,6 +886,7 @@
   async function init() {
     applyStoredTheme();
     bindNav();
+    updateDrawerAccessByRole();
     // Safety net: never leave users on a blank splash if init hangs.
     window.setTimeout(function () {
       var splash = $('#spmSplash');
@@ -902,10 +915,13 @@
       try {
         const result = await window.SpopeerAPI.me();
         app.user = unwrapUser(result);
+        updateDrawerAccessByRole();
         revealTarget('#spmShell');
         render();
         refreshTopbarStats();
       } catch (_error) {
+        app.user = null;
+        updateDrawerAccessByRole();
         revealTarget('#spmAuth');
       }
     }, 1650);
