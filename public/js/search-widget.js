@@ -25,6 +25,15 @@ function setCachedSearchResult(url, data) {
   searchRequestState.cache.set(url, { data, timestamp: Date.now() });
 }
 
+function extractSearchResults(payload) {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.results)) return payload.results;
+  if (Array.isArray(payload.data)) return payload.data;
+  if (payload.data && Array.isArray(payload.data.results)) return payload.data.results;
+  return [];
+}
+
 function injectSearchWidget() {
   const headerContent = document.querySelector('.header-content');
   if (!headerContent) return;
@@ -136,7 +145,7 @@ async function fetchSuggestions(query, suggestionsBox) {
     const url = `/api/search?term=${encodeURIComponent(query)}&pageSize=8`;
     const cached = getCachedSearchResult(url);
     if (cached) {
-      displaySuggestions(cached.results || [], suggestionsBox, query);
+      displaySuggestions(extractSearchResults(cached), suggestionsBox, query);
       return;
     }
 
@@ -156,8 +165,7 @@ async function fetchSuggestions(query, suggestionsBox) {
     
     const data = await res.json();
     setCachedSearchResult(url, data);
-    // ...existing code...
-    displaySuggestions(data.results || [], suggestionsBox, query);
+    displaySuggestions(extractSearchResults(data), suggestionsBox, query);
   } catch (err) {
     if (err.name === 'AbortError') return;
     console.error('Fetch error:', err);
@@ -171,7 +179,7 @@ async function fetchMentions(query, suggestionsBox) {
     const url = `/api/search?term=${encodeURIComponent(query)}&pageSize=8`;
     const cached = getCachedSearchResult(url);
     if (cached) {
-      displayMentions(cached.results || [], suggestionsBox, query);
+      displayMentions(extractSearchResults(cached), suggestionsBox, query);
       return;
     }
 
@@ -189,7 +197,7 @@ async function fetchMentions(query, suggestionsBox) {
     
     const data = await res.json();
     setCachedSearchResult(url, data);
-    displayMentions(data.results || [], suggestionsBox, query);
+    displayMentions(extractSearchResults(data), suggestionsBox, query);
   } catch (err) {
     if (err.name === 'AbortError') return;
     console.error('Mentions error:', err);
@@ -209,7 +217,7 @@ async function showAllProfiles(suggestionsBox) {
     }
     
     const data = await res.json();
-    displayMentions(data.results || [], suggestionsBox, '');
+    displayMentions(extractSearchResults(data), suggestionsBox, '');
   } catch (err) {
     console.error('Error:', err);
     suggestionsBox.style.display = 'none';
@@ -292,6 +300,7 @@ function insertMention(name) { // eslint-disable-line no-unused-vars
 }
 
 function escapeHtml(text) {
+  text = String(text || '');
   const map = {
     '&': '&amp;',
     '<': '&lt;',

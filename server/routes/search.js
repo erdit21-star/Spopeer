@@ -47,7 +47,14 @@ router.get('/', optionalAuth, async (req, res) => {
     const cacheKey = `search:${JSON.stringify({ term, sport, userType, location, limit, offset })}`;
     const cached = await cache.get(cacheKey);
     if (cached) {
-      return res.json(cached);
+      return ok(res, cached.payload || [], {
+        results: cached.payload || [],
+        pagination: cached.pagination || {
+          total: 0,
+          page: parseInt(page) || 1,
+          pages: 0
+        }
+      });
     }
 
     const { rows: users, count } = await User.findAndCountAll({
@@ -58,15 +65,17 @@ router.get('/', optionalAuth, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    const { ok } = require('../utils/response');
     const payload = sanitizeUserList(req.user || null, users);
-    await cache.set(cacheKey, payload, 30 * 1000);
+    const pagination = {
+      total: count,
+      page: parseInt(page) || 1,
+      pages: Math.ceil(count / limit)
+    };
+
+    await cache.set(cacheKey, { payload, pagination }, 30 * 1000);
     ok(res, payload, {
-      pagination: {
-        total: count,
-        page: parseInt(page) || 1,
-        pages: Math.ceil(count / limit)
-      }
+      results: payload,
+      pagination
     });
   } catch (error) {
     logger.error({ event: 'search_error', message: error.message });

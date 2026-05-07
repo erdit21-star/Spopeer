@@ -51,6 +51,17 @@ class FollowManager {
     }));
   }
 
+  unwrapUserListResponse(data) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.users)) return data.users;
+    if (Array.isArray(data.results)) return data.results;
+    if (Array.isArray(data.data)) return data.data;
+    if (data.data && Array.isArray(data.data.users)) return data.data.users;
+    if (data.data && Array.isArray(data.data.results)) return data.data.results;
+    return [];
+  }
+
   async getFollowStatus(userId) {
     if ((window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
       try {
@@ -134,7 +145,7 @@ class FollowManager {
     if ((window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
       try {
         const data = await window.SpopeerAPI.getFollowers(userId);
-        return data.users || [];
+        return this.unwrapUserListResponse(data);
       } catch (err) {
         console.error('Get followers error:', err);
       }
@@ -147,7 +158,7 @@ class FollowManager {
     if ((window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
       try {
         const data = await window.SpopeerAPI.getFollowing(userId);
-        return data.users || [];
+        return this.unwrapUserListResponse(data);
       } catch (err) {
         console.error('Get following error:', err);
       }

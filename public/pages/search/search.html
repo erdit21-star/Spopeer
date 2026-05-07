@@ -1137,7 +1137,9 @@
 
   // Helper function to handle search results (API + Marketplace)
   function handleSearchResults(peopleJson, marketplaceJson, currentPage, PAGE_SIZE){
-    const peopleResults = peopleJson?.results || [];
+    const peopleResults = Array.isArray(peopleJson?.results)
+      ? peopleJson.results
+      : (Array.isArray(peopleJson?.data) ? peopleJson.data : []);
     const peopleTotal = peopleJson?.pagination?.total || 0;
     const peoplePages = peopleJson?.pagination?.pages || 1;
     const peoplePg = peopleJson?.pagination?.page || currentPage;

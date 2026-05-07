@@ -47,8 +47,10 @@
   function unwrapSearchUsers(result) {
     if (!result) return [];
     if (Array.isArray(result)) return result;
+    if (Array.isArray(result.results)) return result.results;
     if (Array.isArray(result.users)) return result.users;
     if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.results)) return result.data.results;
     if (result.data && Array.isArray(result.data.users)) return result.data.users;
     if (result.payload && Array.isArray(result.payload)) return result.payload;
     return [];
