@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' } };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' } };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -2069,52 +2069,230 @@
     events: async function () {
       setTitle('Events', 'Upcoming sports events');
       var screen = $('#spmScreen');
+      var state = app.eventsState || { items: [], source: 'all', sort: 'upcoming', query: '' };
+      app.eventsState = state;
       screen.classList.remove('spm-snap-feed');
       screen.innerHTML = '<div class="spm-empty">Loading events...</div>';
       try {
+        try {
+          var me = await window.SpopeerAPI.getProfile();
+          app.user = unwrapUser(me) || app.user || {};
+        } catch (_profileError) {}
+
         var result = await window.SpopeerAPI.listEvents();
-        var events = unwrapEvents(result);
-        screen.innerHTML = `<div class="spm-screen-header"><h2 class="spm-screen-title"><i class="fa-regular fa-calendar"></i> Events</h2><p class="spm-screen-sub">Upcoming sports events &amp; competitions</p></div><div id="spmEventsList"></div>`;
-        var list = document.getElementById('spmEventsList');
-        if (!events.length) {
-          list.innerHTML = '<div class="spm-empty">No events found. Check back soon.</div>';
-          return;
+        state.items = unwrapEvents(result);
+
+        var currentUserId = String((app.user && (app.user.id || app.user.userId)) || '');
+
+        function hasMyInvite(event) {
+          return Array.isArray(event.myInvites) && event.myInvites.length > 0;
         }
-        events.forEach(function (event) {
-          var card = document.createElement('article');
-          card.className = 'spm-feed-card';
-          var dateStr = eventDate(event);
-          var coverHtml = (event.imageUrl || event.image || event.coverUrl)
-            ? '<div class="spm-feed-thumb" style="background-image:url(\'' + html(event.imageUrl || event.image || event.coverUrl) + '\')"></div>'
-            : '';
-          card.innerHTML = coverHtml + `
-            <div class="spm-feed-head">
-              <div class="spm-mini-avatar"><i class="fa-regular fa-calendar"></i></div>
-              <div class="spm-feed-title-wrap">
-                <strong>${html(eventTitle(event))}</strong>
-                <small>${html(dateStr)}</small>
+
+        function isMyCreatedEvent(event) {
+          if (!currentUserId) return false;
+          return String(event.createdBy || event.ownerId || '') === currentUserId;
+        }
+
+        function getEventSource(event) {
+          if (isMyCreatedEvent(event)) return 'created';
+          if (hasMyInvite(event)) return 'saved';
+          return 'saved';
+        }
+
+        function getPendingInvite(event) {
+          if (!Array.isArray(event.myInvites)) return null;
+          return event.myInvites.find(function (invite) { return invite && invite.status === 'pending'; }) || null;
+        }
+
+        function eventSortTime(event) {
+          var value = event.startDate || event.startsAt || event.date || event.createdAt;
+          var parsed = new Date(value);
+          return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+        }
+
+        function getVisibleEvents() {
+          var term = String(state.query || '').trim().toLowerCase();
+          var filtered = (state.items || []).filter(function (event) {
+            if (state.source !== 'all' && getEventSource(event) !== state.source) return false;
+            if (!term) return true;
+            var haystack = [
+              event.title,
+              event.description,
+              event.sport,
+              event.location,
+              event.venue,
+              event.type
+            ].filter(Boolean).join(' ').toLowerCase();
+            return haystack.indexOf(term) >= 0;
+          });
+
+          filtered.sort(function (left, right) {
+            if (state.sort === 'title') {
+              return String(eventTitle(left)).localeCompare(String(eventTitle(right)));
+            }
+            var leftTime = eventSortTime(left);
+            var rightTime = eventSortTime(right);
+            if (state.sort === 'oldest') return leftTime - rightTime;
+            if (state.sort === 'newest') return rightTime - leftTime;
+
+            var now = Date.now();
+            var leftDelta = leftTime >= now ? leftTime - now : Number.MAX_SAFE_INTEGER + (now - leftTime);
+            var rightDelta = rightTime >= now ? rightTime - now : Number.MAX_SAFE_INTEGER + (now - rightTime);
+            return leftDelta - rightDelta;
+          });
+
+          return filtered;
+        }
+
+        var createdCount = state.items.filter(function (event) { return getEventSource(event) === 'created'; }).length;
+        var savedCount = state.items.filter(function (event) { return getEventSource(event) === 'saved'; }).length;
+        var pendingCount = state.items.filter(function (event) { return Boolean(getPendingInvite(event)); }).length;
+
+        screen.innerHTML = `
+          <section class="spm-library-shell">
+            <div class="spm-library-hero">
+              <div>
+                <p class="spm-library-kicker">Events Hub</p>
+                <h2>All your sports events in one place.</h2>
+                <p class="spm-library-copy">Pulled from the main events API with invite actions, sorting, and personal filters.</p>
+              </div>
+              <div class="spm-library-stats">
+                <article><strong>${state.items.length}</strong><span>Total</span></article>
+                <article><strong>${createdCount}</strong><span>Created</span></article>
+                <article><strong>${savedCount}</strong><span>Saved</span></article>
               </div>
             </div>
-            <p class="spm-feed-copy">${html(event.description || event.details || 'Sports event')}</p>
-            <div class="spm-feed-meta">
-              <span class="spm-feed-chip static"><i class="fa-solid fa-location-dot"></i> ${html(event.location || event.venue || 'TBD')}</span>
-              <span class="spm-feed-chip static">${html(event.sport || event.type || 'Event')}</span>
-              ${event.entryFee || event.fee ? '<span class="spm-feed-chip static">' + html(String(event.entryFee || event.fee)) + '</span>' : ''}
+
+            <div class="spm-library-controls">
+              <div class="spm-library-source" id="spmEventsSource">
+                <button type="button" class="spm-library-source-btn${state.source === 'all' ? ' active' : ''}" data-events-source="all">All</button>
+                <button type="button" class="spm-library-source-btn${state.source === 'created' ? ' active' : ''}" data-events-source="created">Created</button>
+                <button type="button" class="spm-library-source-btn${state.source === 'saved' ? ' active' : ''}" data-events-source="saved">Saved</button>
+              </div>
+              <label class="spm-library-sort-wrap">
+                <span>Sort</span>
+                <select id="spmEventsSort" class="spm-library-sort">
+                  <option value="upcoming"${state.sort === 'upcoming' ? ' selected' : ''}>Upcoming</option>
+                  <option value="newest"${state.sort === 'newest' ? ' selected' : ''}>Newest</option>
+                  <option value="oldest"${state.sort === 'oldest' ? ' selected' : ''}>Oldest</option>
+                  <option value="title"${state.sort === 'title' ? ' selected' : ''}>Title</option>
+                </select>
+              </label>
             </div>
-            <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-event="${html(String(event.id || ''))}">View Event</button></div>`;
-          list.appendChild(card);
-        });
-        list.querySelectorAll('[data-open-event]').forEach(function (button) {
+
+            <input id="spmEventsSearch" class="spm-search" style="margin-top:4px" placeholder="Search events by sport, city, or keyword" value="${html(state.query)}">
+            <div class="spm-section-label">Pending Invites: ${pendingCount}</div>
+            <div id="spmEventsList"></div>
+          </section>`;
+
+        var list = document.getElementById('spmEventsList');
+
+        function renderEventCards() {
+          var events = getVisibleEvents();
+          list.innerHTML = '';
+          if (!events.length) {
+            list.innerHTML = '<div class="spm-empty">No events in this view. Try a different filter or search.</div>';
+            return;
+          }
+
+          events.forEach(function (event) {
+            var pendingInvite = getPendingInvite(event);
+            var sourceTag = getEventSource(event) === 'created' ? 'Created' : 'Saved';
+            var inviteCount = Number(event.inviteCount || (Array.isArray(event.myInvites) ? event.myInvites.length : 0));
+            var dateLabel = eventDate(event);
+            var coverHtml = (event.imageUrl || event.image || event.coverUrl)
+              ? '<div class="spm-feed-thumb" style="background-image:url(\'' + html(event.imageUrl || event.image || event.coverUrl) + '\')"></div>'
+              : '';
+
+          var card = document.createElement('article');
+          card.className = 'spm-feed-card';
+            card.innerHTML = coverHtml + `
+              <div class="spm-feed-head">
+                <div class="spm-mini-avatar"><i class="fa-regular fa-calendar"></i></div>
+                <div class="spm-feed-title-wrap">
+                  <strong>${html(eventTitle(event))}</strong>
+                  <small>${html(dateLabel)}</small>
+                </div>
+              </div>
+              <p class="spm-feed-copy">${html(event.description || event.details || 'Sports event')}</p>
+              <div class="spm-feed-meta">
+                <span class="spm-feed-chip static">${html(sourceTag)}</span>
+                <span class="spm-feed-chip static"><i class="fa-solid fa-location-dot"></i> ${html(event.location || event.venue || 'TBD')}</span>
+                <span class="spm-feed-chip static">${html(event.sport || event.type || 'Event')}</span>
+                <span class="spm-feed-chip static"><i class="fa-solid fa-user-group"></i> ${inviteCount}</span>
+                ${event.entryFee || event.fee ? '<span class="spm-feed-chip static">' + html(String(event.entryFee || event.fee)) + '</span>' : ''}
+              </div>
+              ${pendingInvite ? '<div class="spm-detail-actions"><button type="button" class="spm-chat-back" data-accept-event="' + html(String(event.id || '')) + '">Accept</button><button type="button" class="spm-chat-back" data-decline-event="' + html(String(event.id || '')) + '">Decline</button></div>' : ''}
+              <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-event="${html(String(event.id || ''))}">View Event</button></div>`;
+            list.appendChild(card);
+          });
+
+          list.querySelectorAll('[data-open-event]').forEach(function (button) {
+            button.addEventListener('click', function () {
+              var eventId = button.getAttribute('data-open-event');
+              var selected = events.find(function (entry) { return String(entry.id || '') === String(eventId || ''); });
+              if (!selected) return;
+              app.selectedEvent = selected;
+              app.detailBackRoute = 'events';
+              app.route = 'event-detail';
+              render();
+            });
+          });
+
+          list.querySelectorAll('[data-accept-event]').forEach(function (button) {
+            button.addEventListener('click', async function () {
+              var eventId = button.getAttribute('data-accept-event');
+              if (!eventId) return;
+              try {
+                await window.SpopeerAPI.respondToEventInvite(eventId, 'accepted');
+                screens.events();
+              } catch (_error) {}
+            });
+          });
+
+          list.querySelectorAll('[data-decline-event]').forEach(function (button) {
+            button.addEventListener('click', async function () {
+              var eventId = button.getAttribute('data-decline-event');
+              if (!eventId) return;
+              try {
+                await window.SpopeerAPI.respondToEventInvite(eventId, 'declined');
+                screens.events();
+              } catch (_error) {}
+            });
+          });
+        }
+
+        document.querySelectorAll('[data-events-source]').forEach(function (button) {
           button.addEventListener('click', function () {
-            var eventId = button.getAttribute('data-open-event');
-            var selected = events.find(function (entry) { return String(entry.id || '') === String(eventId || ''); });
-            if (!selected) return;
-            app.selectedEvent = selected;
-            app.detailBackRoute = 'events';
-            app.route = 'event-detail';
-            render();
+            state.source = button.getAttribute('data-events-source') || 'all';
+            document.querySelectorAll('[data-events-source]').forEach(function (node) {
+              node.classList.toggle('active', node === button);
+            });
+            renderEventCards();
           });
         });
+
+        var sortSelect = document.getElementById('spmEventsSort');
+        if (sortSelect) {
+          sortSelect.addEventListener('change', function () {
+            state.sort = sortSelect.value || 'upcoming';
+            renderEventCards();
+          });
+        }
+
+        var searchInput = document.getElementById('spmEventsSearch');
+        if (searchInput) {
+          var searchTimer = null;
+          searchInput.addEventListener('input', function () {
+            window.clearTimeout(searchTimer);
+            searchTimer = window.setTimeout(function () {
+              state.query = searchInput.value || '';
+              renderEventCards();
+            }, 180);
+          });
+        }
+
+        renderEventCards();
       } catch (_error) {
         screen.innerHTML = '<div class="spm-empty">Could not load events.</div>';
       }
