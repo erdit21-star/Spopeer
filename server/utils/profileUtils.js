@@ -5,6 +5,7 @@
  * to ensure identical field handling and response shape from both routes.
  */
 const { sanitizeString } = require('./validation');
+const { getEffectivePlan } = require('./subscription-plans');
 
 const PROFILE_STRING_FIELDS = {
   firstName: 100, lastName: 100, displayName: 150, username: 100,
@@ -99,6 +100,7 @@ function pickAllowedUpdates(body) {
 function normalizeUser(user) {
   const src = typeof user.toJSON === 'function' ? user.toJSON() : user;
   const ext = (src.extendedProfile && typeof src.extendedProfile === 'object') ? src.extendedProfile : {};
+  const subscriptionPlan = getEffectivePlan(src);
 
   return {
     // Core identity
@@ -123,6 +125,12 @@ function normalizeUser(user) {
     // Extended profile (flattened for frontend compatibility)
     extendedProfile: ext,
     ...ext,
+    // Subscription plan metadata
+    subscription: src.subscription || subscriptionPlan.coarseSubscription,
+    subscriptionPlanCode: subscriptionPlan.code,
+    subscriptionPlanLabel: subscriptionPlan.label,
+    subscriptionTier: subscriptionPlan.tier,
+    subscriptionFeatures: subscriptionPlan.features,
     // Counts (keep at end so they can't be overridden by extendedProfile)
     followersCount: src.followersCount || 0,
     followingCount: src.followingCount || 0,

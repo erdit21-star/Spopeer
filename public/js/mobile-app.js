@@ -119,6 +119,28 @@
     return joinedDate.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
   }
 
+  function resolveSubscriptionInfo(user) {
+    if (!window.SubscriptionFeatures) {
+      return {
+        code: String((user && user.subscription) || 'free').toUpperCase(),
+        label: 'Plan',
+        features: []
+      };
+    }
+    var resolved = window.SubscriptionFeatures.resolveCurrentPlan(user || {});
+    return {
+      code: resolved.code,
+      label: resolved.label,
+      features: resolved.features || []
+    };
+  }
+
+  function renderSubscriptionFeatureRows(features, maxItems) {
+    return (features || []).slice(0, maxItems || 4).map(function (feature) {
+      return '<div class="spm-profile-field"><span>Feature</span><strong>' + html(feature.text || '') + '</strong></div>';
+    }).join('');
+  }
+
   function isSameUser(left, right) {
     if (!left || !right) return false;
     var leftIds = [left.id, left.userId, left.email, left.userEmail].filter(Boolean).map(function (v) { return String(v).toLowerCase(); });
@@ -3226,6 +3248,7 @@
       const media = Number(user.mediaCount || user.postsCount || user.postCount || 0);
       const followers = Number(user.followersCount || user.followers || 0);
       const following = Number(user.followingCount || user.following || 0);
+      const subscriptionInfo = resolveSubscriptionInfo(user);
 
       const joinedValue = user.createdAt || user.created_at || user.joinedAt || user.memberSince || user.updatedAt;
       var joinedLabel = '-';
@@ -3262,6 +3285,8 @@
               <div class="spm-profile-field"><span>Location</span><strong>${html(location)}</strong></div>
               <div class="spm-profile-field"><span>Experience</span><strong>${html(String(experience))}</strong></div>
               <div class="spm-profile-field"><span>Member Since</span><strong>${html(joinedLabel)}</strong></div>
+              <div class="spm-profile-field"><span>Subscription</span><strong>${html(subscriptionInfo.code + ' · ' + subscriptionInfo.label)}</strong></div>
+              ${renderSubscriptionFeatureRows(subscriptionInfo.features, 3)}
             </div>
 
             <div class="spm-profile-bio">${html(user.bio || user.about || 'Add your story, achievements, and goals to strengthen your profile.')}</div>
@@ -3274,6 +3299,7 @@
               <input id="spmAvatarFileInput" type="file" accept="image/*" class="spm-hidden">
               <div id="spmAvatarMediaPicker" class="spm-avatar-picker spm-hidden"></div>
               <button id="spmEditProfileBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
+              <button id="spmManagePlanBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-layer-group"></i> Manage Plan</button>
               <button id="spmSignOutBtn" class="spm-signout-btn" type="button"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
             </div>
           </div>
@@ -3389,6 +3415,13 @@
         });
       }
 
+      var managePlanBtn = document.getElementById('spmManagePlanBtn');
+      if (managePlanBtn) {
+        managePlanBtn.addEventListener('click', function () {
+          window.location.href = '/pages/dashboard/settings.html#section-subscription';
+        });
+      }
+
       document.getElementById('spmSignOutBtn').addEventListener('click', async function () {
         if (window.Auth && typeof window.Auth.logout === 'function') {
           await window.Auth.logout();
@@ -3422,6 +3455,40 @@
     var adminDashboardItem = document.getElementById('spmAdminDashboardItem');
     if (!adminDashboardItem) return;
     adminDashboardItem.classList.toggle('spm-hidden', !isAdminUser(app.user));
+
+    var drawer = document.getElementById('spmDrawer');
+    if (!drawer) return;
+
+    var user = app.user || {};
+    var info = resolveSubscriptionInfo(user);
+    var block = document.getElementById('spmDrawerPlanBlock');
+    if (!block) {
+      block = document.createElement('div');
+      block.id = 'spmDrawerPlanBlock';
+      block.className = 'spm-drawer-item';
+      block.style.display = 'block';
+      block.style.borderTop = '1px solid rgba(148, 163, 184, 0.25)';
+      block.style.marginTop = '10px';
+      block.style.paddingTop = '12px';
+      var accountSection = Array.from(drawer.querySelectorAll('.spm-drawer-section')).find(function (node) {
+        return String(node.textContent || '').toLowerCase().indexOf('account') !== -1;
+      });
+      if (accountSection && accountSection.parentNode) {
+        accountSection.parentNode.insertBefore(block, accountSection.nextSibling);
+      } else {
+        drawer.appendChild(block);
+      }
+    }
+
+    var featureRows = (info.features || []).slice(0, 2).map(function (feature) {
+      return '<div style="font-size:11px;color:#64748b;line-height:1.35">• ' + html(feature.text || '') + '</div>';
+    }).join('');
+
+    block.innerHTML = '' +
+      '<div style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#334155">Current Plan</div>' +
+      '<div style="font-size:13px;font-weight:700;color:#0f172a;margin:4px 0 6px">' + html(info.code + ' · ' + info.label) + '</div>' +
+      featureRows +
+      '<a href="/pages/dashboard/settings.html#section-subscription" style="display:inline-flex;margin-top:7px;font-size:12px;font-weight:700;color:#001f3f;text-decoration:none">Manage Subscription</a>';
   }
 
   function bindNav() {

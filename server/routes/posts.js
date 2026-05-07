@@ -58,7 +58,7 @@ async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
       where,
       include: [{
         model: User, as: 'author',
-        attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport']
+        attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription']
       }],
       limit,
       offset,
@@ -173,7 +173,7 @@ router.get('/', optionalAuth, async (req, res) => {
       include: [{
         model: User,
         as: 'author',
-        attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport']
+        attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription']
       }],
       limit,
       offset,
@@ -255,7 +255,7 @@ router.post('/', authenticate, uploadPost.single('image'), validate(createPostSc
 
     // Fetch with author info
     const fullPost = await Post.findByPk(post.id, {
-      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport'] }]
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription'] }]
     });
 
     created(res, fullPost);
@@ -336,7 +336,7 @@ router.post('/:id/poll/vote', authenticate, async (req, res) => {
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id, {
-      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport'] }]
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription'] }]
     });
 
     if (!post || !post.isActive) {
@@ -495,7 +495,7 @@ router.post('/:id/repost', authenticate, async (req, res) => {
     await req.user.increment('postsCount');
 
     const fullPost = await Post.findByPk(repost.id, {
-      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport'] }]
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription'] }]
     });
 
     created(res, { payload: fullPost, repostsCount: original.repostsCount + 1 });

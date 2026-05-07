@@ -293,6 +293,17 @@
     return updateProfile(payload);
   }
 
+  async function getSubscriptionPlans() {
+    return request('/api/profile/subscription-plans');
+  }
+
+  async function updateSubscriptionPlan(planCode) {
+    return request('/api/profile/subscription', {
+      method: 'PATCH',
+      body: JSON.stringify({ planCode: String(planCode || '').trim().toUpperCase() })
+    });
+  }
+
   async function uploadAvatar(file) {
     const formData = new FormData();
     formData.append("avatar", file);
@@ -334,6 +345,8 @@
     getCurrentProfile,
     updateProfile,
     updateCurrentProfile,
+    getSubscriptionPlans,
+    updateSubscriptionPlan,
     uploadAvatar,
     uploadCover,
     saveProfile: updateProfile,

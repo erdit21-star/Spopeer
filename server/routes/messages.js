@@ -111,7 +111,7 @@ router.get('/conversations', async (req, res) => {
         {
           model: ConversationParticipant,
           as: 'participants',
-          include: [{ model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email', 'avatarUrl'] }]
+          include: [{ model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email', 'avatarUrl', 'subscription'] }]
         },
         {
           model: Message,
@@ -178,7 +178,7 @@ router.get('/conversations/:id', async (req, res) => {
         {
           model: ConversationParticipant,
           as: 'participants',
-          include: [{ model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email', 'avatarUrl'] }]
+          include: [{ model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email', 'avatarUrl', 'subscription'] }]
         }
       ]
     });

@@ -4,6 +4,7 @@ const { User } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { ok, fail } = require('../utils/response');
 const { pickAllowedUpdates, normalizeUser } = require('../utils/profileUtils');
+const { getEffectivePlan } = require('../utils/subscription-plans');
 
 // GET /api/profile/me
 router.get('/me', authenticate, async (req, res) => {
@@ -50,6 +51,66 @@ router.patch('/me', authenticate, async (req, res) => {
       stack: error && error.stack
     });
     return fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
+  }
+});
+
+// GET /api/profile/subscription-plans
+router.get('/subscription-plans', authenticate, async (req, res) => {
+  try {
+    const effective = getEffectivePlan(req.user);
+    return ok(res, {
+      role: effective.role,
+      currentPlanCode: effective.code,
+      currentPlanLabel: effective.label,
+      currentTier: effective.tier,
+      plans: effective.plans
+    });
+  } catch (error) {
+    console.error('[PROFILE] get_subscription_plans failed:', error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch subscription plans.');
+  }
+});
+
+// PATCH /api/profile/subscription
+router.patch('/subscription', authenticate, async (req, res) => {
+  try {
+    const requestedPlanCode = String(req.body.planCode || '').trim().toUpperCase();
+    if (!requestedPlanCode) {
+      return fail(res, 400, 'VALIDATION', 'planCode is required.');
+    }
+
+    const resolved = getEffectivePlan(req.user, requestedPlanCode);
+    if (!resolved.isValidRequest) {
+      return fail(res, 400, 'VALIDATION', 'Selected plan is not available for your user type.');
+    }
+
+    const currentExtendedProfile = req.user.extendedProfile && typeof req.user.extendedProfile === 'object'
+      ? req.user.extendedProfile
+      : {};
+
+    const nextExtendedProfile = {
+      ...currentExtendedProfile,
+      subscriptionPlanCode: resolved.code,
+      subscriptionUpdatedAt: new Date().toISOString()
+    };
+
+    await req.user.update({
+      subscription: resolved.coarseSubscription,
+      extendedProfile: nextExtendedProfile
+    });
+
+    return ok(res, {
+      user: normalizeUser(req.user),
+      plan: {
+        code: resolved.code,
+        label: resolved.label,
+        tier: resolved.tier,
+        features: resolved.features
+      }
+    }, { message: 'Subscription updated.' });
+  } catch (error) {
+    console.error('[PROFILE] patch_subscription failed:', error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to update subscription.');
   }
 });
 

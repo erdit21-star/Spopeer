@@ -11,6 +11,7 @@
   <script src="/js/current-user-store.js"></script>
   <script src="/js/user-ui.js"></script>
   <script src="/js/shared-ui.js"></script>
+  <script src="/js/subscription-features.js"></script>
   <script src="/js/role-router.js"></script>
   <script>window.Auth.requireAuth();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -613,6 +614,94 @@
     }[role] || 'User';
   }
 
+  function injectSubscriptionSection() {
+    var sidebar = document.querySelector('.settings-sidebar');
+    var main = document.querySelector('.settings-main');
+    if (!sidebar || !main) return;
+
+    if (!document.querySelector('.sidebar-nav-item[data-section="subscription"]')) {
+      var anchor = document.querySelector('.sidebar-nav-item[data-section="account"]');
+      var subLink = document.createElement('a');
+      subLink.href = '#section-subscription';
+      subLink.className = 'sidebar-nav-item';
+      subLink.setAttribute('data-section', 'subscription');
+      subLink.innerHTML = '<i class="fa-solid fa-layer-group"></i> Subscription';
+      if (anchor && anchor.parentNode) {
+        anchor.parentNode.insertBefore(subLink, anchor);
+      }
+    }
+
+    if (document.getElementById('section-subscription')) return;
+
+    var section = document.createElement('div');
+    section.className = 'settings-card';
+    section.id = 'section-subscription';
+    section.innerHTML = '' +
+      '<div class="card-header">' +
+        '<div class="card-icon blue"><i class="fa-solid fa-layer-group"></i></div>' +
+        '<div class="card-header-text">' +
+          '<div class="card-title">Subscription Plan</div>' +
+          '<div class="card-desc">Choose your plan to unlock role-based and cross-network features.</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-body">' +
+        '<div class="form-group">' +
+          '<label class="form-label" for="accountSubscriptionPlan">Current Plan</label>' +
+          '<select id="accountSubscriptionPlan" class="form-input"></select>' +
+        '</div>' +
+        '<div class="setting-row" style="align-items:flex-start">' +
+          '<div class="setting-info" style="width:100%">' +
+            '<div class="setting-label">Included Features</div>' +
+            '<div class="setting-desc" id="subscriptionSignal" style="margin-bottom:8px"></div>' +
+            '<ul id="subscriptionFeatureList" style="margin:0;padding-left:18px;display:grid;gap:6px"></ul>' +
+          '</div>' +
+        '</div>' +
+        '<div class="btn-row">' +
+          '<button class="btn-primary" id="saveSubscription"><i class="fa-solid fa-check" style="font-size:11px"></i> Update Subscription</button>' +
+        '</div>' +
+      '</div>';
+
+    var accountSection = document.getElementById('section-account');
+    if (accountSection && accountSection.parentNode === main) {
+      main.insertBefore(section, accountSection);
+    } else {
+      main.appendChild(section);
+    }
+  }
+
+  function refreshSubscriptionPreview(user, selectedCodeOverride) {
+    if (!window.SubscriptionFeatures) return;
+    var planSelect = document.getElementById('accountSubscriptionPlan');
+    var list = document.getElementById('subscriptionFeatureList');
+    var signal = document.getElementById('subscriptionSignal');
+    if (!planSelect || !list || !signal) return;
+
+    var resolved = window.SubscriptionFeatures.resolveCurrentPlan(user || {});
+    var plans = resolved.plans || [];
+    var selectedCode = String(selectedCodeOverride || resolved.code || '').trim().toUpperCase();
+    var selectedPlan = plans.find(function (plan) { return plan.code === selectedCode; }) || resolved.plan;
+
+    if (!planSelect.dataset.bound) {
+      planSelect.innerHTML = plans.map(function (plan) {
+        return '<option value="' + plan.code + '">' + plan.code + ' — ' + plan.label + '</option>';
+      }).join('');
+      planSelect.dataset.bound = '1';
+      planSelect.addEventListener('change', function () {
+        refreshSubscriptionPreview(user || {}, planSelect.value);
+      });
+    }
+
+    planSelect.value = selectedPlan.code;
+    signal.textContent = window.SubscriptionFeatures.getCrossTypeSignals({
+      code: selectedPlan.code,
+      tier: selectedPlan.tier
+    }).join(' ');
+
+    list.innerHTML = (selectedPlan.features || []).map(function (feature) {
+      return '<li>' + (feature.text || '') + '</li>';
+    }).join('');
+  }
+
   async function persistProfile(payload, sourceLabel) {
     const result = await window.SpopeerAPI.updateProfile(payload);
     const savedUser = result.user || payload;
@@ -643,6 +732,8 @@
   if (emailInput) emailInput.value = ud.email || ud.userEmail || '';
   if (usernameInput) usernameInput.value = '@' + (ud.email ? ud.email.split('@')[0] : ud.username || 'user');
   if (typeInput) typeInput.value = roleLabel(ud.role || ud.userType);
+  injectSubscriptionSection();
+  refreshSubscriptionPreview(ud);
 
   /* ── Profile menu: handled by shared-ui.js setupSocialFeedRuntime ── */
 
@@ -757,6 +848,35 @@
       showToast('Preferences saved!');
     } catch (err) {
       showToast(err.message || 'Failed to save preferences', 'fa-triangle-exclamation');
+    }
+  });
+
+  document.getElementById('saveSubscription')?.addEventListener('click', async () => {
+    var select = document.getElementById('accountSubscriptionPlan');
+    if (!select || !select.value) {
+      showToast('Choose a subscription plan first', 'fa-triangle-exclamation');
+      return;
+    }
+
+    try {
+      var result = await window.SpopeerAPI.updateSubscriptionPlan(select.value);
+      var savedUser = (result && result.data && result.data.user) || result.user || ud;
+      localStorage.setItem('spopeer_user', JSON.stringify(savedUser));
+      localStorage.setItem('user', JSON.stringify(savedUser));
+      localStorage.setItem('spopeer_loggedIn', 'true');
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+        window.CurrentUserStore.setCurrentUser(savedUser);
+      }
+      refreshSubscriptionPreview(savedUser, select.value);
+      if (window.sharedUi && window.sharedUi.ensureDesktopSubscriptionPanel) {
+        window.sharedUi.ensureDesktopSubscriptionPanel();
+      }
+      if (window.sharedUi && window.sharedUi.ensureMobileDrawerPlanBlock) {
+        window.sharedUi.ensureMobileDrawerPlanBlock();
+      }
+      showToast('Subscription updated!');
+    } catch (err) {
+      showToast(err.message || 'Failed to update subscription', 'fa-triangle-exclamation');
     }
   });
 

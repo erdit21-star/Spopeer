@@ -34,6 +34,7 @@ const { Op } = require('sequelize');
 const { config: env } = require('../config/env');
 const { issueCsrfToken, csrfProtection } = require('../middleware/csrf');
 const { verifyCaptchaMiddleware } = require('../middleware/captcha');
+const { getEffectivePlan } = require('../utils/subscription-plans');
 // Test flag (used to relax middleware in tests)
 const isTest = process.env.NODE_ENV === 'test';
 const isProd = process.env.NODE_ENV === 'production';
@@ -137,6 +138,30 @@ async function withRetries(factory, retries, label) {
   }
 
   throw lastError;
+}
+
+function buildAuthUserPayload(user) {
+  const plan = getEffectivePlan(user);
+  const firstName = user.firstName ?? null;
+  const lastName = user.lastName ?? null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    userType: user.role,
+    firstName,
+    lastName,
+    displayName: user.displayName || [firstName, lastName].filter(Boolean).join(' ') || user.email,
+    avatarUrl: user.avatarUrl ?? null,
+    sport: user.sport ?? null,
+    username: user.username ?? null,
+    subscription: plan.coarseSubscription,
+    subscriptionPlanCode: plan.code,
+    subscriptionPlanLabel: plan.label,
+    subscriptionTier: plan.tier,
+    subscriptionFeatures: plan.features
+  };
 }
 
 function isTransientDbError(error) {
@@ -295,16 +320,7 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
         message: requireEmailVerification
           ? 'Account created successfully. Please verify your email before signing in.'
           : 'Account created successfully. A verification email has been sent.',
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          firstName: user.firstName ?? null,
-          lastName: user.lastName ?? null,
-          displayName: user.displayName || null,
-          avatarUrl: user.avatarUrl ?? null,
-          sport: user.sport ?? null
-        },
+        user: buildAuthUserPayload(user),
         emailSent: emailSent === null ? null : !!emailSent
       }
     });
@@ -430,14 +446,8 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
       data: {
         message: 'Login successful.',
         user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          userType: user.role,
+          ...buildAuthUserPayload(user),
           isActive: user.isActive,
-          firstName,
-          lastName,
-          displayName: user.displayName || [firstName, lastName].filter(Boolean).join(' ') || email,
           emailVerified,
           avatarUrl,
           sport,
@@ -465,12 +475,7 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
 router.get('/me', authenticate, async (req, res) => {
   try {
     const u = req.user;
-    return ok(res, { user: {
-      id: u.id, email: u.email, role: u.role,
-      firstName: u.firstName ?? null, lastName: u.lastName ?? null,
-      displayName: u.displayName ?? null, avatarUrl: u.avatarUrl ?? null,
-      sport: u.sport ?? null, username: u.username ?? null
-    } });
+    return ok(res, { user: buildAuthUserPayload(u) });
   } catch (error) {
     console.error('[GET-USER-BY-EMAIL] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
     return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
@@ -480,12 +485,7 @@ router.get('/me', authenticate, async (req, res) => {
 router.get('/profile', authenticate, async (req, res) => {
   try {
     const u = req.user;
-    return ok(res, { user: {
-      id: u.id, email: u.email, role: u.role,
-      firstName: u.firstName ?? null, lastName: u.lastName ?? null,
-      displayName: u.displayName ?? null, avatarUrl: u.avatarUrl ?? null,
-      sport: u.sport ?? null, username: u.username ?? null
-    } });
+    return ok(res, { user: buildAuthUserPayload(u) });
   } catch (error) {
     console.error('[GET-PROFILE] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
     return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');
@@ -947,12 +947,7 @@ router.post('/google', googleLimiter, async (req, res) => {
 
     // Send curated user object (no passwords, tokens, or internal fields)
     const curatedUser = {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      avatarUrl: user.avatarUrl,
+      ...buildAuthUserPayload(user),
       emailVerified: user.emailVerified
     };
 

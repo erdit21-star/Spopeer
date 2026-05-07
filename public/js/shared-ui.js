@@ -786,6 +786,135 @@
     }
   }
 
+  function ensureSubscriptionStyles() {
+    if (document.getElementById('sp-subscription-style')) return;
+    var style = document.createElement('style');
+    style.id = 'sp-subscription-style';
+    style.textContent = [
+      '.sp-subscription-panel{margin-top:12px;background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:12px;box-shadow:0 2px 8px rgba(2,6,23,.04)}',
+      '.sp-subscription-title{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;color:#0f172a;letter-spacing:.02em;text-transform:uppercase;margin:0 0 8px}',
+      '.sp-subscription-pill{font-size:10px;padding:2px 8px;border-radius:999px;background:#e2e8f0;color:#334155;font-weight:800}',
+      '.sp-subscription-features{display:grid;gap:6px;margin:0;padding:0;list-style:none}',
+      '.sp-subscription-features li{font-size:12px;color:#334155;line-height:1.35;display:flex;align-items:flex-start;gap:7px}',
+      '.sp-subscription-features li i{color:#0ea5e9;margin-top:2px}',
+      '.sp-subscription-features a{color:inherit;text-decoration:none}',
+      '.sp-subscription-features a:hover{text-decoration:underline}',
+      '.sp-subscription-manage{margin-top:10px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#001f3f;text-decoration:none}',
+      '.sp-mobile-plan-block{margin:10px 16px 0;padding:10px;border:1px solid var(--border,#ebebE7);border-radius:10px;background:#f8fafc}',
+      '.sp-mobile-plan-block strong{display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#334155;margin-bottom:6px}',
+      '.sp-mobile-plan-block ul{margin:0;padding-left:16px;font-size:12px;color:#475569;display:grid;gap:4px}'
+    ].join('');
+    document.head.appendChild(style);
+  }
+
+  function ensureSubscriptionLibrary(onReady) {
+    if (window.SubscriptionFeatures) {
+      if (typeof onReady === 'function') onReady();
+      return;
+    }
+
+    var existing = document.getElementById('sp-subscription-lib');
+    if (existing) {
+      if (typeof onReady === 'function') {
+        existing.addEventListener('load', onReady, { once: true });
+      }
+      return;
+    }
+
+    var script = document.createElement('script');
+    script.id = 'sp-subscription-lib';
+    script.src = '/js/subscription-features.js';
+    if (typeof onReady === 'function') {
+      script.addEventListener('load', onReady, { once: true });
+    }
+    document.head.appendChild(script);
+  }
+
+  function buildSubscriptionPanelHtml(info) {
+    var items = (info.features || []).slice(0, 5).map(function (feature) {
+      var text = feature.text || '';
+      if (feature.route) {
+        return '<li><i class="fa-solid fa-check"></i><a href="' + feature.route + '">' + text + '</a></li>';
+      }
+      return '<li><i class="fa-solid fa-check"></i><span>' + text + '</span></li>';
+    }).join('');
+
+    return '' +
+      '<div class="sp-subscription-title">' +
+        '<span>Plan Features</span>' +
+        '<span class="sp-subscription-pill">' + info.code + '</span>' +
+      '</div>' +
+      '<ul class="sp-subscription-features">' + items + '</ul>' +
+      '<a class="sp-subscription-manage" href="/pages/dashboard/settings.html#section-subscription">' +
+        '<i class="fa-regular fa-gear"></i> Manage Subscription' +
+      '</a>';
+  }
+
+  function ensureDesktopSubscriptionPanel() {
+    if (!window.CurrentUserStore) return;
+    if (!window.SubscriptionFeatures) {
+      ensureSubscriptionLibrary(ensureDesktopSubscriptionPanel);
+      return;
+    }
+    ensureSubscriptionStyles();
+
+    var sidebar = document.querySelector('.sidebar-left');
+    if (!sidebar) return;
+
+    var user = window.CurrentUserStore.getCurrentUser ? window.CurrentUserStore.getCurrentUser() : getUserProfile();
+    if (!user) return;
+
+    var info = window.SubscriptionFeatures.resolveCurrentPlan(user);
+    var panel = sidebar.querySelector('[data-subscription-panel]');
+    if (!panel) {
+      panel = document.createElement('section');
+      panel.className = 'sp-subscription-panel';
+      panel.setAttribute('data-subscription-panel', '1');
+      var anchor = sidebar.querySelector('.sidebar-profile') || sidebar.querySelector('.profile-card-variant') || sidebar.firstElementChild;
+      if (anchor && anchor.parentNode === sidebar) {
+        anchor.insertAdjacentElement('afterend', panel);
+      } else {
+        sidebar.insertAdjacentElement('afterbegin', panel);
+      }
+    }
+
+    panel.innerHTML = buildSubscriptionPanelHtml(info);
+  }
+
+  function ensureMobileDrawerPlanBlock() {
+    if (!window.CurrentUserStore) return;
+    if (!window.SubscriptionFeatures) {
+      ensureSubscriptionLibrary(ensureMobileDrawerPlanBlock);
+      return;
+    }
+    ensureSubscriptionStyles();
+
+    var drawer = document.querySelector('.sp-mobile-drawer') || document.getElementById('spmDrawer');
+    if (!drawer) return;
+    var user = window.CurrentUserStore.getCurrentUser ? window.CurrentUserStore.getCurrentUser() : getUserProfile();
+    if (!user) return;
+
+    var info = window.SubscriptionFeatures.resolveCurrentPlan(user);
+    var host = drawer.querySelector('[data-mobile-subscription]');
+    if (!host) {
+      host = document.createElement('div');
+      host.className = 'sp-mobile-plan-block';
+      host.setAttribute('data-mobile-subscription', '1');
+      var firstSection = drawer.querySelector('.sp-mobile-drawer-nav') || drawer.querySelector('.spm-drawer-section');
+      if (firstSection && firstSection.parentNode) {
+        firstSection.parentNode.insertBefore(host, firstSection.nextSibling);
+      } else {
+        drawer.appendChild(host);
+      }
+    }
+
+    host.innerHTML = '<strong>' + info.code + ' · ' + info.label + '</strong><ul>' +
+      (info.features || []).slice(0, 3).map(function (feature) {
+        return '<li>' + (feature.text || '') + '</li>';
+      }).join('') +
+      '</ul>';
+  }
+
   /**
    * Normalize all Sponsor/Sponsorship links to use the canonical absolute path.
    * Handles: <a> href, <button> onclick, sidebar .nav-item links.
@@ -875,6 +1004,8 @@
     normalizeSponsorLinks();
     ensureSponsorNavItem();
     ensureAdsNavItem();
+    ensureDesktopSubscriptionPanel();
+    ensureMobileDrawerPlanBlock();
 
     // Register service worker if not already registered (idempotent — browser deduplicates).
     if ('serviceWorker' in navigator) {
@@ -896,8 +1027,15 @@
   window.sharedUi.normalizeSponsorLinks = normalizeSponsorLinks;
   window.sharedUi.ensureSponsorNavItem = ensureSponsorNavItem;
   window.sharedUi.ensureAdsNavItem = ensureAdsNavItem;
+  window.sharedUi.ensureDesktopSubscriptionPanel = ensureDesktopSubscriptionPanel;
+  window.sharedUi.ensureMobileDrawerPlanBlock = ensureMobileDrawerPlanBlock;
   window.sharedUi.SPONSOR_ROUTE = SPONSOR_ROUTE;
   window.sharedUi.getDisplayName = getDisplayName;
+
+  window.addEventListener('currentUserChanged', function () {
+    ensureDesktopSubscriptionPanel();
+    ensureMobileDrawerPlanBlock();
+  });
 
   // Run auto-init on DOMContentLoaded
   if (typeof document !== 'undefined') {
