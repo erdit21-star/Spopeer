@@ -16,7 +16,7 @@
   </script>
   <!-- Register service worker � inline so it runs regardless of JS cache state -->
   <script>
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && !navigator.webdriver) {
       navigator.serviceWorker.register('/js/service-worker.js').catch(function (err) {
         console.debug('SW registration failed:', err);
       });
