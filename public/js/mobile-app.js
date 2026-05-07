@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' } };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' } };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -683,6 +683,13 @@
     if (item.itemType === 'posts' && item.originalPost) {
       app.selectedPost = item.originalPost;
       app.route = 'post';
+      render();
+      return;
+    }
+    if (item.itemType === 'articles' && item.originalPost) {
+      app.selectedArticle = item.originalPost;
+      app.detailBackRoute = 'library';
+      app.route = 'article-detail';
       render();
       return;
     }
@@ -1536,10 +1543,13 @@
           return;
         }
 
-        screen.innerHTML = '';
+        screen.innerHTML = '<div class="spm-screen-header"><h2 class="spm-screen-title"><i class="fa-regular fa-newspaper"></i> Articles</h2><p class="spm-screen-sub">Long-form posts and article-style updates from the network</p></div><div id="spmArticlesList"></div>';
+        var list = document.getElementById('spmArticlesList');
         posts.slice(0, 20).forEach(function (post) {
           var card = document.createElement('article');
           card.className = 'spm-feed-card';
+          var previewText = String(post.content || 'Article update');
+          var excerpt = previewText.length > 220 ? previewText.slice(0, 220) + '...' : previewText;
           card.innerHTML = `
             <div class="spm-feed-head">
               <div class="spm-mini-avatar"></div>
@@ -1548,13 +1558,88 @@
                 <small>${html(formatTime(post.createdAt || post.created_at))}</small>
               </div>
             </div>
-            <p class="spm-feed-copy">${html(post.content || 'Article update')}</p>
-            <div class="spm-feed-meta"><span class="spm-feed-chip static">Article</span><span class="spm-feed-chip static">${html(post.sport || 'Sports')}</span></div>`;
-          screen.appendChild(card);
+            <p class="spm-feed-copy">${html(excerpt)}</p>
+            <div class="spm-feed-meta"><span class="spm-feed-chip static">Article</span><span class="spm-feed-chip static">${html(post.sport || 'Sports')}</span></div>
+            <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-article="${html(String(post.id || ''))}">Read Article</button></div>`;
+          list.appendChild(card);
+        });
+        list.querySelectorAll('[data-open-article]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            var articleId = button.getAttribute('data-open-article');
+            var selected = posts.find(function (entry) { return String(entry.id || '') === String(articleId || ''); });
+            if (!selected) return;
+            app.selectedArticle = selected;
+            app.detailBackRoute = 'articles';
+            app.route = 'article-detail';
+            render();
+          });
         });
       } catch (_error) {
         screen.innerHTML = '<div class="spm-empty">Could not load articles.</div>';
       }
+    },
+
+    'article-detail': async function () {
+      setTitle('Article', 'Reader view');
+      var screen = $('#spmScreen');
+      var article = app.selectedArticle;
+      screen.classList.remove('spm-snap-feed');
+      if (!article) {
+        app.route = app.detailBackRoute || 'articles';
+        render();
+        return;
+      }
+
+      var mediaType = postMediaType(article);
+      var hero = '';
+      if (mediaType === 'image') {
+        hero = '<div class="spm-detail-hero article" style="background-image:url(\'' + html(postImageUrl(article)) + '\')"><div class="spm-detail-overlay"><span class="spm-detail-badge"><i class="fa-regular fa-newspaper"></i> Article</span><h2>' + html(pickLibraryPostTitle(article)) + '</h2><p>' + html(authorName(article)) + ' · ' + html(formatTime(article.createdAt || article.created_at)) + '</p></div></div>';
+      } else {
+        hero = '<div class="spm-detail-hero article no-media"><div class="spm-detail-overlay"><span class="spm-detail-badge"><i class="fa-regular fa-newspaper"></i> Article</span><h2>' + html(pickLibraryPostTitle(article)) + '</h2><p>' + html(authorName(article)) + ' · ' + html(formatTime(article.createdAt || article.created_at)) + '</p></div></div>';
+      }
+
+      screen.innerHTML = `
+        <section class="spm-detail-shell">
+          <button id="spmArticleDetailBack" class="spm-chat-back spm-detail-back" type="button">Back</button>
+          ${hero}
+          <article class="spm-detail-card spm-article-card">
+            <div class="spm-detail-grid">
+              <div><span>Sport</span><strong>${html(article.sport || 'Sports')}</strong></div>
+              <div><span>Format</span><strong>Long-form post</strong></div>
+            </div>
+            <div class="spm-detail-copy spm-article-copy">
+              <h3>${html(pickLibraryPostTitle(article))}</h3>
+              <p>${html(article.content || 'No article content available.')}</p>
+            </div>
+            <div class="spm-detail-actions">
+              <button id="spmOpenArticlePostBtn" class="spm-primary-action" type="button">Open Discussion</button>
+              <button id="spmShareArticleBtn" class="spm-chat-back" type="button">Share</button>
+            </div>
+          </article>
+        </section>`;
+
+      document.getElementById('spmArticleDetailBack').addEventListener('click', function () {
+        app.route = app.detailBackRoute || 'articles';
+        app.detailBackRoute = null;
+        render();
+      });
+
+      document.getElementById('spmOpenArticlePostBtn').addEventListener('click', function () {
+        app.selectedPost = article;
+        app.route = 'post';
+        render();
+      });
+
+      document.getElementById('spmShareArticleBtn').addEventListener('click', function () {
+        var shareText = pickLibraryPostTitle(article);
+        if (navigator.share) {
+          navigator.share({ title: shareText, text: shareText, url: window.location.href }).catch(function () {});
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareText).catch(function () {});
+        }
+      });
     },
 
     marketplace: async function () {
@@ -1572,25 +1657,124 @@
           return;
         }
 
-        screen.innerHTML = '';
+        screen.innerHTML = '<div class="spm-screen-header"><h2 class="spm-screen-title"><i class="fa-solid fa-store"></i> Marketplace</h2><p class="spm-screen-sub">Active listings from the sports network marketplace</p></div><div id="spmMarketplaceList"></div>';
+        var list = document.getElementById('spmMarketplaceList');
         listings.forEach(function (listing) {
           var card = document.createElement('article');
           card.className = 'spm-feed-card';
+          var seller = listing.seller || {};
+          var sellerName = seller.displayName || [seller.firstName, seller.lastName].filter(Boolean).join(' ') || 'Seller';
           card.innerHTML = `
             <div class="spm-feed-head">
               <div class="spm-mini-avatar"></div>
               <div class="spm-feed-title-wrap">
                 <strong>${html(listingTitle(listing))}</strong>
-                <small>${html(formatTime(listing.createdAt))}</small>
+                <small>${html(sellerName)} · ${html(formatTime(listing.createdAt))}</small>
               </div>
             </div>
             <p class="spm-feed-copy">${html(listing.description || listing.category || 'Marketplace opportunity')}</p>
-            <div class="spm-feed-meta"><span class="spm-feed-chip static">${html(listingPrice(listing))}</span><span class="spm-feed-chip static">${html(listing.sport || listing.category || 'Listing')}</span></div>`;
-          screen.appendChild(card);
+            <div class="spm-feed-meta"><span class="spm-feed-chip static">${html(listingPrice(listing))}</span><span class="spm-feed-chip static">${html(listing.sport || listing.category || 'Listing')}</span></div>
+            <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-listing="${html(String(listing.id || ''))}">View Listing</button></div>`;
+          list.appendChild(card);
+        });
+        list.querySelectorAll('[data-open-listing]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            var listingId = button.getAttribute('data-open-listing');
+            var selected = listings.find(function (entry) { return String(entry.id || '') === String(listingId || ''); });
+            if (!selected) return;
+            app.selectedMarketplaceListing = selected;
+            app.detailBackRoute = 'marketplace';
+            app.route = 'marketplace-detail';
+            render();
+          });
         });
       } catch (_error) {
         screen.innerHTML = '<div class="spm-empty">Could not load marketplace listings.</div>';
       }
+    },
+
+    'marketplace-detail': async function () {
+      setTitle('Listing Details', 'Marketplace');
+      var screen = $('#spmScreen');
+      var listing = app.selectedMarketplaceListing;
+      screen.classList.remove('spm-snap-feed');
+      if (!listing) {
+        app.route = app.detailBackRoute || 'marketplace';
+        render();
+        return;
+      }
+
+      if (listing.id && window.SpopeerAPI && typeof window.SpopeerAPI.request === 'function') {
+        try {
+          var detail = await window.SpopeerAPI.request('/api/marketplace/listings/' + encodeURIComponent(listing.id));
+          listing = (detail && detail.data) || listing;
+          app.selectedMarketplaceListing = listing;
+        } catch (_error) {}
+      }
+
+      var seller = listing.seller || {};
+      var sellerName = seller.displayName || [seller.firstName, seller.lastName].filter(Boolean).join(' ') || 'Seller';
+      var heroUrl = Array.isArray(listing.imageUrls) && listing.imageUrls.length ? listing.imageUrls[0] : (listing.imageUrl || listing.image || '');
+      screen.innerHTML = `
+        <section class="spm-detail-shell">
+          <button id="spmMarketplaceDetailBack" class="spm-chat-back spm-detail-back" type="button">Back</button>
+          <div class="spm-detail-hero marketplace${heroUrl ? '' : ' no-media'}"${heroUrl ? ' style="background-image:url(\'' + html(heroUrl) + '\')"' : ''}>
+            <div class="spm-detail-overlay">
+              <span class="spm-detail-badge"><i class="fa-solid fa-store"></i> Marketplace</span>
+              <h2>${html(listingTitle(listing))}</h2>
+              <p>${html(sellerName)} · ${html(listingPrice(listing))}</p>
+            </div>
+          </div>
+          <article class="spm-detail-card">
+            <div class="spm-detail-grid">
+              <div><span>Category</span><strong>${html(listing.category || 'General')}</strong></div>
+              <div><span>Sport</span><strong>${html(listing.sport || 'All Sports')}</strong></div>
+              <div><span>Type</span><strong>${html(listing.listingType || 'Listing')}</strong></div>
+              <div><span>Status</span><strong>${html(listing.status || 'active')}</strong></div>
+              <div><span>Views</span><strong>${html(String(listing.viewCount || 0))}</strong></div>
+              <div><span>Seller Role</span><strong>${html(seller.role || 'Member')}</strong></div>
+            </div>
+            <div class="spm-detail-copy">
+              <h3>Description</h3>
+              <p>${html(listing.description || 'No listing description provided.')}</p>
+            </div>
+            <div class="spm-detail-actions">
+              <button id="spmSaveMarketplaceBtn" class="spm-primary-action" type="button">Save Listing</button>
+              <button id="spmShareMarketplaceBtn" class="spm-chat-back" type="button">Share</button>
+            </div>
+          </article>
+        </section>`;
+
+      document.getElementById('spmMarketplaceDetailBack').addEventListener('click', function () {
+        app.route = app.detailBackRoute || 'marketplace';
+        app.detailBackRoute = null;
+        render();
+      });
+
+      document.getElementById('spmSaveMarketplaceBtn').addEventListener('click', async function () {
+        var button = document.getElementById('spmSaveMarketplaceBtn');
+        button.disabled = true;
+        try {
+          await window.SpopeerAPI.request('/api/marketplace/saved/' + encodeURIComponent(listing.id), { method: 'POST' });
+          button.textContent = 'Saved';
+        } catch (_error) {
+          button.textContent = 'Could not save';
+          window.setTimeout(function () { button.textContent = 'Save Listing'; }, 1200);
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      document.getElementById('spmShareMarketplaceBtn').addEventListener('click', function () {
+        var shareText = listingTitle(listing) + ' · ' + listingPrice(listing);
+        if (navigator.share) {
+          navigator.share({ title: listingTitle(listing), text: shareText, url: window.location.href }).catch(function () {});
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareText).catch(function () {});
+        }
+      });
     },
 
     library: async function () {

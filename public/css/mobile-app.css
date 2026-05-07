@@ -334,6 +334,8 @@ body.spm-dark-mode .spm-signout-btn{background:#111827;border-color:#b91c1c;colo
 .spm-detail-shell{display:flex;flex-direction:column;gap:12px}
 .spm-detail-back{align-self:flex-start}
 .spm-detail-hero{min-height:220px;border-radius:28px;overflow:hidden;background:radial-gradient(circle at top left,rgba(255,255,255,.18),transparent 32%),linear-gradient(145deg,#001733,#0048a5 62%,#1a6bff);background-size:cover;background-position:center;position:relative;display:flex;align-items:flex-end}
+.spm-detail-hero.article{background:radial-gradient(circle at top left,rgba(255,255,255,.18),transparent 30%),linear-gradient(145deg,#172554,#1d4ed8 54%,#60a5fa)}
+.spm-detail-hero.marketplace{background:radial-gradient(circle at top left,rgba(255,255,255,.16),transparent 30%),linear-gradient(145deg,#0f172a,#334155 54%,#f59e0b)}
 .spm-detail-hero.sponsorship{background:radial-gradient(circle at top left,rgba(255,255,255,.18),transparent 30%),linear-gradient(145deg,#052e16,#166534 54%,#22c55e)}
 .spm-detail-hero.no-media{min-height:188px}
 .spm-detail-overlay{width:100%;padding:22px 18px 18px;background:linear-gradient(180deg,rgba(2,6,23,0),rgba(2,6,23,.78));color:#fff}
@@ -349,6 +351,8 @@ body.spm-dark-mode .spm-signout-btn{background:#111827;border-color:#b91c1c;colo
 .spm-detail-copy h3{margin:0 0 8px;font-family:Syne,Arial,sans-serif;font-size:17px;color:#0f172a}
 .spm-detail-copy p{margin:0;color:#475467;font-size:13px;line-height:1.65}
 .spm-detail-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.spm-article-card .spm-detail-grid{margin-bottom:2px}
+.spm-article-copy p{white-space:pre-wrap;font-size:14px;line-height:1.82}
 
 body.spm-dark-mode .spm-detail-card{background:#111827;border-color:#243044}
 body.spm-dark-mode .spm-detail-grid div{background:#1d2939;border-color:#243044}
