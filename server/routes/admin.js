@@ -16,6 +16,8 @@ const router = express.Router();
 const { User, Post, Connection, Message, Like, Comment, Listing, Sponsorship, Job, Inquiry, AdminAuditLog } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../models');
+const { USER_ROLES } = require('../utils/constants');
+const { normalizeUserRole } = require('../utils/validation');
 const ADMIN_METRICS_TTL_MS = 15 * 1000;
 const adminMetricsCache = new Map();
 
@@ -159,15 +161,54 @@ router.put('/users/:id', async (req, res) => {
 
     const allowedFields = ['role', 'isActive', 'verified', 'subscription'];
     const updates = {};
+
+    if (req.body.role !== undefined) {
+      const normalizedRole = normalizeUserRole(req.body.role);
+      if (!USER_ROLES.includes(normalizedRole)) {
+        return fail(res, 400, 'VALIDATION', 'Invalid role value.');
+      }
+      updates.role = normalizedRole;
+    }
+
     allowedFields.forEach(field => {
+      if (field === 'role') return;
       if (req.body[field] !== undefined) {
         updates[field] = req.body[field];
       }
     });
 
+    if (user.id === req.userId) {
+      if (updates.role && updates.role !== user.role) {
+        return fail(res, 400, 'VALIDATION', 'You cannot change your own role.');
+      }
+      if (updates.isActive === false) {
+        return fail(res, 400, 'VALIDATION', 'You cannot deactivate your own account.');
+      }
+      if (updates.verified === false) {
+        return fail(res, 400, 'VALIDATION', 'You cannot revoke your own verification status.');
+      }
+    }
+
     await user.update(updates);
     await writeAdminAuditLog(req, 'user_updated', 'user', user.id, JSON.stringify(updates));
-    ok(res, { message: 'User updated.', payload: user.toJSON() });
+
+    const safeUser = await User.findByPk(user.id, {
+      attributes: [
+        'id',
+        'email',
+        'firstName',
+        'lastName',
+        'role',
+        'subscription',
+        'verified',
+        'emailVerified',
+        'isActive',
+        'createdAt',
+        'updatedAt'
+      ]
+    });
+
+    ok(res, { message: 'User updated.', payload: safeUser });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to update user.');
   }

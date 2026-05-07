@@ -57,6 +57,7 @@ const { sentryErrorHandler } = require('./services/sentry');
 const { authenticate } = require('./middleware/auth');
 const { requireAdmin } = require('./middleware/admin');
 const { createPerUserLimiter } = require('./middleware/perUserRateLimiter');
+const { csrfProtection } = require('./middleware/csrf');
 
 const app = express();
 app.disable('x-powered-by');
@@ -184,6 +185,34 @@ const searchLimiter = createLimiter({
 // ─── BODY PARSING ───
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const globalApiCsrf = csrfProtection({
+  exemptPaths: [
+    '/auth/csrf',
+    '/auth/login',
+    '/auth/signup',
+    '/auth/register',
+    '/auth/google',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/auth/verify-email',
+    '/auth/verify-email/request',
+    '/auth/resend-verification',
+    '/contact',
+    '/reports',
+    '/careers'
+  ]
+});
+
+app.use('/api', (req, res, next) => {
+  if (!MUTATING_METHODS.has(req.method)) return next();
+
+  const hasCookieSession = Boolean(req.cookies?.access_token || req.cookies?.refresh_token);
+  if (!hasCookieSession) return next();
+
+  return globalApiCsrf(req, res, next);
+});
 
 // ─── METRICS (basic Prometheus text format) ───
 const metrics = {

@@ -37,6 +37,7 @@ const { verifyCaptchaMiddleware } = require('../middleware/captcha');
 // Test flag (used to relax middleware in tests)
 const isTest = process.env.NODE_ENV === 'test';
 const isProd = process.env.NODE_ENV === 'production';
+const requireEmailVerification = isProd || String(process.env.REQUIRE_EMAIL_VERIFICATION || 'false').toLowerCase() === 'true';
 
 // Do not enforce CSRF during unit tests to keep test requests simple
 const requireCsrf = isTest ? (req, res, next) => next() : csrfProtection();
@@ -149,18 +150,10 @@ function isTransientDbError(error) {
   );
 }
 
-// Temporary request logger for auth routes — masks sensitive fields.
+// Minimal auth request logger (no request body logging).
 router.use((req, res, next) => {
   const startedAt = Date.now();
-  try {
-    const safeBody = { ...(req.body || {}) };
-    if (safeBody.password) safeBody.password = '***MASKED***';
-    if (safeBody.newPassword) safeBody.newPassword = '***MASKED***';
-    if (safeBody.credential) safeBody.credential = '***MASKED_GOOGLE_CREDENTIAL***';
-    console.info(`[AUTH] ${req.method} ${req.path} body=${JSON.stringify(safeBody)} ua=${req.get('user-agent') || ''}`);
-  } catch (e) {
-    console.warn('[AUTH] Request logging failed:', e && e.message);
-  }
+  console.info(`[AUTH] ${req.method} ${req.path} ua=${req.get('user-agent') || ''}`);
 
   res.on('finish', () => {
     const durationMs = Date.now() - startedAt;
@@ -231,7 +224,7 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
       return fail(res, 409, 'EMAIL_EXISTS', 'Email already registered.');
     }
 
-    // Create user (active immediately; email verification is optional enhancement)
+    // Create user. In production (or when explicitly enabled), users must verify email first.
     const user = await User.create({
       email: email.toLowerCase(),
       password,
@@ -240,7 +233,7 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
       role: safeRole || 'athlete',
       sport: sport || null,
       profession: profession || null,
-      isActive: true
+      isActive: !requireEmailVerification
     });
 
     // Generate verification token and send email (optional — does not block signup)
@@ -260,20 +253,11 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
       console.error('[SIGNUP] emailVerifyToken update failed (column may not exist):', verifyErr && verifyErr.message);
     }
 
-    // Issue DB-backed session so the user can use the app immediately (MODEL B — verification optional)
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    if (!requireEmailVerification) {
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
 
-    if (process.env.NODE_ENV === 'production') {
-      await RefreshSession.create({
-        userId: user.id,
-        tokenHash: sha256(refreshToken),
-        userAgent: req.get('user-agent') || null,
-        ipAddress: req.ip,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      });
-    } else {
-      try {
+      if (process.env.NODE_ENV === 'production') {
         await RefreshSession.create({
           userId: user.id,
           tokenHash: sha256(refreshToken),
@@ -281,25 +265,36 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
           ipAddress: req.ip,
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         });
-      } catch (sessionErr) {
-        console.error('[SIGNUP] RefreshSession.create failed (table may not exist):', sessionErr.message);
+      } else {
+        try {
+          await RefreshSession.create({
+            userId: user.id,
+            tokenHash: sha256(refreshToken),
+            userAgent: req.get('user-agent') || null,
+            ipAddress: req.ip,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          });
+        } catch (sessionErr) {
+          console.error('[SIGNUP] RefreshSession.create failed (table may not exist):', sessionErr.message);
+        }
       }
-    }
 
-    res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
-    res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+      res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
+      res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
-    // Ensure client receives a CSRF cookie immediately after auth.
-    try {
-      issueCsrfToken(req, res);
-    } catch (err) {
-      console.debug('issueCsrfToken failed on signup:', err && err.message);
+      try {
+        issueCsrfToken(req, res);
+      } catch (err) {
+        console.debug('issueCsrfToken failed on signup:', err && err.message);
+      }
     }
 
     res.status(201).json({
       success: true,
       data: {
-        message: 'Account created successfully. A verification email has been sent.',
+        message: requireEmailVerification
+          ? 'Account created successfully. Please verify your email before signing in.'
+          : 'Account created successfully. A verification email has been sent.',
         user: {
           id: user.id,
           email: user.email,
@@ -349,7 +344,7 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
     const user = await User.findOne({
       where: { email: email.toLowerCase() },
       // Keep login compatible with older DB schemas that may not yet have optional profile columns.
-      attributes: ['id', 'email', 'password', 'role', 'isActive', 'firstName', 'lastName']
+      attributes: ['id', 'email', 'password', 'role', 'isActive', 'emailVerified', 'firstName', 'lastName']
     });
 
     if (!user) {
@@ -358,6 +353,10 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
 
     stage = 'status_check';
     if (user.isActive === false) {
+      const emailVerified = (typeof user.getDataValue === 'function' ? user.getDataValue('emailVerified') : user.emailVerified);
+      if (requireEmailVerification && emailVerified !== true) {
+        return fail(res, 403, 'EMAIL_NOT_VERIFIED', 'Please verify your email address before signing in.');
+      }
       return fail(res, 403, 'ACCOUNT_DEACTIVATED', 'Account has been deactivated.');
     }
 
@@ -959,9 +958,7 @@ router.post('/google', googleLimiter, async (req, res) => {
 
     const responsePayload = {
       message: 'Signed in with Google',
-      user: curatedUser,
-      accessToken,
-      refreshToken
+      user: curatedUser
     };
 
     ok(res, responsePayload);
