@@ -2674,7 +2674,7 @@
       const user = app.user || {};
       const name = displayNameFromUser(user);
       const avatarUrl = user.avatarUrl || user.avatar || user.profileImageUrl || user.profilePhoto || '';
-      const coverUrl = user.coverUrl || user.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900';
+      const coverUrl = user.coverUrl || user.coverImage || avatarUrl || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900';
       const role = user.role || user.userType || 'Sports profile';
       const sport = user.sport || user.primarySport || '-';
       const position = user.position || user.preferredPosition || user.cardPosition || '-';
@@ -2726,7 +2726,7 @@
             <div class="spm-profile-bio">${html(user.bio || user.about || 'Add your story, achievements, and goals to strengthen your profile.')}</div>
 
             <div class="spm-profile-actions">
-              <button id="spmChangeAvatarBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-camera"></i> Change Profile Image</button>
+              <button id="spmChangeAvatarBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-camera"></i> Change Profile Cover</button>
               <button id="spmChooseAvatarFromMediaBtn" class="spm-primary-action" type="button"><i class="fa-regular fa-images"></i> Choose From My Media</button>
               <input id="spmAvatarFileInput" type="file" accept="image/*" class="spm-hidden">
               <div id="spmAvatarMediaPicker" class="spm-avatar-picker spm-hidden"></div>
@@ -2736,7 +2736,7 @@
           </div>
         </section>`;
 
-      async function refreshProfileAfterAvatarChange() {
+      async function refreshProfileAfterProfileImageChange() {
         try {
           var refreshed = await window.SpopeerAPI.getProfile();
           app.user = unwrapUser(refreshed) || app.user || {};
@@ -2758,11 +2758,11 @@
           changeAvatarBtn.disabled = true;
           changeAvatarBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
           try {
-            await window.SpopeerAPI.uploadAvatar(file);
-            await refreshProfileAfterAvatarChange();
+            await window.SpopeerAPI.uploadCover(file);
+            await refreshProfileAfterProfileImageChange();
           } catch (_error) {
             changeAvatarBtn.disabled = false;
-            changeAvatarBtn.innerHTML = '<i class="fa-solid fa-camera"></i> Change Profile Image';
+            changeAvatarBtn.innerHTML = '<i class="fa-solid fa-camera"></i> Change Profile Cover';
           }
         });
       }
@@ -2802,7 +2802,7 @@
                   button.disabled = true;
                   try {
                     await window.SpopeerAPI.updateProfile({ avatarUrl: selectedUrl });
-                    await refreshProfileAfterAvatarChange();
+                    await refreshProfileAfterProfileImageChange();
                   } catch (_error) {
                     button.disabled = false;
                   }
