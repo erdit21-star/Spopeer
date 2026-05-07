@@ -193,6 +193,8 @@ body.spm-dark-mode .spm-story-view-body p{color:#cbd5e1}
 .spm-profile-actions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 .spm-primary-action i,.spm-signout-btn i{font-size:13px}
 .spm-signout-btn{height:46px;border-radius:12px;border:1.5px solid #ef4444;background:#fff;color:#ef4444;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.spm-public-profile-title{margin:14px 0 8px;font-family:Syne,Arial,sans-serif;font-size:16px;color:#0f172a}
+.spm-public-profile-actions .spm-chat-back{height:40px}
 
 body.spm-dark-mode .spm-profile-card{background:#111827;border-color:#243044;box-shadow:none}
 body.spm-dark-mode .spm-profile-avatar{border-color:#111827;background:linear-gradient(135deg,#1d2939,#243044);color:#e2e8f0}
@@ -205,4 +207,5 @@ body.spm-dark-mode .spm-profile-field{background:#111827;border-color:#243044}
 body.spm-dark-mode .spm-profile-field span{color:#94a3b8}
 body.spm-dark-mode .spm-profile-field strong{color:#e2e8f0}
 body.spm-dark-mode .spm-profile-bio{background:#1d2939;border-color:#243044;color:#cbd5e1}
+body.spm-dark-mode .spm-public-profile-title{color:#f8fafc}
 body.spm-dark-mode .spm-signout-btn{background:#111827;border-color:#b91c1c;color:#fca5a5}

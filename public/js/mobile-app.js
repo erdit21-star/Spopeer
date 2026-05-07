@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, activeConversationId: null };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -105,6 +105,82 @@
 
   function displayNameFromUser(user) {
     return user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || 'Spopeer member';
+  }
+
+  function profileIdentifier(user) {
+    return (user && (user.id || user.userId || user.email || user.userEmail || user.username)) || '';
+  }
+
+  function profileJoinedLabel(user) {
+    var joinedValue = user && (user.createdAt || user.created_at || user.joinedAt || user.memberSince || user.updatedAt);
+    if (!joinedValue) return '-';
+    var joinedDate = new Date(joinedValue);
+    if (Number.isNaN(joinedDate.getTime())) return '-';
+    return joinedDate.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+  }
+
+  function isSameUser(left, right) {
+    if (!left || !right) return false;
+    var leftIds = [left.id, left.userId, left.email, left.userEmail].filter(Boolean).map(function (v) { return String(v).toLowerCase(); });
+    var rightIds = [right.id, right.userId, right.email, right.userEmail].filter(Boolean).map(function (v) { return String(v).toLowerCase(); });
+    return leftIds.some(function (id) { return rightIds.indexOf(id) >= 0; });
+  }
+
+  function profileExtraFields(user) {
+    var fields = [
+      ['height', 'Height'],
+      ['weight', 'Weight'],
+      ['gender', 'Gender'],
+      ['dob', 'Date of Birth'],
+      ['nationality', 'Nationality'],
+      ['strongFoot', 'Strong Foot'],
+      ['playingStyle', 'Playing Style'],
+      ['highestLevel', 'Highest Level'],
+      ['competitionHistory', 'Competition History'],
+      ['upcomingEvents', 'Upcoming Events'],
+      ['goals', 'Goals'],
+      ['availability', 'Availability'],
+      ['clubBudget', 'Club Budget'],
+      ['revenueStreams', 'Revenue Streams'],
+      ['feeStructure', 'Fee Structure'],
+      ['trainingRoutine', 'Training Routine'],
+      ['nutritionDiet', 'Nutrition & Diet'],
+      ['injuryHistory', 'Injury History'],
+      ['currentInjuries', 'Current Injuries'],
+      ['medicalHistory', 'Medical History']
+    ];
+
+    return fields
+      .map(function (tuple) {
+        var key = tuple[0];
+        var label = tuple[1];
+        var value = user && user[key];
+        if (value === undefined || value === null) return null;
+        if (Array.isArray(value)) value = value.join(', ');
+        value = String(value).trim();
+        if (!value) return null;
+        return { label: label, value: value };
+      })
+      .filter(Boolean);
+  }
+
+  async function fetchPublicProfile(identifier) {
+    if (!identifier) return null;
+    try {
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.getPublicProfile === 'function') {
+        var direct = await window.SpopeerAPI.getPublicProfile(identifier);
+        return unwrapUser(direct);
+      }
+    } catch (_error) {}
+
+    try {
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.request === 'function') {
+        var fallback = await window.SpopeerAPI.request('/api/users/' + encodeURIComponent(identifier));
+        return unwrapUser(fallback);
+      }
+    } catch (_error2) {}
+
+    return null;
   }
 
   function initialForName(name) {
@@ -672,18 +748,11 @@
             <span class="spm-search-avatar">${html(initialForName(name))}</span>
             <span class="spm-search-meta"><strong>${html(name)}</strong><small>${html(user.role || 'Member')} · ${html(user.sport || 'Sport')}</small></span>
             <span class="spm-search-arrow">›</span>`;
-          item.addEventListener('click', async function () {
-            try {
-              var convo = await window.SpopeerAPI.createConversation(user.id || user.userId || user.email);
-              var convoId = (convo && convo.data && convo.data.id) || convo.id;
-              app.activeConversationId = convoId || null;
-              app.route = 'messages';
-              render();
-            } catch (error) {
-              console.error('[mobile] create conversation failed', error);
-              app.route = 'messages';
-              render();
-            }
+          item.addEventListener('click', function () {
+            app.selectedProfile = user;
+            app.selectedProfileIdentifier = profileIdentifier(user);
+            app.route = 'public-profile';
+            render();
           });
           box.appendChild(item);
         });
@@ -706,6 +775,114 @@
       });
 
       runSearch('');
+    },
+
+    'public-profile': async function () {
+      setTitle('Profile', 'Public profile view');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+
+      var baseUser = app.selectedProfile || {};
+      var identifier = app.selectedProfileIdentifier || profileIdentifier(baseUser);
+
+      screen.innerHTML = '<div class="spm-empty">Loading profile...</div>';
+
+      var fullUser = null;
+      try {
+        fullUser = await fetchPublicProfile(identifier);
+      } catch (_error) {}
+
+      var user = fullUser || baseUser || {};
+      var viewer = app.user || {};
+      var ownProfile = isSameUser(viewer, user);
+      var name = displayNameFromUser(user);
+      var avatarUrl = user.avatarUrl || user.avatar || user.profileImageUrl || user.profilePhoto || '';
+      var coverUrl = user.coverUrl || user.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900';
+      var role = user.role || user.userType || 'Sports profile';
+      var sport = user.sport || user.primarySport || '-';
+      var position = user.position || user.preferredPosition || user.cardPosition || '-';
+      var team = user.team || user.clubName || user.organization || '-';
+      var level = user.level || user.skillLevel || user.competitiveLevel || '-';
+      var location = user.location || user.city || user.country || '-';
+      var experience = user.experience || user.sportsYears || user.profExperience || user.yearsOfExperience || user.yearsOfCoaching || '-';
+      var media = Number(user.mediaCount || user.postsCount || user.postCount || 0);
+      var followers = Number(user.followersCount || user.followers || 0);
+      var following = Number(user.followingCount || user.following || 0);
+      var joinedLabel = profileJoinedLabel(user);
+      var bio = user.bio || user.about || 'No bio added yet.';
+
+      var extras = profileExtraFields(user);
+      var extrasHtml = extras.length
+        ? extras.map(function (entry) {
+            return '<div class="spm-profile-field"><span>' + html(entry.label) + '</span><strong>' + html(entry.value) + '</strong></div>';
+          }).join('')
+        : '<div class="spm-empty" style="padding:8px 0 0">No additional profile details available.</div>';
+
+      screen.innerHTML = `
+        <section class="spm-profile-shell">
+          <div class="spm-profile-cover" style="background-image:url('${html(coverUrl)}')"></div>
+          <div class="spm-profile-card">
+            <div class="spm-profile-head">
+              <div class="spm-profile-avatar">${avatarUrl ? '<img src="' + html(avatarUrl) + '" alt="' + html(name) + '">' : html(initialForName(name))}</div>
+              <div class="spm-profile-identity">
+                <h2>${html(name)}</h2>
+                <p>${html(role)} · ${html(sport)}</p>
+              </div>
+            </div>
+
+            <div class="spm-profile-stats">
+              <div><strong>${followers.toLocaleString()}</strong><span>Followers</span></div>
+              <div><strong>${following.toLocaleString()}</strong><span>Following</span></div>
+              <div><strong>${media.toLocaleString()}</strong><span>Media</span></div>
+            </div>
+
+            <div class="spm-profile-fields">
+              <div class="spm-profile-field"><span>Sport</span><strong>${html(sport)}</strong></div>
+              <div class="spm-profile-field"><span>Position</span><strong>${html(position)}</strong></div>
+              <div class="spm-profile-field"><span>Team</span><strong>${html(team)}</strong></div>
+              <div class="spm-profile-field"><span>Level</span><strong>${html(level)}</strong></div>
+              <div class="spm-profile-field"><span>Location</span><strong>${html(location)}</strong></div>
+              <div class="spm-profile-field"><span>Experience</span><strong>${html(String(experience))}</strong></div>
+              <div class="spm-profile-field"><span>Member Since</span><strong>${html(joinedLabel)}</strong></div>
+            </div>
+
+            <div class="spm-profile-bio">${html(bio)}</div>
+
+            <h4 class="spm-public-profile-title">More Details</h4>
+            <div class="spm-profile-fields">${extrasHtml}</div>
+
+            <div class="spm-profile-actions spm-public-profile-actions">
+              <button id="spmBackToSearchBtn" class="spm-chat-back" type="button">Back to Search</button>
+              ${ownProfile ? '' : '<button id="spmMessageUserBtn" class="spm-primary-action" type="button"><i class="fa-regular fa-paper-plane"></i> Message</button>'}
+            </div>
+          </div>
+        </section>`;
+
+      var backBtn = document.getElementById('spmBackToSearchBtn');
+      if (backBtn) {
+        backBtn.addEventListener('click', function () {
+          app.route = 'search';
+          render();
+        });
+      }
+
+      var messageBtn = document.getElementById('spmMessageUserBtn');
+      if (messageBtn) {
+        messageBtn.addEventListener('click', async function () {
+          try {
+            var target = profileIdentifier(user);
+            var convo = await window.SpopeerAPI.createConversation(target);
+            var convoId = (convo && convo.data && convo.data.id) || convo.id;
+            app.activeConversationId = convoId || null;
+            app.route = 'messages';
+            render();
+          } catch (error) {
+            console.error('[mobile] create conversation failed', error);
+            app.route = 'messages';
+            render();
+          }
+        });
+      }
     },
 
     messages: async function () {
