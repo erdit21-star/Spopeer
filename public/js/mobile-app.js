@@ -164,6 +164,67 @@
       .filter(Boolean);
   }
 
+  function belongsToCurrentUser(item, user) {
+    if (!item || !user) return false;
+    var userIds = [user.id, user.userId, user.email, user.userEmail]
+      .filter(function (v) { return v !== undefined && v !== null && String(v).trim() !== ''; })
+      .map(function (v) { return String(v).toLowerCase(); });
+
+    if (!userIds.length) return false;
+
+    var author = item.author || item.user || {};
+    var itemIds = [
+      item.userId,
+      item.authorId,
+      item.email,
+      item.userEmail,
+      author.id,
+      author.userId,
+      author.email
+    ].filter(function (v) { return v !== undefined && v !== null && String(v).trim() !== ''; })
+      .map(function (v) { return String(v).toLowerCase(); });
+
+    return itemIds.some(function (id) { return userIds.indexOf(id) >= 0; });
+  }
+
+  async function fetchMyUploadedMedia(user) {
+    var out = [];
+    var seen = {};
+
+    function add(url, source, type) {
+      var normalized = String(url || '').trim();
+      if (!normalized || seen[normalized]) return;
+      seen[normalized] = true;
+      out.push({ url: normalized, source: source || 'media', type: type || (isVideoMediaUrl(normalized) ? 'video' : 'image') });
+    }
+
+    add(user && (user.avatarUrl || user.avatar), 'avatar', 'image');
+    add(user && (user.coverPhotoUrl || user.coverUrl || user.coverImage), 'cover', 'image');
+
+    var responses = await Promise.allSettled([
+      window.SpopeerAPI.listPosts({ limit: 120, page: 1 }),
+      fetchStoriesFeed()
+    ]);
+
+    if (responses[0].status === 'fulfilled') {
+      unwrapPosts(responses[0].value)
+        .filter(function (post) { return belongsToCurrentUser(post, user); })
+        .forEach(function (post) {
+          add(mediaUrlForPost(post), 'post', postMediaType(post) || 'image');
+        });
+    }
+
+    if (responses[1].status === 'fulfilled') {
+      (responses[1].value || [])
+        .filter(function (story) { return belongsToCurrentUser(story, user); })
+        .forEach(function (story) {
+          add(storyMediaUrl(story), 'story', storyMediaType(story));
+        });
+    }
+
+    return out.filter(function (item) { return item.type === 'image'; });
+  }
+
   async function fetchPublicProfile(identifier) {
     if (!identifier) return null;
     try {
@@ -1298,11 +1359,96 @@
             <div class="spm-profile-bio">${html(user.bio || user.about || 'Add your story, achievements, and goals to strengthen your profile.')}</div>
 
             <div class="spm-profile-actions">
+              <button id="spmChangeAvatarBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-camera"></i> Change Profile Image</button>
+              <button id="spmChooseAvatarFromMediaBtn" class="spm-primary-action" type="button"><i class="fa-regular fa-images"></i> Choose From My Media</button>
+              <input id="spmAvatarFileInput" type="file" accept="image/*" class="spm-hidden">
+              <div id="spmAvatarMediaPicker" class="spm-avatar-picker spm-hidden"></div>
               <button id="spmEditProfileBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
               <button id="spmSignOutBtn" class="spm-signout-btn" type="button"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
             </div>
           </div>
         </section>`;
+
+      async function refreshProfileAfterAvatarChange() {
+        try {
+          var refreshed = await window.SpopeerAPI.getProfile();
+          app.user = unwrapUser(refreshed) || app.user || {};
+        } catch (_error) {}
+        app.route = 'profile';
+        render();
+      }
+
+      var avatarFileInput = document.getElementById('spmAvatarFileInput');
+      var changeAvatarBtn = document.getElementById('spmChangeAvatarBtn');
+      if (changeAvatarBtn && avatarFileInput) {
+        changeAvatarBtn.addEventListener('click', function () {
+          avatarFileInput.click();
+        });
+
+        avatarFileInput.addEventListener('change', async function () {
+          var file = avatarFileInput.files && avatarFileInput.files[0];
+          if (!file) return;
+          changeAvatarBtn.disabled = true;
+          changeAvatarBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+          try {
+            await window.SpopeerAPI.uploadAvatar(file);
+            await refreshProfileAfterAvatarChange();
+          } catch (_error) {
+            changeAvatarBtn.disabled = false;
+            changeAvatarBtn.innerHTML = '<i class="fa-solid fa-camera"></i> Change Profile Image';
+          }
+        });
+      }
+
+      var chooseFromMediaBtn = document.getElementById('spmChooseAvatarFromMediaBtn');
+      var avatarMediaPicker = document.getElementById('spmAvatarMediaPicker');
+      if (chooseFromMediaBtn && avatarMediaPicker) {
+        chooseFromMediaBtn.addEventListener('click', async function () {
+          chooseFromMediaBtn.disabled = true;
+          chooseFromMediaBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading Media...';
+          try {
+            var mediaItems = await fetchMyUploadedMedia(user);
+            if (!mediaItems.length) {
+              avatarMediaPicker.innerHTML = '<div class="spm-empty" style="padding:10px">No uploaded images found yet.</div>';
+              avatarMediaPicker.classList.remove('spm-hidden');
+            } else {
+              avatarMediaPicker.innerHTML =
+                '<div class="spm-avatar-picker-head"><strong>Select Profile Image</strong><button id="spmCloseAvatarPickerBtn" type="button">Close</button></div>' +
+                '<div class="spm-avatar-picker-grid">' +
+                mediaItems.map(function (item) {
+                  return '<button type="button" class="spm-avatar-media-item" data-avatar-url="' + html(item.url) + '"><img src="' + html(item.url) + '" alt="Media"></button>';
+                }).join('') +
+                '</div>';
+              avatarMediaPicker.classList.remove('spm-hidden');
+
+              var closePickerBtn = document.getElementById('spmCloseAvatarPickerBtn');
+              if (closePickerBtn) {
+                closePickerBtn.addEventListener('click', function () {
+                  avatarMediaPicker.classList.add('spm-hidden');
+                });
+              }
+
+              avatarMediaPicker.querySelectorAll('.spm-avatar-media-item').forEach(function (button) {
+                button.addEventListener('click', async function () {
+                  var selectedUrl = button.getAttribute('data-avatar-url');
+                  if (!selectedUrl) return;
+                  button.disabled = true;
+                  try {
+                    await window.SpopeerAPI.updateProfile({ avatarUrl: selectedUrl });
+                    await refreshProfileAfterAvatarChange();
+                  } catch (_error) {
+                    button.disabled = false;
+                  }
+                });
+              });
+            }
+          } catch (_error) {
+          } finally {
+            chooseFromMediaBtn.disabled = false;
+            chooseFromMediaBtn.innerHTML = '<i class="fa-regular fa-images"></i> Choose From My Media';
+          }
+        });
+      }
 
       var editProfileBtn = document.getElementById('spmEditProfileBtn');
       if (editProfileBtn) {

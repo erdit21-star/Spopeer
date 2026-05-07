@@ -207,6 +207,13 @@ body.spm-dark-mode .spm-story-more-menu button{border-color:#243044;background:#
 .spm-public-profile-title{margin:14px 0 8px;font-family:Syne,Arial,sans-serif;font-size:16px;color:#0f172a}
 .spm-public-profile-actions .spm-chat-back{height:40px}
 .spm-following-btn{background:#ecfdf3;color:#166534;border:1px solid #86efac}
+.spm-avatar-picker{border:1px solid #dbe5f1;background:#f8fafc;border-radius:14px;padding:10px}
+.spm-avatar-picker-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.spm-avatar-picker-head strong{font-size:13px;color:#0f172a}
+.spm-avatar-picker-head button{border:1px solid #dbe5f1;background:#fff;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:700;color:#334155;cursor:pointer}
+.spm-avatar-picker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.spm-avatar-media-item{padding:0;border:1px solid #dbe5f1;border-radius:10px;overflow:hidden;background:#fff;cursor:pointer;aspect-ratio:1}
+.spm-avatar-media-item img{width:100%;height:100%;object-fit:cover;display:block}
 
 body.spm-dark-mode .spm-profile-card{background:#111827;border-color:#243044;box-shadow:none}
 body.spm-dark-mode .spm-profile-avatar{border-color:#111827;background:linear-gradient(135deg,#1d2939,#243044);color:#e2e8f0}
@@ -221,4 +228,8 @@ body.spm-dark-mode .spm-profile-field strong{color:#e2e8f0}
 body.spm-dark-mode .spm-profile-bio{background:#1d2939;border-color:#243044;color:#cbd5e1}
 body.spm-dark-mode .spm-public-profile-title{color:#f8fafc}
 body.spm-dark-mode .spm-following-btn{background:#0b3b22;color:#bbf7d0;border-color:#166534}
+body.spm-dark-mode .spm-avatar-picker{border-color:#243044;background:#111827}
+body.spm-dark-mode .spm-avatar-picker-head strong{color:#e2e8f0}
+body.spm-dark-mode .spm-avatar-picker-head button{border-color:#243044;background:#1d2939;color:#cbd5e1}
+body.spm-dark-mode .spm-avatar-media-item{border-color:#243044;background:#1d2939}
 body.spm-dark-mode .spm-signout-btn{background:#111827;border-color:#b91c1c;color:#fca5a5}
