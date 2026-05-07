@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -388,6 +388,18 @@
     return isVideoMediaUrl(storyMediaUrl(story)) ? 'video' : 'image';
   }
 
+  function storyProfileIdentifier(story) {
+    var author = story && (story.author || story.user) || {};
+    return story && (story.userId || story.authorId || author.id || author.userId || author.email || story.userEmail) || '';
+  }
+
+  function clearStoryTimer() {
+    if (app.storyAutoTimer) {
+      window.clearTimeout(app.storyAutoTimer);
+      app.storyAutoTimer = null;
+    }
+  }
+
   function renderStoriesRail(stories) {
     var items = (stories || []).filter(function (story) { return Boolean(storyMediaUrl(story)); }).slice(0, 20);
 
@@ -397,7 +409,7 @@
       return '<button class="spm-story-item" type="button" data-story-index="' + index + '"><span class="spm-story-ring"><span class="spm-story-avatar">' + html(initialForName(author)) + '</span></span><span class="spm-story-name">' + html(author.split(' ')[0] || author) + '</span></button>';
     }).join('');
 
-    return '<section class="spm-stories"><div class="spm-stories-head"><strong>Stories</strong><small>Visible on mobile and desktop</small></div><div class="spm-stories-row">' + createCard + storiesHtml + '</div></section>';
+    return '<section class="spm-stories"><div class="spm-stories-head"><strong>Stories</strong><small>Latest highlights</small></div><div class="spm-stories-row">' + createCard + storiesHtml + '</div></section>';
   }
 
   async function fetchStoriesFeed() {
@@ -506,6 +518,8 @@
           button.addEventListener('click', function () {
             var index = Number(button.dataset.storyIndex || -1);
             if (Number.isNaN(index) || index < 0 || index >= stories.length) return;
+            app.storyFeed = stories.slice();
+            app.storyIndex = index;
             app.selectedStory = stories[index];
             app.route = 'story-view';
             render();
@@ -615,6 +629,12 @@
       setTitle('Story', 'Highlights');
       var screen = $('#spmScreen');
       screen.classList.remove('spm-snap-feed');
+      clearStoryTimer();
+
+      var storyList = Array.isArray(app.storyFeed) ? app.storyFeed : [];
+      if (app.storyIndex >= 0 && app.storyIndex < storyList.length) {
+        app.selectedStory = storyList[app.storyIndex];
+      }
       var story = app.selectedStory;
       if (!story) {
         app.route = 'feed';
@@ -625,9 +645,12 @@
       var mediaType = storyMediaType(story);
       var mediaUrl = storyMediaUrl(story);
       var mediaHtml = mediaType === 'video'
-        ? '<video class="spm-story-view-media" controls playsinline autoplay muted src="' + html(mediaUrl) + '"></video>'
+        ? '<video id="spmStoryMedia" class="spm-story-view-media" controls playsinline autoplay muted src="' + html(mediaUrl) + '"></video>'
         : '<div class="spm-story-view-media" style="background-image:url(\'' + html(mediaUrl) + '\')"></div>';
       var author = storyAuthorName(story);
+      var likesCount = Number(story.likesCount || 0);
+      var hasPrev = app.storyIndex > 0;
+      var hasNext = app.storyIndex >= 0 && app.storyIndex < (storyList.length - 1);
 
       screen.innerHTML = `
         <article class="spm-story-view-card">
@@ -636,20 +659,135 @@
             <strong>${html(author)}</strong>
             <small>${html(formatTime(story.createdAt))} · ${html(story.sport || 'Sport')}</small>
             <p>${html(story.caption || 'Shared a new story.')}</p>
-            <button id="spmStoryBackBtn" class="spm-chat-back" type="button">Back to Feed</button>
+            <div class="spm-story-action-row">
+              <button id="spmStoryLikeBtn" class="spm-story-action" type="button">❤️ <span id="spmStoryLikeCount">${likesCount}</span></button>
+              <button id="spmStoryShareBtn" class="spm-story-action" type="button">🔗 Share</button>
+              <button id="spmStoryMoreBtn" class="spm-story-action" type="button">⋯ More</button>
+            </div>
+            <div id="spmStoryMoreMenu" class="spm-story-more-menu spm-hidden">
+              <button id="spmStoryViewProfileBtn" type="button">View Profile</button>
+              <button id="spmStoryCloseMenuBtn" type="button">Close</button>
+            </div>
+            <div class="spm-story-nav-row">
+              <button id="spmStoryPrevBtn" class="spm-chat-back" type="button" ${hasPrev ? '' : 'disabled'}>Previous</button>
+              <button id="spmStoryBackBtn" class="spm-chat-back" type="button">Back to Feed</button>
+              <button id="spmStoryNextBtn" class="spm-chat-back" type="button" ${hasNext ? '' : 'disabled'}>Next</button>
+            </div>
           </div>
         </article>`;
+
+      function goToStoryIndex(nextIndex) {
+        if (nextIndex < 0 || nextIndex >= storyList.length) {
+          app.route = 'feed';
+          render();
+          return;
+        }
+        app.storyIndex = nextIndex;
+        app.selectedStory = storyList[nextIndex];
+        render();
+      }
 
       document.getElementById('spmStoryBackBtn').addEventListener('click', function () {
         app.route = 'feed';
         render();
       });
 
+      var prevBtn = document.getElementById('spmStoryPrevBtn');
+      if (prevBtn) {
+        prevBtn.addEventListener('click', function () {
+          goToStoryIndex(app.storyIndex - 1);
+        });
+      }
+
+      var nextBtn = document.getElementById('spmStoryNextBtn');
+      if (nextBtn) {
+        nextBtn.addEventListener('click', function () {
+          goToStoryIndex(app.storyIndex + 1);
+        });
+      }
+
+      var likeBtn = document.getElementById('spmStoryLikeBtn');
+      if (likeBtn) {
+        likeBtn.addEventListener('click', async function () {
+          if (!story.id || story.__likedByViewer) return;
+          likeBtn.disabled = true;
+          try {
+            var response = await fetch('/api/stories/' + encodeURIComponent(story.id) + '/like', {
+              method: 'POST',
+              credentials: 'include'
+            });
+            var payload = await response.json().catch(function () { return {}; });
+            if (!response.ok) throw new Error((payload && payload.error && payload.error.message) || 'Could not like story');
+            story.__likedByViewer = true;
+            story.likesCount = Number((payload && payload.data && payload.data.likesCount) || story.likesCount || 0);
+            document.getElementById('spmStoryLikeCount').textContent = String(story.likesCount);
+            likeBtn.classList.add('active');
+          } catch (_error) {
+            likeBtn.disabled = false;
+          }
+        });
+      }
+
+      var shareBtn = document.getElementById('spmStoryShareBtn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', function () {
+          var shareUrl = window.location.origin + '/app.html#feed';
+          if (navigator.share) {
+            navigator.share({ title: 'Spopeer Story', text: author + ' shared a story', url: shareUrl }).catch(function () {});
+            return;
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareUrl).then(function () {
+              shareBtn.textContent = 'Copied';
+              window.setTimeout(function () { shareBtn.textContent = '🔗 Share'; }, 1200);
+            }).catch(function () {});
+          }
+        });
+      }
+
+      var moreBtn = document.getElementById('spmStoryMoreBtn');
+      var moreMenu = document.getElementById('spmStoryMoreMenu');
+      if (moreBtn && moreMenu) {
+        moreBtn.addEventListener('click', function () {
+          moreMenu.classList.toggle('spm-hidden');
+        });
+      }
+
+      var closeMenuBtn = document.getElementById('spmStoryCloseMenuBtn');
+      if (closeMenuBtn && moreMenu) {
+        closeMenuBtn.addEventListener('click', function () {
+          moreMenu.classList.add('spm-hidden');
+        });
+      }
+
+      var viewProfileBtn = document.getElementById('spmStoryViewProfileBtn');
+      if (viewProfileBtn) {
+        viewProfileBtn.addEventListener('click', function () {
+          var profileId = storyProfileIdentifier(story);
+          if (!profileId) return;
+          app.selectedProfile = story.author || story.user || null;
+          app.selectedProfileIdentifier = profileId;
+          app.route = 'public-profile';
+          render();
+        });
+      }
+
       if (story.id) {
         fetch('/api/stories/' + encodeURIComponent(story.id) + '/view', {
           method: 'POST',
           credentials: 'include'
         }).catch(function () {});
+      }
+
+      var mediaNode = document.getElementById('spmStoryMedia');
+      if (mediaNode && mediaType === 'video') {
+        mediaNode.addEventListener('ended', function () {
+          goToStoryIndex(app.storyIndex + 1);
+        });
+      } else {
+        app.storyAutoTimer = window.setTimeout(function () {
+          goToStoryIndex(app.storyIndex + 1);
+        }, 6500);
       }
     },
 
@@ -795,6 +933,18 @@
       var user = fullUser || baseUser || {};
       var viewer = app.user || {};
       var ownProfile = isSameUser(viewer, user);
+      var targetUserId = Number(user.id || user.userId || 0);
+      var canFollow = !ownProfile && Number.isInteger(targetUserId) && targetUserId > 0;
+      var isFollowing = false;
+
+      if (canFollow && window.SpopeerAPI && typeof window.SpopeerAPI.getFollowStatus === 'function') {
+        try {
+          var statusResult = await window.SpopeerAPI.getFollowStatus(targetUserId);
+          var statusPayload = (statusResult && statusResult.data) || statusResult || {};
+          isFollowing = !!statusPayload.isFollowing || statusPayload.relation === 'accepted' || statusPayload.connectionStatus === 'active';
+        } catch (_statusErr) {}
+      }
+
       var name = displayNameFromUser(user);
       var avatarUrl = user.avatarUrl || user.avatar || user.profileImageUrl || user.profilePhoto || '';
       var coverUrl = user.coverUrl || user.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900';
@@ -831,8 +981,8 @@
             </div>
 
             <div class="spm-profile-stats">
-              <div><strong>${followers.toLocaleString()}</strong><span>Followers</span></div>
-              <div><strong>${following.toLocaleString()}</strong><span>Following</span></div>
+              <div><strong id="spmPublicFollowersCount">${followers.toLocaleString()}</strong><span>Followers</span></div>
+              <div><strong id="spmPublicFollowingCount">${following.toLocaleString()}</strong><span>Following</span></div>
               <div><strong>${media.toLocaleString()}</strong><span>Media</span></div>
             </div>
 
@@ -853,6 +1003,7 @@
 
             <div class="spm-profile-actions spm-public-profile-actions">
               <button id="spmBackToSearchBtn" class="spm-chat-back" type="button">Back to Search</button>
+              ${canFollow ? '<button id="spmFollowUserBtn" class="spm-primary-action' + (isFollowing ? ' spm-following-btn' : '') + '" type="button"><i class="fa-solid fa-user-plus"></i> ' + (isFollowing ? 'Following' : 'Follow') + '</button>' : ''}
               ${ownProfile ? '' : '<button id="spmMessageUserBtn" class="spm-primary-action" type="button"><i class="fa-regular fa-paper-plane"></i> Message</button>'}
             </div>
           </div>
@@ -880,6 +1031,31 @@
             console.error('[mobile] create conversation failed', error);
             app.route = 'messages';
             render();
+          }
+        });
+      }
+
+      var followBtn = document.getElementById('spmFollowUserBtn');
+      if (followBtn) {
+        followBtn.addEventListener('click', async function () {
+          followBtn.disabled = true;
+          try {
+            if (isFollowing) {
+              await window.SpopeerAPI.unfollowUser(targetUserId);
+              isFollowing = false;
+              followers = Math.max(0, followers - 1);
+            } else {
+              await window.SpopeerAPI.followUser(targetUserId);
+              isFollowing = true;
+              followers += 1;
+            }
+            var followersEl = document.getElementById('spmPublicFollowersCount');
+            if (followersEl) followersEl.textContent = followers.toLocaleString();
+            followBtn.classList.toggle('spm-following-btn', isFollowing);
+            followBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> ' + (isFollowing ? 'Following' : 'Follow');
+          } catch (_followError) {
+          } finally {
+            followBtn.disabled = false;
           }
         });
       }
@@ -1148,6 +1324,9 @@
   };
 
   function render() {
+    if (app.route !== 'story-view') {
+      clearStoryTimer();
+    }
     const screen = screens[app.route] || screens.feed;
     document.querySelectorAll('.spm-tabbar button').forEach(function (button) { button.classList.toggle('active', button.dataset.route === app.route); });
     Promise.resolve(screen()).finally(function () {
