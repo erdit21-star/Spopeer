@@ -15,7 +15,7 @@
       id: 'exploreBtn',
       legacyId: null,
       title: 'Search',
-      path: '/pages/search/search.html',
+      path: '/app.html#search',
       iconClass: 'fa-solid fa-magnifying-glass'
     },
     {
@@ -63,11 +63,11 @@
   function getActiveKey(pathname) {
     var path = normalizePath(pathname);
 
-    if (path === '/app.html' || path === '/feed.html' || path === '/' || path === '/index.html') return 'home';
-    if (path.indexOf('/pages/search/') === 0 || path === '/search.html') return 'search';
+    if (path === '/app.html' || path === '/' || path === '/index.html') return 'home';
+    if (path.indexOf('/pages/search/') === 0) return 'search';
     if (path === '/articles.html' || path.indexOf('/pages/company/blog') === 0) return 'articles';
     if (path.indexOf('/pages/marketplace/') === 0) return 'marketplace';
-    if (path.indexOf('/pages/messaging/') === 0 || path === '/messages.html') return 'messages';
+    if (path.indexOf('/pages/messaging/') === 0) return 'messages';
     if (path.indexOf('/pages/dashboard/notifications') === 0) return 'notifications';
 
     return null;

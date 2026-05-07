@@ -15,7 +15,6 @@
   // Never redirect desktop app shell and desktop page routes.
   if (
     path === '/app.html' ||
-    path === '/feed.html' ||
     path.indexOf('/pages/') === 0 ||
     path.indexOf('/api/') === 0
   ) {
@@ -27,11 +26,6 @@
     '/': true,
     '/index.html': true,
     '/articles.html': true,
-    '/search.html': true,
-    '/messages.html': true,
-    '/profile.html': true,
-    '/connections.html': true,
-    '/create-post.html': true,
     '/contact.html': true
   };
 
