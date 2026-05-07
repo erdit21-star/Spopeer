@@ -280,3 +280,10 @@ body.spm-dark-mode .spm-signout-btn{background:#111827;border-color:#b91c1c;colo
   .spm-passport{padding:8px 10px}
   .spm-explore-toggle{font-size:11px;padding:9px 10px}
 }
+
+/* -- Screen page headers ---------------------------- */
+.spm-screen-header{padding:18px 16px 10px;background:linear-gradient(135deg,#1e3a8a 0%,#0ea5e9 100%);color:#fff;border-radius:0 0 16px 16px;margin-bottom:8px}
+.spm-screen-title{margin:0 0 4px;font-family:Syne,Arial,sans-serif;font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px}
+.spm-screen-sub{margin:0;font-size:12px;font-weight:600;opacity:.85}
+.spm-section-label{padding:10px 16px 4px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8}
+.spm-feed-thumb{width:100%;height:160px;background-size:cover;background-position:center;border-radius:10px;margin-bottom:10px}

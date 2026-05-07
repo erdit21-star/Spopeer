@@ -1300,6 +1300,238 @@
       }
     },
 
+    library: async function () {
+      setTitle('Library', 'Your saved content');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading your library...</div>';
+      try {
+        var result = await window.SpopeerAPI.listBookmarks();
+        var bookmarks = (result && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : (result && result.bookmarks) || []));
+        if (!bookmarks.length) {
+          screen.innerHTML = '<div class="spm-empty">No saved items yet. Bookmark posts to find them here.</div>';
+          return;
+        }
+        screen.innerHTML = '<div class="spm-screen-header"><h2 class="spm-screen-title"><i class="fa-regular fa-bookmark"></i> Library</h2><p class="spm-screen-sub">Your saved posts &amp; content</p></div><div id="spmLibraryList"></div>';
+        var list = document.getElementById('spmLibraryList');
+        bookmarks.forEach(function (item) {
+          var post = item.post || item;
+          var card = document.createElement('article');
+          card.className = 'spm-feed-card';
+          var mediaType = postMediaType(post);
+          var thumbHtml = (mediaType === 'image')
+            ? '<div class="spm-feed-thumb" style="background-image:url(\'' + html(postImageUrl(post)) + '\')"></div>'
+            : '';
+          card.innerHTML = thumbHtml + `
+            <div class="spm-feed-head">
+              <div class="spm-mini-avatar">${html(initialForName(authorName(post)))}</div>
+              <div class="spm-feed-title-wrap">
+                <strong>${html(authorName(post))}</strong>
+                <small>${html(formatTime(post.createdAt || post.created_at))}</small>
+              </div>
+              <span class="spm-feed-chip static"><i class="fa-regular fa-bookmark"></i> Saved</span>
+            </div>
+            <p class="spm-feed-copy">${html(post.content || post.caption || 'Saved item')}</p>
+            <div class="spm-feed-meta">
+              <span class="spm-feed-chip static">${html(post.sport || 'Sports')}</span>
+            </div>`;
+          list.appendChild(card);
+        });
+      } catch (_error) {
+        screen.innerHTML = '<div class="spm-empty">Could not load library.</div>';
+      }
+    },
+
+    events: async function () {
+      setTitle('Events', 'Upcoming sports events');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading events...</div>';
+      try {
+        var result = await window.SpopeerAPI.listEvents();
+        var events = unwrapEvents(result);
+        screen.innerHTML = `<div class="spm-screen-header"><h2 class="spm-screen-title"><i class="fa-regular fa-calendar"></i> Events</h2><p class="spm-screen-sub">Upcoming sports events &amp; competitions</p></div><div id="spmEventsList"></div>`;
+        var list = document.getElementById('spmEventsList');
+        if (!events.length) {
+          list.innerHTML = '<div class="spm-empty">No events found. Check back soon.</div>';
+          return;
+        }
+        events.forEach(function (event) {
+          var card = document.createElement('article');
+          card.className = 'spm-feed-card';
+          var dateStr = eventDate(event);
+          var coverHtml = (event.imageUrl || event.image || event.coverUrl)
+            ? '<div class="spm-feed-thumb" style="background-image:url(\'' + html(event.imageUrl || event.image || event.coverUrl) + '\')"></div>'
+            : '';
+          card.innerHTML = coverHtml + `
+            <div class="spm-feed-head">
+              <div class="spm-mini-avatar"><i class="fa-regular fa-calendar"></i></div>
+              <div class="spm-feed-title-wrap">
+                <strong>${html(eventTitle(event))}</strong>
+                <small>${html(dateStr)}</small>
+              </div>
+            </div>
+            <p class="spm-feed-copy">${html(event.description || event.details || 'Sports event')}</p>
+            <div class="spm-feed-meta">
+              <span class="spm-feed-chip static"><i class="fa-solid fa-location-dot"></i> ${html(event.location || event.venue || 'TBD')}</span>
+              <span class="spm-feed-chip static">${html(event.sport || event.type || 'Event')}</span>
+              ${event.entryFee || event.fee ? '<span class="spm-feed-chip static">' + html(String(event.entryFee || event.fee)) + '</span>' : ''}
+            </div>`;
+          list.appendChild(card);
+        });
+      } catch (_error) {
+        screen.innerHTML = '<div class="spm-empty">Could not load events.</div>';
+      }
+    },
+
+    sponsorship: async function () {
+      setTitle('Sponsorship', 'Opportunities for you');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading sponsorship opportunities...</div>';
+      try {
+        var result = await window.SpopeerAPI.listSponsorships({ limit: 30 });
+        var items = unwrapSponsorships(result);
+        screen.innerHTML = `<div class="spm-screen-header"><h2 class="spm-screen-title"><i class="fa-solid fa-handshake"></i> Sponsorship</h2><p class="spm-screen-sub">Explore sponsorship &amp; collaboration opportunities</p></div><div id="spmSponsorList"></div>`;
+        var list = document.getElementById('spmSponsorList');
+        if (!items.length) {
+          list.innerHTML = '<div class="spm-empty">No sponsorship opportunities listed yet.</div>';
+          return;
+        }
+        items.forEach(function (item) {
+          var card = document.createElement('article');
+          card.className = 'spm-feed-card';
+          card.innerHTML = `
+            <div class="spm-feed-head">
+              <div class="spm-mini-avatar"><i class="fa-solid fa-handshake"></i></div>
+              <div class="spm-feed-title-wrap">
+                <strong>${html(sponsorshipTitle(item))}</strong>
+                <small>${html(item.company || item.brand || item.organizer || 'Sponsor')}</small>
+              </div>
+            </div>
+            <p class="spm-feed-copy">${html(item.description || item.summary || item.details || 'Sponsorship opportunity')}</p>
+            <div class="spm-feed-meta">
+              <span class="spm-feed-chip static">${html(item.sport || 'All Sports')}</span>
+              ${item.budget || item.value ? '<span class="spm-feed-chip static">' + html(String(item.budget || item.value)) + '</span>' : ''}
+              <span class="spm-feed-chip static">${html(item.type || item.category || 'Sponsorship')}</span>
+            </div>`;
+          list.appendChild(card);
+        });
+      } catch (_error) {
+        screen.innerHTML = '<div class="spm-empty">Could not load sponsorship opportunities.</div>';
+      }
+    },
+
+    training: async function () {
+      setTitle('Training', 'Drills, tips & forums');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading training content...</div>';
+      try {
+        var result = await (window.SpopeerAPI.request ? window.SpopeerAPI.request('/api/forums?limit=40') : fetch('/api/forums?limit=40', { credentials: 'include' }).then(function (r) { return r.json(); }));
+        var threads = (result && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : (result && result.forums) || (result && result.threads) || []));
+        var trainingThreads = threads.filter(function (t) {
+          var tag = String(t.category || t.type || t.tag || t.title || '').toLowerCase();
+          return tag.includes('train') || tag.includes('drill') || tag.includes('fitness') || tag.includes('workout') || tag.includes('technique') || tag.includes('coach');
+        });
+        var displayThreads = trainingThreads.length ? trainingThreads : threads;
+        screen.innerHTML = `<div class="spm-screen-header"><h2 class="spm-screen-title"><i class="fa-solid fa-dumbbell"></i> Training</h2><p class="spm-screen-sub">Drills, workouts &amp; coaching forums</p></div><div id="spmTrainingList"></div>`;
+        var list = document.getElementById('spmTrainingList');
+        if (!displayThreads.length) {
+          list.innerHTML = '<div class="spm-empty">No training content yet. Be the first to post a drill or tip.</div>';
+          return;
+        }
+        displayThreads.slice(0, 25).forEach(function (thread) {
+          var card = document.createElement('article');
+          card.className = 'spm-feed-card';
+          var authorStr = (thread.author && (thread.author.displayName || thread.author.firstName || thread.author.email)) || thread.userName || thread.authorName || 'Trainer';
+          card.innerHTML = `
+            <div class="spm-feed-head">
+              <div class="spm-mini-avatar">${html(initialForName(authorStr))}</div>
+              <div class="spm-feed-title-wrap">
+                <strong>${html(thread.title || thread.subject || 'Training Thread')}</strong>
+                <small>${html(authorStr)} · ${html(formatTime(thread.createdAt || thread.created_at))}</small>
+              </div>
+            </div>
+            <p class="spm-feed-copy">${html(thread.body || thread.content || thread.description || '')}</p>
+            <div class="spm-feed-meta">
+              <span class="spm-feed-chip static"><i class="fa-solid fa-dumbbell"></i> ${html(thread.category || thread.type || 'Training')}</span>
+              ${thread.repliesCount || thread.replies ? '<span class="spm-feed-chip static"><i class="fa-regular fa-comment"></i> ' + html(String(thread.repliesCount || thread.replies || 0)) + ' replies</span>' : ''}
+            </div>`;
+          list.appendChild(card);
+        });
+      } catch (_error) {
+        screen.innerHTML = '<div class="spm-empty">Could not load training content.</div>';
+      }
+    },
+
+    community: async function () {
+      setTitle('Community', 'Groups & forums');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading community...</div>';
+      try {
+        var responses = await Promise.allSettled([
+          window.SpopeerAPI.request ? window.SpopeerAPI.request('/api/groups?limit=20') : fetch('/api/groups?limit=20', { credentials: 'include' }).then(function (r) { return r.json(); }),
+          window.SpopeerAPI.request ? window.SpopeerAPI.request('/api/forums?limit=20') : fetch('/api/forums?limit=20', { credentials: 'include' }).then(function (r) { return r.json(); })
+        ]);
+        var groupsRaw = responses[0].status === 'fulfilled' ? responses[0].value : null;
+        var forumsRaw = responses[1].status === 'fulfilled' ? responses[1].value : null;
+        var groups = groupsRaw && Array.isArray(groupsRaw.data) ? groupsRaw.data : (Array.isArray(groupsRaw) ? groupsRaw : (groupsRaw && groupsRaw.groups) || []);
+        var forums = forumsRaw && Array.isArray(forumsRaw.data) ? forumsRaw.data : (Array.isArray(forumsRaw) ? forumsRaw : (forumsRaw && forumsRaw.forums) || []);
+
+        screen.innerHTML = `<div class="spm-screen-header"><h2 class="spm-screen-title"><i class="fa-solid fa-users"></i> Community</h2><p class="spm-screen-sub">Groups &amp; discussion forums</p></div>` +
+          (groups.length ? '<div class="spm-section-label">Groups</div><div id="spmGroupsList"></div>' : '') +
+          (forums.length ? '<div class="spm-section-label">Forum Threads</div><div id="spmForumsList"></div>' : '') +
+          (!groups.length && !forums.length ? '<div class="spm-empty">No community content yet.</div>' : '');
+
+        var groupsList = document.getElementById('spmGroupsList');
+        if (groupsList) {
+          groups.slice(0, 10).forEach(function (group) {
+            var card = document.createElement('article');
+            card.className = 'spm-feed-card';
+            var memberCount = Number(group.memberCount || group.membersCount || 0);
+            card.innerHTML = `
+              <div class="spm-feed-head">
+                <div class="spm-mini-avatar"><i class="fa-solid fa-users"></i></div>
+                <div class="spm-feed-title-wrap">
+                  <strong>${html(group.name || 'Group')}</strong>
+                  <small>${memberCount ? memberCount.toLocaleString() + ' members' : 'Open group'}</small>
+                </div>
+                <span class="spm-feed-chip static">${html(group.sport || group.category || 'Sports')}</span>
+              </div>
+              <p class="spm-feed-copy">${html(group.description || group.bio || 'A sports community group.')}</p>`;
+            groupsList.appendChild(card);
+          });
+        }
+
+        var forumsList = document.getElementById('spmForumsList');
+        if (forumsList) {
+          forums.slice(0, 15).forEach(function (thread) {
+            var card = document.createElement('article');
+            card.className = 'spm-feed-card';
+            var authorStr = (thread.author && (thread.author.displayName || thread.author.firstName || thread.author.email)) || thread.userName || thread.authorName || 'Member';
+            card.innerHTML = `
+              <div class="spm-feed-head">
+                <div class="spm-mini-avatar">${html(initialForName(authorStr))}</div>
+                <div class="spm-feed-title-wrap">
+                  <strong>${html(thread.title || thread.subject || 'Discussion')}</strong>
+                  <small>${html(authorStr)} · ${html(formatTime(thread.createdAt))}</small>
+                </div>
+              </div>
+              <p class="spm-feed-copy">${html(thread.body || thread.content || thread.description || '')}</p>
+              <div class="spm-feed-meta">
+                <span class="spm-feed-chip static">${html(thread.category || 'Forum')}</span>
+                ${thread.repliesCount ? '<span class="spm-feed-chip static"><i class="fa-regular fa-comment"></i> ' + html(String(thread.repliesCount)) + '</span>' : ''}
+              </div>`;
+            forumsList.appendChild(card);
+          });
+        }
+      } catch (_error) {
+        screen.innerHTML = '<div class="spm-empty">Could not load community content.</div>';
+      }
+    },
+
     profile: async function () {
       setTitle('Profile', 'Your sports identity');
       $('#spmScreen').classList.remove('spm-snap-feed');
