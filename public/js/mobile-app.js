@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, activeConversationId: null };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, activeConversationId: null };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -87,6 +87,15 @@
     if (Array.isArray(result.data)) return result.data;
     if (result.data && Array.isArray(result.data.listings)) return result.data.listings;
     if (result.data && result.data.payload && Array.isArray(result.data.payload)) return result.data.payload;
+    return [];
+  }
+
+  function unwrapStories(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.data)) return result.data;
+    if (Array.isArray(result.stories)) return result.stories;
+    if (result.data && Array.isArray(result.data.stories)) return result.data.stories;
     return [];
   }
 
@@ -287,27 +296,60 @@
     return item.status || 'Available';
   }
 
-  function renderStoriesRail(posts) {
-    var mediaPosts = posts.filter(function (post) { return Boolean(postMediaType(post)); });
-    if (!mediaPosts.length) return '';
+  function storyAuthorName(story) {
+    var author = story.author || story.user || {};
+    return story.userName || author.displayName || [author.firstName, author.lastName].filter(Boolean).join(' ') || 'Member';
+  }
 
-    var seen = {};
-    var items = mediaPosts.filter(function (post) {
-      var author = post.author || post.user || {};
-      var key = String(author.id || author.email || authorName(post));
-      if (seen[key]) return false;
-      seen[key] = true;
-      return true;
-    }).slice(0, 12);
+  function storyMediaUrl(story) {
+    return story.mediaUrl || story.thumbnailUrl || '';
+  }
 
-    if (!items.length) return '';
+  function storyMediaType(story) {
+    var type = String(story.type || story.mediaType || '').toLowerCase();
+    if (type === 'video') return 'video';
+    if (type === 'image') return 'image';
+    return isVideoMediaUrl(storyMediaUrl(story)) ? 'video' : 'image';
+  }
 
-    var storiesHtml = items.map(function (post) {
-      var author = authorName(post);
-      return '<button class="spm-story-item" type="button" data-story-post="' + html(post.id) + '"><span class="spm-story-ring"><span class="spm-story-avatar">' + html(initialForName(author)) + '</span></span><span class="spm-story-name">' + html(author.split(' ')[0] || author) + '</span></button>';
+  function renderStoriesRail(stories) {
+    var items = (stories || []).filter(function (story) { return Boolean(storyMediaUrl(story)); }).slice(0, 20);
+
+    var createCard = '<button class="spm-story-item add" type="button" data-story-create="1"><span class="spm-story-ring"><span class="spm-story-avatar">+</span></span><span class="spm-story-name">Your story</span></button>';
+    var storiesHtml = items.map(function (story, index) {
+      var author = storyAuthorName(story);
+      return '<button class="spm-story-item" type="button" data-story-index="' + index + '"><span class="spm-story-ring"><span class="spm-story-avatar">' + html(initialForName(author)) + '</span></span><span class="spm-story-name">' + html(author.split(' ')[0] || author) + '</span></button>';
     }).join('');
 
-    return '<section class="spm-stories"><div class="spm-stories-head"><strong>Stories</strong><small>Latest media updates</small></div><div class="spm-stories-row">' + storiesHtml + '</div></section>';
+    return '<section class="spm-stories"><div class="spm-stories-head"><strong>Stories</strong><small>Visible on mobile and desktop</small></div><div class="spm-stories-row">' + createCard + storiesHtml + '</div></section>';
+  }
+
+  async function fetchStoriesFeed() {
+    var response = await fetch('/api/stories', { credentials: 'include' });
+    var payload = await response.json().catch(function () { return {}; });
+    if (!response.ok) throw new Error((payload && payload.error && payload.error.message) || 'Could not load stories');
+    return unwrapStories(payload);
+  }
+
+  async function createStoryFromFile(file, caption, sport) {
+    if (!file) throw new Error('Choose an image or video first.');
+    var formData = new FormData();
+    formData.append('media', file);
+    formData.append('caption', caption || '');
+    formData.append('sport', sport || (app.user && (app.user.sport || app.user.primarySport)) || 'Sport');
+    formData.append('type', file.type && file.type.indexOf('video/') === 0 ? 'video' : 'image');
+
+    var response = await fetch('/api/stories', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    });
+
+    var payload = await response.json().catch(function () { return {}; });
+    if (!response.ok) {
+      throw new Error((payload && payload.error && payload.error.message) || 'Could not publish story');
+    }
+    return payload;
   }
 
   function setBadge(id, count) {
@@ -363,26 +405,33 @@
       container.innerHTML = '<div class="spm-empty">Loading your feed...</div>';
       try {
         var responses = await Promise.allSettled([
+          fetchStoriesFeed(),
           window.SpopeerAPI.listPosts({ limit: 12, page: 1, _: Date.now() }),
           window.SpopeerAPI.listEvents(),
           window.SpopeerAPI.listSponsorships({ limit: 5 })
         ]);
 
-        var posts = responses[0].status === 'fulfilled' ? unwrapPosts(responses[0].value) : [];
-        var events = responses[1].status === 'fulfilled' ? unwrapEvents(responses[1].value) : [];
-        var opportunities = responses[2].status === 'fulfilled' ? unwrapSponsorships(responses[2].value) : [];
+        var stories = responses[0].status === 'fulfilled' ? responses[0].value : [];
+        var posts = responses[1].status === 'fulfilled' ? unwrapPosts(responses[1].value) : [];
+        var events = responses[2].status === 'fulfilled' ? unwrapEvents(responses[2].value) : [];
+        var opportunities = responses[3].status === 'fulfilled' ? unwrapSponsorships(responses[3].value) : [];
 
         var topEvent = events[0] || null;
         var topOpportunity = opportunities[0] || null;
 
-        container.innerHTML = renderStoriesRail(posts);
-        container.querySelectorAll('[data-story-post]').forEach(function (button) {
+        container.innerHTML = renderStoriesRail(stories);
+        container.querySelectorAll('[data-story-create]').forEach(function (button) {
           button.addEventListener('click', function () {
-            var postId = String(button.dataset.storyPost || '');
-            var selected = posts.find(function (post) { return String(post.id) === postId; });
-            if (!selected) return;
-            app.selectedPost = selected;
-            app.route = 'post';
+            app.route = 'story-create';
+            render();
+          });
+        });
+        container.querySelectorAll('[data-story-index]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            var index = Number(button.dataset.storyIndex || -1);
+            if (Number.isNaN(index) || index < 0 || index >= stories.length) return;
+            app.selectedStory = stories[index];
+            app.route = 'story-view';
             render();
           });
         });
@@ -433,6 +482,98 @@
       } catch (error) {
         container.innerHTML = '<div class="spm-empty">Could not load feed.</div>';
         console.error('[mobile] feed error', error);
+      }
+    },
+
+    'story-create': async function () {
+      setTitle('New Story', 'Share for 24 hours');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      var defaultSport = (app.user && (app.user.sport || app.user.primarySport)) || '';
+      screen.innerHTML = `
+        <div class="spm-card">
+          <h3 style="margin:0 0 10px;font-family:Syne,Arial,sans-serif">Create Story</h3>
+          <p style="margin:0 0 12px;color:#64748b;font-size:12px;font-weight:700">Your story will be visible in mobile and desktop highlights.</p>
+          <input id="spmStoryFile" type="file" accept="image/*,video/*" style="width:100%;margin-bottom:10px">
+          <input id="spmStorySport" class="spm-search" placeholder="Sport" value="${html(defaultSport)}" style="margin-bottom:10px;height:42px">
+          <textarea id="spmStoryCaption" class="spm-search" placeholder="Caption (optional)" style="height:88px;padding:12px;resize:none"></textarea>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button id="spmCancelStory" class="spm-chat-back" type="button">Cancel</button>
+            <button id="spmPublishStory" class="spm-primary-action" type="button" style="margin-left:auto">Publish Story</button>
+          </div>
+          <div id="spmStoryError" class="spm-empty" style="display:none;padding:12px 0 0;color:#ef4444;text-align:left"></div>
+        </div>`;
+
+      document.getElementById('spmCancelStory').addEventListener('click', function () {
+        app.route = 'feed';
+        render();
+      });
+
+      document.getElementById('spmPublishStory').addEventListener('click', async function () {
+        var btn = document.getElementById('spmPublishStory');
+        var errorEl = document.getElementById('spmStoryError');
+        var fileInput = document.getElementById('spmStoryFile');
+        var file = fileInput && fileInput.files && fileInput.files[0];
+        var caption = document.getElementById('spmStoryCaption').value.trim();
+        var sport = document.getElementById('spmStorySport').value.trim();
+
+        errorEl.style.display = 'none';
+        btn.disabled = true;
+        btn.textContent = 'Publishing...';
+
+        try {
+          await createStoryFromFile(file, caption, sport);
+          app.route = 'feed';
+          render();
+        } catch (error) {
+          errorEl.textContent = error.message || 'Could not publish story.';
+          errorEl.style.display = 'block';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Publish Story';
+        }
+      });
+    },
+
+    'story-view': async function () {
+      setTitle('Story', 'Highlights');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      var story = app.selectedStory;
+      if (!story) {
+        app.route = 'feed';
+        render();
+        return;
+      }
+
+      var mediaType = storyMediaType(story);
+      var mediaUrl = storyMediaUrl(story);
+      var mediaHtml = mediaType === 'video'
+        ? '<video class="spm-story-view-media" controls playsinline autoplay muted src="' + html(mediaUrl) + '"></video>'
+        : '<div class="spm-story-view-media" style="background-image:url(\'' + html(mediaUrl) + '\')"></div>';
+      var author = storyAuthorName(story);
+
+      screen.innerHTML = `
+        <article class="spm-story-view-card">
+          ${mediaHtml}
+          <div class="spm-story-view-body">
+            <strong>${html(author)}</strong>
+            <small>${html(formatTime(story.createdAt))} · ${html(story.sport || 'Sport')}</small>
+            <p>${html(story.caption || 'Shared a new story.')}</p>
+            <button id="spmStoryBackBtn" class="spm-chat-back" type="button">Back to Feed</button>
+          </div>
+        </article>`;
+
+      document.getElementById('spmStoryBackBtn').addEventListener('click', function () {
+        app.route = 'feed';
+        render();
+      });
+
+      if (story.id) {
+        fetch('/api/stories/' + encodeURIComponent(story.id) + '/view', {
+          method: 'POST',
+          credentials: 'include'
+        }).catch(function () {});
       }
     },
 

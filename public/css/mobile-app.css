@@ -147,9 +147,17 @@ body.spm-dark-mode .spm-chat-back{background:#1d2939;border-color:#243044;color:
 .spm-stories-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:2px}
 .spm-stories-row::-webkit-scrollbar{display:none}
 .spm-story-item{border:0;background:transparent;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:62px;cursor:pointer}
+.spm-story-item.add .spm-story-ring{background:linear-gradient(135deg,#1a6bff,#003366)}
 .spm-story-ring{width:54px;height:54px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#155eef,#22c55e);display:grid;place-items:center}
 .spm-story-avatar{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#155eef;font-size:14px;font-weight:800}
 .spm-story-name{font-size:10px;color:#475467;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.spm-story-view-card{background:#fff;border:1px solid #e4e7ec;border-radius:24px;overflow:hidden;box-shadow:0 10px 24px rgba(15,23,42,.08)}
+.spm-story-view-media{width:100%;min-height:260px;max-height:68vh;display:block;background:#0f172a;background-size:cover;background-position:center;object-fit:cover}
+.spm-story-view-body{padding:14px 14px 16px;display:flex;flex-direction:column;gap:6px}
+.spm-story-view-body strong{font-size:15px;color:#0f172a}
+.spm-story-view-body small{font-size:11px;color:#64748b;font-weight:700}
+.spm-story-view-body p{margin:4px 0 8px;color:#334155;font-size:13px;line-height:1.5}
 
 .spm-feed-image{height:auto;min-height:170px;aspect-ratio:4/3;background-size:cover;background-position:center}
 .spm-feed-video,.spm-post-video{width:100%;background:#000;border-radius:20px;display:block;object-fit:cover}
@@ -159,6 +167,10 @@ body.spm-dark-mode .spm-chat-back{background:#1d2939;border-color:#243044;color:
 body.spm-dark-mode .spm-stories{background:#111827;border-color:#243044}
 body.spm-dark-mode .spm-stories-head small,body.spm-dark-mode .spm-story-name{color:#94a3b8}
 body.spm-dark-mode .spm-story-avatar{background:#0b1220;color:#84adff}
+body.spm-dark-mode .spm-story-view-card{background:#111827;border-color:#243044;box-shadow:none}
+body.spm-dark-mode .spm-story-view-body strong{color:#f8fafc}
+body.spm-dark-mode .spm-story-view-body small{color:#94a3b8}
+body.spm-dark-mode .spm-story-view-body p{color:#cbd5e1}
 
 .spm-profile-shell{display:flex;flex-direction:column;gap:0}
 .spm-profile-cover{height:180px;border-radius:24px 24px 0 0;background-size:cover;background-position:center;position:relative;overflow:hidden}
