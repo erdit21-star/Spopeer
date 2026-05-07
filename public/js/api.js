@@ -435,6 +435,9 @@
     followUser: function (userId) {
       return request("/api/follows/" + encodeURIComponent(userId), { method: "POST" });
     },
+    requestFollowUser: function (userId) {
+      return request("/api/follows/" + encodeURIComponent(userId) + "/request", { method: "POST" });
+    },
     unfollowUser: function (userId) {
       return request("/api/follows/" + encodeURIComponent(userId), { method: "DELETE" });
     },
@@ -449,6 +452,18 @@
     },
     getProfileStats: function (userId) {
       return request("/api/follows/stats/" + encodeURIComponent(userId));
+    },
+    listIncomingFollowRequests: function () {
+      return request('/api/follows/requests/incoming');
+    },
+    listOutgoingFollowRequests: function () {
+      return request('/api/follows/requests/outgoing');
+    },
+    acceptFollowRequest: function (connectionId) {
+      return request('/api/follows/requests/' + encodeURIComponent(connectionId) + '/accept', { method: 'PATCH' });
+    },
+    rejectFollowRequest: function (connectionId) {
+      return request('/api/follows/requests/' + encodeURIComponent(connectionId) + '/reject', { method: 'PATCH' });
     },
     listBookmarks: function () { return request("/api/bookmarks"); },
     createBookmark: function (payload) {

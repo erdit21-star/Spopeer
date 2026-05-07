@@ -132,13 +132,47 @@ class FollowManager {
   }
 
   async acceptFollowRequest(connectionId) {
-    console.warn('Accept follow request is not implemented on the current backend.', connectionId);
-    return false;
+    if (!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
+      return false;
+    }
+
+    if (!window.SpopeerAPI || typeof window.SpopeerAPI.acceptFollowRequest !== 'function') {
+      console.warn('acceptFollowRequest API method is unavailable.');
+      return false;
+    }
+
+    try {
+      const response = await window.SpopeerAPI.acceptFollowRequest(connectionId);
+      const payload = (response && response.data) || response || {};
+      if (payload.userId) {
+        this.emitFollowRelationChanged(payload.userId, 1, 0, 'accept-follow-request');
+      }
+      return true;
+    } catch (err) {
+      console.error('Accept follow request error:', err);
+      if (window.SpopeerToast) window.SpopeerToast.error(err?.message || 'Failed to accept follow request');
+      return false;
+    }
   }
 
   async rejectFollowRequest(connectionId) {
-    console.warn('Reject follow request is not implemented on the current backend.', connectionId);
-    return false;
+    if (!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
+      return false;
+    }
+
+    if (!window.SpopeerAPI || typeof window.SpopeerAPI.rejectFollowRequest !== 'function') {
+      console.warn('rejectFollowRequest API method is unavailable.');
+      return false;
+    }
+
+    try {
+      await window.SpopeerAPI.rejectFollowRequest(connectionId);
+      return true;
+    } catch (err) {
+      console.error('Reject follow request error:', err);
+      if (window.SpopeerToast) window.SpopeerToast.error(err?.message || 'Failed to reject follow request');
+      return false;
+    }
   }
 
   async getFollowers(userId) {
@@ -169,8 +203,19 @@ class FollowManager {
 
   async getPendingRequests() {
     if (!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) return [];
-    console.warn('Pending follow requests are not implemented on the current backend.');
-    return [];
+    if (!window.SpopeerAPI || typeof window.SpopeerAPI.listIncomingFollowRequests !== 'function') return [];
+
+    try {
+      const data = await window.SpopeerAPI.listIncomingFollowRequests();
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.data)) return data.data;
+      if (Array.isArray(data.requests)) return data.requests;
+      if (data.data && Array.isArray(data.data.requests)) return data.data.requests;
+      return [];
+    } catch (err) {
+      console.error('Get pending requests error:', err);
+      return [];
+    }
   }
 
   isLoggedIn() {

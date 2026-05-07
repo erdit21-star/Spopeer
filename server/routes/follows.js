@@ -18,6 +18,169 @@ const { Op } = require('sequelize');
 const { getBlockedUserIds } = require('../utils/blocks');
 const { createNotification } = require('../services/notifications');
 
+function parsePositiveInt(value) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) return null;
+  return parsed;
+}
+
+// ─── CREATE FOLLOW REQUEST ───
+router.post('/:userId/request', authenticate, async (req, res) => {
+  try {
+    const userId = parsePositiveInt(req.params.userId);
+    if (!userId) {
+      return fail(res, 400, 'VALIDATION', 'Invalid user id.');
+    }
+
+    if (userId === req.userId) {
+      return fail(res, 400, 'VALIDATION', 'You cannot send a follow request to yourself.');
+    }
+
+    const targetUser = await User.findByPk(userId);
+    if (!targetUser || !targetUser.isActive) {
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
+    }
+
+    const existing = await Connection.findOne({
+      where: { followerId: req.userId, followingId: userId }
+    });
+
+    if (existing && existing.status === 'active') {
+      return fail(res, 409, 'CONFLICT', 'Already following this user.');
+    }
+
+    if (existing && existing.status === 'pending') {
+      return ok(res, { message: 'Follow request already pending.', status: 'pending', connectionId: existing.id });
+    }
+
+    const connection = existing
+      ? await existing.update({ status: 'pending' })
+      : await Connection.create({
+          followerId: req.userId,
+          followingId: userId,
+          status: 'pending'
+        });
+
+    await createNotification({
+      recipientId: userId,
+      senderId: req.userId,
+      type: 'follow_request',
+      text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} sent you a follow request.`,
+      href: '/pages/profiles/followers.html'
+    });
+
+    return created(res, { message: 'Follow request sent.', status: 'pending', connectionId: connection.id });
+  } catch (error) {
+    console.error('Follow request error:', error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to send follow request.');
+  }
+});
+
+// ─── LIST INCOMING FOLLOW REQUESTS ───
+router.get('/requests/incoming', authenticate, async (req, res) => {
+  try {
+    const requests = await Connection.findAll({
+      where: { followingId: req.userId, status: 'pending' },
+      include: [{
+        model: User,
+        as: 'follower',
+        attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport']
+      }],
+      order: [['createdAt', 'DESC']]
+    });
+
+    return ok(res, requests.map((request) => ({
+      id: request.id,
+      status: request.status,
+      createdAt: request.createdAt,
+      user: request.follower
+    })));
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch incoming follow requests.');
+  }
+});
+
+// ─── LIST OUTGOING FOLLOW REQUESTS ───
+router.get('/requests/outgoing', authenticate, async (req, res) => {
+  try {
+    const requests = await Connection.findAll({
+      where: { followerId: req.userId, status: 'pending' },
+      include: [{
+        model: User,
+        as: 'followedUser',
+        attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport']
+      }],
+      order: [['createdAt', 'DESC']]
+    });
+
+    return ok(res, requests.map((request) => ({
+      id: request.id,
+      status: request.status,
+      createdAt: request.createdAt,
+      user: request.followedUser
+    })));
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch outgoing follow requests.');
+  }
+});
+
+// ─── ACCEPT FOLLOW REQUEST ───
+router.patch('/requests/:connectionId/accept', authenticate, async (req, res) => {
+  try {
+    const connectionId = parsePositiveInt(req.params.connectionId);
+    if (!connectionId) {
+      return fail(res, 400, 'VALIDATION', 'Invalid connection id.');
+    }
+
+    const connection = await Connection.findByPk(connectionId);
+    if (!connection || connection.followingId !== req.userId || connection.status !== 'pending') {
+      return fail(res, 404, 'NOT_FOUND', 'Follow request not found.');
+    }
+
+    await connection.update({ status: 'active' });
+
+    const follower = await User.findByPk(connection.followerId);
+    const followed = await User.findByPk(connection.followingId);
+
+    if (follower) await follower.increment('followingCount');
+    if (followed) await followed.increment('followersCount');
+
+    await createNotification({
+      recipientId: connection.followerId,
+      senderId: req.userId,
+      type: 'follow_accept',
+      text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} accepted your follow request.`,
+      href: `/pages/profiles/public-profile.html?userId=${encodeURIComponent(req.userId)}`
+    });
+
+    return ok(res, { message: 'Follow request accepted.', status: 'active', connectionId: connection.id, userId: connection.followerId });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to accept follow request.');
+  }
+});
+
+// ─── REJECT FOLLOW REQUEST ───
+router.patch('/requests/:connectionId/reject', authenticate, async (req, res) => {
+  try {
+    const connectionId = parsePositiveInt(req.params.connectionId);
+    if (!connectionId) {
+      return fail(res, 400, 'VALIDATION', 'Invalid connection id.');
+    }
+
+    const connection = await Connection.findByPk(connectionId);
+    if (!connection || connection.followingId !== req.userId || connection.status !== 'pending') {
+      return fail(res, 404, 'NOT_FOUND', 'Follow request not found.');
+    }
+
+    const requesterId = connection.followerId;
+    await connection.destroy();
+
+    return ok(res, { message: 'Follow request rejected.', connectionId, userId: requesterId });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to reject follow request.');
+  }
+});
+
 // ─── FOLLOW ───
 const { ok, created, fail } = require('../utils/response');
 const { sanitizeUserList } = require('../utils/privacy');
