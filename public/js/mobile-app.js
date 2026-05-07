@@ -823,6 +823,20 @@
   async function init() {
     applyStoredTheme();
     bindNav();
+    // Safety net: never leave users on a blank splash if init hangs.
+    window.setTimeout(function () {
+      var splash = $('#spmSplash');
+      var shell = $('#spmShell');
+      var auth = $('#spmAuth');
+      if (!splash || !shell || !auth) return;
+      var shellHidden = shell.classList.contains('spm-hidden');
+      var authHidden = auth.classList.contains('spm-hidden');
+      if (shellHidden && authHidden) {
+        splash.classList.add('spm-hidden');
+        auth.classList.remove('spm-hidden');
+      }
+    }, 6000);
+
     window.setTimeout(async function () {
       var splash = $('#spmSplash');
       function revealTarget(targetSelector) {

@@ -123,43 +123,10 @@ async function postGoogleCredential(credential) {
 
 function completeAuthNavigation(path) {
   var targetPath = path || '/mobile.html';
-  var targetUrl = targetPath.indexOf('http') === 0
-    ? targetPath
-    : window.location.origin + targetPath;
-
-  try {
-    localStorage.setItem('spopeer_google_auth_complete', String(Date.now()));
-  } catch (_error) {}
-
-  try {
-    if (window.opener && !window.opener.closed) {
-      window.opener.location.replace(targetUrl);
-      window.setTimeout(function () {
-        try {
-          window.close();
-        } catch (_closeErr) {
-          window.location.replace(targetUrl);
-        }
-      }, 120);
-      return;
-    }
-  } catch (_error) {}
-
-  try {
-    if (window.parent && window.parent !== window) {
-      window.parent.location.replace(targetUrl);
-      return;
-    }
-  } catch (_error) {}
-
-  try {
-    if (window.top && window.top !== window) {
-      window.top.location.replace(targetUrl);
-      return;
-    }
-  } catch (_error) {}
-
-  window.location.replace(targetUrl);
+  // Mobile browsers are unreliable with opener/popup close flows.
+  // Always navigate the current tab to avoid ending on a blank white page.
+  try { localStorage.setItem('spopeer_google_auth_complete', String(Date.now())); } catch (_error) {}
+  window.location.assign(targetPath);
 }
 
 function setMessage(elId, msg) {
