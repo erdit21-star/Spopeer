@@ -851,34 +851,10 @@
   }
 
   function ensureDesktopSubscriptionPanel() {
-    if (!window.CurrentUserStore) return;
-    if (!window.SubscriptionFeatures) {
-      ensureSubscriptionLibrary(ensureDesktopSubscriptionPanel);
-      return;
-    }
-    ensureSubscriptionStyles();
-
-    var sidebar = document.querySelector('.sidebar-left');
-    if (!sidebar) return;
-
-    var user = window.CurrentUserStore.getCurrentUser ? window.CurrentUserStore.getCurrentUser() : getUserProfile();
-    if (!user) return;
-
-    var info = window.SubscriptionFeatures.resolveCurrentPlan(user);
-    var panel = sidebar.querySelector('[data-subscription-panel]');
-    if (!panel) {
-      panel = document.createElement('section');
-      panel.className = 'sp-subscription-panel';
-      panel.setAttribute('data-subscription-panel', '1');
-      var anchor = sidebar.querySelector('.sidebar-profile') || sidebar.querySelector('.profile-card-variant') || sidebar.firstElementChild;
-      if (anchor && anchor.parentNode === sidebar) {
-        anchor.insertAdjacentElement('afterend', panel);
-      } else {
-        sidebar.insertAdjacentElement('afterbegin', panel);
-      }
-    }
-
-    panel.innerHTML = buildSubscriptionPanelHtml(info);
+    // Desktop sidebar subscription panel has been removed by product decision.
+    document.querySelectorAll('[data-subscription-panel]').forEach(function (panel) {
+      panel.remove();
+    });
   }
 
   function ensureMobileDrawerPlanBlock() {
