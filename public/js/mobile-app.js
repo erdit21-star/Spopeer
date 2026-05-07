@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' } };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' } };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -533,7 +533,8 @@
       description: event.description || event.location || event.venue || 'Event',
       sport: event.sport || '',
       href: '/pages/events/event.html',
-      previewUrl: event.imageUrl || event.image || event.coverUrl || ''
+      previewUrl: event.imageUrl || event.image || event.coverUrl || '',
+      originalEvent: event
     };
   }
 
@@ -547,7 +548,8 @@
       description: entry.summary || entry.description || entry.mode || 'Sponsorship',
       sport: entry.sport || '',
       href: '/pages/sponsorship/sponsor.html',
-      previewUrl: entry.imageUrl || entry.image || ''
+      previewUrl: entry.imageUrl || entry.image || '',
+      originalSponsorship: entry
     };
   }
 
@@ -684,6 +686,20 @@
       render();
       return;
     }
+    if (item.itemType === 'events' && item.originalEvent) {
+      app.selectedEvent = item.originalEvent;
+      app.detailBackRoute = 'library';
+      app.route = 'event-detail';
+      render();
+      return;
+    }
+    if (item.itemType === 'sponsorships' && item.originalSponsorship) {
+      app.selectedSponsorship = item.originalSponsorship;
+      app.detailBackRoute = 'library';
+      app.route = 'sponsorship-detail';
+      render();
+      return;
+    }
     if (!item.href) return;
     if (/^https?:\/\//i.test(item.href)) {
       window.open(item.href, '_blank', 'noopener');
@@ -700,6 +716,14 @@
     if (item.price === 0) return 'Free';
     if (item.price) return '$' + Number(item.price).toLocaleString();
     return item.status || 'Available';
+  }
+
+  function eventBackRoute() {
+    return app.detailBackRoute || 'events';
+  }
+
+  function sponsorshipBackRoute() {
+    return app.detailBackRoute || 'sponsorship';
   }
 
   function storyAuthorName(story) {
@@ -1763,12 +1787,115 @@
               <span class="spm-feed-chip static"><i class="fa-solid fa-location-dot"></i> ${html(event.location || event.venue || 'TBD')}</span>
               <span class="spm-feed-chip static">${html(event.sport || event.type || 'Event')}</span>
               ${event.entryFee || event.fee ? '<span class="spm-feed-chip static">' + html(String(event.entryFee || event.fee)) + '</span>' : ''}
-            </div>`;
+            </div>
+            <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-event="${html(String(event.id || ''))}">View Event</button></div>`;
           list.appendChild(card);
+        });
+        list.querySelectorAll('[data-open-event]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            var eventId = button.getAttribute('data-open-event');
+            var selected = events.find(function (entry) { return String(entry.id || '') === String(eventId || ''); });
+            if (!selected) return;
+            app.selectedEvent = selected;
+            app.detailBackRoute = 'events';
+            app.route = 'event-detail';
+            render();
+          });
         });
       } catch (_error) {
         screen.innerHTML = '<div class="spm-empty">Could not load events.</div>';
       }
+    },
+
+    'event-detail': async function () {
+      setTitle('Event Details', 'Inside the mobile shell');
+      var screen = $('#spmScreen');
+      var event = app.selectedEvent;
+      screen.classList.remove('spm-snap-feed');
+      if (!event) {
+        app.route = eventBackRoute();
+        render();
+        return;
+      }
+
+      var bannerUrl = event.imageUrl || event.image || event.coverUrl || '';
+      var location = event.location || event.venue || 'Location TBD';
+      var sport = event.sport || event.type || 'Event';
+      var dateLabel = eventDate(event);
+      var timeLabel = 'Time TBD';
+      var startTime = event.startDate || event.startsAt || event.date || '';
+      var endTime = event.endDate || event.endsAt || '';
+      if (startTime) {
+        var startDate = new Date(startTime);
+        if (!Number.isNaN(startDate.getTime())) {
+          timeLabel = startDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+      }
+      if (endTime) {
+        var endDate = new Date(endTime);
+        if (!Number.isNaN(endDate.getTime())) {
+          timeLabel += ' - ' + endDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+      }
+
+      screen.innerHTML = `
+        <section class="spm-detail-shell">
+          <button id="spmEventDetailBack" class="spm-chat-back spm-detail-back" type="button">Back</button>
+          <div class="spm-detail-hero${bannerUrl ? '' : ' no-media'}"${bannerUrl ? ' style="background-image:url(\'' + html(bannerUrl) + '\')"' : ''}>
+            <div class="spm-detail-overlay">
+              <span class="spm-detail-badge"><i class="fa-regular fa-calendar"></i> Event</span>
+              <h2>${html(eventTitle(event))}</h2>
+              <p>${html(dateLabel)}</p>
+            </div>
+          </div>
+          <article class="spm-detail-card">
+            <div class="spm-detail-grid">
+              <div><span>Sport</span><strong>${html(sport)}</strong></div>
+              <div><span>Location</span><strong>${html(location)}</strong></div>
+              <div><span>Schedule</span><strong>${html(timeLabel)}</strong></div>
+              <div><span>Entry</span><strong>${html(String(event.entryFee || event.fee || 'Open'))}</strong></div>
+            </div>
+            <div class="spm-detail-copy">
+              <h3>About this event</h3>
+              <p>${html(event.description || event.details || 'No additional event details were provided yet.')}</p>
+            </div>
+            <div class="spm-detail-actions">
+              <button id="spmRespondEventBtn" class="spm-primary-action" type="button">Interested</button>
+              <button id="spmShareEventBtn" class="spm-chat-back" type="button">Share</button>
+            </div>
+          </article>
+        </section>`;
+
+      document.getElementById('spmEventDetailBack').addEventListener('click', function () {
+        app.route = eventBackRoute();
+        app.detailBackRoute = null;
+        render();
+      });
+
+      document.getElementById('spmRespondEventBtn').addEventListener('click', async function () {
+        var button = document.getElementById('spmRespondEventBtn');
+        button.disabled = true;
+        try {
+          await window.SpopeerAPI.respondToEvent(event.id, 'accepted');
+          button.textContent = 'Going';
+        } catch (_error) {
+          button.textContent = 'Could not save';
+          window.setTimeout(function () { button.textContent = 'Interested'; }, 1200);
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      document.getElementById('spmShareEventBtn').addEventListener('click', function () {
+        var shareText = eventTitle(event) + ' · ' + dateLabel;
+        if (navigator.share) {
+          navigator.share({ title: eventTitle(event), text: shareText, url: window.location.href }).catch(function () {});
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareText).catch(function () {});
+        }
+      });
     },
 
     sponsorship: async function () {
@@ -1801,12 +1928,97 @@
               <span class="spm-feed-chip static">${html(item.sport || 'All Sports')}</span>
               ${item.budget || item.value ? '<span class="spm-feed-chip static">' + html(String(item.budget || item.value)) + '</span>' : ''}
               <span class="spm-feed-chip static">${html(item.type || item.category || 'Sponsorship')}</span>
-            </div>`;
+            </div>
+            <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-sponsorship="${html(String(item.id || ''))}">View Opportunity</button></div>`;
           list.appendChild(card);
+        });
+        list.querySelectorAll('[data-open-sponsorship]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            var itemId = button.getAttribute('data-open-sponsorship');
+            var selected = items.find(function (entry) { return String(entry.id || '') === String(itemId || ''); });
+            if (!selected) return;
+            app.selectedSponsorship = selected;
+            app.detailBackRoute = 'sponsorship';
+            app.route = 'sponsorship-detail';
+            render();
+          });
         });
       } catch (_error) {
         screen.innerHTML = '<div class="spm-empty">Could not load sponsorship opportunities.</div>';
       }
+    },
+
+    'sponsorship-detail': async function () {
+      setTitle('Sponsorship Details', 'Inside the mobile shell');
+      var screen = $('#spmScreen');
+      var item = app.selectedSponsorship;
+      screen.classList.remove('spm-snap-feed');
+      if (!item) {
+        app.route = sponsorshipBackRoute();
+        render();
+        return;
+      }
+
+      if (item.id && window.SpopeerAPI && typeof window.SpopeerAPI.request === 'function') {
+        try {
+          var detail = await window.SpopeerAPI.request('/api/sponsorships/' + encodeURIComponent(item.id));
+          item = (detail && detail.data && detail.data.sponsorship) || (detail && detail.sponsorship) || item;
+          app.selectedSponsorship = item;
+        } catch (_error) {}
+      }
+
+      var owner = item.ownerName || (item.author && ([item.author.firstName, item.author.lastName].filter(Boolean).join(' ') || item.author.email)) || 'Sponsor';
+      var summary = item.summary || item.description || item.details || 'No additional sponsorship summary available.';
+      screen.innerHTML = `
+        <section class="spm-detail-shell">
+          <button id="spmSponsorshipDetailBack" class="spm-chat-back spm-detail-back" type="button">Back</button>
+          <div class="spm-detail-hero sponsorship${item.imageUrl || item.image ? '' : ' no-media'}"${item.imageUrl || item.image ? ' style="background-image:url(\'' + html(item.imageUrl || item.image) + '\')"' : ''}>
+            <div class="spm-detail-overlay">
+              <span class="spm-detail-badge"><i class="fa-solid fa-handshake"></i> Sponsorship</span>
+              <h2>${html(sponsorshipTitle(item))}</h2>
+              <p>${html(owner)} · ${html(item.status || 'active')}</p>
+            </div>
+          </div>
+          <article class="spm-detail-card">
+            <div class="spm-detail-grid">
+              <div><span>Sport</span><strong>${html(item.sport || 'All Sports')}</strong></div>
+              <div><span>Mode</span><strong>${html(item.mode || item.type || 'Open')}</strong></div>
+              <div><span>Audience</span><strong>${html(item.targetAudience || 'All')}</strong></div>
+              <div><span>Location</span><strong>${html(item.location || 'Flexible')}</strong></div>
+              <div><span>Timeline</span><strong>${html(item.timeline || 'Open timeline')}</strong></div>
+              <div><span>Sponsor Type</span><strong>${html(item.sponsorType || item.category || 'General')}</strong></div>
+            </div>
+            <div class="spm-detail-copy">
+              <h3>Opportunity Summary</h3>
+              <p>${html(summary)}</p>
+            </div>
+            <div class="spm-detail-actions">
+              <button id="spmOpenSponsorshipDesktop" class="spm-primary-action" type="button">Open Full Page</button>
+              <button id="spmShareSponsorshipBtn" class="spm-chat-back" type="button">Share</button>
+            </div>
+          </article>
+        </section>`;
+
+      document.getElementById('spmSponsorshipDetailBack').addEventListener('click', function () {
+        app.route = sponsorshipBackRoute();
+        app.detailBackRoute = null;
+        render();
+      });
+
+      document.getElementById('spmOpenSponsorshipDesktop').addEventListener('click', function () {
+        window.location.href = '/pages/sponsorship/sponsor.html';
+      });
+
+      document.getElementById('spmShareSponsorshipBtn').addEventListener('click', function () {
+        var shareText = sponsorshipTitle(item) + ' · ' + (item.sport || 'Sponsorship');
+        if (navigator.share) {
+          navigator.share({ title: sponsorshipTitle(item), text: shareText, url: window.location.href }).catch(function () {});
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareText).catch(function () {});
+        }
+      });
     },
 
     training: async function () {
