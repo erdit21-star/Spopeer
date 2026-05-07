@@ -552,6 +552,19 @@
       color: var(--accent-lt);
     }
 
+    .tab-btn.requests.active {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+    }
+    .tab-btn.requests .tab-badge {
+      background: #e7efff;
+      color: #1e3a8a;
+    }
+    .tab-btn.requests.active .tab-badge {
+      background: var(--blue);
+      color: #fff;
+    }
+
     /* User cards */
     .user-list {
       display: flex;
@@ -1054,11 +1067,16 @@
         <i class="fa-regular fa-user-plus"></i>
         Following <span class="tab-badge" id="badgeFollowing">0</span>
       </button>
+      <button class="tab-btn requests" id="tabRequests" data-tab="requests">
+        <i class="fa-regular fa-envelope-open"></i>
+        Requests <span class="tab-badge" id="badgeRequests">0</span>
+      </button>
     </div>
 
     <!-- Lists -->
     <div class="user-list" id="listFollowers"></div>
     <div class="user-list" id="listFollowing" style="display:none;"></div>
+    <div class="user-list" id="listRequests" style="display:none;"></div>
 
   </main>
 </div>
@@ -1074,7 +1092,8 @@
   var user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
   var followersData = [];
   var followingData = [];
-  var followingEmails = new Set();
+  var pendingRequestsData = [];
+  var followingKeys = new Set();
 
   var avatarColors = [
     '#001f3f','#003366','#1a6bff','#16a34a','#7c3aed','#ea580c','#0891b2','#b91c1c'
@@ -1091,15 +1110,41 @@
   }
 
   function normalizeConnection(entry) {
+    var idValue = entry.id || entry.userId || entry._id || '';
+    var emailValue = entry.email || '';
     return {
-      id: entry.id || entry._id || entry.email || '',
+      id: idValue,
       name: entry.displayName || [entry.firstName, entry.lastName].filter(Boolean).join(' ') || entry.email || 'User',
-      email: entry.email || '',
+      email: emailValue,
       userType: normalizeUserType(entry.role || entry.userType),
       sport: entry.primarySport || entry.sport || '',
       mutual: 0,
       verified: false
     };
+  }
+
+  function unwrapUserList(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.users)) return result.users;
+    if (Array.isArray(result.results)) return result.results;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.users)) return result.data.users;
+    if (result.data && Array.isArray(result.data.results)) return result.data.results;
+    return [];
+  }
+
+  function unwrapRequestList(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.requests)) return result.requests;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.requests)) return result.data.requests;
+    return [];
+  }
+
+  function personKey(entry) {
+    return String(entry.id || entry.userId || entry.email || '').toLowerCase();
   }
 
   /* ── Helpers ── */
@@ -1141,15 +1186,30 @@
         window.SpopeerAPI.getFollowing(userId)
       ]);
 
-      followersData = (results[0].users || []).map(normalizeConnection);
-      followingData = (results[1].users || []).map(normalizeConnection);
-      followingEmails = new Set(followingData.map(function (entry) { return entry.email; }));
+      followersData = unwrapUserList(results[0]).map(normalizeConnection);
+      followingData = unwrapUserList(results[1]).map(normalizeConnection);
+      followingKeys = new Set(followingData.map(personKey));
+
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.listIncomingFollowRequests === 'function') {
+        var requestResult = await window.SpopeerAPI.listIncomingFollowRequests();
+        pendingRequestsData = unwrapRequestList(requestResult).map(function (request) {
+          var userPayload = request.user || request.follower || request.sender || {};
+          var normalized = normalizeConnection(userPayload);
+          normalized.requestId = request.id || request.connectionId || '';
+          return normalized;
+        }).filter(function (entry) { return !!entry.requestId; });
+      } else {
+        pendingRequestsData = [];
+      }
 
       document.getElementById('statFollowers').textContent = followersData.length;
       document.getElementById('statFollowing').textContent = followingData.length;
       document.getElementById('badgeFollowers').textContent = followersData.length;
       document.getElementById('badgeFollowing').textContent = followingData.length;
-      document.getElementById('pageCountPill').textContent = activeTab === 'followers' ? followersData.length : followingData.length;
+      document.getElementById('badgeRequests').textContent = pendingRequestsData.length;
+      document.getElementById('pageCountPill').textContent = activeTab === 'followers'
+        ? followersData.length
+        : (activeTab === 'requests' ? pendingRequestsData.length : followingData.length);
       renderSuggestions();
       switchTab(activeTab);
     } catch (err) {
@@ -1175,11 +1235,13 @@
   /* ── Render user list ── */
   var activeFilter = null;
   var searchQuery  = '';
-  var activeTab    = (new URLSearchParams(window.location.search).get('type') === 'following') ? 'following' : 'followers';
+  var tabParam = new URLSearchParams(window.location.search).get('type');
+  var activeTab = (tabParam === 'following' || tabParam === 'requests') ? tabParam : 'followers';
 
   function renderCard(u, idx) {
     var isSelf = !!u.email && !!user.email && u.email === user.email;
-    var isFollowed = followingEmails.has(u.email);
+    var userKey = personKey(u);
+    var isFollowed = followingKeys.has(userKey);
     var card = document.createElement('div');
     card.className = 'user-card';
     card.style.animationDelay = (idx * 40) + 'ms';
@@ -1207,7 +1269,7 @@
       '</div>' +
       '<div class="user-actions">' +
         '<button class="btn-message-sm" title="Message"><i class="fa-regular fa-paper-plane"></i></button>' +
-        (isSelf ? '' : '<button class="btn-follow' + (isFollowed ? ' following' : '') + '" data-email="' + u.email + '">' +
+        (isSelf ? '' : '<button class="btn-follow' + (isFollowed ? ' following' : '') + '" data-user-key="' + userKey + '" data-user-id="' + (u.id || '') + '">' +
           (isFollowed
             ? '<span class="follow-label"><i class="fa-solid fa-check" style="font-size:10px;"></i> Following</span><span class="unfollow-label"><i class="fa-solid fa-times" style="font-size:10px;"></i> Unfollow</span>'
             : '<i class="fa-solid fa-plus" style="font-size:10px;"></i> Follow') +
@@ -1219,14 +1281,15 @@
     if (followButton) {
       followButton.addEventListener('click', async function (e) {
       e.stopPropagation();
-      var email = this.dataset.email;
+      var targetId = this.dataset.userId;
+      var key = this.dataset.userKey;
       this.disabled = true;
       try {
-        if (followingEmails.has(email)) {
-          await window.SpopeerAPI.unfollowUser(email);
+        if (followingKeys.has(key)) {
+          await window.SpopeerAPI.unfollowUser(targetId || key);
           showToast('Unfollowed ' + u.name, 'user-minus');
         } else {
-          await window.SpopeerAPI.followUser(email);
+          await window.SpopeerAPI.followUser(targetId || key);
           showToast('Now following ' + u.name, 'check');
         }
         await loadConnections();
@@ -1244,8 +1307,62 @@
     });
     /* Card click → profile */
     card.addEventListener('click', function () {
-      window.location.href = 'public-profile.html?userId=' + encodeURIComponent(u.email);
+      window.location.href = 'public-profile.html?userId=' + encodeURIComponent(u.id || u.email);
     });
+    return card;
+  }
+
+  function renderRequestCard(u, idx) {
+    var card = document.createElement('div');
+    card.className = 'user-card';
+    card.style.animationDelay = (idx * 40) + 'ms';
+    card.innerHTML =
+      '<div class="user-av-wrap">' +
+        '<div class="user-av" style="background:' + colorFor(u.email || String(u.id || '')) + ';">' + initials(u.name) + '</div>' +
+        '<div class="type-dot ' + typeDotClass(u.userType) + '"><i class="fa-solid ' + typeIcon(u.userType) + '" style="font-size:7px;"></i></div>' +
+      '</div>' +
+      '<div class="user-info">' +
+        '<div class="user-name-row"><span class="user-name">' + u.name + '</span></div>' +
+        '<div class="user-meta"><span class="user-type-badge ' + typeBadgeClass(u.userType) + '">' + typeLabel(u.userType) + '</span>' +
+        (u.sport ? '<span class="meta-dot">·</span><span>' + u.sport + '</span>' : '') + '</div>' +
+      '</div>' +
+      '<div class="user-actions">' +
+        '<button class="btn-follow" data-action="accept"><i class="fa-solid fa-check" style="font-size:10px;"></i> Accept</button>' +
+        '<button class="btn-follow" data-action="reject" style="border-color:#dc2626;color:#dc2626;"><i class="fa-solid fa-xmark" style="font-size:10px;"></i> Reject</button>' +
+      '</div>';
+
+    card.querySelector('[data-action="accept"]').addEventListener('click', async function (e) {
+      e.stopPropagation();
+      this.disabled = true;
+      try {
+        await window.SpopeerAPI.acceptFollowRequest(u.requestId);
+        showToast('Request accepted', 'check');
+        await loadConnections();
+      } catch (err) {
+        showToast(err.message || 'Could not accept request', 'triangle-exclamation');
+      } finally {
+        this.disabled = false;
+      }
+    });
+
+    card.querySelector('[data-action="reject"]').addEventListener('click', async function (e) {
+      e.stopPropagation();
+      this.disabled = true;
+      try {
+        await window.SpopeerAPI.rejectFollowRequest(u.requestId);
+        showToast('Request rejected', 'xmark');
+        await loadConnections();
+      } catch (err) {
+        showToast(err.message || 'Could not reject request', 'triangle-exclamation');
+      } finally {
+        this.disabled = false;
+      }
+    });
+
+    card.addEventListener('click', function () {
+      window.location.href = 'public-profile.html?userId=' + encodeURIComponent(u.id || u.email);
+    });
+
     return card;
   }
 
@@ -1275,27 +1392,48 @@
     });
   }
 
+  function renderRequests(container) {
+    container.innerHTML = '';
+    if (!pendingRequestsData.length) {
+      container.innerHTML =
+        '<div class="empty-state">' +
+        '<div class="empty-icon"><i class="fa-regular fa-envelope-open"></i></div>' +
+        '<div class="empty-title">No pending requests</div>' +
+        '<div class="empty-desc">When people request to follow you, they will appear here.</div>' +
+        '</div>';
+      return;
+    }
+    pendingRequestsData.forEach(function (u, i) {
+      container.appendChild(renderRequestCard(u, i));
+    });
+  }
+
   function switchTab(tab) {
     activeTab = tab;
     var isFollowers = tab === 'followers';
+    var isRequests = tab === 'requests';
     document.getElementById('tabFollowers').classList.toggle('active', isFollowers);
-    document.getElementById('tabFollowing').classList.toggle('active', !isFollowers);
+    document.getElementById('tabFollowing').classList.toggle('active', tab === 'following');
+    document.getElementById('tabRequests').classList.toggle('active', isRequests);
     document.getElementById('listFollowers').style.display = isFollowers ? 'flex' : 'none';
-    document.getElementById('listFollowing').style.display = !isFollowers ? 'flex' : 'none';
-    document.getElementById('pageTitle').textContent = isFollowers ? 'Followers' : 'Following';
-    document.getElementById('breadcrumbCurrent').textContent = isFollowers ? 'Followers' : 'Following';
-    document.getElementById('pageCountPill').textContent = isFollowers ? followersData.length : followingData.length;
-    document.getElementById('listSearchInput').placeholder = isFollowers ? 'Search followers…' : 'Search following…';
+    document.getElementById('listFollowing').style.display = tab === 'following' ? 'flex' : 'none';
+    document.getElementById('listRequests').style.display = isRequests ? 'flex' : 'none';
+    document.getElementById('pageTitle').textContent = isFollowers ? 'Followers' : (isRequests ? 'Follow Requests' : 'Following');
+    document.getElementById('breadcrumbCurrent').textContent = isFollowers ? 'Followers' : (isRequests ? 'Requests' : 'Following');
+    document.getElementById('pageCountPill').textContent = isFollowers ? followersData.length : (isRequests ? pendingRequestsData.length : followingData.length);
+    document.getElementById('listSearchInput').placeholder = isFollowers ? 'Search followers…' : (isRequests ? 'Search requests…' : 'Search following…');
     var url = new URL(window.location);
     url.searchParams.set('type', tab);
     history.replaceState(null, '', url);
     renderList(document.getElementById('listFollowers'), followersData);
     renderList(document.getElementById('listFollowing'), followingData);
+    renderRequests(document.getElementById('listRequests'));
   }
 
   /* ── Tabs ── */
   document.getElementById('tabFollowers').addEventListener('click', function () { switchTab('followers'); });
   document.getElementById('tabFollowing').addEventListener('click', function () { switchTab('following'); });
+  document.getElementById('tabRequests').addEventListener('click', function () { switchTab('requests'); });
 
   /* ── Search ── */
   document.getElementById('listSearchInput').addEventListener('input', function () {

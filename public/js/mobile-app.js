@@ -74,6 +74,15 @@
     return [];
   }
 
+  function unwrapFollowRequests(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.requests)) return result.requests;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.requests)) return result.data.requests;
+    return [];
+  }
+
   function unreadNotificationsCount(result) {
     if (!result) return 0;
     if (result.meta && typeof result.meta.unreadCount === 'number') return result.meta.unreadCount;
@@ -3251,6 +3260,12 @@
       const followers = Number(user.followersCount || user.followers || 0);
       const following = Number(user.followingCount || user.following || 0);
       const subscriptionInfo = resolveSubscriptionInfo(user);
+      var pendingFollowRequestsCount = 0;
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.listIncomingFollowRequests === 'function') {
+        try {
+          pendingFollowRequestsCount = unwrapFollowRequests(await window.SpopeerAPI.listIncomingFollowRequests()).length;
+        } catch (_requestsErr) {}
+      }
 
       const joinedValue = user.createdAt || user.created_at || user.joinedAt || user.memberSince || user.updatedAt;
       var joinedLabel = '-';
@@ -3301,6 +3316,7 @@
               <input id="spmAvatarFileInput" type="file" accept="image/*" class="spm-hidden">
               <div id="spmAvatarMediaPicker" class="spm-avatar-picker spm-hidden"></div>
               <button id="spmEditProfileBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
+              <button id="spmFollowRequestsBtn" class="spm-primary-action" type="button"><i class="fa-regular fa-envelope-open"></i> Follow Requests${pendingFollowRequestsCount > 0 ? ' (' + pendingFollowRequestsCount + ')' : ''}</button>
               <button id="spmManagePlanBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-layer-group"></i> Manage Plan</button>
               <button id="spmSignOutBtn" class="spm-signout-btn" type="button"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
             </div>
@@ -3424,6 +3440,14 @@
         });
       }
 
+      var followRequestsBtn = document.getElementById('spmFollowRequestsBtn');
+      if (followRequestsBtn) {
+        followRequestsBtn.addEventListener('click', function () {
+          app.route = 'follow-requests';
+          render();
+        });
+      }
+
       document.getElementById('spmSignOutBtn').addEventListener('click', async function () {
         if (window.Auth && typeof window.Auth.logout === 'function') {
           await window.Auth.logout();
@@ -3433,6 +3457,102 @@
         }
         window.location.href = '/mobile.html';
       });
+    }
+
+    ,
+
+    'follow-requests': async function () {
+      setTitle('Follow Requests', 'Manage incoming requests');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading follow requests...</div>';
+
+      try {
+        var result = await window.SpopeerAPI.listIncomingFollowRequests();
+        var requests = unwrapFollowRequests(result);
+
+        if (!requests.length) {
+          screen.innerHTML = '<section class="spm-library-shell"><div class="spm-empty"><strong>No pending requests</strong><p>When users request to follow you, they will appear here.</p><button id="spmBackToProfileFromRequests" class="spm-chat-back" type="button">Back to Profile</button></div></section>';
+          var backEmpty = document.getElementById('spmBackToProfileFromRequests');
+          if (backEmpty) {
+            backEmpty.addEventListener('click', function () {
+              app.route = 'profile';
+              render();
+            });
+          }
+          return;
+        }
+
+        screen.innerHTML = '<section class="spm-library-shell"><div class="spm-library-hero"><div><p class="spm-library-kicker">Connections</p><h2>Incoming follow requests</h2><p class="spm-library-copy">Accept to add followers or reject to dismiss.</p></div><div class="spm-library-stats"><article><strong>' + requests.length + '</strong><span>Pending</span></article></div></div><div id="spmFollowRequestsList"></div><div class="spm-detail-actions" style="margin-top:12px"><button id="spmBackToProfileRequests" class="spm-chat-back" type="button">Back to Profile</button></div></section>';
+
+        var list = document.getElementById('spmFollowRequestsList');
+        requests.forEach(function (request) {
+          var requestId = request.id || request.connectionId;
+          var reqUser = request.user || request.follower || request.sender || {};
+          var userId = reqUser.id || reqUser.userId || '';
+          var name = displayNameFromUser(reqUser);
+          var sport = reqUser.sport || reqUser.primarySport || 'Sport';
+          var role = reqUser.role || reqUser.userType || 'Member';
+          var card = document.createElement('article');
+          card.className = 'spm-feed-card';
+          card.innerHTML = '<div class="spm-feed-head"><div class="spm-mini-avatar">' + html(initialForName(name)) + '</div><div class="spm-feed-title-wrap"><strong>' + html(name) + '</strong><small>' + html(role + ' · ' + sport) + '</small></div></div><div class="spm-detail-actions"><button class="spm-chat-back" data-follow-reject="' + html(String(requestId || '')) + '">Reject</button><button class="spm-primary-action" data-follow-accept="' + html(String(requestId || '')) + '" data-request-user-id="' + html(String(userId || '')) + '">Accept</button></div>';
+          list.appendChild(card);
+        });
+
+        list.querySelectorAll('[data-follow-accept]').forEach(function (button) {
+          button.addEventListener('click', async function () {
+            var requestId = button.getAttribute('data-follow-accept');
+            var requestUserId = button.getAttribute('data-request-user-id');
+            if (!requestId) return;
+            button.disabled = true;
+            try {
+              await window.SpopeerAPI.acceptFollowRequest(requestId);
+              if (window.CurrentUserStore && typeof window.CurrentUserStore.refreshCurrentUser === 'function') {
+                try { await window.CurrentUserStore.refreshCurrentUser(); } catch (_refreshErr) {}
+              }
+              if (requestUserId) {
+                window.dispatchEvent(new CustomEvent('followRelationChanged', {
+                  detail: {
+                    targetUserId: requestUserId,
+                    deltaFollowers: 1,
+                    deltaFollowing: 0,
+                    action: 'accept-follow-request'
+                  }
+                }));
+              }
+              app.route = 'follow-requests';
+              render();
+            } catch (_error) {
+              button.disabled = false;
+            }
+          });
+        });
+
+        list.querySelectorAll('[data-follow-reject]').forEach(function (button) {
+          button.addEventListener('click', async function () {
+            var requestId = button.getAttribute('data-follow-reject');
+            if (!requestId) return;
+            button.disabled = true;
+            try {
+              await window.SpopeerAPI.rejectFollowRequest(requestId);
+              app.route = 'follow-requests';
+              render();
+            } catch (_error) {
+              button.disabled = false;
+            }
+          });
+        });
+
+        var backBtn = document.getElementById('spmBackToProfileRequests');
+        if (backBtn) {
+          backBtn.addEventListener('click', function () {
+            app.route = 'profile';
+            render();
+          });
+        }
+      } catch (_error) {
+        screen.innerHTML = '<div class="spm-empty">Could not load follow requests.</div>';
+      }
     }
   };
 
