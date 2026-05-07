@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' } };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -421,6 +421,275 @@
     if (content.length >= 280) return true;
     if (content.indexOf('article') >= 0 || content.indexOf('read:') >= 0) return true;
     return /https?:\/\/[^\s)]+/.test(content);
+  }
+
+  function unwrapLibraryCollection(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.items)) return result.data.items;
+    if (result.payload && Array.isArray(result.payload)) return result.payload;
+    if (Array.isArray(result.posts)) return result.posts;
+    if (Array.isArray(result.bookmarks)) return result.bookmarks;
+    if (Array.isArray(result.sponsorships)) return result.sponsorships;
+    return [];
+  }
+
+  function extractUrls(text) {
+    var matches = String(text || '').match(/https?:\/\/[^\s)]+/g);
+    return matches || [];
+  }
+
+  function pickLibraryPostTitle(post) {
+    var content = String(post.content || '').trim();
+    if (!content) return 'Untitled post';
+    return content.length > 90 ? content.slice(0, 90) + '...' : content;
+  }
+
+  function libraryTypeLabel(type) {
+    var map = {
+      posts: 'Posts',
+      links: 'Links',
+      articles: 'Articles',
+      videos: 'Videos',
+      images: 'Images',
+      events: 'Events',
+      sponsorships: 'Sponsorships'
+    };
+    return map[type] || 'Items';
+  }
+
+  function libraryTypeIcon(type) {
+    var map = {
+      posts: 'fa-regular fa-note-sticky',
+      links: 'fa-solid fa-link',
+      articles: 'fa-regular fa-newspaper',
+      videos: 'fa-solid fa-video',
+      images: 'fa-regular fa-image',
+      events: 'fa-regular fa-calendar',
+      sponsorships: 'fa-solid fa-handshake-angle'
+    };
+    return map[type] || 'fa-regular fa-folder-open';
+  }
+
+  function librarySourceLabel(source) {
+    return source === 'created' ? 'Created' : 'Saved';
+  }
+
+  function normalizePostToLibraryItems(post, source) {
+    if (!post || !post.id) return [];
+
+    var createdAt = post.createdAt || post.created_at || new Date().toISOString();
+    var urls = extractUrls(post.content);
+    var mediaKind = postMediaType(post) === 'video' ? 'videos' : (postMediaType(post) === 'image' ? 'images' : null);
+    var base = {
+      id: 'post-' + post.id + '-' + source,
+      source: source,
+      postId: post.id,
+      createdAt: createdAt,
+      title: pickLibraryPostTitle(post),
+      description: String(post.content || ''),
+      sport: post.sport || '',
+      href: '/app.html',
+      previewUrl: mediaUrlForPost(post),
+      originalPost: post
+    };
+    var items = [Object.assign({}, base, { itemType: 'posts' })];
+
+    if (urls.length) {
+      items.push(Object.assign({}, base, {
+        id: 'link-' + post.id + '-' + source,
+        itemType: 'links',
+        href: urls[0],
+        description: urls[0]
+      }));
+    }
+
+    if (looksLikeArticlePost(post)) {
+      items.push(Object.assign({}, base, {
+        id: 'article-' + post.id + '-' + source,
+        itemType: 'articles'
+      }));
+    }
+
+    if (mediaKind) {
+      items.push(Object.assign({}, base, {
+        id: mediaKind + '-' + post.id + '-' + source,
+        itemType: mediaKind
+      }));
+    }
+
+    return items;
+  }
+
+  function normalizeEventToLibraryItem(event, currentUserId) {
+    var source = currentUserId && String(event.createdBy || '') === String(currentUserId) ? 'created' : 'saved';
+    return {
+      id: 'event-' + event.id + '-' + source,
+      itemType: 'events',
+      source: source,
+      createdAt: event.createdAt || event.startDate || event.startsAt || new Date().toISOString(),
+      title: eventTitle(event),
+      description: event.description || event.location || event.venue || 'Event',
+      sport: event.sport || '',
+      href: '/pages/events/event.html',
+      previewUrl: event.imageUrl || event.image || event.coverUrl || ''
+    };
+  }
+
+  function normalizeSponsorshipToLibraryItem(entry) {
+    return {
+      id: 'sponsorship-' + entry.id + '-created',
+      itemType: 'sponsorships',
+      source: 'created',
+      createdAt: entry.createdAt || new Date().toISOString(),
+      title: sponsorshipTitle(entry),
+      description: entry.summary || entry.description || entry.mode || 'Sponsorship',
+      sport: entry.sport || '',
+      href: '/pages/sponsorship/sponsor.html',
+      previewUrl: entry.imageUrl || entry.image || ''
+    };
+  }
+
+  async function loadLibraryItems() {
+    var profileResponse = null;
+    try {
+      profileResponse = await window.SpopeerAPI.getProfile();
+    } catch (_error) {}
+
+    var profileUser = unwrapUser(profileResponse) || app.user || {};
+    if (profileUser && Object.keys(profileUser).length) {
+      app.user = profileUser;
+    }
+
+    var currentUserId = profileUser && (profileUser.id || profileUser.userId) ? String(profileUser.id || profileUser.userId) : '';
+    var responses = await Promise.allSettled([
+      currentUserId ? window.SpopeerAPI.listPosts({ authorId: currentUserId, limit: 200, page: 1 }) : Promise.resolve([]),
+      window.SpopeerAPI.listSavedPosts(),
+      window.SpopeerAPI.listBookmarks(),
+      window.SpopeerAPI.listEvents(),
+      window.SpopeerAPI.listSponsorships({ limit: 200 })
+    ]);
+
+    var posts = responses[0].status === 'fulfilled' ? unwrapLibraryCollection(responses[0].value) : [];
+    var savedPosts = responses[1].status === 'fulfilled' ? unwrapLibraryCollection(responses[1].value) : [];
+    var bookmarks = responses[2].status === 'fulfilled' ? unwrapLibraryCollection(responses[2].value) : [];
+    var events = responses[3].status === 'fulfilled' ? unwrapEvents(responses[3].value) : [];
+    var sponsorships = responses[4].status === 'fulfilled' ? unwrapSponsorships(responses[4].value) : [];
+
+    var items = [];
+    var seen = {};
+
+    function addItem(item) {
+      if (!item || seen[item.id]) return;
+      seen[item.id] = true;
+      items.push(item);
+    }
+
+    (Array.isArray(posts) ? posts : []).forEach(function (post) {
+      normalizePostToLibraryItems(post, 'created').forEach(addItem);
+    });
+
+    (Array.isArray(savedPosts) ? savedPosts : []).forEach(function (entry) {
+      var post = entry && (entry.post || entry);
+      normalizePostToLibraryItems(post, 'saved').forEach(addItem);
+    });
+
+    (Array.isArray(bookmarks) ? bookmarks : []).forEach(function (entry) {
+      var post = entry && (entry.post || entry);
+      normalizePostToLibraryItems(post, 'saved').forEach(addItem);
+    });
+
+    (Array.isArray(events) ? events : []).forEach(function (event) {
+      addItem(normalizeEventToLibraryItem(event, currentUserId));
+    });
+
+    (Array.isArray(sponsorships) ? sponsorships : []).filter(function (entry) {
+      if (!currentUserId) return false;
+      return String(entry.userId || (entry.author && entry.author.id) || '') === currentUserId;
+    }).forEach(function (entry) {
+      addItem(normalizeSponsorshipToLibraryItem(entry));
+    });
+
+    var coverUrl = profileUser && (profileUser.coverPhotoUrl || profileUser.coverUrl || profileUser.coverImage);
+    var avatarUrl = profileUser && (profileUser.avatarUrl || profileUser.avatar || profileUser.profileImageUrl);
+    if (coverUrl) {
+      addItem({
+        id: 'profile-cover',
+        itemType: 'images',
+        source: 'created',
+        createdAt: profileUser.updatedAt || new Date().toISOString(),
+        title: 'Profile Cover Photo',
+        description: 'Cover image used in your profile card.',
+        sport: '',
+        href: '/pages/profiles/edit-profile.html',
+        previewUrl: coverUrl
+      });
+    }
+    if (avatarUrl) {
+      addItem({
+        id: 'profile-avatar',
+        itemType: 'images',
+        source: 'created',
+        createdAt: profileUser.updatedAt || new Date().toISOString(),
+        title: 'Profile Photo',
+        description: 'Avatar image used across your profile.',
+        sport: '',
+        href: '/pages/profiles/edit-profile.html',
+        previewUrl: avatarUrl
+      });
+    }
+    if (profileUser && profileUser.mediaLinks && profileUser.mediaLinks.highlightVideo) {
+      addItem({
+        id: 'profile-highlight-video',
+        itemType: 'videos',
+        source: 'created',
+        createdAt: profileUser.updatedAt || new Date().toISOString(),
+        title: 'Profile Highlight Video',
+        description: 'Highlight video saved in your profile media links.',
+        sport: '',
+        href: profileUser.mediaLinks.highlightVideo,
+        previewUrl: profileUser.mediaLinks.highlightVideo
+      });
+    }
+
+    return items;
+  }
+
+  function sortLibraryItems(items, sortBy) {
+    return items.slice().sort(function (left, right) {
+      if (sortBy === 'title') {
+        return String(left.title || '').localeCompare(String(right.title || ''));
+      }
+      var leftTime = new Date(left.createdAt).getTime() || 0;
+      var rightTime = new Date(right.createdAt).getTime() || 0;
+      return sortBy === 'oldest' ? leftTime - rightTime : rightTime - leftTime;
+    });
+  }
+
+  function getVisibleLibraryItems(items, type, source, sortBy) {
+    var filtered = (items || []).filter(function (item) {
+      if (type !== 'all' && item.itemType !== type) return false;
+      if (source !== 'all' && item.source !== source) return false;
+      return true;
+    });
+    return sortLibraryItems(filtered, sortBy);
+  }
+
+  function openLibraryItem(item) {
+    if (!item) return;
+    if (item.itemType === 'posts' && item.originalPost) {
+      app.selectedPost = item.originalPost;
+      app.route = 'post';
+      render();
+      return;
+    }
+    if (!item.href) return;
+    if (/^https?:\/\//i.test(item.href)) {
+      window.open(item.href, '_blank', 'noopener');
+      return;
+    }
+    window.location.href = item.href;
   }
 
   function listingTitle(item) {
@@ -1301,45 +1570,163 @@
     },
 
     library: async function () {
-      setTitle('Library', 'Your saved content');
+      setTitle('Library', 'Posts, links, media and saved activity');
       var screen = $('#spmScreen');
+      var state = app.libraryState || { items: [], type: 'all', source: 'all', sort: 'newest' };
+      app.libraryState = state;
       screen.classList.remove('spm-snap-feed');
       screen.innerHTML = '<div class="spm-empty">Loading your library...</div>';
+
       try {
-        var result = await window.SpopeerAPI.listBookmarks();
-        var bookmarks = (result && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : (result && result.bookmarks) || []));
-        if (!bookmarks.length) {
-          screen.innerHTML = '<div class="spm-empty">No saved items yet. Bookmark posts to find them here.</div>';
+        state.items = await loadLibraryItems();
+      } catch (error) {
+        console.error('[mobile] library error', error);
+        state.items = [];
+      }
+
+      var createdCount = state.items.filter(function (item) { return item.source === 'created'; }).length;
+      var savedCount = state.items.filter(function (item) { return item.source === 'saved'; }).length;
+      var typeCounts = {
+        all: state.items.length,
+        posts: state.items.filter(function (item) { return item.itemType === 'posts'; }).length,
+        links: state.items.filter(function (item) { return item.itemType === 'links'; }).length,
+        articles: state.items.filter(function (item) { return item.itemType === 'articles'; }).length,
+        images: state.items.filter(function (item) { return item.itemType === 'images'; }).length,
+        videos: state.items.filter(function (item) { return item.itemType === 'videos'; }).length,
+        events: state.items.filter(function (item) { return item.itemType === 'events'; }).length,
+        sponsorships: state.items.filter(function (item) { return item.itemType === 'sponsorships'; }).length
+      };
+
+      screen.innerHTML = `
+        <section class="spm-library-shell">
+          <div class="spm-library-hero">
+            <div>
+              <p class="spm-library-kicker">Sports Passport Archive</p>
+              <h2>Everything you have created, saved, or tracked.</h2>
+              <p class="spm-library-copy">Pulled from your main library sources: posts, saved items, media, events and sponsorships.</p>
+            </div>
+            <div class="spm-library-stats">
+              <article><strong>${typeCounts.all}</strong><span>Total</span></article>
+              <article><strong>${createdCount}</strong><span>Created</span></article>
+              <article><strong>${savedCount}</strong><span>Saved</span></article>
+            </div>
+          </div>
+
+          <div class="spm-library-controls">
+            <div class="spm-library-source" id="spmLibrarySource">
+              <button type="button" class="spm-library-source-btn${state.source === 'all' ? ' active' : ''}" data-library-source="all">All</button>
+              <button type="button" class="spm-library-source-btn${state.source === 'created' ? ' active' : ''}" data-library-source="created">Created</button>
+              <button type="button" class="spm-library-source-btn${state.source === 'saved' ? ' active' : ''}" data-library-source="saved">Saved</button>
+            </div>
+            <label class="spm-library-sort-wrap">
+              <span>Sort</span>
+              <select id="spmLibrarySort" class="spm-library-sort">
+                <option value="newest"${state.sort === 'newest' ? ' selected' : ''}>Newest</option>
+                <option value="oldest"${state.sort === 'oldest' ? ' selected' : ''}>Oldest</option>
+                <option value="title"${state.sort === 'title' ? ' selected' : ''}>Title</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="spm-library-tabs" id="spmLibraryTabs">
+            <button type="button" class="spm-library-tab${state.type === 'all' ? ' active' : ''}" data-library-type="all">All <span>${typeCounts.all}</span></button>
+            <button type="button" class="spm-library-tab${state.type === 'posts' ? ' active' : ''}" data-library-type="posts">Posts <span>${typeCounts.posts}</span></button>
+            <button type="button" class="spm-library-tab${state.type === 'links' ? ' active' : ''}" data-library-type="links">Links <span>${typeCounts.links}</span></button>
+            <button type="button" class="spm-library-tab${state.type === 'articles' ? ' active' : ''}" data-library-type="articles">Articles <span>${typeCounts.articles}</span></button>
+            <button type="button" class="spm-library-tab${state.type === 'images' ? ' active' : ''}" data-library-type="images">Images <span>${typeCounts.images}</span></button>
+            <button type="button" class="spm-library-tab${state.type === 'videos' ? ' active' : ''}" data-library-type="videos">Videos <span>${typeCounts.videos}</span></button>
+            <button type="button" class="spm-library-tab${state.type === 'events' ? ' active' : ''}" data-library-type="events">Events <span>${typeCounts.events}</span></button>
+            <button type="button" class="spm-library-tab${state.type === 'sponsorships' ? ' active' : ''}" data-library-type="sponsorships">Sponsorships <span>${typeCounts.sponsorships}</span></button>
+          </div>
+
+          <div id="spmLibraryResults" class="spm-library-results"></div>
+        </section>`;
+
+      function renderLibraryResults() {
+        var mount = document.getElementById('spmLibraryResults');
+        if (!mount) return;
+
+        var visibleItems = getVisibleLibraryItems(state.items, state.type, state.source, state.sort);
+        if (!visibleItems.length) {
+          mount.innerHTML = '<div class="spm-empty spm-library-empty"><strong>No items in this view</strong><p>Try another type or source filter. New activity from your main library will appear here automatically.</p></div>';
           return;
         }
-        screen.innerHTML = '<div class="spm-screen-header"><h2 class="spm-screen-title"><i class="fa-regular fa-bookmark"></i> Library</h2><p class="spm-screen-sub">Your saved posts &amp; content</p></div><div id="spmLibraryList"></div>';
-        var list = document.getElementById('spmLibraryList');
-        bookmarks.forEach(function (item) {
-          var post = item.post || item;
+
+        mount.innerHTML = '';
+        visibleItems.forEach(function (item) {
           var card = document.createElement('article');
-          card.className = 'spm-feed-card';
-          var mediaType = postMediaType(post);
-          var thumbHtml = (mediaType === 'image')
-            ? '<div class="spm-feed-thumb" style="background-image:url(\'' + html(postImageUrl(post)) + '\')"></div>'
-            : '';
-          card.innerHTML = thumbHtml + `
-            <div class="spm-feed-head">
-              <div class="spm-mini-avatar">${html(initialForName(authorName(post)))}</div>
-              <div class="spm-feed-title-wrap">
-                <strong>${html(authorName(post))}</strong>
-                <small>${html(formatTime(post.createdAt || post.created_at))}</small>
+          card.className = 'spm-library-card';
+
+          var preview = '';
+          if (item.itemType === 'videos' && item.previewUrl) {
+            preview = '<div class="spm-library-preview spm-library-preview-video"><i class="fa-solid fa-play"></i><span>Video</span></div>';
+          } else if (item.previewUrl) {
+            preview = '<div class="spm-library-preview" style="background-image:url(\'' + html(item.previewUrl) + '\')"></div>';
+          } else {
+            preview = '<div class="spm-library-preview spm-library-preview-fallback"><i class="' + html(libraryTypeIcon(item.itemType)) + '"></i></div>';
+          }
+
+          card.innerHTML = `
+            ${preview}
+            <div class="spm-library-card-body">
+              <div class="spm-library-card-top">
+                <span class="spm-library-pill type"><i class="${html(libraryTypeIcon(item.itemType))}"></i>${html(libraryTypeLabel(item.itemType))}</span>
+                <span class="spm-library-pill source">${html(librarySourceLabel(item.source))}</span>
               </div>
-              <span class="spm-feed-chip static"><i class="fa-regular fa-bookmark"></i> Saved</span>
-            </div>
-            <p class="spm-feed-copy">${html(post.content || post.caption || 'Saved item')}</p>
-            <div class="spm-feed-meta">
-              <span class="spm-feed-chip static">${html(post.sport || 'Sports')}</span>
+              <h3>${html(item.title || 'Untitled item')}</h3>
+              <p>${html(item.description || '')}</p>
+              <div class="spm-library-meta">
+                ${item.sport ? '<span>' + html(item.sport) + '</span>' : ''}
+                <span>${html(new Date(item.createdAt).toLocaleDateString())}</span>
+              </div>
+              <button type="button" class="spm-library-open" data-library-id="${html(item.id)}">Open</button>
             </div>`;
-          list.appendChild(card);
+          mount.appendChild(card);
         });
-      } catch (_error) {
-        screen.innerHTML = '<div class="spm-empty">Could not load library.</div>';
+
+        mount.querySelectorAll('[data-library-id]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            var found = visibleItems.find(function (item) { return item.id === button.getAttribute('data-library-id'); });
+            openLibraryItem(found);
+          });
+        });
       }
+
+      function syncLibraryControls() {
+        document.querySelectorAll('[data-library-source]').forEach(function (button) {
+          button.classList.toggle('active', button.getAttribute('data-library-source') === state.source);
+        });
+        document.querySelectorAll('[data-library-type]').forEach(function (button) {
+          button.classList.toggle('active', button.getAttribute('data-library-type') === state.type);
+        });
+      }
+
+      document.querySelectorAll('[data-library-source]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          state.source = button.getAttribute('data-library-source') || 'all';
+          syncLibraryControls();
+          renderLibraryResults();
+        });
+      });
+
+      document.querySelectorAll('[data-library-type]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          state.type = button.getAttribute('data-library-type') || 'all';
+          syncLibraryControls();
+          renderLibraryResults();
+        });
+      });
+
+      var sortSelect = document.getElementById('spmLibrarySort');
+      if (sortSelect) {
+        sortSelect.addEventListener('change', function () {
+          state.sort = sortSelect.value || 'newest';
+          renderLibraryResults();
+        });
+      }
+
+      syncLibraryControls();
+      renderLibraryResults();
     },
 
     events: async function () {
