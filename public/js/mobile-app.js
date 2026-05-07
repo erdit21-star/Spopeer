@@ -1358,12 +1358,16 @@
       var targetUserId = Number(user.id || user.userId || 0);
       var canFollow = !ownProfile && Number.isInteger(targetUserId) && targetUserId > 0;
       var isFollowing = false;
+      var isPendingFollow = false;
+      var pendingConnectionId = null;
 
       if (canFollow && window.SpopeerAPI && typeof window.SpopeerAPI.getFollowStatus === 'function') {
         try {
           var statusResult = await window.SpopeerAPI.getFollowStatus(targetUserId);
           var statusPayload = (statusResult && statusResult.data) || statusResult || {};
           isFollowing = !!statusPayload.isFollowing || statusPayload.relation === 'accepted' || statusPayload.connectionStatus === 'active';
+          isPendingFollow = !!statusPayload.isPending || statusPayload.relation === 'pending' || statusPayload.connectionStatus === 'pending';
+          pendingConnectionId = statusPayload.connectionId || null;
         } catch (_statusErr) {}
       }
 
@@ -1425,7 +1429,7 @@
 
             <div class="spm-profile-actions spm-public-profile-actions">
               <button id="spmBackToSearchBtn" class="spm-chat-back" type="button">Back to Search</button>
-              ${canFollow ? '<button id="spmFollowUserBtn" class="spm-primary-action' + (isFollowing ? ' spm-following-btn' : '') + '" type="button"><i class="fa-solid fa-user-plus"></i> ' + (isFollowing ? 'Following' : 'Follow') + '</button>' : ''}
+              ${canFollow ? '<button id="spmFollowUserBtn" class="spm-primary-action' + (isFollowing ? ' spm-following-btn' : '') + (isPendingFollow ? ' spm-following-btn' : '') + '" type="button"><i class="fa-solid fa-user-plus"></i> ' + (isFollowing ? 'Following' : (isPendingFollow ? 'Requested' : 'Follow')) + '</button>' : ''}
               ${ownProfile ? '' : '<button id="spmMessageUserBtn" class="spm-primary-action" type="button"><i class="fa-regular fa-paper-plane"></i> Message</button>'}
             </div>
           </div>
@@ -1466,15 +1470,34 @@
               await window.SpopeerAPI.unfollowUser(targetUserId);
               isFollowing = false;
               followers = Math.max(0, followers - 1);
+              pendingConnectionId = null;
+            } else if (isPendingFollow) {
+              if (window.SpopeerAPI && typeof window.SpopeerAPI.cancelFollowRequest === 'function' && pendingConnectionId) {
+                await window.SpopeerAPI.cancelFollowRequest(pendingConnectionId);
+              }
+              isPendingFollow = false;
+              pendingConnectionId = null;
             } else {
-              await window.SpopeerAPI.followUser(targetUserId);
-              isFollowing = true;
-              followers += 1;
+              if (window.SpopeerAPI && typeof window.SpopeerAPI.requestFollowUser === 'function') {
+                var followRequestResult = await window.SpopeerAPI.requestFollowUser(targetUserId);
+                var followRequestPayload = (followRequestResult && followRequestResult.data) || followRequestResult || {};
+                if ((followRequestPayload.status || '').toLowerCase() === 'pending') {
+                  isPendingFollow = true;
+                  pendingConnectionId = followRequestPayload.connectionId || pendingConnectionId;
+                } else {
+                  isFollowing = true;
+                  followers += 1;
+                }
+              } else {
+                await window.SpopeerAPI.followUser(targetUserId);
+                isFollowing = true;
+                followers += 1;
+              }
             }
             var followersEl = document.getElementById('spmPublicFollowersCount');
             if (followersEl) followersEl.textContent = followers.toLocaleString();
-            followBtn.classList.toggle('spm-following-btn', isFollowing);
-            followBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> ' + (isFollowing ? 'Following' : 'Follow');
+            followBtn.classList.toggle('spm-following-btn', isFollowing || isPendingFollow);
+            followBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> ' + (isFollowing ? 'Following' : (isPendingFollow ? 'Requested' : 'Follow'));
           } catch (_followError) {
           } finally {
             followBtn.disabled = false;

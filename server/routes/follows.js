@@ -296,7 +296,13 @@ router.get('/status/:userId', authenticate, async (req, res) => {
     if (connectionStatus === 'active') relation = 'accepted';
     else if (connectionStatus === 'pending') relation = 'pending';
 
-    ok(res, { isFollowing: !!conn, connectionStatus, relation });
+    ok(res, {
+      isFollowing: connectionStatus === 'active',
+      isPending: connectionStatus === 'pending',
+      connectionId: conn ? conn.id : null,
+      connectionStatus,
+      relation
+    });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to check follow status.');
   }
