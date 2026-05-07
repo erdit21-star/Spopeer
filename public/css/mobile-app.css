@@ -236,20 +236,23 @@ body.spm-dark-mode .spm-signout-btn{background:#111827;border-color:#b91c1c;colo
 
 /* Mobile auth landing refresh */
 .spm-auth{background:#f3f7ff}
-.spm-auth-hero{min-height:58vh;justify-content:flex-end;padding:26px 24px 32px;border-radius:0 0 30px 30px;background:radial-gradient(circle at 18% 14%,rgba(255,255,255,.24),transparent 36%),linear-gradient(145deg,#001733,#0048a5 62%,#1a6bff)}
+.spm-auth-hero{min-height:46vh;justify-content:flex-end;padding:20px 24px 28px;border-radius:0 0 30px 30px;background:radial-gradient(circle at 18% 14%,rgba(255,255,255,.24),transparent 36%),linear-gradient(145deg,#001733,#0048a5 62%,#1a6bff)}
 .spm-auth-hero h1{font-size:42px;letter-spacing:-.03em;margin:14px 0 8px}
 .spm-auth-hero p{font-size:14px;max-width:260px;line-height:1.55;color:rgba(255,255,255,.9)}
-.spm-auth-panel{flex:0 0 auto;justify-content:flex-start;gap:12px;padding:20px 20px 16px;background:transparent}
+.spm-auth-panel{flex:1;justify-content:flex-start;gap:12px;padding:16px 20px 16px;background:transparent}
 .spm-btn{height:54px;font-size:15px;box-shadow:0 8px 20px rgba(15,23,42,.08)}
 .spm-btn.primary{background:#003b8f}
 .spm-btn.secondary{background:#fff;border-color:#bfdbfe;color:#003b8f}
 
-.spm-auth-menu{position:absolute;top:14px;right:14px;z-index:3}
-.spm-auth-menu summary{list-style:none;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:10px 12px;cursor:pointer;backdrop-filter:blur(8px)}
-.spm-auth-menu summary::-webkit-details-marker{display:none}
-.spm-auth-menu-panel{position:absolute;right:0;top:46px;width:min(84vw,290px);max-height:56vh;overflow:auto;padding:10px;background:rgba(2,8,23,.95);border:1px solid rgba(148,163,184,.35);border-radius:16px;display:grid;gap:6px;box-shadow:0 20px 38px rgba(2,8,23,.45)}
-.spm-auth-menu-panel a{display:block;padding:9px 10px;border-radius:10px;text-decoration:none;font-size:12px;font-weight:700;color:#dbeafe;background:rgba(30,41,59,.6)}
-.spm-auth-menu-panel a:active,.spm-auth-menu-panel a:hover{background:#1d4ed8;color:#fff}
+.spm-explore-menu{position:absolute;top:14px;right:14px;z-index:5}
+.spm-explore-toggle{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.34);color:#fff;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:10px 12px;cursor:pointer;backdrop-filter:blur(8px);transition:background .2s ease,transform .2s ease}
+.spm-explore-toggle:hover,.spm-explore-toggle.is-open{background:rgba(255,255,255,.24);transform:translateY(-1px)}
+.spm-explore-toggle svg{width:14px;height:14px}
+.spm-explore-panel{position:absolute;right:0;top:46px;width:min(84vw,304px);max-height:56vh;overflow:auto;padding:10px;background:rgba(2,8,23,.95);border:1px solid rgba(148,163,184,.35);border-radius:16px;display:grid;gap:6px;box-shadow:0 20px 38px rgba(2,8,23,.45);opacity:0;transform:translateY(-6px) scale(.98);pointer-events:none;transition:opacity .18s ease,transform .18s ease}
+.spm-explore-menu.is-open .spm-explore-panel{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.spm-explore-link{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;text-decoration:none;font-size:12px;font-weight:700;color:#dbeafe;background:rgba(30,41,59,.6);transition:background .16s ease,color .16s ease}
+.spm-explore-link:active,.spm-explore-link:hover{background:#1d4ed8;color:#fff}
+.spm-explore-link svg{width:14px;height:14px;opacity:.9}
 
 .spm-auth-footer{margin-top:6px;padding:16px 8px 0;text-align:center;border-top:1px solid #dbe8ff}
 .spm-auth-footer p{margin:0;font-size:12px;font-weight:700;color:#334155}
@@ -257,5 +260,5 @@ body.spm-dark-mode .spm-signout-btn{background:#111827;border-color:#b91c1c;colo
 
 @media (max-width:360px){
   .spm-auth-hero h1{font-size:36px}
-  .spm-auth-menu summary{font-size:11px;padding:9px 10px}
+  .spm-explore-toggle{font-size:11px;padding:9px 10px}
 }
