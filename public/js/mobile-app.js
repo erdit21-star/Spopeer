@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' } };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' } };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -2392,48 +2392,205 @@
     sponsorship: async function () {
       setTitle('Sponsorship', 'Opportunities for you');
       var screen = $('#spmScreen');
+      var state = app.sponsorshipState || { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' };
+      app.sponsorshipState = state;
       screen.classList.remove('spm-snap-feed');
       screen.innerHTML = '<div class="spm-empty">Loading sponsorship opportunities...</div>';
       try {
-        var result = await window.SpopeerAPI.listSponsorships({ limit: 30 });
-        var items = unwrapSponsorships(result);
-        screen.innerHTML = `<div class="spm-screen-header"><h2 class="spm-screen-title"><i class="fa-solid fa-handshake"></i> Sponsorship</h2><p class="spm-screen-sub">Explore sponsorship &amp; collaboration opportunities</p></div><div id="spmSponsorList"></div>`;
-        var list = document.getElementById('spmSponsorList');
-        if (!items.length) {
-          list.innerHTML = '<div class="spm-empty">No sponsorship opportunities listed yet.</div>';
-          return;
+        try {
+          var me = await window.SpopeerAPI.getProfile();
+          app.user = unwrapUser(me) || app.user || {};
+        } catch (_profileError) {}
+
+        var result = await window.SpopeerAPI.listSponsorships({ limit: 200 });
+        state.items = unwrapSponsorships(result);
+        var currentUserId = String((app.user && (app.user.id || app.user.userId)) || '');
+
+        function isMySponsorship(item) {
+          if (!currentUserId) return false;
+          return String(item.userId || (item.author && item.author.id) || '') === currentUserId;
         }
-        items.forEach(function (item) {
-          var card = document.createElement('article');
-          card.className = 'spm-feed-card';
-          card.innerHTML = `
-            <div class="spm-feed-head">
-              <div class="spm-mini-avatar"><i class="fa-solid fa-handshake"></i></div>
-              <div class="spm-feed-title-wrap">
-                <strong>${html(sponsorshipTitle(item))}</strong>
-                <small>${html(item.company || item.brand || item.organizer || 'Sponsor')}</small>
+
+        function getSponsorshipSource(item) {
+          return isMySponsorship(item) ? 'created' : 'saved';
+        }
+
+        function getMode(item) {
+          var mode = String(item.mode || '').toLowerCase();
+          if (mode === 'offer' || mode === 'request' || mode === 'secure') return mode;
+          return 'offer';
+        }
+
+        function sponsorshipSortTime(item) {
+          var parsed = new Date(item.createdAt || item.updatedAt || Date.now());
+          return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+        }
+
+        function getVisibleItems() {
+          var term = String(state.query || '').trim().toLowerCase();
+          var filtered = (state.items || []).filter(function (item) {
+            if (state.source !== 'all' && getSponsorshipSource(item) !== state.source) return false;
+            if (state.mode !== 'all' && getMode(item) !== state.mode) return false;
+            if (!term) return true;
+            var haystack = [
+              item.title,
+              item.summary,
+              item.description,
+              item.sport,
+              item.location,
+              item.sponsorType,
+              item.targetAudience
+            ].filter(Boolean).join(' ').toLowerCase();
+            return haystack.indexOf(term) >= 0;
+          });
+
+          filtered.sort(function (left, right) {
+            if (state.sort === 'title') {
+              return String(sponsorshipTitle(left)).localeCompare(String(sponsorshipTitle(right)));
+            }
+            var leftTime = sponsorshipSortTime(left);
+            var rightTime = sponsorshipSortTime(right);
+            return state.sort === 'oldest' ? leftTime - rightTime : rightTime - leftTime;
+          });
+
+          return filtered;
+        }
+
+        var createdCount = state.items.filter(function (item) { return getSponsorshipSource(item) === 'created'; }).length;
+        var savedCount = state.items.filter(function (item) { return getSponsorshipSource(item) === 'saved'; }).length;
+        var secureCount = state.items.filter(function (item) { return getMode(item) === 'secure'; }).length;
+
+        screen.innerHTML = `
+          <section class="spm-library-shell">
+            <div class="spm-library-hero">
+              <div>
+                <p class="spm-library-kicker">Sponsorship Hub</p>
+                <h2>Offers, requests, and secure sponsor deals.</h2>
+                <p class="spm-library-copy">Pulled from the main sponsorship board with audience, type and mode filters.</p>
+              </div>
+              <div class="spm-library-stats">
+                <article><strong>${state.items.length}</strong><span>Total</span></article>
+                <article><strong>${createdCount}</strong><span>Created</span></article>
+                <article><strong>${savedCount}</strong><span>Saved</span></article>
               </div>
             </div>
-            <p class="spm-feed-copy">${html(item.description || item.summary || item.details || 'Sponsorship opportunity')}</p>
-            <div class="spm-feed-meta">
-              <span class="spm-feed-chip static">${html(item.sport || 'All Sports')}</span>
-              ${item.budget || item.value ? '<span class="spm-feed-chip static">' + html(String(item.budget || item.value)) + '</span>' : ''}
-              <span class="spm-feed-chip static">${html(item.type || item.category || 'Sponsorship')}</span>
+
+            <div class="spm-library-controls">
+              <div class="spm-library-source" id="spmSponsorshipSource">
+                <button type="button" class="spm-library-source-btn${state.source === 'all' ? ' active' : ''}" data-sponsor-source="all">All</button>
+                <button type="button" class="spm-library-source-btn${state.source === 'created' ? ' active' : ''}" data-sponsor-source="created">Created</button>
+                <button type="button" class="spm-library-source-btn${state.source === 'saved' ? ' active' : ''}" data-sponsor-source="saved">Saved</button>
+              </div>
+              <label class="spm-library-sort-wrap">
+                <span>Sort</span>
+                <select id="spmSponsorshipSort" class="spm-library-sort">
+                  <option value="newest"${state.sort === 'newest' ? ' selected' : ''}>Newest</option>
+                  <option value="oldest"${state.sort === 'oldest' ? ' selected' : ''}>Oldest</option>
+                  <option value="title"${state.sort === 'title' ? ' selected' : ''}>Title</option>
+                </select>
+              </label>
             </div>
-            <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-sponsorship="${html(String(item.id || ''))}">View Opportunity</button></div>`;
-          list.appendChild(card);
-        });
-        list.querySelectorAll('[data-open-sponsorship]').forEach(function (button) {
+
+            <div class="spm-library-tabs" id="spmSponsorshipModes">
+              <button type="button" class="spm-library-tab${state.mode === 'all' ? ' active' : ''}" data-sponsor-mode="all">All <span>${state.items.length}</span></button>
+              <button type="button" class="spm-library-tab${state.mode === 'offer' ? ' active' : ''}" data-sponsor-mode="offer">Offers <span>${state.items.filter(function (item) { return getMode(item) === 'offer'; }).length}</span></button>
+              <button type="button" class="spm-library-tab${state.mode === 'request' ? ' active' : ''}" data-sponsor-mode="request">Requests <span>${state.items.filter(function (item) { return getMode(item) === 'request'; }).length}</span></button>
+              <button type="button" class="spm-library-tab${state.mode === 'secure' ? ' active' : ''}" data-sponsor-mode="secure">Secure <span>${secureCount}</span></button>
+            </div>
+
+            <input id="spmSponsorshipSearch" class="spm-search" style="margin-top:4px" placeholder="Search by sport, city, sponsor type or goal" value="${html(state.query)}">
+            <div id="spmSponsorList"></div>
+          </section>`;
+
+        var list = document.getElementById('spmSponsorList');
+
+        function renderSponsorCards() {
+          var items = getVisibleItems();
+          list.innerHTML = '';
+          if (!items.length) {
+            list.innerHTML = '<div class="spm-empty">No sponsorship opportunities in this view. Try another mode or filter.</div>';
+            return;
+          }
+
+          items.forEach(function (item) {
+            var card = document.createElement('article');
+            card.className = 'spm-feed-card';
+            var sourceTag = getSponsorshipSource(item) === 'created' ? 'Created' : 'Saved';
+            var modeTag = getMode(item);
+            card.innerHTML = `
+              <div class="spm-feed-head">
+                <div class="spm-mini-avatar"><i class="fa-solid fa-handshake"></i></div>
+                <div class="spm-feed-title-wrap">
+                  <strong>${html(sponsorshipTitle(item))}</strong>
+                  <small>${html(item.ownerName || item.company || item.brand || item.organizer || 'Sponsor')}</small>
+                </div>
+              </div>
+              <p class="spm-feed-copy">${html(item.description || item.summary || item.details || 'Sponsorship opportunity')}</p>
+              <div class="spm-feed-meta">
+                <span class="spm-feed-chip static">${html(sourceTag)}</span>
+                <span class="spm-feed-chip static">${html(modeTag)}</span>
+                <span class="spm-feed-chip static">${html(item.sport || 'All Sports')}</span>
+                ${item.sponsorType ? '<span class="spm-feed-chip static">' + html(String(item.sponsorType)) + '</span>' : ''}
+                ${item.targetAudience ? '<span class="spm-feed-chip static">For ' + html(String(item.targetAudience)) + '</span>' : ''}
+              </div>
+              <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-sponsorship="${html(String(item.id || ''))}">View Opportunity</button></div>`;
+            list.appendChild(card);
+          });
+
+          list.querySelectorAll('[data-open-sponsorship]').forEach(function (button) {
+            button.addEventListener('click', function () {
+              var itemId = button.getAttribute('data-open-sponsorship');
+              var selected = items.find(function (entry) { return String(entry.id || '') === String(itemId || ''); });
+              if (!selected) return;
+              app.selectedSponsorship = selected;
+              app.detailBackRoute = 'sponsorship';
+              app.route = 'sponsorship-detail';
+              render();
+            });
+          });
+        }
+
+        document.querySelectorAll('[data-sponsor-source]').forEach(function (button) {
           button.addEventListener('click', function () {
-            var itemId = button.getAttribute('data-open-sponsorship');
-            var selected = items.find(function (entry) { return String(entry.id || '') === String(itemId || ''); });
-            if (!selected) return;
-            app.selectedSponsorship = selected;
-            app.detailBackRoute = 'sponsorship';
-            app.route = 'sponsorship-detail';
-            render();
+            state.source = button.getAttribute('data-sponsor-source') || 'all';
+            document.querySelectorAll('[data-sponsor-source]').forEach(function (node) {
+              node.classList.toggle('active', node === button);
+            });
+            renderSponsorCards();
           });
         });
+
+        document.querySelectorAll('[data-sponsor-mode]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            state.mode = button.getAttribute('data-sponsor-mode') || 'all';
+            document.querySelectorAll('[data-sponsor-mode]').forEach(function (node) {
+              node.classList.toggle('active', node === button);
+            });
+            renderSponsorCards();
+          });
+        });
+
+        var sortSelect = document.getElementById('spmSponsorshipSort');
+        if (sortSelect) {
+          sortSelect.addEventListener('change', function () {
+            state.sort = sortSelect.value || 'newest';
+            renderSponsorCards();
+          });
+        }
+
+        var searchInput = document.getElementById('spmSponsorshipSearch');
+        if (searchInput) {
+          var searchTimer = null;
+          searchInput.addEventListener('input', function () {
+            window.clearTimeout(searchTimer);
+            searchTimer = window.setTimeout(function () {
+              state.query = searchInput.value || '';
+              renderSponsorCards();
+            }, 180);
+          });
+        }
+
+        renderSponsorCards();
       } catch (_error) {
         screen.innerHTML = '<div class="spm-empty">Could not load sponsorship opportunities.</div>';
       }
@@ -2904,8 +3061,10 @@
             <div class="spm-profile-bio">${html(user.bio || user.about || 'Add your story, achievements, and goals to strengthen your profile.')}</div>
 
             <div class="spm-profile-actions">
-              <button id="spmChangeAvatarBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-camera"></i> Change Profile Cover</button>
+              <button id="spmChangeCoverBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-panorama"></i> Change Profile Cover</button>
+              <button id="spmChangeAvatarBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-camera"></i> Change Avatar</button>
               <button id="spmChooseAvatarFromMediaBtn" class="spm-primary-action" type="button"><i class="fa-regular fa-images"></i> Choose From My Media</button>
+              <input id="spmCoverFileInput" type="file" accept="image/*" class="spm-hidden">
               <input id="spmAvatarFileInput" type="file" accept="image/*" class="spm-hidden">
               <div id="spmAvatarMediaPicker" class="spm-avatar-picker spm-hidden"></div>
               <button id="spmEditProfileBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
@@ -2923,6 +3082,28 @@
         render();
       }
 
+      var coverFileInput = document.getElementById('spmCoverFileInput');
+      var changeCoverBtn = document.getElementById('spmChangeCoverBtn');
+      if (changeCoverBtn && coverFileInput) {
+        changeCoverBtn.addEventListener('click', function () {
+          coverFileInput.click();
+        });
+
+        coverFileInput.addEventListener('change', async function () {
+          var file = coverFileInput.files && coverFileInput.files[0];
+          if (!file) return;
+          changeCoverBtn.disabled = true;
+          changeCoverBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+          try {
+            await window.SpopeerAPI.uploadCover(file);
+            await refreshProfileAfterProfileImageChange();
+          } catch (_error) {
+            changeCoverBtn.disabled = false;
+            changeCoverBtn.innerHTML = '<i class="fa-solid fa-panorama"></i> Change Profile Cover';
+          }
+        });
+      }
+
       var avatarFileInput = document.getElementById('spmAvatarFileInput');
       var changeAvatarBtn = document.getElementById('spmChangeAvatarBtn');
       if (changeAvatarBtn && avatarFileInput) {
@@ -2936,11 +3117,11 @@
           changeAvatarBtn.disabled = true;
           changeAvatarBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
           try {
-            await window.SpopeerAPI.uploadCover(file);
+            await window.SpopeerAPI.uploadAvatar(file);
             await refreshProfileAfterProfileImageChange();
           } catch (_error) {
             changeAvatarBtn.disabled = false;
-            changeAvatarBtn.innerHTML = '<i class="fa-solid fa-camera"></i> Change Profile Cover';
+            changeAvatarBtn.innerHTML = '<i class="fa-solid fa-camera"></i> Change Avatar';
           }
         });
       }
