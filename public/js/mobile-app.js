@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' } };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' } };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -731,6 +731,34 @@
 
   function sponsorshipBackRoute() {
     return app.detailBackRoute || 'sponsorship';
+  }
+
+  function threadBackRoute() {
+    return app.detailBackRoute || 'training';
+  }
+
+  function groupBackRoute() {
+    return app.detailBackRoute || 'community';
+  }
+
+  function normalizeBookmarkList(result) {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.bookmarks)) return result.data.bookmarks;
+    if (Array.isArray(result.bookmarks)) return result.bookmarks;
+    return [];
+  }
+
+  function mapBookmarksByPostId(bookmarks) {
+    var out = {};
+    (bookmarks || []).forEach(function (entry) {
+      var post = entry && entry.post;
+      var postId = entry && (entry.postId || (post && post.id));
+      if (!postId) return;
+      out[String(postId)] = { bookmarkId: entry.id, postId: postId };
+    });
+    return out;
   }
 
   function storyAuthorName(story) {
@@ -1535,8 +1563,14 @@
       screen.innerHTML = '<div class="spm-empty">Loading articles...</div>';
 
       try {
-        var result = await window.SpopeerAPI.listPosts({ limit: 60, page: 1, _: Date.now() });
+        var responses = await Promise.allSettled([
+          window.SpopeerAPI.listPosts({ limit: 60, page: 1, _: Date.now() }),
+          window.SpopeerAPI.listBookmarks()
+        ]);
+        var result = responses[0].status === 'fulfilled' ? responses[0].value : [];
+        var bookmarksResult = responses[1].status === 'fulfilled' ? responses[1].value : [];
         var posts = unwrapPosts(result).filter(looksLikeArticlePost);
+        var bookmarkMap = mapBookmarksByPostId(normalizeBookmarkList(bookmarksResult));
 
         if (!posts.length) {
           screen.innerHTML = '<div class="spm-empty">No articles found yet.</div>';
@@ -1550,6 +1584,9 @@
           card.className = 'spm-feed-card';
           var previewText = String(post.content || 'Article update');
           var excerpt = previewText.length > 220 ? previewText.slice(0, 220) + '...' : previewText;
+          var bookmarkInfo = bookmarkMap[String(post.id)] || null;
+          var savedBadge = bookmarkInfo ? '<span class="spm-feed-chip static spm-saved-chip"><i class="fa-solid fa-bookmark"></i> Saved</span>' : '';
+          var saveLabel = bookmarkInfo ? 'Saved' : 'Save';
           card.innerHTML = `
             <div class="spm-feed-head">
               <div class="spm-mini-avatar"></div>
@@ -1559,9 +1596,37 @@
               </div>
             </div>
             <p class="spm-feed-copy">${html(excerpt)}</p>
-            <div class="spm-feed-meta"><span class="spm-feed-chip static">Article</span><span class="spm-feed-chip static">${html(post.sport || 'Sports')}</span></div>
-            <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-article="${html(String(post.id || ''))}">Read Article</button></div>`;
+            <div class="spm-feed-meta"><span class="spm-feed-chip static">Article</span><span class="spm-feed-chip static">${html(post.sport || 'Sports')}</span>${savedBadge}</div>
+            <div class="spm-detail-actions"><button type="button" class="spm-chat-back" data-toggle-article-save="${html(String(post.id || ''))}">${saveLabel}</button><button type="button" class="spm-primary-action" data-open-article="${html(String(post.id || ''))}">Read Article</button></div>`;
           list.appendChild(card);
+        });
+        list.querySelectorAll('[data-toggle-article-save]').forEach(function (button) {
+          button.addEventListener('click', async function () {
+            var articleId = button.getAttribute('data-toggle-article-save');
+            if (!articleId) return;
+            button.disabled = true;
+            try {
+              var existing = bookmarkMap[String(articleId)] || null;
+              if (existing && existing.bookmarkId) {
+                await window.SpopeerAPI.removeBookmark(existing.bookmarkId);
+                delete bookmarkMap[String(articleId)];
+                button.textContent = 'Save';
+              } else {
+                var created = await window.SpopeerAPI.createBookmark({ postId: Number(articleId) });
+                var createdBookmark = (created && created.data) || created || {};
+                bookmarkMap[String(articleId)] = { bookmarkId: createdBookmark.id || null, postId: Number(articleId) };
+                button.textContent = 'Saved';
+              }
+            } catch (_error) {
+              button.textContent = 'Try again';
+              window.setTimeout(function () {
+                var currentlySaved = !!bookmarkMap[String(articleId)];
+                button.textContent = currentlySaved ? 'Saved' : 'Save';
+              }, 900);
+            } finally {
+              button.disabled = false;
+            }
+          });
         });
         list.querySelectorAll('[data-open-article]').forEach(function (button) {
           button.addEventListener('click', function () {
@@ -1569,6 +1634,8 @@
             var selected = posts.find(function (entry) { return String(entry.id || '') === String(articleId || ''); });
             if (!selected) return;
             app.selectedArticle = selected;
+            app.selectedArticle.__saved = !!bookmarkMap[String(articleId)];
+            app.selectedArticle.__bookmarkId = (bookmarkMap[String(articleId)] && bookmarkMap[String(articleId)].bookmarkId) || null;
             app.detailBackRoute = 'articles';
             app.route = 'article-detail';
             render();
@@ -1612,6 +1679,7 @@
               <p>${html(article.content || 'No article content available.')}</p>
             </div>
             <div class="spm-detail-actions">
+              <button id="spmSaveArticleBtn" class="spm-chat-back" type="button">${article.__saved ? 'Saved' : 'Save'}</button>
               <button id="spmOpenArticlePostBtn" class="spm-primary-action" type="button">Open Discussion</button>
               <button id="spmShareArticleBtn" class="spm-chat-back" type="button">Share</button>
             </div>
@@ -1628,6 +1696,32 @@
         app.selectedPost = article;
         app.route = 'post';
         render();
+      });
+
+      document.getElementById('spmSaveArticleBtn').addEventListener('click', async function () {
+        var button = document.getElementById('spmSaveArticleBtn');
+        button.disabled = true;
+        try {
+          if (article.__saved && article.__bookmarkId) {
+            await window.SpopeerAPI.removeBookmark(article.__bookmarkId);
+            article.__saved = false;
+            article.__bookmarkId = null;
+            button.textContent = 'Save';
+          } else {
+            var created = await window.SpopeerAPI.createBookmark({ postId: Number(article.id) });
+            var createdBookmark = (created && created.data) || created || {};
+            article.__saved = true;
+            article.__bookmarkId = createdBookmark.id || null;
+            button.textContent = 'Saved';
+          }
+        } catch (_error) {
+          button.textContent = 'Try again';
+          window.setTimeout(function () {
+            button.textContent = article.__saved ? 'Saved' : 'Save';
+          }, 900);
+        } finally {
+          button.disabled = false;
+        }
       });
 
       document.getElementById('spmShareArticleBtn').addEventListener('click', function () {
@@ -1649,8 +1743,15 @@
       screen.innerHTML = '<div class="spm-empty">Loading marketplace...</div>';
 
       try {
-        var result = await window.SpopeerAPI.listMarketplaceListings({ page: 1, limit: 20, status: 'active' });
+        var responses = await Promise.allSettled([
+          window.SpopeerAPI.listMarketplaceListings({ page: 1, limit: 20, status: 'active' }),
+          window.SpopeerAPI.listSavedMarketplaceListings()
+        ]);
+        var result = responses[0].status === 'fulfilled' ? responses[0].value : [];
+        var savedResult = responses[1].status === 'fulfilled' ? responses[1].value : [];
         var listings = unwrapMarketplaceListings(result);
+        var savedListings = unwrapMarketplaceListings(savedResult);
+        var savedListingSet = new Set(savedListings.map(function (item) { return String(item && item.id || ''); }).filter(Boolean));
 
         if (!listings.length) {
           screen.innerHTML = '<div class="spm-empty">No active listings right now.</div>';
@@ -1664,6 +1765,8 @@
           card.className = 'spm-feed-card';
           var seller = listing.seller || {};
           var sellerName = seller.displayName || [seller.firstName, seller.lastName].filter(Boolean).join(' ') || 'Seller';
+          var listingId = String(listing.id || '');
+          var isSaved = savedListingSet.has(listingId);
           card.innerHTML = `
             <div class="spm-feed-head">
               <div class="spm-mini-avatar"></div>
@@ -1673,9 +1776,33 @@
               </div>
             </div>
             <p class="spm-feed-copy">${html(listing.description || listing.category || 'Marketplace opportunity')}</p>
-            <div class="spm-feed-meta"><span class="spm-feed-chip static">${html(listingPrice(listing))}</span><span class="spm-feed-chip static">${html(listing.sport || listing.category || 'Listing')}</span></div>
-            <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-listing="${html(String(listing.id || ''))}">View Listing</button></div>`;
+            <div class="spm-feed-meta"><span class="spm-feed-chip static">${html(listingPrice(listing))}</span><span class="spm-feed-chip static">${html(listing.sport || listing.category || 'Listing')}</span>${isSaved ? '<span class="spm-feed-chip static spm-saved-chip"><i class="fa-solid fa-bookmark"></i> Saved</span>' : ''}</div>
+            <div class="spm-detail-actions"><button type="button" class="spm-chat-back" data-toggle-market-save="${html(listingId)}">${isSaved ? 'Saved' : 'Save'}</button><button type="button" class="spm-primary-action" data-open-listing="${html(listingId)}">View Listing</button></div>`;
           list.appendChild(card);
+        });
+        list.querySelectorAll('[data-toggle-market-save]').forEach(function (button) {
+          button.addEventListener('click', async function () {
+            var listingId = button.getAttribute('data-toggle-market-save');
+            if (!listingId) return;
+            button.disabled = true;
+            try {
+              await window.SpopeerAPI.request('/api/marketplace/saved/' + encodeURIComponent(listingId), { method: 'POST' });
+              if (savedListingSet.has(listingId)) {
+                savedListingSet.delete(listingId);
+                button.textContent = 'Save';
+              } else {
+                savedListingSet.add(listingId);
+                button.textContent = 'Saved';
+              }
+            } catch (_error) {
+              button.textContent = 'Try again';
+              window.setTimeout(function () {
+                button.textContent = savedListingSet.has(listingId) ? 'Saved' : 'Save';
+              }, 900);
+            } finally {
+              button.disabled = false;
+            }
+          });
         });
         list.querySelectorAll('[data-open-listing]').forEach(function (button) {
           button.addEventListener('click', function () {
@@ -1683,6 +1810,7 @@
             var selected = listings.find(function (entry) { return String(entry.id || '') === String(listingId || ''); });
             if (!selected) return;
             app.selectedMarketplaceListing = selected;
+            app.selectedMarketplaceListing.__saved = savedListingSet.has(String(listingId || ''));
             app.detailBackRoute = 'marketplace';
             app.route = 'marketplace-detail';
             render();
@@ -1739,7 +1867,7 @@
               <p>${html(listing.description || 'No listing description provided.')}</p>
             </div>
             <div class="spm-detail-actions">
-              <button id="spmSaveMarketplaceBtn" class="spm-primary-action" type="button">Save Listing</button>
+              <button id="spmSaveMarketplaceBtn" class="spm-primary-action" type="button">${listing.__saved ? 'Saved' : 'Save Listing'}</button>
               <button id="spmShareMarketplaceBtn" class="spm-chat-back" type="button">Share</button>
             </div>
           </article>
@@ -1756,10 +1884,11 @@
         button.disabled = true;
         try {
           await window.SpopeerAPI.request('/api/marketplace/saved/' + encodeURIComponent(listing.id), { method: 'POST' });
-          button.textContent = 'Saved';
+          listing.__saved = !listing.__saved;
+          button.textContent = listing.__saved ? 'Saved' : 'Save Listing';
         } catch (_error) {
           button.textContent = 'Could not save';
-          window.setTimeout(function () { button.textContent = 'Save Listing'; }, 1200);
+          window.setTimeout(function () { button.textContent = listing.__saved ? 'Saved' : 'Save Listing'; }, 1200);
         } finally {
           button.disabled = false;
         }
@@ -2060,7 +2189,7 @@
         var button = document.getElementById('spmRespondEventBtn');
         button.disabled = true;
         try {
-          await window.SpopeerAPI.respondToEvent(event.id, 'accepted');
+          await window.SpopeerAPI.respondToEventInvite(event.id, 'accepted');
           button.textContent = 'Going';
         } catch (_error) {
           button.textContent = 'Could not save';
@@ -2228,6 +2357,7 @@
           var card = document.createElement('article');
           card.className = 'spm-feed-card';
           var authorStr = (thread.author && (thread.author.displayName || thread.author.firstName || thread.author.email)) || thread.userName || thread.authorName || 'Trainer';
+          var threadId = String(thread.id || '');
           card.innerHTML = `
             <div class="spm-feed-head">
               <div class="spm-mini-avatar">${html(initialForName(authorStr))}</div>
@@ -2240,12 +2370,109 @@
             <div class="spm-feed-meta">
               <span class="spm-feed-chip static"><i class="fa-solid fa-dumbbell"></i> ${html(thread.category || thread.type || 'Training')}</span>
               ${thread.repliesCount || thread.replies ? '<span class="spm-feed-chip static"><i class="fa-regular fa-comment"></i> ' + html(String(thread.repliesCount || thread.replies || 0)) + ' replies</span>' : ''}
-            </div>`;
+            </div>
+            <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-thread="${html(threadId)}">Open Thread</button></div>`;
           list.appendChild(card);
+        });
+        list.querySelectorAll('[data-open-thread]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            var threadId = button.getAttribute('data-open-thread');
+            var selected = displayThreads.find(function (entry) { return String(entry.id || '') === String(threadId || ''); });
+            if (!selected) return;
+            app.selectedThread = selected;
+            app.detailBackRoute = 'training';
+            app.route = 'thread-detail';
+            render();
+          });
         });
       } catch (_error) {
         screen.innerHTML = '<div class="spm-empty">Could not load training content.</div>';
       }
+    },
+
+    'thread-detail': async function () {
+      setTitle('Thread Details', 'Community discussion');
+      var screen = $('#spmScreen');
+      var thread = app.selectedThread;
+      screen.classList.remove('spm-snap-feed');
+      if (!thread) {
+        app.route = threadBackRoute();
+        render();
+        return;
+      }
+
+      if (thread.id && window.SpopeerAPI && typeof window.SpopeerAPI.request === 'function') {
+        try {
+          var detail = await window.SpopeerAPI.request('/api/forums/' + encodeURIComponent(thread.id));
+          thread = (detail && detail.data) || thread;
+          app.selectedThread = thread;
+        } catch (_error) {}
+      }
+
+      var threadAuthor = (thread.author && ([thread.author.firstName, thread.author.lastName].filter(Boolean).join(' ') || thread.author.email)) || 'Member';
+      var replies = Array.isArray(thread.replies) ? thread.replies : [];
+      screen.innerHTML = `
+        <section class="spm-detail-shell">
+          <button id="spmThreadDetailBack" class="spm-chat-back spm-detail-back" type="button">Back</button>
+          <div class="spm-detail-hero thread no-media">
+            <div class="spm-detail-overlay">
+              <span class="spm-detail-badge"><i class="fa-solid fa-comments"></i> Thread</span>
+              <h2>${html(thread.title || thread.subject || 'Discussion')}</h2>
+              <p>${html(threadAuthor)} · ${html(formatTime(thread.createdAt || thread.created_at))}</p>
+            </div>
+          </div>
+          <article class="spm-detail-card">
+            <div class="spm-detail-grid">
+              <div><span>Category</span><strong>${html(thread.category || 'General')}</strong></div>
+              <div><span>Sport</span><strong>${html(thread.sport || 'Sports')}</strong></div>
+              <div><span>Replies</span><strong>${html(String(thread.replyCount || replies.length || 0))}</strong></div>
+              <div><span>Views</span><strong>${html(String(thread.viewCount || 0))}</strong></div>
+            </div>
+            <div class="spm-detail-copy">
+              <h3>Topic</h3>
+              <p>${html(thread.body || thread.content || thread.description || 'No content provided.')}</p>
+            </div>
+            <div class="spm-thread-replies" id="spmThreadReplies">
+              <h4>Replies</h4>
+              ${replies.length ? replies.map(function (reply) {
+                var author = (reply.author && ([reply.author.firstName, reply.author.lastName].filter(Boolean).join(' ') || reply.author.email)) || 'Member';
+                return '<article class="spm-thread-reply"><strong>' + html(author) + '</strong><small>' + html(formatTime(reply.createdAt)) + '</small><p>' + html(reply.body || '') + '</p></article>';
+              }).join('') : '<div class="spm-empty" style="padding:10px 0">No replies yet.</div>'}
+            </div>
+            <div class="spm-thread-reply-form">
+              <textarea id="spmThreadReplyInput" class="spm-search" placeholder="Reply to this thread..."></textarea>
+              <button id="spmSendThreadReplyBtn" class="spm-primary-action" type="button">Reply</button>
+            </div>
+          </article>
+        </section>`;
+
+      document.getElementById('spmThreadDetailBack').addEventListener('click', function () {
+        app.route = threadBackRoute();
+        app.detailBackRoute = null;
+        render();
+      });
+
+      document.getElementById('spmSendThreadReplyBtn').addEventListener('click', async function () {
+        var button = document.getElementById('spmSendThreadReplyBtn');
+        var input = document.getElementById('spmThreadReplyInput');
+        var value = (input && input.value || '').trim();
+        if (!value) return;
+        button.disabled = true;
+        try {
+          await window.SpopeerAPI.request('/api/forums/' + encodeURIComponent(thread.id) + '/replies', {
+            method: 'POST',
+            body: JSON.stringify({ body: value })
+          });
+          app.selectedThread = thread;
+          app.route = 'thread-detail';
+          render();
+        } catch (_error) {
+          button.textContent = 'Could not send';
+          window.setTimeout(function () { button.textContent = 'Reply'; }, 1000);
+        } finally {
+          button.disabled = false;
+        }
+      });
     },
 
     community: async function () {
@@ -2274,6 +2501,7 @@
             var card = document.createElement('article');
             card.className = 'spm-feed-card';
             var memberCount = Number(group.memberCount || group.membersCount || 0);
+            var groupId = String(group.id || '');
             card.innerHTML = `
               <div class="spm-feed-head">
                 <div class="spm-mini-avatar"><i class="fa-solid fa-users"></i></div>
@@ -2283,8 +2511,20 @@
                 </div>
                 <span class="spm-feed-chip static">${html(group.sport || group.category || 'Sports')}</span>
               </div>
-              <p class="spm-feed-copy">${html(group.description || group.bio || 'A sports community group.')}</p>`;
+              <p class="spm-feed-copy">${html(group.description || group.bio || 'A sports community group.')}</p>
+              <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-group="${html(groupId)}">Open Group</button></div>`;
             groupsList.appendChild(card);
+          });
+          groupsList.querySelectorAll('[data-open-group]').forEach(function (button) {
+            button.addEventListener('click', function () {
+              var groupId = button.getAttribute('data-open-group');
+              var selected = groups.find(function (entry) { return String(entry.id || '') === String(groupId || ''); });
+              if (!selected) return;
+              app.selectedGroup = selected;
+              app.detailBackRoute = 'community';
+              app.route = 'group-detail';
+              render();
+            });
           });
         }
 
@@ -2294,6 +2534,7 @@
             var card = document.createElement('article');
             card.className = 'spm-feed-card';
             var authorStr = (thread.author && (thread.author.displayName || thread.author.firstName || thread.author.email)) || thread.userName || thread.authorName || 'Member';
+            var threadId = String(thread.id || '');
             card.innerHTML = `
               <div class="spm-feed-head">
                 <div class="spm-mini-avatar">${html(initialForName(authorStr))}</div>
@@ -2306,13 +2547,124 @@
               <div class="spm-feed-meta">
                 <span class="spm-feed-chip static">${html(thread.category || 'Forum')}</span>
                 ${thread.repliesCount ? '<span class="spm-feed-chip static"><i class="fa-regular fa-comment"></i> ' + html(String(thread.repliesCount)) + '</span>' : ''}
-              </div>`;
+              </div>
+              <div class="spm-detail-actions"><button type="button" class="spm-primary-action" data-open-forum-thread="${html(threadId)}">Open Thread</button></div>`;
             forumsList.appendChild(card);
+          });
+          forumsList.querySelectorAll('[data-open-forum-thread]').forEach(function (button) {
+            button.addEventListener('click', function () {
+              var threadId = button.getAttribute('data-open-forum-thread');
+              var selected = forums.find(function (entry) { return String(entry.id || '') === String(threadId || ''); });
+              if (!selected) return;
+              app.selectedThread = selected;
+              app.detailBackRoute = 'community';
+              app.route = 'thread-detail';
+              render();
+            });
           });
         }
       } catch (_error) {
         screen.innerHTML = '<div class="spm-empty">Could not load community content.</div>';
       }
+    },
+
+    'group-detail': async function () {
+      setTitle('Group Details', 'Community');
+      var screen = $('#spmScreen');
+      var group = app.selectedGroup;
+      screen.classList.remove('spm-snap-feed');
+      if (!group) {
+        app.route = groupBackRoute();
+        render();
+        return;
+      }
+
+      if (group.id && window.SpopeerAPI && typeof window.SpopeerAPI.request === 'function') {
+        try {
+          var detail = await window.SpopeerAPI.request('/api/groups/' + encodeURIComponent(group.id));
+          group = (detail && detail.data) || group;
+          app.selectedGroup = group;
+        } catch (_error) {}
+      }
+
+      var creator = group.creator || {};
+      var creatorName = [creator.firstName, creator.lastName].filter(Boolean).join(' ') || 'Community member';
+      var memberCount = Number(group.memberCount || (group.members && group.members.length) || 0);
+      var members = Array.isArray(group.members) ? group.members : [];
+      screen.innerHTML = `
+        <section class="spm-detail-shell">
+          <button id="spmGroupDetailBack" class="spm-chat-back spm-detail-back" type="button">Back</button>
+          <div class="spm-detail-hero group no-media">
+            <div class="spm-detail-overlay">
+              <span class="spm-detail-badge"><i class="fa-solid fa-users"></i> Group</span>
+              <h2>${html(group.name || 'Community Group')}</h2>
+              <p>${html(creatorName)} · ${memberCount.toLocaleString()} members</p>
+            </div>
+          </div>
+          <article class="spm-detail-card">
+            <div class="spm-detail-grid">
+              <div><span>Sport</span><strong>${html(group.sport || 'All Sports')}</strong></div>
+              <div><span>Privacy</span><strong>${group.isPrivate ? 'Private' : 'Public'}</strong></div>
+              <div><span>Member Count</span><strong>${memberCount.toLocaleString()}</strong></div>
+              <div><span>Status</span><strong>${group.isMember ? 'Joined' : 'Not Joined'}</strong></div>
+            </div>
+            <div class="spm-detail-copy">
+              <h3>About this group</h3>
+              <p>${html(group.description || 'No group description available yet.')}</p>
+            </div>
+            <div class="spm-thread-replies" id="spmGroupMembers">
+              <h4>Members</h4>
+              ${members.length ? members.slice(0, 12).map(function (member) {
+                var user = member.user || {};
+                var name = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || 'Member';
+                return '<article class="spm-thread-reply"><strong>' + html(name) + '</strong><small>' + html(member.role || user.role || 'member') + '</small></article>';
+              }).join('') : '<div class="spm-empty" style="padding:10px 0">No member list yet.</div>'}
+            </div>
+            <div class="spm-detail-actions">
+              <button id="spmGroupJoinLeaveBtn" class="spm-primary-action" type="button">${group.isMember ? 'Leave Group' : 'Join Group'}</button>
+              <button id="spmGroupShareBtn" class="spm-chat-back" type="button">Share</button>
+            </div>
+          </article>
+        </section>`;
+
+      document.getElementById('spmGroupDetailBack').addEventListener('click', function () {
+        app.route = groupBackRoute();
+        app.detailBackRoute = null;
+        render();
+      });
+
+      document.getElementById('spmGroupJoinLeaveBtn').addEventListener('click', async function () {
+        var button = document.getElementById('spmGroupJoinLeaveBtn');
+        button.disabled = true;
+        try {
+          if (group.isMember) {
+            await window.SpopeerAPI.request('/api/groups/' + encodeURIComponent(group.id) + '/leave', { method: 'DELETE' });
+            group.isMember = false;
+          } else {
+            await window.SpopeerAPI.request('/api/groups/' + encodeURIComponent(group.id) + '/join', { method: 'POST' });
+            group.isMember = true;
+          }
+          app.selectedGroup = group;
+          app.route = 'group-detail';
+          render();
+        } catch (_error) {
+          button.textContent = 'Could not update';
+          window.setTimeout(function () { button.textContent = group.isMember ? 'Leave Group' : 'Join Group'; }, 1000);
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      document.getElementById('spmGroupShareBtn').addEventListener('click', function () {
+        var shareText = (group.name || 'Community Group') + ' · ' + (group.sport || 'Sports');
+        if (navigator.share) {
+          navigator.share({ title: group.name || 'Community Group', text: shareText, url: window.location.href }).catch(function () {});
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareText).catch(function () {});
+        }
+      });
     },
 
     profile: async function () {
