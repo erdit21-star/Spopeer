@@ -1093,6 +1093,7 @@
   var followersData = [];
   var followingData = [];
   var pendingRequestsData = [];
+  var outgoingRequestsData = [];
   var followingKeys = new Set();
 
   var avatarColors = [
@@ -1190,26 +1191,40 @@
       followingData = unwrapUserList(results[1]).map(normalizeConnection);
       followingKeys = new Set(followingData.map(personKey));
 
-      if (window.SpopeerAPI && typeof window.SpopeerAPI.listIncomingFollowRequests === 'function') {
-        var requestResult = await window.SpopeerAPI.listIncomingFollowRequests();
-        pendingRequestsData = unwrapRequestList(requestResult).map(function (request) {
-          var userPayload = request.user || request.follower || request.sender || {};
-          var normalized = normalizeConnection(userPayload);
-          normalized.requestId = request.id || request.connectionId || '';
-          return normalized;
-        }).filter(function (entry) { return !!entry.requestId; });
-      } else {
-        pendingRequestsData = [];
+      if (window.SpopeerAPI) {
+        if (typeof window.SpopeerAPI.listIncomingFollowRequests === 'function') {
+          var requestResult = await window.SpopeerAPI.listIncomingFollowRequests();
+          pendingRequestsData = unwrapRequestList(requestResult).map(function (request) {
+            var userPayload = request.user || request.follower || request.sender || {};
+            var normalized = normalizeConnection(userPayload);
+            normalized.requestId = request.id || request.connectionId || '';
+            return normalized;
+          }).filter(function (entry) { return !!entry.requestId; });
+        } else {
+          pendingRequestsData = [];
+        }
+
+        if (typeof window.SpopeerAPI.listOutgoingFollowRequests === 'function') {
+          var outgoingResult = await window.SpopeerAPI.listOutgoingFollowRequests();
+          outgoingRequestsData = unwrapRequestList(outgoingResult).map(function (request) {
+            var userPayload = request.user || request.followedUser || request.following || {};
+            var normalized = normalizeConnection(userPayload);
+            normalized.requestId = request.id || request.connectionId || '';
+            return normalized;
+          }).filter(function (entry) { return !!entry.requestId; });
+        } else {
+          outgoingRequestsData = [];
+        }
       }
 
       document.getElementById('statFollowers').textContent = followersData.length;
       document.getElementById('statFollowing').textContent = followingData.length;
       document.getElementById('badgeFollowers').textContent = followersData.length;
       document.getElementById('badgeFollowing').textContent = followingData.length;
-      document.getElementById('badgeRequests').textContent = pendingRequestsData.length;
+      document.getElementById('badgeRequests').textContent = pendingRequestsData.length + outgoingRequestsData.length;
       document.getElementById('pageCountPill').textContent = activeTab === 'followers'
         ? followersData.length
-        : (activeTab === 'requests' ? pendingRequestsData.length : followingData.length);
+        : (activeTab === 'requests' ? (pendingRequestsData.length + outgoingRequestsData.length) : followingData.length);
       renderSuggestions();
       switchTab(activeTab);
     } catch (err) {
@@ -1366,6 +1381,49 @@
     return card;
   }
 
+  function renderOutgoingRequestCard(u, idx) {
+    var card = document.createElement('div');
+    card.className = 'user-card';
+    card.style.animationDelay = (idx * 40) + 'ms';
+    card.innerHTML =
+      '<div class="user-av-wrap">' +
+        '<div class="user-av" style="background:' + colorFor(u.email || String(u.id || '')) + ';">' + initials(u.name) + '</div>' +
+        '<div class="type-dot ' + typeDotClass(u.userType) + '"><i class="fa-solid ' + typeIcon(u.userType) + '" style="font-size:7px;"></i></div>' +
+      '</div>' +
+      '<div class="user-info">' +
+        '<div class="user-name-row"><span class="user-name">' + u.name + '</span></div>' +
+        '<div class="user-meta"><span class="user-type-badge ' + typeBadgeClass(u.userType) + '">' + typeLabel(u.userType) + '</span>' +
+        (u.sport ? '<span class="meta-dot">·</span><span>' + u.sport + '</span>' : '') + '</div>' +
+      '</div>' +
+      '<div class="user-actions">' +
+        '<button class="btn-follow" data-action="cancel" style="border-color:#d97706;color:#d97706;"><i class="fa-solid fa-ban" style="font-size:10px;"></i> Cancel Request</button>' +
+      '</div>';
+
+    card.querySelector('[data-action="cancel"]').addEventListener('click', async function (e) {
+      e.stopPropagation();
+      this.disabled = true;
+      try {
+        if (window.SpopeerAPI && typeof window.SpopeerAPI.cancelFollowRequest === 'function') {
+          await window.SpopeerAPI.cancelFollowRequest(u.requestId);
+        } else {
+          await window.SpopeerAPI.rejectFollowRequest(u.requestId);
+        }
+        showToast('Outgoing request canceled', 'ban');
+        await loadConnections();
+      } catch (err) {
+        showToast(err.message || 'Could not cancel request', 'triangle-exclamation');
+      } finally {
+        this.disabled = false;
+      }
+    });
+
+    card.addEventListener('click', function () {
+      window.location.href = 'public-profile.html?userId=' + encodeURIComponent(u.id || u.email);
+    });
+
+    return card;
+  }
+
   function filterData(data) {
     return data.filter(function (u) {
       var matchesFilter = !activeFilter || u.userType === activeFilter;
@@ -1394,18 +1452,35 @@
 
   function renderRequests(container) {
     container.innerHTML = '';
-    if (!pendingRequestsData.length) {
+    var incoming = filterData(pendingRequestsData);
+    var outgoing = filterData(outgoingRequestsData);
+    if (!incoming.length && !outgoing.length) {
       container.innerHTML =
         '<div class="empty-state">' +
         '<div class="empty-icon"><i class="fa-regular fa-envelope-open"></i></div>' +
-        '<div class="empty-title">No pending requests</div>' +
-        '<div class="empty-desc">When people request to follow you, they will appear here.</div>' +
+        '<div class="empty-title">No request activity</div>' +
+        '<div class="empty-desc">Incoming and sent follow requests will appear here.</div>' +
         '</div>';
       return;
     }
-    pendingRequestsData.forEach(function (u, i) {
-      container.appendChild(renderRequestCard(u, i));
-    });
+    if (incoming.length) {
+      var incomingLabel = document.createElement('div');
+      incomingLabel.className = 'section-label';
+      incomingLabel.textContent = 'Incoming Requests';
+      container.appendChild(incomingLabel);
+      incoming.forEach(function (u, i) {
+        container.appendChild(renderRequestCard(u, i));
+      });
+    }
+    if (outgoing.length) {
+      var outgoingLabel = document.createElement('div');
+      outgoingLabel.className = 'section-label';
+      outgoingLabel.textContent = 'Sent Requests';
+      container.appendChild(outgoingLabel);
+      outgoing.forEach(function (u, i) {
+        container.appendChild(renderOutgoingRequestCard(u, i));
+      });
+    }
   }
 
   function switchTab(tab) {
@@ -1420,7 +1495,7 @@
     document.getElementById('listRequests').style.display = isRequests ? 'flex' : 'none';
     document.getElementById('pageTitle').textContent = isFollowers ? 'Followers' : (isRequests ? 'Follow Requests' : 'Following');
     document.getElementById('breadcrumbCurrent').textContent = isFollowers ? 'Followers' : (isRequests ? 'Requests' : 'Following');
-    document.getElementById('pageCountPill').textContent = isFollowers ? followersData.length : (isRequests ? pendingRequestsData.length : followingData.length);
+    document.getElementById('pageCountPill').textContent = isFollowers ? followersData.length : (isRequests ? (pendingRequestsData.length + outgoingRequestsData.length) : followingData.length);
     document.getElementById('listSearchInput').placeholder = isFollowers ? 'Search followers…' : (isRequests ? 'Search requests…' : 'Search following…');
     var url = new URL(window.location);
     url.searchParams.set('type', tab);
@@ -1440,6 +1515,7 @@
     searchQuery = this.value.trim().toLowerCase();
     renderList(document.getElementById('listFollowers'), followersData);
     renderList(document.getElementById('listFollowing'), followingData);
+    renderRequests(document.getElementById('listRequests'));
   });
 
   /* ── Filter toggle ── */
@@ -1460,6 +1536,7 @@
       }
       renderList(document.getElementById('listFollowers'), followersData);
       renderList(document.getElementById('listFollowing'), followingData);
+      renderRequests(document.getElementById('listRequests'));
     }
   });
   document.getElementById('clearFilter').addEventListener('click', function () {
@@ -1469,11 +1546,13 @@
     });
     renderList(document.getElementById('listFollowers'), followersData);
     renderList(document.getElementById('listFollowing'), followingData);
+    renderRequests(document.getElementById('listRequests'));
   });
 
   /* ── Badges ── */
   document.getElementById('badgeFollowers').textContent = followersData.length;
   document.getElementById('badgeFollowing').textContent = followingData.length;
+  document.getElementById('badgeRequests').textContent = pendingRequestsData.length + outgoingRequestsData.length;
 
   /* ── Init ── */
   switchTab(activeTab);

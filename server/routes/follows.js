@@ -181,6 +181,28 @@ router.patch('/requests/:connectionId/reject', authenticate, async (req, res) =>
   }
 });
 
+// ─── CANCEL OUTGOING FOLLOW REQUEST ───
+router.patch('/requests/:connectionId/cancel', authenticate, async (req, res) => {
+  try {
+    const connectionId = parsePositiveInt(req.params.connectionId);
+    if (!connectionId) {
+      return fail(res, 400, 'VALIDATION', 'Invalid connection id.');
+    }
+
+    const connection = await Connection.findByPk(connectionId);
+    if (!connection || connection.followerId !== req.userId || connection.status !== 'pending') {
+      return fail(res, 404, 'NOT_FOUND', 'Outgoing follow request not found.');
+    }
+
+    const targetUserId = connection.followingId;
+    await connection.destroy();
+
+    return ok(res, { message: 'Follow request canceled.', connectionId, userId: targetUserId });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to cancel follow request.');
+  }
+});
+
 // ─── FOLLOW ───
 const { ok, created, fail } = require('../utils/response');
 const { sanitizeUserList } = require('../utils/privacy');

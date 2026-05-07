@@ -465,6 +465,9 @@
     rejectFollowRequest: function (connectionId) {
       return request('/api/follows/requests/' + encodeURIComponent(connectionId) + '/reject', { method: 'PATCH' });
     },
+    cancelFollowRequest: function (connectionId) {
+      return request('/api/follows/requests/' + encodeURIComponent(connectionId) + '/cancel', { method: 'PATCH' });
+    },
     listBookmarks: function () { return request("/api/bookmarks"); },
     createBookmark: function (payload) {
       return request("/api/bookmarks", { method: "POST", body: JSON.stringify(payload) });

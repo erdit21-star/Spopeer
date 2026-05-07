@@ -3261,9 +3261,17 @@
       const following = Number(user.followingCount || user.following || 0);
       const subscriptionInfo = resolveSubscriptionInfo(user);
       var pendingFollowRequestsCount = 0;
-      if (window.SpopeerAPI && typeof window.SpopeerAPI.listIncomingFollowRequests === 'function') {
+      if (window.SpopeerAPI) {
         try {
-          pendingFollowRequestsCount = unwrapFollowRequests(await window.SpopeerAPI.listIncomingFollowRequests()).length;
+          var incomingCount = 0;
+          var outgoingCount = 0;
+          if (typeof window.SpopeerAPI.listIncomingFollowRequests === 'function') {
+            incomingCount = unwrapFollowRequests(await window.SpopeerAPI.listIncomingFollowRequests()).length;
+          }
+          if (typeof window.SpopeerAPI.listOutgoingFollowRequests === 'function') {
+            outgoingCount = unwrapFollowRequests(await window.SpopeerAPI.listOutgoingFollowRequests()).length;
+          }
+          pendingFollowRequestsCount = incomingCount + outgoingCount;
         } catch (_requestsErr) {}
       }
 
@@ -3462,16 +3470,24 @@
     ,
 
     'follow-requests': async function () {
-      setTitle('Follow Requests', 'Manage incoming requests');
+      setTitle('Follow Requests', 'Manage incoming and sent requests');
       var screen = $('#spmScreen');
       screen.classList.remove('spm-snap-feed');
       screen.innerHTML = '<div class="spm-empty">Loading follow requests...</div>';
 
       try {
-        var result = await window.SpopeerAPI.listIncomingFollowRequests();
-        var requests = unwrapFollowRequests(result);
+        var incomingResult = null;
+        var outgoingResult = null;
+        if (window.SpopeerAPI && typeof window.SpopeerAPI.listIncomingFollowRequests === 'function') {
+          incomingResult = await window.SpopeerAPI.listIncomingFollowRequests();
+        }
+        if (window.SpopeerAPI && typeof window.SpopeerAPI.listOutgoingFollowRequests === 'function') {
+          outgoingResult = await window.SpopeerAPI.listOutgoingFollowRequests();
+        }
+        var incomingRequests = unwrapFollowRequests(incomingResult);
+        var outgoingRequests = unwrapFollowRequests(outgoingResult);
 
-        if (!requests.length) {
+        if (!incomingRequests.length && !outgoingRequests.length) {
           screen.innerHTML = '<section class="spm-library-shell"><div class="spm-empty"><strong>No pending requests</strong><p>When users request to follow you, they will appear here.</p><button id="spmBackToProfileFromRequests" class="spm-chat-back" type="button">Back to Profile</button></div></section>';
           var backEmpty = document.getElementById('spmBackToProfileFromRequests');
           if (backEmpty) {
@@ -3483,21 +3499,49 @@
           return;
         }
 
-        screen.innerHTML = '<section class="spm-library-shell"><div class="spm-library-hero"><div><p class="spm-library-kicker">Connections</p><h2>Incoming follow requests</h2><p class="spm-library-copy">Accept to add followers or reject to dismiss.</p></div><div class="spm-library-stats"><article><strong>' + requests.length + '</strong><span>Pending</span></article></div></div><div id="spmFollowRequestsList"></div><div class="spm-detail-actions" style="margin-top:12px"><button id="spmBackToProfileRequests" class="spm-chat-back" type="button">Back to Profile</button></div></section>';
+        screen.innerHTML = '<section class="spm-library-shell"><div class="spm-library-hero"><div><p class="spm-library-kicker">Connections</p><h2>Follow requests</h2><p class="spm-library-copy">Accept incoming requests or cancel requests you sent.</p></div><div class="spm-library-stats"><article><strong>' + incomingRequests.length + '</strong><span>Incoming</span></article><article><strong>' + outgoingRequests.length + '</strong><span>Sent</span></article></div></div><div id="spmFollowRequestsList"></div><div class="spm-detail-actions" style="margin-top:12px"><button id="spmBackToProfileRequests" class="spm-chat-back" type="button">Back to Profile</button></div></section>';
 
         var list = document.getElementById('spmFollowRequestsList');
-        requests.forEach(function (request) {
-          var requestId = request.id || request.connectionId;
-          var reqUser = request.user || request.follower || request.sender || {};
-          var userId = reqUser.id || reqUser.userId || '';
-          var name = displayNameFromUser(reqUser);
-          var sport = reqUser.sport || reqUser.primarySport || 'Sport';
-          var role = reqUser.role || reqUser.userType || 'Member';
-          var card = document.createElement('article');
-          card.className = 'spm-feed-card';
-          card.innerHTML = '<div class="spm-feed-head"><div class="spm-mini-avatar">' + html(initialForName(name)) + '</div><div class="spm-feed-title-wrap"><strong>' + html(name) + '</strong><small>' + html(role + ' · ' + sport) + '</small></div></div><div class="spm-detail-actions"><button class="spm-chat-back" data-follow-reject="' + html(String(requestId || '')) + '">Reject</button><button class="spm-primary-action" data-follow-accept="' + html(String(requestId || '')) + '" data-request-user-id="' + html(String(userId || '')) + '">Accept</button></div>';
-          list.appendChild(card);
-        });
+        if (incomingRequests.length) {
+          var incomingHeader = document.createElement('p');
+          incomingHeader.className = 'spm-library-kicker';
+          incomingHeader.style.margin = '4px 0 8px';
+          incomingHeader.textContent = 'Incoming requests';
+          list.appendChild(incomingHeader);
+
+          incomingRequests.forEach(function (request) {
+            var requestId = request.id || request.connectionId;
+            var reqUser = request.user || request.follower || request.sender || {};
+            var userId = reqUser.id || reqUser.userId || '';
+            var name = displayNameFromUser(reqUser);
+            var sport = reqUser.sport || reqUser.primarySport || 'Sport';
+            var role = reqUser.role || reqUser.userType || 'Member';
+            var card = document.createElement('article');
+            card.className = 'spm-feed-card';
+            card.innerHTML = '<div class="spm-feed-head"><div class="spm-mini-avatar">' + html(initialForName(name)) + '</div><div class="spm-feed-title-wrap"><strong>' + html(name) + '</strong><small>' + html(role + ' · ' + sport) + '</small></div></div><div class="spm-detail-actions"><button class="spm-chat-back" data-follow-reject="' + html(String(requestId || '')) + '">Reject</button><button class="spm-primary-action" data-follow-accept="' + html(String(requestId || '')) + '" data-request-user-id="' + html(String(userId || '')) + '">Accept</button></div>';
+            list.appendChild(card);
+          });
+        }
+
+        if (outgoingRequests.length) {
+          var outgoingHeader = document.createElement('p');
+          outgoingHeader.className = 'spm-library-kicker';
+          outgoingHeader.style.margin = '16px 0 8px';
+          outgoingHeader.textContent = 'Sent requests';
+          list.appendChild(outgoingHeader);
+
+          outgoingRequests.forEach(function (request) {
+            var requestId = request.id || request.connectionId;
+            var reqUser = request.user || request.followedUser || request.following || {};
+            var name = displayNameFromUser(reqUser);
+            var sport = reqUser.sport || reqUser.primarySport || 'Sport';
+            var role = reqUser.role || reqUser.userType || 'Member';
+            var card = document.createElement('article');
+            card.className = 'spm-feed-card';
+            card.innerHTML = '<div class="spm-feed-head"><div class="spm-mini-avatar">' + html(initialForName(name)) + '</div><div class="spm-feed-title-wrap"><strong>' + html(name) + '</strong><small>' + html(role + ' · ' + sport) + '</small></div></div><div class="spm-detail-actions"><button class="spm-chat-back" data-follow-cancel="' + html(String(requestId || '')) + '">Cancel Request</button></div>';
+            list.appendChild(card);
+          });
+        }
 
         list.querySelectorAll('[data-follow-accept]').forEach(function (button) {
           button.addEventListener('click', async function () {
@@ -3535,6 +3579,25 @@
             button.disabled = true;
             try {
               await window.SpopeerAPI.rejectFollowRequest(requestId);
+              app.route = 'follow-requests';
+              render();
+            } catch (_error) {
+              button.disabled = false;
+            }
+          });
+        });
+
+        list.querySelectorAll('[data-follow-cancel]').forEach(function (button) {
+          button.addEventListener('click', async function () {
+            var requestId = button.getAttribute('data-follow-cancel');
+            if (!requestId) return;
+            button.disabled = true;
+            try {
+              if (window.SpopeerAPI && typeof window.SpopeerAPI.cancelFollowRequest === 'function') {
+                await window.SpopeerAPI.cancelFollowRequest(requestId);
+              } else {
+                await window.SpopeerAPI.rejectFollowRequest(requestId);
+              }
               app.route = 'follow-requests';
               render();
             } catch (_error) {
