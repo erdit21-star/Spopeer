@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' } };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' }, notificationsState: { items: [], source: 'all', type: 'all', sort: 'newest', query: '' } };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -1534,25 +1534,231 @@
 
     notifications: function () {
       setTitle('Notifications', 'Latest activity');
-      $('#spmScreen').classList.remove('spm-snap-feed');
-      $('#spmScreen').innerHTML = '<div id="spmNotificationsList" class="spm-list"><div class="spm-empty">Loading notifications...</div></div>';
-      var box = document.getElementById('spmNotificationsList');
+      var screen = $('#spmScreen');
+      var state = app.notificationsState || { items: [], source: 'all', type: 'all', sort: 'newest', query: '' };
+      app.notificationsState = state;
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading notifications...</div>';
 
-      window.SpopeerAPI.listNotifications({ page: 1, limit: 30 }).then(function (result) {
-        var notifications = unwrapNotifications(result);
-        if (!notifications.length) {
-          box.innerHTML = '<div class="spm-empty">No notifications yet.</div>';
-          return;
-        }
-        box.innerHTML = '';
-        notifications.forEach(function (notification) {
-          var item = document.createElement('div');
-          item.className = 'spm-list-item';
-          item.innerHTML = '<strong>' + html(notification.type || 'Activity') + '</strong><div>' + html(notification.message || 'You have a new notification.') + '</div><small>' + html(formatTime(notification.createdAt)) + '</small>';
-          box.appendChild(item);
+      function normalizedType(notification) {
+        var type = String((notification && notification.type) || '').toLowerCase();
+        if (!type) return 'updates';
+        if (type.indexOf('message') >= 0) return 'message';
+        if (type.indexOf('follow') >= 0) return 'follow';
+        if (type.indexOf('like') >= 0 || type.indexOf('comment') >= 0 || type.indexOf('repost') >= 0) return 'social';
+        if (type.indexOf('event') >= 0 || type.indexOf('invite') >= 0 || type.indexOf('achievement') >= 0) return 'activity';
+        return 'updates';
+      }
+
+      function isUnread(notification) {
+        return !(notification && (notification.isRead === true || notification.read === true));
+      }
+
+      function notificationSortTime(notification) {
+        var parsed = new Date(notification.createdAt || notification.updatedAt || Date.now());
+        return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+      }
+
+      function getVisibleNotifications() {
+        var term = String(state.query || '').trim().toLowerCase();
+        var filtered = (state.items || []).filter(function (notification) {
+          if (state.source === 'unread' && !isUnread(notification)) return false;
+          if (state.source === 'read' && isUnread(notification)) return false;
+          if (state.type !== 'all' && normalizedType(notification) !== state.type) return false;
+          if (!term) return true;
+          var haystack = [notification.type, notification.text, notification.message].filter(Boolean).join(' ').toLowerCase();
+          return haystack.indexOf(term) >= 0;
         });
+
+        filtered.sort(function (left, right) {
+          var leftTime = notificationSortTime(left);
+          var rightTime = notificationSortTime(right);
+          return state.sort === 'oldest' ? leftTime - rightTime : rightTime - leftTime;
+        });
+
+        return filtered;
+      }
+
+      function markNotificationAsReadLocal(notificationId) {
+        state.items = (state.items || []).map(function (notification) {
+          var id = String(notification.id || notification.notificationId || '');
+          if (id !== String(notificationId || '')) return notification;
+          return Object.assign({}, notification, { isRead: true, read: true });
+        });
+      }
+
+      function markAllNotificationsAsReadLocal() {
+        state.items = (state.items || []).map(function (notification) {
+          return Object.assign({}, notification, { isRead: true, read: true });
+        });
+      }
+
+      window.SpopeerAPI.listNotifications({ page: 1, limit: 120 }).then(function (result) {
+        state.items = unwrapNotifications(result);
+
+        var unreadCount = state.items.filter(isUnread).length;
+        var messageCount = state.items.filter(function (n) { return normalizedType(n) === 'message'; }).length;
+        var socialCount = state.items.filter(function (n) { return normalizedType(n) === 'social' || normalizedType(n) === 'follow'; }).length;
+
+        screen.innerHTML = `
+          <section class="spm-library-shell">
+            <div class="spm-library-hero">
+              <div>
+                <p class="spm-library-kicker">Notifications Hub</p>
+                <h2>All your social and activity updates.</h2>
+                <p class="spm-library-copy">Live notifications from likes, follows, messages, and platform updates.</p>
+              </div>
+              <div class="spm-library-stats">
+                <article><strong>${state.items.length}</strong><span>Total</span></article>
+                <article><strong>${unreadCount}</strong><span>Unread</span></article>
+                <article><strong>${messageCount}</strong><span>Messages</span></article>
+              </div>
+            </div>
+
+            <div class="spm-library-controls">
+              <div class="spm-library-source" id="spmNotifSource">
+                <button type="button" class="spm-library-source-btn${state.source === 'all' ? ' active' : ''}" data-notif-source="all">All</button>
+                <button type="button" class="spm-library-source-btn${state.source === 'unread' ? ' active' : ''}" data-notif-source="unread">Unread</button>
+                <button type="button" class="spm-library-source-btn${state.source === 'read' ? ' active' : ''}" data-notif-source="read">Read</button>
+              </div>
+              <label class="spm-library-sort-wrap">
+                <span>Sort</span>
+                <select id="spmNotifSort" class="spm-library-sort">
+                  <option value="newest"${state.sort === 'newest' ? ' selected' : ''}>Newest</option>
+                  <option value="oldest"${state.sort === 'oldest' ? ' selected' : ''}>Oldest</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="spm-library-tabs" id="spmNotifTypes">
+              <button type="button" class="spm-library-tab${state.type === 'all' ? ' active' : ''}" data-notif-type="all">All <span>${state.items.length}</span></button>
+              <button type="button" class="spm-library-tab${state.type === 'message' ? ' active' : ''}" data-notif-type="message">Messages <span>${messageCount}</span></button>
+              <button type="button" class="spm-library-tab${state.type === 'social' ? ' active' : ''}" data-notif-type="social">Social <span>${socialCount}</span></button>
+              <button type="button" class="spm-library-tab${state.type === 'activity' ? ' active' : ''}" data-notif-type="activity">Activity <span>${state.items.filter(function (n) { return normalizedType(n) === 'activity'; }).length}</span></button>
+              <button type="button" class="spm-library-tab${state.type === 'updates' ? ' active' : ''}" data-notif-type="updates">Updates <span>${state.items.filter(function (n) { return normalizedType(n) === 'updates'; }).length}</span></button>
+            </div>
+
+            <input id="spmNotifSearch" class="spm-search" style="margin-top:4px" placeholder="Search notifications by type or message" value="${html(state.query)}">
+            <div class="spm-detail-actions" style="margin-top:10px"><button id="spmMarkAllReadBtn" class="spm-chat-back" type="button">Mark All Read</button></div>
+            <div id="spmNotificationsList"></div>
+          </section>`;
+
+        var list = document.getElementById('spmNotificationsList');
+
+        function renderNotificationCards() {
+          var notifications = getVisibleNotifications();
+          list.innerHTML = '';
+          if (!notifications.length) {
+            list.innerHTML = '<div class="spm-empty">No notifications for this filter.</div>';
+            return;
+          }
+
+          notifications.forEach(function (notification) {
+            var id = String(notification.id || notification.notificationId || '');
+            var unread = isUnread(notification);
+            var card = document.createElement('article');
+            card.className = 'spm-feed-card';
+            card.innerHTML = `
+              <div class="spm-feed-head">
+                <div class="spm-mini-avatar"><i class="fa-regular fa-bell"></i></div>
+                <div class="spm-feed-title-wrap">
+                  <strong>${html(notification.type || 'Activity')}</strong>
+                  <small>${html(formatTime(notification.createdAt || notification.updatedAt))}</small>
+                </div>
+              </div>
+              <p class="spm-feed-copy">${html(notification.text || notification.message || 'You have a new notification.')}</p>
+              <div class="spm-feed-meta">
+                <span class="spm-feed-chip static">${html(unread ? 'Unread' : 'Read')}</span>
+                <span class="spm-feed-chip static">${html(normalizedType(notification))}</span>
+              </div>
+              <div class="spm-detail-actions">
+                ${unread ? '<button type="button" class="spm-chat-back" data-mark-notif-read="' + html(id) + '">Mark Read</button>' : ''}
+                ${notification.href ? '<button type="button" class="spm-primary-action" data-open-notif-href="' + html(notification.href) + '">Open</button>' : ''}
+              </div>`;
+            list.appendChild(card);
+          });
+
+          list.querySelectorAll('[data-mark-notif-read]').forEach(function (button) {
+            button.addEventListener('click', async function () {
+              var id = button.getAttribute('data-mark-notif-read');
+              if (!id) return;
+              button.disabled = true;
+              try {
+                await window.SpopeerAPI.markNotificationRead(id);
+                markNotificationAsReadLocal(id);
+                renderNotificationCards();
+              } catch (_error) {
+                button.disabled = false;
+              }
+            });
+          });
+
+          list.querySelectorAll('[data-open-notif-href]').forEach(function (button) {
+            button.addEventListener('click', function () {
+              var href = button.getAttribute('data-open-notif-href');
+              if (!href) return;
+              window.location.href = href;
+            });
+          });
+        }
+
+        document.querySelectorAll('[data-notif-source]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            state.source = button.getAttribute('data-notif-source') || 'all';
+            document.querySelectorAll('[data-notif-source]').forEach(function (node) {
+              node.classList.toggle('active', node === button);
+            });
+            renderNotificationCards();
+          });
+        });
+
+        document.querySelectorAll('[data-notif-type]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            state.type = button.getAttribute('data-notif-type') || 'all';
+            document.querySelectorAll('[data-notif-type]').forEach(function (node) {
+              node.classList.toggle('active', node === button);
+            });
+            renderNotificationCards();
+          });
+        });
+
+        var sortSelect = document.getElementById('spmNotifSort');
+        if (sortSelect) {
+          sortSelect.addEventListener('change', function () {
+            state.sort = sortSelect.value || 'newest';
+            renderNotificationCards();
+          });
+        }
+
+        var searchInput = document.getElementById('spmNotifSearch');
+        if (searchInput) {
+          var searchTimer = null;
+          searchInput.addEventListener('input', function () {
+            window.clearTimeout(searchTimer);
+            searchTimer = window.setTimeout(function () {
+              state.query = searchInput.value || '';
+              renderNotificationCards();
+            }, 180);
+          });
+        }
+
+        var markAllBtn = document.getElementById('spmMarkAllReadBtn');
+        if (markAllBtn) {
+          markAllBtn.addEventListener('click', async function () {
+            markAllBtn.disabled = true;
+            try {
+              await window.SpopeerAPI.markAllNotificationsRead();
+              markAllNotificationsAsReadLocal();
+              renderNotificationCards();
+            } catch (_error) {
+              markAllBtn.disabled = false;
+            }
+          });
+        }
+
+        renderNotificationCards();
       }).catch(function () {
-        box.innerHTML = '<div class="spm-empty">Could not load notifications.</div>';
+        screen.innerHTML = '<div class="spm-empty">Could not load notifications.</div>';
       });
     },
 

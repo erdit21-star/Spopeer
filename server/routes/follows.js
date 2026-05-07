@@ -12,10 +12,11 @@
  */
 const express = require('express');
 const router = express.Router();
-const { Connection, User, Notification } = require('../models');
+const { Connection, User } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { getBlockedUserIds } = require('../utils/blocks');
+const { createNotification } = require('../services/notifications');
 
 // ─── FOLLOW ───
 const { ok, created, fail } = require('../utils/response');
@@ -53,18 +54,13 @@ router.post('/:userId', authenticate, async (req, res) => {
     await req.user.increment('followingCount');
     await targetUser.increment('followersCount');
 
-    // Create a follow notification for the target user (best-effort)
-    try {
-      await Notification.create({
-        recipientId: userId,
-        senderId: req.userId,
-        type: 'follow',
-        text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} started following you.`,
-        href: `/pages/profiles/public-profile.html?userId=${encodeURIComponent(req.userId)}`
-      });
-    } catch (ntfErr) {
-      console.warn('Failed to create follow notification:', ntfErr && ntfErr.message);
-    }
+    await createNotification({
+      recipientId: userId,
+      senderId: req.userId,
+      type: 'follow',
+      text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} started following you.`,
+      href: `/pages/profiles/public-profile.html?userId=${encodeURIComponent(req.userId)}`
+    });
 
     created(res, { message: 'Followed successfully.' });
   } catch (error) {

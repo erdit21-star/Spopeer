@@ -556,16 +556,36 @@
   function updateNotifBadge() {
     var badge = document.getElementById('notifBadge') || document.querySelector('.notif-badge') || document.querySelector('.notif-badge-dot');
     if (!badge) return;
+
+    var renderBadge = function (unseenCount) {
+      if (unseenCount > 0) {
+        badge.style.display = 'block';
+        badge.title = unseenCount + ' unread notification' + (unseenCount === 1 ? '' : 's');
+      } else {
+        badge.style.display = 'none';
+        badge.title = '';
+      }
+    };
+
+    if (window.SpopeerAPI && typeof window.SpopeerAPI.listNotifications === 'function') {
+      window.SpopeerAPI.listNotifications({ page: 1, limit: 1 }).then(function (result) {
+        var unreadCount = 0;
+        if (result && result.meta && typeof result.meta.unreadCount === 'number') unreadCount = result.meta.unreadCount;
+        if (result && result.data && result.data.meta && typeof result.data.meta.unreadCount === 'number') unreadCount = result.data.meta.unreadCount;
+        renderBadge(unreadCount);
+      }).catch(function () {
+        var lastSeen = parseInt(localStorage.getItem(NOTIF_LAST_SEEN_KEY) || '0', 10) || 0;
+        var notifs = getStoredNotifications();
+        var unseenCount = notifs.filter(function (n) { return new Date(n.createdAt).getTime() > lastSeen; }).length;
+        renderBadge(unseenCount);
+      });
+      return;
+    }
+
     var lastSeen = parseInt(localStorage.getItem(NOTIF_LAST_SEEN_KEY) || '0', 10) || 0;
     var notifs = getStoredNotifications();
-    var unseenCount = notifs.filter(function(n) { return new Date(n.createdAt).getTime() > lastSeen; }).length;
-    if (unseenCount > 0) {
-      badge.style.display = 'block';
-      badge.title = unseenCount + ' unread notification' + (unseenCount === 1 ? '' : 's');
-    } else {
-      badge.style.display = 'none';
-      badge.title = '';
-    }
+    var unseenCount = notifs.filter(function (n) { return new Date(n.createdAt).getTime() > lastSeen; }).length;
+    renderBadge(unseenCount);
   }
 
   window.sharedUi.createNotification = createNotification;

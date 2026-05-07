@@ -12,6 +12,7 @@ const router = express.Router();
 const { Connection, User } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { parsePagination } = require('../utils/validation');
+const { createNotification } = require('../services/notifications');
 
 // ─── FOLLOW ───
 const { ok, created, fail } = require('../utils/response');
@@ -51,6 +52,14 @@ router.post('/follow', authenticate, async (req, res) => {
     // Update counts
     await req.user.increment('followingCount');
     await targetUser.increment('followersCount');
+
+    await createNotification({
+      recipientId: Number(userId),
+      senderId: req.userId,
+      type: 'follow',
+      text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} started following you.`,
+      href: `/pages/profiles/public-profile.html?userId=${encodeURIComponent(req.userId)}`
+    });
 
     created(res, { message: 'Followed successfully.' });
   } catch (error) {

@@ -12,6 +12,7 @@ const {
 const { findOrCreateDirectConversation } = require('../utils/conversations');
 const { authenticate } = require('../middleware/auth');
 const { sanitizeString } = require('../utils/validation');
+const { createNotification } = require('../services/notifications');
 const { ok, created, fail } = require('../utils/response');
 
 function logApiError(scope, req, error) {
@@ -232,6 +233,14 @@ router.post('/conversations/:id/messages', async (req, res) => {
       readAt: null
     });
 
+    await createNotification({
+      recipientId: receiver ? receiver.userId : null,
+      senderId: req.userId,
+      type: 'message',
+      text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} sent you a message.`,
+      href: '/app.html#messages'
+    });
+
     return created(res, formatMessage(message));
   } catch (error) {
     logApiError('send_message', req, error);
@@ -285,6 +294,15 @@ router.post('/send', async (req, res) => {
     }, { transaction });
 
     await transaction.commit();
+
+    await createNotification({
+      recipientId: receiver.id,
+      senderId: req.userId,
+      type: 'message',
+      text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} sent you a message.`,
+      href: '/app.html#messages'
+    });
+
     return created(res, formatMessage(message));
   } catch (error) {
     await transaction.rollback();

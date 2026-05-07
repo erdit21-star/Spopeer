@@ -295,29 +295,7 @@
 
   /* – user chip & profile menu: handled by shared-ui.js – */
 
-  const NOTIF_KEY = 'spopeer_notifications';
-  const NOTIF_LAST_SEEN_KEY = 'spopeer_notifications_lastSeen';
-
-  const getLastSeen = () => {
-    const stored = parseInt(localStorage.getItem(NOTIF_LAST_SEEN_KEY), 10);
-    return Number.isFinite(stored) ? stored : 0;
-  };
-
-  const setLastSeen = (ts) => {
-    localStorage.setItem(NOTIF_LAST_SEEN_KEY, String(ts));
-  };
-
-  const getStoredNotifications = () => {
-    const stored = localStorage.getItem(NOTIF_KEY);
-    if (!stored) return [];
-    try { return JSON.parse(stored) || []; } catch { return []; }
-  };
-
-  const saveNotifications = (notifs) => {
-    localStorage.setItem(NOTIF_KEY, JSON.stringify(notifs));
-  };
-
-  const getUnreadCount = (notifs) => notifs.filter(n => !n.read).length;
+  let notifications = [];
 
   const formatRelativeTime = (iso) => {
     const date = new Date(iso);
@@ -340,6 +318,19 @@
     }
   };
 
+  const unwrapNotifications = (result) => {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.data)) return result.data;
+    if (Array.isArray(result.notifications)) return result.notifications;
+    if (result.data && Array.isArray(result.data.notifications)) return result.data.notifications;
+    return [];
+  };
+
+  const isRead = (notification) => !!(notification && (notification.isRead === true || notification.read === true));
+
+  const getUnreadCount = (items) => items.filter(n => !isRead(n)).length;
+
   const renderNotifications = (filter = 'all') => {
     const list = document.getElementById('notifList');
     const emptyState = document.getElementById('emptyState');
@@ -347,19 +338,18 @@
     const allCountLabel = document.getElementById('allCount');
     const unreadTabCountLabel = document.getElementById('unreadTabCount');
 
-    const notifs = getStoredNotifications();
-    const unreadCount = getUnreadCount(notifs);
+    const unreadCount = getUnreadCount(notifications);
 
     unreadCountLabel.textContent = unreadCount;
-    allCountLabel.textContent = notifs.length;
+    allCountLabel.textContent = notifications.length;
     unreadTabCountLabel.textContent = unreadCount;
 
-    const filtered = notifs.filter(n => {
+    const filtered = notifications.filter(n => {
       if (filter === 'all') return true;
-      if (filter === 'unread') return !n.read;
+      if (filter === 'unread') return !isRead(n);
       if (filter === 'activity') return ['like','comment','event'].includes(n.type);
-      if (filter === 'social') return ['follow'].includes(n.type);
-      if (filter === 'updates') return ['event'].includes(n.type);
+      if (filter === 'social') return ['follow', 'message', 'like', 'comment'].includes(n.type);
+      if (filter === 'updates') return ['event', 'system', 'announcement', 'reminder'].includes(n.type);
       return true;
     });
 
@@ -373,16 +363,16 @@
     filtered.forEach(n => {
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = `notif-card ${n.read ? '' : 'unread'}`;
+      card.className = `notif-card ${isRead(n) ? '' : 'unread'}`;
       card.innerHTML = `
         <div class="av-wrap">
           <div class="av ${n.type === 'follow' ? 'av-green' : n.type === 'like' ? 'av-orange' : n.type === 'comment' ? 'av-blue' : 'av-purple'}">
             ${n.sender ? `<span>${(n.sender.initials || n.sender.name?.slice(0,2) || '').toUpperCase()}</span>` : `<i class="${getIconClass(n.type)}"></i>`}
           </div>
-          ${n.read ? '' : '<div class="unread-dot"></div>'}
+          ${isRead(n) ? '' : '<div class="unread-dot"></div>'}
         </div>
         <div class="notif-body">
-          <div class="notif-text">${n.text}</div>
+          <div class="notif-text">${n.text || n.message || 'You have a new notification.'}</div>
           <div class="notif-meta"><span class="notif-time">${formatRelativeTime(n.createdAt)}</span></div>
         </div>
         <div class="notif-right">
@@ -390,15 +380,19 @@
         </div>
       `;
 
-      card.addEventListener('click', () => {
-        if (!n.read) {
-          n.read = true;
-          saveNotifications(notifs);
-          renderNotifications(filter);
-        }
-        if (n.href) {
-          window.location.href = n.href;
-        }
+      card.addEventListener('click', async () => {
+        try {
+          if (!isRead(n) && n.id && window.SpopeerAPI && typeof window.SpopeerAPI.markNotificationRead === 'function') {
+            await window.SpopeerAPI.markNotificationRead(n.id);
+            notifications = notifications.map(function (item) {
+              if (String(item.id || '') !== String(n.id || '')) return item;
+              return Object.assign({}, item, { isRead: true, read: true });
+            });
+            renderNotifications(filter);
+          }
+        } catch (_err) {}
+
+        if (n.href) window.location.href = n.href;
       });
 
       list.appendChild(card);
@@ -413,19 +407,31 @@
     });
   });
 
-  document.getElementById('markAllReadBtn')?.addEventListener('click', () => {
-    const notifs = getStoredNotifications().map(n => ({ ...n, read: true }));
-    saveNotifications(notifs);
-    setLastSeen(Date.now());
-    renderNotifications(document.querySelector('.ftab.active')?.dataset.filter || 'all');
+  document.getElementById('markAllReadBtn')?.addEventListener('click', async () => {
+    try {
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.markAllNotificationsRead === 'function') {
+        await window.SpopeerAPI.markAllNotificationsRead();
+      }
+      notifications = notifications.map(function (item) {
+        return Object.assign({}, item, { isRead: true, read: true });
+      });
+      renderNotifications(document.querySelector('.ftab.active')?.dataset.filter || 'all');
+    } catch (_err) {}
   });
 
-  // Never seed notifications locally in production.
-
-  // Mark as seen when visiting notifications page
-  setLastSeen(Date.now());
-
-  renderNotifications();
+  (async function initNotificationsPage() {
+    try {
+      if (!window.SpopeerAPI || typeof window.SpopeerAPI.listNotifications !== 'function') {
+        renderNotifications();
+        return;
+      }
+      const result = await window.SpopeerAPI.listNotifications({ page: 1, limit: 120 });
+      notifications = unwrapNotifications(result);
+      renderNotifications();
+    } catch (_err) {
+      renderNotifications();
+    }
+  })();
 })();
 </script>
 <script>

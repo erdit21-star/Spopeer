@@ -5,6 +5,7 @@ const router = express.Router();
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { uploadPost, persistFile } = require('../middleware/upload');
 const { Story, User } = require('../models');
+const { createNotification } = require('../services/notifications');
 
 const { ok, created, fail } = require('../utils/response');
 
@@ -83,6 +84,14 @@ router.post('/:id/like', authenticate, async (req, res) => {
 
     await story.increment('likesCount');
     await story.reload();
+
+    await createNotification({
+      recipientId: story.userId,
+      senderId: req.userId,
+      type: 'like',
+      text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} liked your photo.`,
+      href: '/app.html#feed'
+    });
 
     ok(res, { likesCount: story.likesCount });
   } catch (err) {

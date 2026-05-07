@@ -94,7 +94,7 @@ function initSocket(httpServer) {
           return;
         }
 
-        const { Message } = require('../models');
+        const { Message, Notification, User } = require('../models');
         const { findOrCreateDirectConversation } = require('../utils/conversations');
         const conversation = await findOrCreateDirectConversation(userId, receiverId);
         const msg = await Message.create({
@@ -104,6 +104,35 @@ function initSocket(httpServer) {
           body: trimmedContent,
           content: trimmedContent
         });
+
+        try {
+          const sender = await User.findByPk(userId, {
+            attributes: ['displayName', 'firstName', 'lastName']
+          });
+          const senderName = sender
+            ? (sender.displayName || [sender.firstName, sender.lastName].filter(Boolean).join(' '))
+            : 'Someone';
+          const notification = await Notification.create({
+            recipientId: receiverId,
+            senderId: userId,
+            type: 'message',
+            text: `${senderName || 'Someone'} sent you a message.`,
+            href: '/app.html#messages'
+          });
+          io.to(`user:${receiverId}`).emit('notification:new', {
+            id: notification.id,
+            recipientId: notification.recipientId,
+            senderId: notification.senderId,
+            type: notification.type,
+            text: notification.text,
+            href: notification.href,
+            isRead: notification.isRead,
+            createdAt: notification.createdAt,
+            updatedAt: notification.updatedAt
+          });
+        } catch (notificationError) {
+          console.warn('Socket notification create failed:', notificationError && notificationError.message);
+        }
 
         // Deliver to receiver if online
         io.to(`user:${receiverId}`).emit('new_message', {

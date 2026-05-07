@@ -25,6 +25,7 @@ const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
 const { createPostSchema, validate } = require('../utils/schemas');
 const { cache } = require('../services/cache');
+const { createNotification } = require('../services/notifications');
 const logger = require('../utils/logger');
 const { getBlockedUserIds } = require('../utils/blocks');
 const supportsPostViewCount = Object.prototype.hasOwnProperty.call(Post.rawAttributes || {}, 'viewCount');
@@ -427,6 +428,15 @@ router.post('/:id/like', authenticate, async (req, res) => {
     await Like.create({ userId: req.userId, postId: post.id });
     await post.increment('likesCount');
     await post.reload();
+
+    await createNotification({
+      recipientId: post.userId,
+      senderId: req.userId,
+      type: 'like',
+      text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} liked your ${post.image ? 'photo' : 'post'}.`,
+      href: '/app.html#feed'
+    });
+
     ok(res, { liked: true, likesCount: post.likesCount });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to toggle like.');
