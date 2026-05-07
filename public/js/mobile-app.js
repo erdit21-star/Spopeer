@@ -750,22 +750,73 @@
       $('#spmScreen').classList.remove('spm-snap-feed');
       try { const result = await window.SpopeerAPI.getProfile(); app.user = unwrapUser(result) || app.user || {}; } catch (_error) {}
       const user = app.user || {};
-      const name = user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Spopeer member';
+      const name = displayNameFromUser(user);
+      const avatarUrl = user.avatarUrl || user.avatar || user.profileImageUrl || user.profilePhoto || '';
+      const coverUrl = user.coverUrl || user.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900';
+      const role = user.role || user.userType || 'Sports profile';
+      const sport = user.sport || user.primarySport || '-';
+      const position = user.position || user.preferredPosition || user.cardPosition || '-';
+      const team = user.team || user.clubName || user.organization || '-';
+      const level = user.level || user.skillLevel || user.competitiveLevel || '-';
+      const location = user.location || user.city || user.country || '-';
+      const experience = user.experience || user.sportsYears || user.profExperience || user.yearsOfExperience || user.yearsOfCoaching || '-';
+      const media = Number(user.mediaCount || user.postsCount || user.postCount || 0);
+      const followers = Number(user.followersCount || user.followers || 0);
+      const following = Number(user.followingCount || user.following || 0);
+
+      const joinedValue = user.createdAt || user.created_at || user.joinedAt || user.memberSince || user.updatedAt;
+      var joinedLabel = '-';
+      if (joinedValue) {
+        var joinedDate = new Date(joinedValue);
+        if (!Number.isNaN(joinedDate.getTime())) {
+          joinedLabel = joinedDate.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+        }
+      }
+
       $('#spmScreen').innerHTML = `
-        <div class="spm-profile-hero"><div style="background-image:url('${html(user.coverUrl || user.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=900')}')"></div></div>
-        <div class="spm-profile-panel">
-          <h2>${html(name)}</h2>
-          <p>${html(user.role || 'Sports profile')} · ${html(user.sport || user.primarySport || 'Sport')}</p>
-        </div>
-        <div class="spm-grid" style="margin-top:12px">
-          <div class="spm-grid-card">Posts</div>
-          <div class="spm-grid-card">Followers</div>
-          <div class="spm-grid-card">Following</div>
-          <div class="spm-grid-card">Settings</div>
-        </div>
-        <button id="spmSignOutBtn" style="width:100%;margin-top:20px;height:50px;border-radius:999px;background:#fff;border:1.5px solid #ef4444;color:#ef4444;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box">
-          <i class="fa-solid fa-right-from-bracket"></i> Sign Out
-        </button>`;
+        <section class="spm-profile-shell">
+          <div class="spm-profile-cover" style="background-image:url('${html(coverUrl)}')"></div>
+          <div class="spm-profile-card">
+            <div class="spm-profile-head">
+              <div class="spm-profile-avatar">${avatarUrl ? '<img src="' + html(avatarUrl) + '" alt="' + html(name) + '">' : html(initialForName(name))}</div>
+              <div class="spm-profile-identity">
+                <h2>${html(name)}</h2>
+                <p>${html(role)} · ${html(sport)}</p>
+              </div>
+            </div>
+
+            <div class="spm-profile-stats">
+              <div><strong>${followers.toLocaleString()}</strong><span>Followers</span></div>
+              <div><strong>${following.toLocaleString()}</strong><span>Following</span></div>
+              <div><strong>${media.toLocaleString()}</strong><span>Media</span></div>
+            </div>
+
+            <div class="spm-profile-fields">
+              <div class="spm-profile-field"><span>Sport</span><strong>${html(sport)}</strong></div>
+              <div class="spm-profile-field"><span>Position</span><strong>${html(position)}</strong></div>
+              <div class="spm-profile-field"><span>Team</span><strong>${html(team)}</strong></div>
+              <div class="spm-profile-field"><span>Level</span><strong>${html(level)}</strong></div>
+              <div class="spm-profile-field"><span>Location</span><strong>${html(location)}</strong></div>
+              <div class="spm-profile-field"><span>Experience</span><strong>${html(String(experience))}</strong></div>
+              <div class="spm-profile-field"><span>Member Since</span><strong>${html(joinedLabel)}</strong></div>
+            </div>
+
+            <div class="spm-profile-bio">${html(user.bio || user.about || 'Add your story, achievements, and goals to strengthen your profile.')}</div>
+
+            <div class="spm-profile-actions">
+              <button id="spmEditProfileBtn" class="spm-primary-action" type="button"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
+              <button id="spmSignOutBtn" class="spm-signout-btn" type="button"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+            </div>
+          </div>
+        </section>`;
+
+      var editProfileBtn = document.getElementById('spmEditProfileBtn');
+      if (editProfileBtn) {
+        editProfileBtn.addEventListener('click', function () {
+          window.location.href = '/pages/profiles/edit-profile.html';
+        });
+      }
+
       document.getElementById('spmSignOutBtn').addEventListener('click', async function () {
         if (window.Auth && typeof window.Auth.logout === 'function') {
           await window.Auth.logout();
