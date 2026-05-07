@@ -14,7 +14,7 @@
 
   // Never redirect desktop app shell and desktop page routes.
   if (
-    path === '/app.html' ||
+    path === '/feed.html' ||
     path.indexOf('/pages/') === 0 ||
     path.indexOf('/api/') === 0
   ) {

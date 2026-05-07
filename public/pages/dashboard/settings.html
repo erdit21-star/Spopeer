@@ -158,7 +158,7 @@
       <input type="text" id="navSearchInput" placeholder="Search athletes, clubs, coaches">
     </div>
     <div class="nav-right">
-      <button class="nav-icon" title="Home" onclick="window.location.href='/app.html#feed'"><i class="fa-solid fa-house"></i></button>
+      <button class="nav-icon" title="Home" onclick="window.location.href='/feed.html'"><i class="fa-solid fa-house"></i></button>
       <button class="nav-icon" title="Messages" onclick="window.location.href='../../pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
       <button class="nav-icon" title="Notifications" onclick="window.location.href='notifications.html'">
         <i class="fa-regular fa-bell"></i>
@@ -812,7 +812,7 @@
   document.getElementById('deleteAccount')?.addEventListener('click', () => {
     if (confirm('Are you sure you want to permanently delete your account? This action cannot be undone.')) {
       ['spopeer_token','spopeer_user','spopeer_loggedIn','authToken','token','user','userToken','userData'].forEach(k => localStorage.removeItem(k));
-      window.location.href = '/app.html#feed';
+      window.location.href = '/feed.html';
     }
   });
 })();

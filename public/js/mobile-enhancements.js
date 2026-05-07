@@ -163,7 +163,7 @@
     }
 
     var items = [
-      { href: '/app.html', icon: 'fa-solid fa-house', label: 'Home' },
+      { href: '/feed.html', icon: 'fa-solid fa-house', label: 'Home' },
       { href: '/pages/search/search.html', icon: 'fa-regular fa-compass', label: 'Explore' },
       { href: null, icon: 'fa-solid fa-plus', label: '', post: true },
       { href: '/pages/messaging/inbox.html', icon: 'fa-regular fa-paper-plane', label: 'Messages' },
@@ -193,7 +193,7 @@
             composer.focus();
             composer.scrollIntoView({ behavior: 'smooth', block: 'center' });
           } else {
-            window.location.href = '/app.html#feed';
+            window.location.href = '/feed.html';
           }
         });
       } else {

@@ -7,7 +7,7 @@
       id: 'homeBtn',
       legacyId: null,
       title: 'Home',
-      path: '/app.html',
+      path: '/feed.html',
       iconClass: 'fa-solid fa-house'
     },
     {
@@ -15,7 +15,7 @@
       id: 'exploreBtn',
       legacyId: null,
       title: 'Search',
-      path: '/app.html#search',
+      path: '/search.html',
       iconClass: 'fa-solid fa-magnifying-glass'
     },
     {
@@ -63,7 +63,7 @@
   function getActiveKey(pathname) {
     var path = normalizePath(pathname);
 
-    if (path === '/app.html' || path === '/' || path === '/index.html') return 'home';
+    if (path === '/feed.html' || path === '/' || path === '/index.html') return 'home';
     if (path.indexOf('/pages/search/') === 0) return 'search';
     if (path === '/articles.html' || path.indexOf('/pages/company/blog') === 0) return 'articles';
     if (path.indexOf('/pages/marketplace/') === 0) return 'marketplace';

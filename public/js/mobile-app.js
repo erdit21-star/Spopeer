@@ -490,7 +490,7 @@
       title: pickLibraryPostTitle(post),
       description: String(post.content || ''),
       sport: post.sport || '',
-      href: '/app.html',
+      href: '/feed.html',
       previewUrl: mediaUrlForPost(post),
       originalPost: post
     };
@@ -1120,7 +1120,7 @@
       var shareBtn = document.getElementById('spmStoryShareBtn');
       if (shareBtn) {
         shareBtn.addEventListener('click', function () {
-          var shareUrl = window.location.origin + '/app.html#feed';
+          var shareUrl = window.location.origin + '/feed.html';
           if (navigator.share) {
             navigator.share({ title: 'Spopeer Story', text: author + ' shared a story', url: shareUrl }).catch(function () {});
             return;

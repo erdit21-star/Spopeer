@@ -238,7 +238,7 @@ router.post('/conversations/:id/messages', async (req, res) => {
       senderId: req.userId,
       type: 'message',
       text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} sent you a message.`,
-      href: '/app.html#messages'
+      href: '/pages/messaging/inbox.html'
     });
 
     return created(res, formatMessage(message));
@@ -300,7 +300,7 @@ router.post('/send', async (req, res) => {
       senderId: req.userId,
       type: 'message',
       text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} sent you a message.`,
-      href: '/app.html#messages'
+      href: '/pages/messaging/inbox.html'
     });
 
     return created(res, formatMessage(message));

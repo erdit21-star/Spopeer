@@ -21,18 +21,10 @@
   }
 
   function navigateToProfile() {
-    if (window.SpaRouter) {
-      window.SpaRouter.navigate('profile');
-    } else {
-      window.location.href = getProfileUrl();
-    }
+    window.location.href = getProfileUrl();
   }
   function navigateToEditProfile() {
-    if (window.SpaRouter) {
-      window.SpaRouter.navigate('settings');
-    } else {
-      window.location.href = getEditProfileUrl();
-    }
+    window.location.href = getEditProfileUrl();
   }
 
   /* ── Chip hydration ── */
@@ -98,20 +90,16 @@
   /* ── Action dispatch ── */
   function handleMenuAction(action) {
     function _spa(route, params, query) {
-      if (window.SpaRouter) {
-        window.SpaRouter.navigate(route, params, query);
-      } else {
-        var fallbacks = {
-          profile: '/app.html#profile',
-          settings: '/pages/dashboard/settings.html',
-          notifications: '/pages/dashboard/notifications.html',
-          messages: '/pages/messaging/inbox.html',
-          library: '/pages/library/index.html',
-          events: '/pages/events/event.html',
-          marketplace: '/pages/marketplace/marketplace.html'
-        };
-        window.location.href = fallbacks[route] || ('/app.html#' + route);
-      }
+      var fallbacks = {
+        profile: '/profile.html',
+        settings: '/pages/dashboard/settings.html',
+        notifications: '/pages/dashboard/notifications.html',
+        messages: '/pages/messaging/inbox.html',
+        library: '/pages/library/index.html',
+        events: '/pages/events/event.html',
+        marketplace: '/pages/marketplace/marketplace.html'
+      };
+      window.location.href = fallbacks[route] || '/feed.html';
     }
 
     switch (action) {

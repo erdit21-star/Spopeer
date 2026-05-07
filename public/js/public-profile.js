@@ -738,7 +738,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
             '<i class="fa-solid fa-lock" style="font-size:28px;color:var(--muted)"></i></div>' +
             '<h2 style="font-family:var(--fD);font-size:22px;font-weight:800;margin-bottom:8px;">This Profile is Private</h2>' +
             '<p style="color:var(--muted);font-size:14px;max-width:340px;margin:0 auto 20px;">This user has set their profile to private. Connect with them to see their full profile.</p>' +
-            '<a href="/app.html#feed" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:var(--accent);color:#fff;border-radius:var(--pill);text-decoration:none;font-size:14px;font-weight:700;font-family:var(--fB)"><i class="fa-solid fa-arrow-left" style="font-size:12px"></i> Back to Feed</a></div>';
+            '<a href="/feed.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:var(--accent);color:#fff;border-radius:var(--pill);text-decoration:none;font-size:14px;font-weight:700;font-family:var(--fB)"><i class="fa-solid fa-arrow-left" style="font-size:12px"></i> Back to Feed</a></div>';
         }
         emitAnalytics('profile:view:blocked', { reason: 'private_profile' });
         return;

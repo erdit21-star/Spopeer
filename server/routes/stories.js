@@ -90,7 +90,7 @@ router.post('/:id/like', authenticate, async (req, res) => {
       senderId: req.userId,
       type: 'like',
       text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} liked your photo.`,
-      href: '/app.html#feed'
+      href: '/feed.html'
     });
 
     ok(res, { likesCount: story.likesCount });

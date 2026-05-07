@@ -117,7 +117,7 @@ function initSocket(httpServer) {
             senderId: userId,
             type: 'message',
             text: `${senderName || 'Someone'} sent you a message.`,
-            href: '/app.html#messages'
+            href: '/pages/messaging/inbox.html'
           });
           io.to(`user:${receiverId}`).emit('notification:new', {
             id: notification.id,
