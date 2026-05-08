@@ -21,6 +21,8 @@ function created(res, data, extra = {}) {
 function fail(res, statusCode, code, message) {
   return res.status(statusCode).json({
     success: false,
+    code,
+    message,
     error: { code, message }
   });
 }

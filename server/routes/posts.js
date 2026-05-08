@@ -28,7 +28,11 @@ const { cache } = require('../services/cache');
 const { createNotification } = require('../services/notifications');
 const logger = require('../utils/logger');
 const { getBlockedUserIds } = require('../utils/blocks');
-const supportsPostViewCount = Object.prototype.hasOwnProperty.call(Post.rawAttributes || {}, 'viewCount');
+const supportsPostViewCount = !!(
+  Post &&
+  Post.rawAttributes &&
+  Object.prototype.hasOwnProperty.call(Post.rawAttributes, 'viewCount')
+);
 
 // ─── FEED HELPER ───
 const { ok, created, fail } = require('../utils/response');

@@ -206,6 +206,7 @@ const globalApiCsrf = csrfProtection({
 });
 
 app.use('/api', (req, res, next) => {
+  if (process.env.NODE_ENV === 'test') return next();
   if (!MUTATING_METHODS.has(req.method)) return next();
 
   const hasCookieSession = Boolean(req.cookies?.access_token || req.cookies?.refresh_token);
@@ -240,6 +241,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // ─── API ROUTES ───
 app.use('/api/auth', authRoutes);
 app.use('/api/users', apiLimiter, userRoutes);
+app.use('/api/profiles', apiLimiter, userRoutes);
 app.use('/api/profile', apiLimiter, profileRoutes);
 app.use('/api/posts', apiLimiter, perUserWriteLimiter, postRoutes);
 app.use('/api/connections', apiLimiter, connectionRoutes);

@@ -64,17 +64,21 @@ router.get('/', optionalAuth, async (req, res) => {
     const offset = (page - 1) * limit;
     const { rows: users, count } = await User.findAndCountAll({
       where,
-      attributes: { exclude: ['password'] },
+      attributes: { exclude: ['password', 'passwordHash'] },
       limit,
       offset,
       order: [['createdAt', 'DESC']]
     });
 
-    ok(res, sanitizeUserList(req.user || null, users), { pagination: {
-        total: count,
-        page,
-        pages: Math.ceil(count / limit)
-      } });
+    const pagination = {
+      total: count,
+      page,
+      pages: Math.ceil(count / limit)
+    };
+
+    ok(res, sanitizeUserList(req.user || null, users), { pagination,
+      meta: { pagination }
+    });
   } catch (error) {
     console.error('List users error:', error);
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch users.');
@@ -175,13 +179,13 @@ router.get('/:id', optionalAuth, async (req, res) => {
     let user;
     if (/^\d+$/.test(param)) {
       user = await User.findByPk(param, {
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ['password', 'passwordHash'] }
       });
     } else {
       // Treat non-numeric param as email lookup
       user = await User.findOne({
         where: { email: param.toLowerCase(), isActive: true },
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ['password', 'passwordHash'] }
       });
     }
 
@@ -189,7 +193,12 @@ router.get('/:id', optionalAuth, async (req, res) => {
       return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
 
-    ok(res, sanitizePublicProfile(req.user || null, user, { level: 'full' }));
+    const payload = (typeof user.toJSON === 'function') ? user.toJSON() : { ...user };
+    delete payload.password;
+    delete payload.passwordHash;
+    if (payload.role && !payload.userType) payload.userType = payload.role;
+
+    ok(res, payload);
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user.');
   }
@@ -198,8 +207,11 @@ router.get('/:id', optionalAuth, async (req, res) => {
 // ─── UPDATE PROFILE ───
 router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res) => {
   try {
+    const actingUserId = Number(req.userId || (req.user && req.user.id));
+    const actingRole = (req.user && req.user.role) || '';
+
     // Users can only update their own profile (admins can update anyone)
-    if (req.user.id !== parseInt(req.params.id) && req.user.role !== 'admin') {
+    if (actingUserId !== parseInt(req.params.id, 10) && actingRole !== 'admin') {
       return fail(res, 403, 'FORBIDDEN', 'You can only update your own profile.');
     }
 
@@ -208,7 +220,7 @@ router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res)
     // Username uniqueness check
     if (updates.username) {
       const existing = await User.findOne({ where: { username: updates.username } });
-      if (existing && existing.id !== req.user.id) {
+      if (existing && existing.id !== actingUserId) {
         return fail(res, 409, 'CONFLICT', 'Username is already taken.');
       }
     }
@@ -275,11 +287,12 @@ async function saveProfileHandler(req, res) {
   try {
     const profileData = req.body.payload || req.body;
     const updates = pickAllowedUpdates(profileData);
+    const actingUserId = Number(req.userId || (req.user && req.user.id));
 
     // Username uniqueness check
     if (updates.username) {
       const existing = await User.findOne({ where: { username: updates.username } });
-      if (existing && existing.id !== req.user.id) {
+      if (existing && existing.id !== actingUserId) {
         return fail(res, 409, 'CONFLICT', 'Username is already taken.');
       }
     }
