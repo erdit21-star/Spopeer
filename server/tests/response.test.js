@@ -45,6 +45,8 @@ describe('fail()', () => {
     expect(res.statusCode).toBe(404);
     expect(res.body).toEqual({
       success: false,
+      code: 'NOT_FOUND',
+      message: 'User not found.',
       error: { code: 'NOT_FOUND', message: 'User not found.' }
     });
   });
