@@ -458,7 +458,8 @@
       div.className='conv-item'+(currentConversation&&currentConversation===String(c.otherId||c.id)?' active':'');
       div.dataset.other=c.otherId||c.id;
       const unread=c.unread&&c.unread>0;
-      const name = c.otherName || c.firstName + ' ' + (c.lastName||'') || 'User ' + (c.otherId||c.id);
+      const fallbackName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim();
+      const name = c.otherName || fallbackName || ('User ' + (c.otherId || c.id));
       div.innerHTML=`
         <div class="conv-av">${initFor(c.otherId||c.id)}${(c.online||Math.random()>0.7)?'<span class="online-dot"></span>':''}</div>
         <div class="conv-info">
@@ -481,20 +482,17 @@
     const userEmail = ud?.email || 'user@example.com';
     
     try{
-      // Try API first
-      const r=await fetch('/api/messages/conversations',{credentials:'include',headers:getAuthHeaders()});
-      if(r.ok){
-        const raw=await r.json();
-        allConvs=parsePayload(raw)||[];
-        setMessagingAvailability(true);
-        renderConvList(allConvs);
-        return;
-      }
-      if (r.status === 404 || r.status === 501 || r.status === 503) {
-        setMessagingAvailability(false);
-      }
+      // Prefer SpopeerAPI to ensure cookie + CSRF handling is consistent.
+      const raw = await window.SpopeerAPI.listConversations();
+      allConvs=parsePayload(raw)||[];
+      setMessagingAvailability(true);
+      renderConvList(allConvs);
+      return;
     }catch(e){
       console.error('Failed to load conversations:', e);
+      if (e && (e.status === 404 || e.status === 501 || e.status === 503)) {
+        setMessagingAvailability(false);
+      }
     }
 
     renderConvList([]);
@@ -515,7 +513,8 @@
     const ca=document.getElementById('chatActive');ca.style.display='flex';ca.style.flexDirection='column';ca.style.flex='1';ca.style.overflow='hidden';
 
     /* header */
-    const otherName = getOtherUserName(otherId);
+    const selected = allConvs.find(c => String(c.otherId || c.id) === String(otherId));
+    const otherName = (selected && selected.otherName) || getOtherUserName(otherId);
     document.getElementById('chatHeadAv').textContent=initFor(otherId);
     document.getElementById('chatHeadName').textContent=otherName;
 
@@ -525,26 +524,14 @@
     /* load messages */
     try{
       if(!currentConversationId){
-        const createResp = await fetch('/api/messages/conversations', {
-          method:'POST',
-          credentials:'include',
-          headers:getAuthHeaders({'Content-Type':'application/json'}),
-          body:JSON.stringify({participantId:String(otherId)})
-        });
-        if(createResp.ok){
-          const createdData=parsePayload(await createResp.json());
-          currentConversationId = String(createdData && createdData.id ? createdData.id : '');
-        }
+        const createdData = parsePayload(await window.SpopeerAPI.createConversation(String(otherId)));
+        currentConversationId = String(createdData && createdData.id ? createdData.id : '');
       }
 
       if(currentConversationId){
-        const r=await fetch('/api/messages/conversations/'+encodeURIComponent(currentConversationId),{credentials:'include',headers:getAuthHeaders()});
-        if(r.ok){
-          const raw=await r.json();
-          const data=parsePayload(raw);
-          renderMessages((data&&data.messages)||[],String(me));
-          return;
-        }
+        const data = parsePayload(await window.SpopeerAPI.getConversation(currentConversationId));
+        renderMessages((data&&data.messages)||[],String(me));
+        return;
       }
 
       const rFallback=await fetch('/api/messages/conversation/'+encodeURIComponent(me)+'/'+encodeURIComponent(otherId),{credentials:'include',headers:getAuthHeaders()});
@@ -572,8 +559,8 @@
     let lastDate='';
     msgs.forEach(m=>{
       // Support current API shape and legacy message fields.
-      const sender = m.fromId || m.sender;
-      const content = m.text || m.content;
+      const sender = m.senderId || m.fromId || m.sender;
+      const content = m.body || m.text || m.content;
       const createdAt = m.createdAt || m.timestamp || new Date().toISOString();
       
       const mDate=new Date(createdAt).toLocaleDateString([],{weekday:'long',month:'short',day:'numeric'});
@@ -605,40 +592,18 @@
 
     try{
       if(!currentConversationId){
-        const createResp = await fetch('/api/messages/conversations', {
-          method:'POST',
-          headers:getAuthHeaders({'Content-Type':'application/json'}),
-          credentials:'include',
-          body:JSON.stringify({participantId:String(currentConversation)})
-        });
-        if(createResp.ok){
-          const createdData=parsePayload(await createResp.json());
-          currentConversationId = String(createdData && createdData.id ? createdData.id : '');
-        }
+        const createdData = parsePayload(await window.SpopeerAPI.createConversation(String(currentConversation)));
+        currentConversationId = String(createdData && createdData.id ? createdData.id : '');
       }
 
       if(currentConversationId){
-        const r=await fetch('/api/messages/conversations/'+encodeURIComponent(currentConversationId)+'/messages',{
-          method:'POST',
-          headers:getAuthHeaders({'Content-Type':'application/json'}),
-          credentials:'include',
-          body:JSON.stringify({body:text})
-        });
-        if(r.ok){
-          document.getElementById('messageText').value='';
-          document.getElementById('sendBtn').disabled=true;
-          openConversation(currentConversation,currentConversationId);
-          return;
-        }
-      }
-
-      const fallback=await fetch('/api/messages/send',{method:'POST',headers:getAuthHeaders({'Content-Type':'application/json'}),credentials:'include',body:JSON.stringify({toId:currentConversation,text})});
-      if(fallback.ok){
+        await window.SpopeerAPI.sendConversationMessage(currentConversationId, text);
         document.getElementById('messageText').value='';
         document.getElementById('sendBtn').disabled=true;
         openConversation(currentConversation,currentConversationId);
         return;
       }
+
     }catch(e){
       console.error('Failed to send message:', e);
     }
@@ -668,7 +633,11 @@
     
     if(firstMsg){
       try {
-        await fetch('/api/messages/send',{method:'POST',headers:getAuthHeaders({'Content-Type':'application/json'}),credentials:'include',body:JSON.stringify({toId:otherId,text:firstMsg})});
+        const created = parsePayload(await window.SpopeerAPI.createConversation(String(otherId)));
+        const createdId = created && created.id ? String(created.id) : '';
+        if (createdId) {
+          await window.SpopeerAPI.sendConversationMessage(createdId, firstMsg);
+        }
       } catch (e) {
         console.error('Failed to send initial message:', e);
       }
