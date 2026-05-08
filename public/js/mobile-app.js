@@ -1627,6 +1627,17 @@
         return 'updates';
       }
 
+      function notificationLabel(notification) {
+        var rawType = String((notification && notification.type) || '').trim();
+        if (!rawType) return 'Activity';
+        var normalized = normalizedType(notification);
+        if (normalized === 'social') return 'Social';
+        if (normalized === 'message') return 'Message';
+        if (normalized === 'follow') return 'Follow';
+        if (normalized === 'activity') return 'Activity';
+        return rawType.replace(/[_-]+/g, ' ').replace(/\b\w/g, function (ch) { return ch.toUpperCase(); });
+      }
+
       function isUnread(notification) {
         return !(notification && (notification.isRead === true || notification.read === true));
       }
@@ -1668,6 +1679,11 @@
         state.items = (state.items || []).map(function (notification) {
           return Object.assign({}, notification, { isRead: true, read: true });
         });
+      }
+
+      if (!window.SpopeerAPI || typeof window.SpopeerAPI.listNotifications !== 'function') {
+        screen.innerHTML = '<div class="spm-empty">Notifications are unavailable right now.</div>';
+        return;
       }
 
       window.SpopeerAPI.listNotifications({ page: 1, limit: 120 }).then(function (result) {
@@ -1739,7 +1755,7 @@
               <div class="spm-feed-head">
                 <div class="spm-mini-avatar"><i class="fa-regular fa-bell"></i></div>
                 <div class="spm-feed-title-wrap">
-                  <strong>${html(notification.type || 'Activity')}</strong>
+                  <strong>${html(notificationLabel(notification))}</strong>
                   <small>${html(formatTime(notification.createdAt || notification.updatedAt))}</small>
                 </div>
               </div>
@@ -1750,7 +1766,7 @@
               </div>
               <div class="spm-detail-actions">
                 ${unread ? '<button type="button" class="spm-chat-back" data-mark-notif-read="' + html(id) + '">Mark Read</button>' : ''}
-                ${notification.href ? '<button type="button" class="spm-primary-action" data-open-notif-href="' + html(notification.href) + '">Open</button>' : ''}
+                ${notification.href ? '<button type="button" class="spm-primary-action" data-open-notif-href="' + html(notification.href) + '" data-notification-id="' + html(id) + '">Open</button>' : ''}
               </div>`;
             list.appendChild(card);
           });
@@ -1771,9 +1787,18 @@
           });
 
           list.querySelectorAll('[data-open-notif-href]').forEach(function (button) {
-            button.addEventListener('click', function () {
+            button.addEventListener('click', async function () {
               var href = button.getAttribute('data-open-notif-href');
+              var id = button.getAttribute('data-notification-id');
               if (!href) return;
+              if (id && window.SpopeerAPI && typeof window.SpopeerAPI.markNotificationRead === 'function') {
+                try {
+                  await window.SpopeerAPI.markNotificationRead(id);
+                } catch (_error) {
+                  // Continue to destination even if mark-read fails.
+                }
+                markNotificationAsReadLocal(id);
+              }
               window.location.href = href;
             });
           });

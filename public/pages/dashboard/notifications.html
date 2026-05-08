@@ -308,12 +308,22 @@
     return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
+  const normalizedType = (notification) => {
+    const rawType = String((notification && notification.type) || '').toLowerCase();
+    if (!rawType) return 'updates';
+    if (rawType.indexOf('message') >= 0) return 'message';
+    if (rawType.indexOf('follow') >= 0) return 'follow';
+    if (rawType.indexOf('like') >= 0 || rawType.indexOf('comment') >= 0 || rawType.indexOf('repost') >= 0) return 'social';
+    if (rawType.indexOf('event') >= 0 || rawType.indexOf('invite') >= 0 || rawType.indexOf('achievement') >= 0) return 'activity';
+    return 'updates';
+  };
+
   const getIconClass = (type) => {
-    switch (type) {
-      case 'like': return 'fa-solid fa-heart';
-      case 'comment': return 'fa-solid fa-comment';
+    switch (normalizedType({ type })) {
+      case 'social': return 'fa-solid fa-heart';
+      case 'message': return 'fa-regular fa-paper-plane';
       case 'follow': return 'fa-solid fa-user-plus';
-      case 'event': return 'fa-solid fa-calendar-check';
+      case 'activity': return 'fa-solid fa-calendar-check';
       default: return 'fa-solid fa-bell';
     }
   };
@@ -324,7 +334,18 @@
     if (Array.isArray(result.data)) return result.data;
     if (Array.isArray(result.notifications)) return result.notifications;
     if (result.data && Array.isArray(result.data.notifications)) return result.data.notifications;
+    if (result.payload && Array.isArray(result.payload)) return result.payload;
     return [];
+  };
+
+  const senderInitials = (notification) => {
+    const sender = notification && notification.sender;
+    if (!sender) return '';
+    const displayName = sender.displayName || [sender.firstName, sender.lastName].filter(Boolean).join(' ');
+    if (displayName) {
+      return displayName.split(' ').map(function (part) { return part[0] || ''; }).join('').slice(0, 2).toUpperCase();
+    }
+    return '';
   };
 
   const isRead = (notification) => !!(notification && (notification.isRead === true || notification.read === true));
@@ -345,11 +366,12 @@
     unreadTabCountLabel.textContent = unreadCount;
 
     const filtered = notifications.filter(n => {
+      const type = normalizedType(n);
       if (filter === 'all') return true;
       if (filter === 'unread') return !isRead(n);
-      if (filter === 'activity') return ['like','comment','event'].includes(n.type);
-      if (filter === 'social') return ['follow', 'message', 'like', 'comment'].includes(n.type);
-      if (filter === 'updates') return ['event', 'system', 'announcement', 'reminder'].includes(n.type);
+      if (filter === 'activity') return type === 'activity';
+      if (filter === 'social') return type === 'social' || type === 'follow' || type === 'message';
+      if (filter === 'updates') return type === 'updates';
       return true;
     });
 
@@ -362,18 +384,20 @@
 
     filtered.forEach(n => {
       const card = document.createElement('button');
+      const type = normalizedType(n);
+      const initials = senderInitials(n);
       card.type = 'button';
       card.className = `notif-card ${isRead(n) ? '' : 'unread'}`;
       card.innerHTML = `
         <div class="av-wrap">
-          <div class="av ${n.type === 'follow' ? 'av-green' : n.type === 'like' ? 'av-orange' : n.type === 'comment' ? 'av-blue' : 'av-purple'}">
-            ${n.sender ? `<span>${(n.sender.initials || n.sender.name?.slice(0,2) || '').toUpperCase()}</span>` : `<i class="${getIconClass(n.type)}"></i>`}
+          <div class="av ${type === 'follow' ? 'av-green' : type === 'social' ? 'av-orange' : type === 'activity' ? 'av-blue' : 'av-purple'}">
+            ${initials ? `<span>${initials}</span>` : `<i class="${getIconClass(n.type)}"></i>`}
           </div>
           ${isRead(n) ? '' : '<div class="unread-dot"></div>'}
         </div>
         <div class="notif-body">
           <div class="notif-text">${n.text || n.message || 'You have a new notification.'}</div>
-          <div class="notif-meta"><span class="notif-time">${formatRelativeTime(n.createdAt)}</span></div>
+          <div class="notif-meta"><span class="notif-time">${formatRelativeTime(n.createdAt || n.updatedAt)}</span></div>
         </div>
         <div class="notif-right">
           <div class="thumb"><i class="fa-solid fa-chevron-right"></i></div>
