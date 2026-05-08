@@ -1081,45 +1081,30 @@
     isLoading = true;
     document.getElementById('searchBtn').disabled = true;
 
-    const params = new URLSearchParams();
-    if(term)     params.set('term', term);
-    if(sport)    params.set('sport', sport);
-    if(userType) params.set('userType', userType);
-    params.set('page', currentPage);
-    params.set('pageSize', PAGE_SIZE);
-
     let peopleResults = null;
     let marketplaceResults = null;
 
     try {
-      // Try API first for people search
-      const url = '/api/search?' + params.toString();
-      console.log('Search URL:', url);
-      const res = await fetch(url);
-      if(res.ok){
-        const json = await res.json();
-        console.log('Search response:', json);
-        peopleResults = json;
-      }
+      // Use SpopeerAPI so credentials/CSRF are included (ensures blocked users are excluded)
+      const searchParams = {};
+      if(term) searchParams.term = term;
+      if(sport) searchParams.sport = sport;
+      if(userType) searchParams.userType = userType;
+      searchParams.page = currentPage;
+      searchParams.pageSize = PAGE_SIZE;
+      peopleResults = await window.SpopeerAPI.searchUsers(searchParams);
     } catch(err){
       console.error('API search failed:', err);
     }
 
-    // Fetch marketplace listings
+    // Fetch marketplace listings via SpopeerAPI (includes credentials)
     try {
-      const mpParams = new URLSearchParams();
-      if(term) mpParams.set('search', term);
-      if(sport) mpParams.set('category', sport);
-      mpParams.set('page', currentPage);
-      mpParams.set('limit', PAGE_SIZE);
-      const mpUrl = '/api/marketplace/listings?' + mpParams.toString();
-      const mpRes = await fetch(mpUrl);
-      if(mpRes.ok){
-        const mpJson = await mpRes.json();
-        marketplaceResults = mpJson;
-      }
+      const mpParams = { page: currentPage, limit: PAGE_SIZE };
+      if(term) mpParams.search = term;
+      if(sport) mpParams.category = sport;
+      marketplaceResults = await window.SpopeerAPI.listMarketplaceListings(mpParams);
     } catch(err){
-      console.log('Marketplace search failed');
+      console.log('Marketplace search failed:', err && err.message);
     }
 
     // Pass both results to handler
@@ -1144,10 +1129,10 @@
     const peoplePages = peopleJson?.pagination?.pages || 1;
     const peoplePg = peopleJson?.pagination?.page || currentPage;
 
-    const mpResults = marketplaceJson?.data || [];
-    const mpTotal = marketplaceJson?.total || 0;
-    const mpPages = marketplaceJson?.pages || 1;
-    const mpPg = marketplaceJson?.page || currentPage;
+    const mpResults = Array.isArray(marketplaceJson?.data) ? marketplaceJson.data : [];
+    const mpTotal = marketplaceJson?.pagination?.total || 0;
+    const mpPages = marketplaceJson?.pagination?.pages || 1;
+    const mpPg = marketplaceJson?.pagination?.page || currentPage;
 
     // Check if at least one result type exists
     if(peopleResults.length === 0 && mpResults.length === 0){
