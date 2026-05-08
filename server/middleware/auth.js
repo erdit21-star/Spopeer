@@ -33,6 +33,8 @@ async function authenticate(req, res, next) {
     if (!token) {
       return res.status(401).json({
         success: false,
+        code: 'AUTH_REQUIRED',
+        message: 'Authentication required.',
         error: { code: 'AUTH_REQUIRED', message: 'Authentication required.' }
       });
     }
@@ -43,6 +45,8 @@ async function authenticate(req, res, next) {
     if (!user || !user.isActive) {
       return res.status(401).json({
         success: false,
+        code: 'AUTH_INVALID',
+        message: 'Invalid session.',
         error: { code: 'AUTH_INVALID', message: 'Invalid session.' }
       });
     }
@@ -54,12 +58,16 @@ async function authenticate(req, res, next) {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
+        code: 'TOKEN_EXPIRED',
+        message: 'Session expired. Please log in again.',
         error: { code: 'TOKEN_EXPIRED', message: 'Session expired. Please log in again.' }
       });
     }
 
     return res.status(401).json({
       success: false,
+      code: 'AUTH_INVALID',
+      message: 'Invalid session.',
       error: { code: 'AUTH_INVALID', message: 'Invalid session.' }
     });
   }
@@ -137,7 +145,7 @@ function getCookieOptions(maxAgeMs) {
 function setAuthCookies(res, user) {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
-  res.cookie('access_token', accessToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+  res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
   res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
   return { accessToken, refreshToken };
 }
