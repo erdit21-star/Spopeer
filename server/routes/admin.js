@@ -64,6 +64,13 @@ router.get('/dashboard', async (req, res) => {
       return ok(res, cached);
     }
 
+    const monthFormatter = new Intl.DateTimeFormat('en', { month: 'short' });
+    const monthStarts = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      monthStarts.push(new Date(now.getFullYear(), now.getMonth() - i, 1));
+    }
+
     const [
       totalUsers,
       totalPosts,
@@ -71,8 +78,11 @@ router.get('/dashboard', async (req, res) => {
       totalMessages,
       newUsersToday,
       newPostsToday,
+      liveUsersNow,
+      liveListings,
       usersByRole,
-      usersBySubscription
+      usersBySubscription,
+      registrationsLast6Months
     ] = await Promise.all([
       User.count({ where: { isActive: true } }),
       Post.count({ where: { isActive: true } }),
@@ -90,6 +100,13 @@ router.get('/dashboard', async (req, res) => {
           createdAt: { [Op.gte]: new Date(new Date().setHours(0, 0, 0, 0)) }
         }
       }),
+      User.count({
+        where: {
+          isActive: true,
+          lastLogin: { [Op.gte]: new Date(Date.now() - 15 * 60 * 1000) }
+        }
+      }),
+      Listing.count({ where: { status: 'active' } }),
       User.findAll({
         attributes: ['role', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
         where: { isActive: true },
@@ -101,7 +118,22 @@ router.get('/dashboard', async (req, res) => {
         where: { isActive: true },
         group: ['subscription'],
         raw: true
-      })
+      }),
+      Promise.all(monthStarts.map(async (start, idx) => {
+        const end = monthStarts[idx + 1] || new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        const count = await User.count({
+          where: {
+            createdAt: {
+              [Op.gte]: start,
+              [Op.lt]: end
+            }
+          }
+        });
+        return {
+          label: monthFormatter.format(start),
+          count
+        };
+      }))
     ]);
 
     const payload = {
@@ -111,8 +143,11 @@ router.get('/dashboard', async (req, res) => {
       totalMessages,
       newUsersToday,
       newPostsToday,
+      liveUsersNow,
+      liveListings,
       usersByRole,
-      usersBySubscription
+      usersBySubscription,
+      registrationsLast6Months
     };
     setCachedAdminMetrics('dashboard', payload);
     ok(res, payload);
@@ -450,6 +485,27 @@ router.get('/marketplace/inquiries', async (req, res) => {
     ok(res, payload, { pagination: { total: count, page: parsedPage, pages: Math.ceil(count / parsedLimit) } });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch inquiries.');
+  }
+});
+
+router.patch('/marketplace/inquiries/:id/status', async (req, res) => {
+  try {
+    const inquiry = await Inquiry.findByPk(req.params.id);
+    if (!inquiry) {
+      return fail(res, 404, 'NOT_FOUND', 'Inquiry not found.');
+    }
+
+    const status = String(req.body && req.body.status || '').trim().toLowerCase();
+    const allowedStatuses = ['pending', 'accepted', 'declined', 'closed'];
+    if (!allowedStatuses.includes(status)) {
+      return fail(res, 400, 'VALIDATION', `Status must be one of: ${allowedStatuses.join(', ')}`);
+    }
+
+    await inquiry.update({ status });
+    await writeAdminAuditLog(req, 'inquiry_status_updated', 'inquiry', inquiry.id, status);
+    ok(res, inquiry);
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update inquiry status.');
   }
 });
 

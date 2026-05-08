@@ -572,6 +572,12 @@
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request("/api/admin/marketplace/inquiries" + qs);
     },
+    adminMarketplaceUpdateInquiryStatus: function (inquiryId, status) {
+      return request("/api/admin/marketplace/inquiries/" + encodeURIComponent(inquiryId) + "/status", {
+        method: "PATCH",
+        body: JSON.stringify({ status: status })
+      });
+    },
     adminAuditLogs: function (params) {
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request("/api/admin/audit-logs" + qs);

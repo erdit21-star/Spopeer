@@ -248,8 +248,8 @@
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon blue"><i class="fa-solid fa-users"></i></div><div><div class="stat-label">Total Users</div><div class="stat-value" id="kpi-users">-</div><div class="stat-change" id="kpi-users-today">+0 today</div></div></div>
         <div class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-file-lines"></i></div><div><div class="stat-label">Total Posts</div><div class="stat-value" id="kpi-posts">-</div><div class="stat-change" id="kpi-posts-today">+0 today</div></div></div>
-        <div class="stat-card"><div class="stat-icon amber"><i class="fa-solid fa-link"></i></div><div><div class="stat-label">Connections</div><div class="stat-value" id="kpi-connections">-</div><div class="stat-change">Active links</div></div></div>
-        <div class="stat-card"><div class="stat-icon purple"><i class="fa-solid fa-envelope"></i></div><div><div class="stat-label">Messages Sent</div><div class="stat-value" id="kpi-messages">-</div><div class="stat-change">All-time</div></div></div>
+        <div class="stat-card"><div class="stat-icon amber"><i class="fa-solid fa-link"></i></div><div><div class="stat-label">Connections</div><div class="stat-value" id="kpi-connections">-</div><div class="stat-change" id="kpi-connections-live">Live links</div></div></div>
+        <div class="stat-card"><div class="stat-icon purple"><i class="fa-solid fa-envelope"></i></div><div><div class="stat-label">Messages Sent</div><div class="stat-value" id="kpi-messages">-</div><div class="stat-change" id="kpi-live-users">Live users: 0</div></div></div>
         <div class="stat-card"><div class="stat-icon red"><i class="fa-solid fa-flag"></i></div><div><div class="stat-label">Pending Reports</div><div class="stat-value" id="kpi-reports">0</div><div class="stat-change" style="color:var(--red)">Needs review</div></div></div>
       </div>
 
@@ -417,6 +417,7 @@ let usersData = [];
 let postsData = [];
 let reportsData = [];
 let analyticsData = {};
+let dashboardData = {};
 let currentReportTab = 'pending';
 let currentUsersPage = 1;
 let currentPostsPage = 1;
@@ -542,12 +543,15 @@ async function loadDashboard() {
   try {
     const res = await window.SpopeerAPI.adminDashboard();
     const d = apiUnwrap(res) || {};
+    dashboardData = d;
     document.getElementById('kpi-users').textContent = fmtNum(d.totalUsers || 0);
     document.getElementById('kpi-posts').textContent = fmtNum(d.totalPosts || 0);
     document.getElementById('kpi-connections').textContent = fmtNum(d.totalConnections || 0);
     document.getElementById('kpi-messages').textContent = fmtNum(d.totalMessages || 0);
     document.getElementById('kpi-users-today').textContent = '+' + (d.newUsersToday || 0) + ' today';
     document.getElementById('kpi-posts-today').textContent = '+' + (d.newPostsToday || 0) + ' today';
+    document.getElementById('kpi-live-users').textContent = 'Live users: ' + fmtNum(d.liveUsersNow || 0);
+    document.getElementById('kpi-connections-live').textContent = 'Live listings: ' + fmtNum(d.liveListings || 0);
     renderDonut(d.usersByRole || []);
     renderSubBreakdown(d.usersBySubscription || []);
   } catch (err) {
@@ -559,9 +563,15 @@ async function loadDashboard() {
       totalMessages: 0,
       newUsersToday: 0,
       newPostsToday: 0,
+      liveUsersNow: 0,
+      liveListings: 0,
       usersByRole: [],
-      usersBySubscription: []
+      usersBySubscription: [],
+      registrationsLast6Months: []
     };
+    dashboardData = fallback;
+    document.getElementById('kpi-live-users').textContent = 'Live users: 0';
+    document.getElementById('kpi-connections-live').textContent = 'Live listings: 0';
     renderDonut(fallback.usersByRole);
     renderSubBreakdown(fallback.usersBySubscription);
   }
@@ -572,11 +582,13 @@ async function loadDashboard() {
 
 function renderBarChart() {
   const wrap = document.getElementById('reg-chart');
-  const months = ['Nov','Dec','Jan','Feb','Mar','Apr'];
-  const vals = [41, 58, 72, 89, 112, 143];
+  const monthly = Array.isArray(dashboardData.registrationsLast6Months) ? dashboardData.registrationsLast6Months : [];
+  const months = monthly.length ? monthly.map(function (m) { return m.label; }) : ['Nov','Dec','Jan','Feb','Mar','Apr'];
+  const vals = monthly.length ? monthly.map(function (m) { return Number(m.count || 0); }) : [0, 0, 0, 0, 0, 0];
   const max = Math.max.apply(null, vals);
   wrap.innerHTML = months.map(function (m, i) {
-    return '<div class="bar-col"><div class="bar" style="height:' + (Math.round((vals[i] / max) * 140) + 4) + 'px"></div><div class="bar-label">' + m + '</div></div>';
+    var h = max > 0 ? (Math.round((vals[i] / max) * 140) + 4) : 4;
+    return '<div class="bar-col"><div class="bar" style="height:' + h + 'px"></div><div class="bar-label">' + m + '</div></div>';
   }).join('');
 }
 
@@ -651,7 +663,7 @@ function renderUsersTable(rows, pagination) {
   tbody.innerHTML = rows.map(function (u) {
     const name = ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || 'Unknown';
     const sport = u.sport || u.primarySport || '-';
-    return '<tr><td><div class="user-cell"><div class="u-avatar">' + initials(u) + '</div><div><div class="u-name">' + name + '</div><div class="u-email">' + (u.email || '-') + '</div></div></div></td><td>' + roleChip(u.role) + '</td><td>' + subChip(u.subscription) + '</td><td>' + sport + '</td><td>' + statusChip(u.isActive) + '</td><td>' + fmtDate(u.createdAt) + '</td><td><div style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="editUser(' + JSON.stringify(String(u.id)) + ')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="toggleUserActive(' + JSON.stringify(String(u.id)) + ', ' + (!!u.isActive) + ')"><i class="fa-solid fa-' + (u.isActive ? 'ban' : 'check') + '"></i></button></div></td></tr>';
+    return '<tr><td><div class="user-cell"><div class="u-avatar">' + initials(u) + '</div><div><div class="u-name">' + name + '</div><div class="u-email">' + (u.email || '-') + '</div></div></div></td><td>' + roleChip(u.role) + '</td><td>' + subChip(u.subscription) + '</td><td>' + sport + '</td><td>' + statusChip(u.isActive) + '</td><td>' + fmtDate(u.createdAt) + '</td><td><div style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="editUser(' + Number(u.id) + ')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="toggleUserActive(' + Number(u.id) + ', ' + (!!u.isActive) + ')"><i class="fa-solid fa-' + (u.isActive ? 'ban' : 'check') + '"></i></button></div></td></tr>';
   }).join('');
 
   const total = pagination.total || rows.length;
@@ -925,17 +937,30 @@ async function loadMarketplace(type) {
 
     res = await window.SpopeerAPI.adminMarketplaceInquiries({ page: 1, limit: 50 });
     const rows = apiUnwrap(res) || [];
-    thead.innerHTML = '<tr><th>#</th><th>Status</th><th>Listing</th><th>Message</th><th>Date</th></tr>';
+    thead.innerHTML = '<tr><th>#</th><th>Status</th><th>Listing</th><th>Message</th><th>Date</th><th>Actions</th></tr>';
     tbody.innerHTML = rows.length ? rows.map(function (q) {
       const statusClass = q.status === 'pending' ? 'amber' : q.status === 'accepted' ? 'green' : q.status === 'declined' ? 'red' : 'gray';
-      return '<tr><td>' + q.id + '</td><td><span class="chip chip-' + statusClass + '">' + (q.status || '-') + '</span></td><td>' + (q.listingTitle || ('Listing #' + (q.listingId || '-'))) + '</td><td class="content-preview">' + (q.message || '-') + '</td><td>' + fmtDate(q.createdAt) + '</td></tr>';
-    }).join('') : '<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--muted);">No inquiries found</td></tr>';
+      const actions = q.status === 'pending'
+        ? '<div style="display:flex;gap:6px;"><button class="btn btn-success btn-sm" onclick="adminSetInquiryStatus(' + Number(q.id) + ',\'accepted\')">Accept</button><button class="btn btn-danger btn-sm" onclick="adminSetInquiryStatus(' + Number(q.id) + ',\'declined\')">Decline</button></div>'
+        : '-';
+      return '<tr><td>' + q.id + '</td><td><span class="chip chip-' + statusClass + '">' + (q.status || '-') + '</span></td><td>' + (q.listingTitle || ('Listing #' + (q.listingId || '-'))) + '</td><td class="content-preview">' + (q.message || '-') + '</td><td>' + fmtDate(q.createdAt) + '</td><td>' + actions + '</td></tr>';
+    }).join('') : '<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--muted);">No inquiries found</td></tr>';
     document.getElementById('market-info').textContent = 'Showing ' + rows.length + ' inquiries';
   } catch (err) {
     console.error('Marketplace admin load failed:', err);
     thead.innerHTML = '';
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--red);">Failed to load marketplace data.</td></tr>';
     document.getElementById('market-info').textContent = 'Failed to load ' + type;
+  }
+}
+
+async function adminSetInquiryStatus(inquiryId, status) {
+  try {
+    await window.SpopeerAPI.adminMarketplaceUpdateInquiryStatus(inquiryId, status);
+    showToast('Inquiry ' + status, 'success');
+    loadMarketplace('inquiries');
+  } catch (err) {
+    showToast('Failed to update inquiry', 'error');
   }
 }
 
