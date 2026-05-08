@@ -1,5 +1,11 @@
 // Updated
 (function () {
+  function unwrapStatsPayload(result) {
+    if (!result) return {};
+    if (result.data && typeof result.data === 'object') return result.data;
+    return result;
+  }
+
   async function syncSidebarStats() {
     const user = await window.Auth.syncUserFromBackend();
     if (!user || (!user._id && !user.id)) return;
@@ -8,16 +14,16 @@
     let stats;
 
     try {
-      stats = await window.SpopeerAPI.getProfileStats(userId);
+      stats = unwrapStatsPayload(await window.SpopeerAPI.getProfileStats(userId));
     } catch (err) {
       console.warn('[Spopeer] Sidebar stats unavailable right now.', err);
       return;
     }
 
     const map = {
-      following: stats.followingCount || 0,
-      followers: stats.followersCount || 0,
-      posts: stats.postsCount || 0
+      following: Number(stats.followingCount || 0),
+      followers: Number(stats.followersCount || 0),
+      posts: Number(stats.postsCount || 0)
     };
 
     Object.entries(map).forEach(([key, value]) => {
