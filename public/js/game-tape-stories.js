@@ -280,19 +280,30 @@
       primary: { value: metricValue || '', unit: '', label: 'Performance' }
     }));
 
-    const res = await fetch('/api/stories', {
-      method: 'POST',
-      credentials: 'include',
-      body: formData
-    });
+    try {
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.createStory === 'function') {
+        return await window.SpopeerAPI.createStory(formData);
+      }
 
-    const json = await res.json().catch(function () { return {}; });
+      const res = await fetch('/api/stories', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
 
-    if (!res.ok) {
-      throw new Error((json.error && json.error.message) || 'Failed to create story.');
+      const json = await res.json().catch(function () { return {}; });
+
+      if (!res.ok) {
+        throw new Error((json.error && json.error.message) || 'Failed to create story.');
+      }
+
+      return json;
+    } catch (err) {
+      if (err && err.message) {
+        throw err;
+      }
+      throw new Error(err || 'Failed to create story.');
     }
-
-    return json;
   }
 
   function openViewer(index) {

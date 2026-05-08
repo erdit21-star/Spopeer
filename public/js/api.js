@@ -382,6 +382,19 @@
         body: JSON.stringify(payload),
       });
     },
+    createStory: function (payload) {
+      if (payload instanceof FormData) {
+        return request("/api/stories", {
+          method: "POST",
+          body: payload,
+        });
+      }
+
+      return request("/api/stories", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
     toggleLike: function (postId) {
       return request(`/api/posts/${postId}/like`, { method: "POST" });
     },
@@ -591,6 +604,10 @@
         method: "PUT",
         body: JSON.stringify(payload || {})
       });
+    },
+    searchUsers: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/search/users" + qs);
     },
     unwrap: unwrap
   };

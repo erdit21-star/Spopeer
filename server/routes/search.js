@@ -2,16 +2,61 @@
 /**
  * Search Routes
  * GET /api/search - Search users by term, sport, role, location
+ * GET /api/search/users - Search users for messaging (with name, email, id filtering)
  */
 const express = require('express');
 const router = express.Router();
 const { User } = require('../models');
-const { optionalAuth } = require('../middleware/auth');
+const { optionalAuth, authenticate } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { cache } = require('../services/cache');
 const logger = require('../utils/logger');
 const { ok, fail } = require('../utils/response');
 const { getBlockedUserIds } = require('../utils/blocks');
+
+// ─── SEARCH USERS FOR MESSAGING ───
+router.get('/users', authenticate, async (req, res) => {
+  try {
+    const { query, limit = 5 } = req.query;
+    const currentUserId = req.userId;
+
+    if (!query || query.trim().length < 2) {
+      return ok(res, []);
+    }
+
+    const searchTerm = `%${query.trim()}%`;
+    const maxLimit = Math.min(parseInt(limit) || 5, 20);
+
+    const users = await User.findAll({
+      where: {
+        isActive: true,
+        id: { [Op.ne]: currentUserId }, // Exclude current user
+        [Op.or]: [
+          { firstName: { [Op.iLike]: searchTerm } },
+          { lastName: { [Op.iLike]: searchTerm } },
+          { email: { [Op.iLike]: searchTerm } },
+          { id: { [Op.iLike]: searchTerm } }
+        ]
+      },
+      attributes: ['id', 'email', 'firstName', 'lastName', 'displayName', 'role', 'sport', 'avatar', 'bio'],
+      limit: maxLimit,
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Filter out blocked users
+    let blockedIds = [];
+    if (currentUserId) {
+      blockedIds = await getBlockedUserIds(currentUserId);
+    }
+
+    const filtered = users.filter(u => !blockedIds.includes(String(u.id)));
+
+    ok(res, filtered, { data: filtered });
+  } catch (error) {
+    logger.error({ event: 'search_users_error', message: error.message });
+    fail(res, 500, 'SERVER_ERROR', 'User search failed.');
+  }
+});
 
 // ─── SEARCH ───
 const { sanitizeUserList } = require('../utils/privacy');

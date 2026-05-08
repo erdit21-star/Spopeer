@@ -870,17 +870,25 @@
     formData.append('sport', sport || (app.user && (app.user.sport || app.user.primarySport)) || 'Sport');
     formData.append('type', file.type && file.type.indexOf('video/') === 0 ? 'video' : 'image');
 
-    var response = await fetch('/api/stories', {
-      method: 'POST',
-      credentials: 'include',
-      body: formData
-    });
+    try {
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.createStory === 'function') {
+        return await window.SpopeerAPI.createStory(formData);
+      }
 
-    var payload = await response.json().catch(function () { return {}; });
-    if (!response.ok) {
-      throw new Error((payload && payload.error && payload.error.message) || 'Could not publish story');
+      var response = await fetch('/api/stories', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      var payload = await response.json().catch(function () { return {}; });
+      if (!response.ok) {
+        throw new Error((payload && payload.error && payload.error.message) || 'Could not publish story');
+      }
+      return payload;
+    } catch (err) {
+      throw new Error((err && err.message) || 'Could not publish story');
     }
-    return payload;
   }
 
   function setBadge(id, count) {

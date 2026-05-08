@@ -364,12 +364,21 @@
         textarea.focus();
         return;
       }
+      
+      const user = getCurrentUser() || {};
+      if (user.emailVerified === false || user.emailVerified === 0) {
+        setStatus("Please verify your email before posting. Check your inbox for a verification link.", "error");
+        if (window.SpopeerAPI && typeof window.SpopeerAPI.showNotification === "function") {
+          window.SpopeerAPI.showNotification("Please verify your email to post.", "error");
+        }
+        textarea.focus();
+        return;
+      }
 
       button.disabled = true;
       setStatus("Publishing your post...", "");
 
       try {
-        const user = getCurrentUser() || {};
         await createPost({ content: content, sport: user.sport || user.primarySport || undefined });
         textarea.value = "";
         setStatus("Post published.", "success");

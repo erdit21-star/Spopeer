@@ -346,8 +346,14 @@
 <div class="modal-overlay" id="newMsgModal">
   <div class="modal-box">
     <div class="modal-title"><i class="fa-regular fa-paper-plane" style="color:var(--accent);margin-right:8px;font-size:16px"></i>New Message</div>
-    <input class="modal-input" type="text" id="newMsgTo" placeholder="Enter user ID or email…"/>
+    <div style="position:relative;margin-bottom:12px;">
+      <input class="modal-input" type="text" id="newMsgTo" placeholder="Search by name, email or ID…" autocomplete="off" style="margin-bottom:0;"/>
+      <div id="userSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);border:1.5px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);max-height:200px;overflow-y:auto;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <div id="userSearchList" style="list-style:none;margin:0;padding:0;"></div>
+      </div>
+    </div>
     <input class="modal-input" type="text" id="newMsgFirstMsg" placeholder="Type your first message (optional)"/>
+    <div id="userSearchError" style="display:none;color:#dc2626;font-size:12px;margin-bottom:12px;padding:8px 12px;background:#fef2f2;border-radius:var(--r);"></div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="document.getElementById('newMsgModal').classList.remove('open')">Cancel</button>
       <button class="btn-start" id="startConvBtn">Start Conversation</button>
@@ -623,27 +629,101 @@
   /* ── New message modal ── */
   document.getElementById('newMsgBtn').addEventListener('click',()=>document.getElementById('newMsgModal').classList.add('open'));
   document.getElementById('newMsgModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+  let searchResults = [];
+  document.getElementById('newMsgTo').addEventListener('input', async function(){
+    const query = this.value.trim();
+    const resultsList = document.getElementById('userSearchList');
+    const resultsContainer = document.getElementById('userSearchResults');
+    const errorDiv = document.getElementById('userSearchError');
+    
+    errorDiv.style.display = 'none';
+    
+    if (query.length < 2) {
+      resultsContainer.style.display = 'none';
+      searchResults = [];
+      return;
+    }
+    
+    try {
+      const response = await window.SpopeerAPI.searchUsers({ query, limit: 5 });
+      searchResults = (response && response.data) || response || [];
+      
+      if (!Array.isArray(searchResults)) searchResults = [];
+      
+      if (searchResults.length === 0) {
+        resultsList.innerHTML = '<div style="padding:12px;color:var(--muted);text-align:center;font-size:13px;">No users found</div>';
+        resultsContainer.style.display = 'block';
+        return;
+      }
+      
+      resultsList.innerHTML = searchResults.map(u => {
+        const name = [u.firstName, u.lastName].filter(Boolean).join(' ') || u.displayName || 'User';
+        const displayId = u.email || u.id;
+        const safeId = String(u.id).replace(/'/g, "\\'");
+        const safeName = escHtml(name);
+        return '<div style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s;" onmouseover="this.style.background=\\'var(--surface);\\';" onmouseout="this.style.background=\\'transparent;\\';" onclick="setSelectedUser(\\''+safeId+'\\',\\''+safeName+'\\')" ><div style="font-weight:600;color:var(--ink);font-size:13px;">'+safeName+'</div><div style="font-size:11px;color:var(--muted);">'+escHtml(displayId)+'</div></div>';
+      }).join('');
+      resultsContainer.style.display = 'block';
+    } catch (e) {
+      console.error('Search failed:', e);
+      errorDiv.textContent = 'Search failed. Try entering a user ID or email.';
+      errorDiv.style.display = 'block';
+      resultsContainer.style.display = 'none';
+    }
+  });
+  
+  window.setSelectedUser = function(userId, userName){
+    document.getElementById('newMsgTo').value = userId;
+    document.getElementById('userSearchResults').style.display = 'none';
+  };
+  
   document.getElementById('startConvBtn').addEventListener('click',async function(){
     const otherId=document.getElementById('newMsgTo').value.trim();
     const firstMsg=document.getElementById('newMsgFirstMsg').value.trim();
-    if(!otherId){if (window.SpopeerToast) window.SpopeerToast.warning('Enter a user ID or email');return;}
-    document.getElementById('newMsgModal').classList.remove('open');
-    document.getElementById('newMsgTo').value='';
-    document.getElementById('newMsgFirstMsg').value='';
+    const errorDiv = document.getElementById('userSearchError');
     
-    if(firstMsg){
-      try {
-        const created = parsePayload(await window.SpopeerAPI.createConversation(String(otherId)));
-        const createdId = created && created.id ? String(created.id) : '';
-        if (createdId) {
-          await window.SpopeerAPI.sendConversationMessage(createdId, firstMsg);
-        }
-      } catch (e) {
-        console.error('Failed to send initial message:', e);
-      }
-      loadConversations();
+    errorDiv.style.display = 'none';
+    
+    if(!otherId){
+      errorDiv.textContent = 'Please enter or select a user to message';
+      errorDiv.style.display = 'block';
+      if (window.SpopeerToast) window.SpopeerToast.warning('Please select a recipient');
+      return;
     }
-    openConversation(otherId,null);
+    
+    try {
+      document.getElementById('startConvBtn').disabled = true;
+      
+      const created = parsePayload(await window.SpopeerAPI.createConversation(String(otherId)));
+      const createdId = created && created.id ? String(created.id) : '';
+      
+      if (!createdId) {
+        errorDiv.textContent = 'Could not create conversation. Please try again.';
+        errorDiv.style.display = 'block';
+        if (window.SpopeerToast) window.SpopeerToast.error('Failed to start conversation');
+        return;
+      }
+      
+      if(firstMsg){
+        await window.SpopeerAPI.sendConversationMessage(createdId, firstMsg);
+      }
+      
+      document.getElementById('newMsgModal').classList.remove('open');
+      document.getElementById('newMsgTo').value='';
+      document.getElementById('newMsgFirstMsg').value='';
+      
+      if (window.SpopeerToast) window.SpopeerToast.success('Conversation started!');
+      loadConversations();
+      openConversation(otherId, createdId);
+    } catch (e) {
+      console.error('Failed to start conversation:', e);
+      const msg = e && e.message ? e.message : 'Could not create conversation';
+      errorDiv.textContent = msg;
+      errorDiv.style.display = 'block';
+      if (window.SpopeerToast) window.SpopeerToast.error(msg);
+    } finally {
+      document.getElementById('startConvBtn').disabled = false;
+    }
   });
 
   /* ── Search filter ── */
@@ -674,7 +754,12 @@
   }
 
   /* ── Escape HTML ── */
-  function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+  window.escHtml = function(t){
+    if (!t) return '';
+    const d=document.createElement('div');
+    d.textContent=String(t);
+    return d.innerHTML;
+  };
 
   /* ── Init ── */
   loadConversations();
