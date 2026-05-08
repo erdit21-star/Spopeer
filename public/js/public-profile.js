@@ -141,7 +141,23 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     } else {
       if(connectBtn) connectBtn.style.display='';
       if(connStatus) connStatus.style.display='';
+      if(messageBtn) messageBtn.style.display='flex';
       if(editBtn) editBtn.style.display='none';
+    }
+    // Message button handler
+    if(messageBtn && !isOwnProfile){
+      messageBtn.addEventListener('click', function(){
+        var targetUserId = userId || (payload && payload.id) || (payload && payload.userId);
+        if(!targetUserId){
+          alert('User ID not found. Unable to send message.');
+          return;
+        }
+        var targetName = (payload && payload.firstName && payload.lastName) 
+          ? payload.firstName + ' ' + payload.lastName
+          : (payload && payload.displayName) || 'User';
+        var messagesUrl = window.location.origin + '/messages.html?userId=' + encodeURIComponent(targetUserId);
+        window.location.href = messagesUrl;
+      });
     }
     // Share button handler
     if(shareBtn){

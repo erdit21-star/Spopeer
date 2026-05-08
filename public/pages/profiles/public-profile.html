@@ -371,7 +371,7 @@
         <div class="profile-actions">
           <button class="btn-connect" id="connectBtn"><i class="fa-solid fa-user-plus" style="font-size:12px"></i> Follow</button>
           <div class="conn-status-label" id="connStatus">Not connected</div>
-          <button class="btn-message" id="messageBtn" style="display:none"><i class="fa-regular fa-paper-plane" style="font-size:12px"></i> Message</button>
+          <button class="btn-message" id="messageBtn"><i class="fa-regular fa-paper-plane" style="font-size:12px"></i> Message</button>
           <button class="btn-share" id="shareProfileBtn"><i class="fa-solid fa-share-nodes" style="font-size:12px"></i> Share Profile</button>
           <button class="btn-share" id="editProfileBtn" style="display:none;background:var(--accent);color:var(--accent-light);border:none"><i class="fa-solid fa-edit" style="font-size:12px"></i> Edit Profile</button>
         </div>
@@ -644,9 +644,24 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     } else {
       if(connectBtn) connectBtn.style.display='';
       if(connStatus) connStatus.style.display='';
+      if(messageBtn) messageBtn.style.display='flex';
       if(editBtn) editBtn.style.display='none';
     }
-    // Share button handler
+    // Message button handler
+    if(messageBtn && !isOwnProfile){
+      messageBtn.addEventListener('click', function(){
+        var targetUserId = userId || (payload && payload.id) || (payload && payload.userId);
+        if(!targetUserId){
+          alert('User ID not found. Unable to send message.');
+          return;
+        }
+        var targetName = (payload && payload.firstName && payload.lastName) 
+          ? payload.firstName + ' ' + payload.lastName
+          : (payload && payload.displayName) || 'User';
+        var messagesUrl = window.location.origin + '/messages.html?userId=' + encodeURIComponent(targetUserId);
+        window.location.href = messagesUrl;
+      });
+    }
     if(shareBtn){
       shareBtn.addEventListener('click',function(){
         var url=window.location.href;
