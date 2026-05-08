@@ -1148,6 +1148,16 @@
     return String(entry.id || entry.userId || entry.email || '').toLowerCase();
   }
 
+  function resolveNumericUserId() {
+    for (var i = 0; i < arguments.length; i++) {
+      var value = arguments[i];
+      var num = Number(value);
+      if (Number.isInteger(num) && num > 0) return String(num);
+      if (typeof value === 'string' && /^\d+$/.test(value)) return value;
+    }
+    return '';
+  }
+
   /* ── Helpers ── */
   function initials(name) {
     return name.split(' ').map(function (x) { return x[0] || ''; }).join('').toUpperCase().slice(0, 2) || '??';
@@ -1298,13 +1308,17 @@
       e.stopPropagation();
       var targetId = this.dataset.userId;
       var key = this.dataset.userKey;
+      var followTargetId = resolveNumericUserId(targetId, u.id, key);
       this.disabled = true;
       try {
+        if (!followTargetId) {
+          throw new Error('This profile cannot be followed right now.');
+        }
         if (followingKeys.has(key)) {
-          await window.SpopeerAPI.unfollowUser(targetId || key);
+          await window.SpopeerAPI.unfollowUser(followTargetId);
           showToast('Unfollowed ' + u.name, 'user-minus');
         } else {
-          await window.SpopeerAPI.followUser(targetId || key);
+          await window.SpopeerAPI.followUser(followTargetId);
           showToast('Now following ' + u.name, 'check');
         }
         await loadConnections();
@@ -1318,7 +1332,12 @@
     /* Message */
     card.querySelector('.btn-message-sm').addEventListener('click', function (e) {
       e.stopPropagation();
-      showToast('Opening chat with ' + u.name + '…', 'paper-plane');
+      var chatUserId = resolveNumericUserId(u.id, u.userId);
+      if (!chatUserId) {
+        showToast('Unable to open chat for this profile', 'triangle-exclamation');
+        return;
+      }
+      window.location.href = '/pages/messaging/inbox.html?userId=' + encodeURIComponent(chatUserId);
     });
     /* Card click → profile */
     card.addEventListener('click', function () {
