@@ -2852,7 +2852,11 @@ if (window.profileRuntime) {
         statusEl.className = 'save-status';
         statusEl.textContent = 'Could not save changes. Please try again.';
       }
-      showToast('Could not save profile. Please try again.', 'error');
+        var errMsg = (error && error.message) || 'Could not save profile. Please try again.';
+        if (error && error.response && error.response.error && error.response.error.message) {
+          errMsg = error.response.error.message;
+        }
+        showToast(errMsg, 'error');
       throw error;
     }
   }
@@ -3121,14 +3125,15 @@ if (window.profileRuntime) {
       var cleanPayload = window.ProfileSchema.sanitize(profileData);
       var validation = window.ProfileSchema.validate(cleanPayload);
       if (!validation.valid) {
-        var msg = 'Profile data invalid: ' + validation.errors.slice(0, 3).join('; ');
-        showToast('Could not save profile. Please try again.', 'error');
+        var msg = validation.errors.slice(0, 2).join(' · ');
+        showToast(msg || 'Invalid profile data. Please check your inputs.', 'error');
         throw new Error(msg);
       }
       profileData = cleanPayload;
     }
     var outgoing = normalizeProfileForSave(profileData, Date.now());
     var sanitizedOutgoing = sanitizeProfilePayload(outgoing);
+    delete sanitizedOutgoing._profileUpdatedAt;
     if (!window.SpopeerAPI || typeof window.SpopeerAPI.updateProfile !== 'function') {
       throw new Error('Profile API is unavailable.');
     }

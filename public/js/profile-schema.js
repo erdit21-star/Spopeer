@@ -45,6 +45,20 @@
     'yearsOfCoaching', 'height', 'weight', 'chest', 'waist', 'hips'
   ];
 
+  // Per-field numeric ranges [min, max]
+  var NUMERIC_RANGES = {
+    height: [0, 300],          // cm
+    weight: [0, 700],          // kg
+    chest: [0, 300],           // cm
+    waist: [0, 300],           // cm
+    hips: [0, 300],            // cm
+    experience: [0, 100],      // years
+    sportsYears: [0, 100],
+    profExperience: [0, 100],
+    yearsOfExperience: [0, 100],
+    yearsOfCoaching: [0, 100]
+  };
+
   // Fields that must be booleans when present
   var BOOL_FIELDS = ['privacy_public'];
 
@@ -104,11 +118,15 @@
       }
 
       if (NUMERIC_FIELDS.indexOf(key) !== -1) {
-        var num = Number(val);
+        var numRaw = typeof val === 'string' ? val.replace(/[^0-9.\-]/g, '') : val;
+        var num = Number(numRaw);
         if (Number.isNaN(num)) {
-          errors.push('Field "' + key + '" must be a number.');
-        } else if (num < 0 || num > 200) {
-          errors.push('Field "' + key + '" value ' + num + ' is out of range (0-200).');
+          errors.push('Field "' + key + '" must be a number (received: "' + val + '").');
+        } else {
+          var range = NUMERIC_RANGES[key] || [0, 9999];
+          if (num < range[0] || num > range[1]) {
+            errors.push('"' + key + '" value ' + num + ' is out of range (' + range[0] + '–' + range[1] + ').');
+          }
         }
       }
 
