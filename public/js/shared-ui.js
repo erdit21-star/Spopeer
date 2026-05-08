@@ -76,7 +76,7 @@
       case 'privacy':
         return buildAppUrl('pages/legal/privacy.html');
       case 'connections':
-        return buildAppUrl('pages/messaging/inbox.html');
+        return buildAppUrl('connections.html');
       case 'library':
         return buildAppUrl('pages/library/index.html');
       case 'events':

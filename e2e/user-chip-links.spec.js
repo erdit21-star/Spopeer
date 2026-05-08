@@ -29,7 +29,7 @@ const actionExpectations = {
   'account-settings': '/pages/dashboard/settings.html',
   'notifications': '/pages/dashboard/notifications.html',
   'privacy': '/pages/legal/privacy.html',
-  'connections': '/pages/messaging/inbox.html',
+  'connections': '/connections.html',
   'library': '/pages/library/index.html',
   'events': '/pages/events/event.html',
   'help': '/pages/company/help-center.html',

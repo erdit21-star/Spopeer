@@ -109,7 +109,7 @@
       case 'account-settings': _spa('settings'); break;
       case 'notifications': _spa('notifications'); break;
       case 'privacy': window.location.href = '/pages/legal/privacy.html'; break;
-      case 'connections': _spa('messages'); break;
+      case 'connections': window.location.href = '/connections.html'; break;
       case 'library': _spa('library'); break;
       case 'media-vault': _spa('library'); break;
       case 'events': _spa('events'); break;

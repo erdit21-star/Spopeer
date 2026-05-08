@@ -64,7 +64,7 @@
     var path = normalizePath(pathname);
 
     if (path === '/feed.html' || path === '/' || path === '/index.html') return 'home';
-    if (path.indexOf('/pages/search/') === 0) return 'search';
+    if (path === '/search.html' || path.indexOf('/pages/search/') === 0) return 'search';
     if (path === '/articles.html' || path.indexOf('/pages/company/blog') === 0) return 'articles';
     if (path.indexOf('/pages/marketplace/') === 0) return 'marketplace';
     if (path.indexOf('/pages/messaging/') === 0) return 'messages';
