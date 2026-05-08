@@ -1,4 +1,4 @@
-// Updated
+﻿// Updated
 (function () {
   'use strict';
 
@@ -48,13 +48,13 @@
     }
 
     button.addEventListener('click', function () {
-      var confirmed = window.confirm('Deactivate your account? Your profile will be hidden until you sign in again.');
+      var confirmed = window.confirm('Deactivate your account? Your profile will be hidden until you log in again.');
       if (!confirmed) {
         return;
       }
       localStorage.setItem('spopeer_account_status', 'deactivated');
       if (status) {
-        status.textContent = 'Account marked as deactivated locally. Sign in again to reactivate it.';
+        status.textContent = 'Account marked as deactivated locally. Log in again to reactivate it.';
         status.hidden = false;
       }
     });

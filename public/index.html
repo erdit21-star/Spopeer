@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -693,7 +693,7 @@ footer{
 
     <div class="nav-ctas">
       <button type="button" class="btn btn-ghost" onclick="openAuth('login')">Log in</button>
-      <button type="button" class="btn btn-solid" onclick="openAuth('signup')">Sign up free</button>
+      <button type="button" class="btn btn-solid" onclick="openAuth('signup')">Create account free</button>
     </div>
 
     <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
@@ -706,7 +706,7 @@ footer{
     <a class="nav-link" href="#how-it-works">How It Works</a>
     <div style="height:8px"></div>
     <button type="button" class="btn btn-ghost" onclick="openAuth('login')">Log in</button>
-    <button type="button" class="btn btn-solid" onclick="openAuth('signup')">Sign up free</button>
+    <button type="button" class="btn btn-solid" onclick="openAuth('signup')">Create account free</button>
   </div>
 </nav>
 
@@ -923,7 +923,7 @@ footer{
     <div class="step">
       <div class="step-num">01</div>
       <h3>Create your profile</h3>
-      <p>Sign up, choose your role — athlete, coach, club, or professional — and set up your sports identity with your bio, sport, and photo.</p>
+      <p>Create account, choose your role — athlete, coach, club, or professional — and set up your sports identity with your bio, sport, and photo.</p>
     </div>
     <div class="step">
       <div class="step-num">02</div>
@@ -973,7 +973,7 @@ footer{
     <div class="footer-links">
       <div class="footer-col">
         <h4>Platform</h4>
-        <button type="button" onclick="openAuth('signup')">Sign up</button>
+        <button type="button" onclick="openAuth('signup')">Create account</button>
         <button type="button" onclick="openAuth('login')">Log in</button>
         <a href="pages/search/search.html">Search</a>
       </div>
@@ -1010,7 +1010,7 @@ function toggleMenu(){
 </script>
 
 <!-- ── AUTH MODAL ── -->
-<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in or Sign up" aria-hidden="true">
+<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Log in or Create account" aria-hidden="true">
   <button class="auth-close-btn" onclick="closeAuth()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
   <div class="auth-box">
     <div class="auth-sheet-handle" aria-hidden="true"></div>
@@ -1045,7 +1045,7 @@ function toggleMenu(){
     <div class="auth-right">
       <!-- LOGIN PANEL -->
       <div class="auth-panel active" id="loginPanel">
-        <p class="auth-panel-title">Sign In</p>
+        <p class="auth-panel-title">Log In</p>
         <p class="auth-panel-sub">Log in to your sports network</p>
         <div id="authLoginSuccess" class="auth-success"><i class="fa-solid fa-check-circle" style="margin-right:6px"></i>Email verified! You can now log in.</div>
         <button type="button" id="modalLoginGoogleBtn" class="auth-google-btn">
@@ -1076,7 +1076,7 @@ function toggleMenu(){
             <a href="#" class="forgot-link" onclick="switchAuth('forgot'); return false;">Forgot password?</a>
           </div>
           <button type="submit" class="auth-submit-btn" id="modalLoginBtn">Log In</button>
-          <p class="auth-switch-row">Don't have an account? <a href="#" onclick="switchAuth('signup'); return false;">Sign up free</a></p>
+          <p class="auth-switch-row">Don't have an account? <a href="#" onclick="switchAuth('signup'); return false;">Create account free</a></p>
         </form>
       </div>
 
@@ -1091,9 +1091,9 @@ function toggleMenu(){
             <path fill="#FBBC05" d="M10.6 28.1A14.7 14.7 0 0 1 9.5 24c0-1.4.2-2.8.6-4.1l-6.9-5.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l8-6.6z"/>
             <path fill="#34A853" d="M24 47c5.4 0 9.9-1.8 13.2-4.8l-7.5-5.8c-1.8 1.2-4.2 2-5.7 2-6.4 0-11.8-4.3-13.7-10.1l-8 6.6C7 41.3 14.8 47 24 47z"/>
           </svg>
-          Sign up with Google
+          Create account with Google
         </button>
-        <div class="auth-divider"><span>or sign up with email</span></div>
+        <div class="auth-divider"><span>or create account with email</span></div>
         <form class="auth-form" id="modalSignupForm" novalidate>
           <div id="modalSignupError" class="auth-error"></div>
           <div class="form-row-2">
@@ -1148,7 +1148,7 @@ function toggleMenu(){
             <input id="modalSecondarySports" type="text" placeholder="e.g. Tennis, Swimming" />
           </div>
           <button type="submit" class="auth-submit-btn" id="modalSignupBtn">Create Account</button>
-          <p class="auth-switch-row">Already have an account? <a href="#" onclick="switchAuth('login'); return false;">Sign in</a></p>
+          <p class="auth-switch-row">Already have an account? <a href="#" onclick="switchAuth('login'); return false;">Log in</a></p>
         </form>
       </div>
 
@@ -1164,7 +1164,7 @@ function toggleMenu(){
             <input id="modalForgotEmail" type="email" placeholder="you@email.com" required autocomplete="email" />
           </div>
           <button type="submit" class="auth-submit-btn" id="modalForgotBtn">Send Reset Link</button>
-          <p class="auth-switch-row"><a href="#" onclick="switchAuth('login'); return false;"><i class="fa-solid fa-arrow-left" style="font-size:11px;margin-right:4px"></i>Back to Sign In</a></p>
+          <p class="auth-switch-row"><a href="#" onclick="switchAuth('login'); return false;"><i class="fa-solid fa-arrow-left" style="font-size:11px;margin-right:4px"></i>Back to Log In</a></p>
         </form>
       </div>
 

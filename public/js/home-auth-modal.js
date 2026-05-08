@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   'use strict';
 
   var GOOGLE_CLIENT_ID = '527976493846-99g74l8eqmiui9fro2e1fgf19c27qjii.apps.googleusercontent.com';
@@ -338,7 +338,7 @@
         } else {
           errorBox.style.background = '#dcfce7';
           errorBox.style.color = '#166534';
-          errorBox.textContent = 'Account created! Please verify your email, then sign in.';
+          errorBox.textContent = 'Account created! Please verify your email, then log in.';
           errorBox.style.display = 'block';
           signupForm.reset();
         }

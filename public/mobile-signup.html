@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sign Up - Spopeer</title>
+<title>Create Account - Spopeer</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,7 +80,7 @@
     </div>
 
     <button id="signupBtn" class="ms-btn-primary">Create Account</button>
-    <p class="ms-footer">Already have an account? <a href="/mobile-login.html">Sign In</a></p>
+    <p class="ms-footer">Already have an account? <a href="/mobile-login.html">Log In</a></p>
     <a href="/mobile.html" class="ms-back-home">Back to Home</a>
   </div>
 </div>
@@ -254,7 +254,7 @@ document.getElementById('signupBtn').onclick = async function() {
       window.location.assign('/mobile.html');
       return;
     }
-    setMessage('msSuccess', 'Account created. Please check your email to verify, then sign in.');
+    setMessage('msSuccess', 'Account created. Please check your email to verify, then log in.');
   } catch (e) {
     setMessage('signupError', (e && e.message) || 'Signup failed.');
   }

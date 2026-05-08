@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign Up — Spopeer</title>
+  <title>Create Account — Spopeer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -31,7 +31,7 @@
       </ul>
       <div class="auth-row">
         <a href="/pages/auth/login.html" class="btn-outline">Log In</a>
-        <a href="/pages/auth/signup.html" class="btn-fill">Sign Up Free</a>
+        <a href="/pages/auth/signup.html" class="btn-fill">Create Account Free</a>
       </div>
     </nav>
   </header>
@@ -62,11 +62,11 @@
             <path fill="#FBBC05" d="M10.6 28.1A14.7 14.7 0 0 1 9.5 24c0-1.4.2-2.8.6-4.1l-6.9-5.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l8-6.6z"/>
             <path fill="#34A853" d="M24 47c5.4 0 9.9-1.8 13.2-4.8l-7.5-5.8c-1.8 1.2-4.2 2-5.7 2-6.4 0-11.8-4.3-13.7-10.1l-8 6.6C7 41.3 14.8 47 24 47z"/>
           </svg>
-          Sign up with Google
+          Create account with Google
         </button>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
           <div style="flex:1;height:1px;background:#e8edf3;"></div>
-          <span style="color:#94a3b8;font-size:13px;font-weight:500;white-space:nowrap;">or sign up with email</span>
+          <span style="color:#94a3b8;font-size:13px;font-weight:500;white-space:nowrap;">or create account with email</span>
           <div style="flex:1;height:1px;background:#e8edf3;"></div>
         </div>
       </div>
@@ -305,7 +305,7 @@
             if (errorBox) {
               errorBox.style.background = '#dcfce7';
               errorBox.style.color = '#166534';
-              errorBox.textContent = 'Account created! Please verify your email to secure your account, then sign in.';
+              errorBox.textContent = 'Account created! Please verify your email to secure your account, then log in.';
               errorBox.style.display = 'block';
             }
             document.getElementById('signupForm').reset();

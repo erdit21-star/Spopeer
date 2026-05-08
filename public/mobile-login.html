@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sign In - Spopeer</title>
+<title>Log In - Spopeer</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,19 +68,19 @@
     <div class="ml-hero-ring"></div>
     <div class="ml-logo"><i class="fa-solid fa-bolt"></i></div>
     <h1>Welcome back</h1>
-    <p>Sign in to your Spopeer account<br>and connect with the sports world</p>
+    <p>Log in to your Spopeer account<br>and connect with the sports world</p>
   </div>
 
   <!-- Form -->
   <div class="ml-body">
-    <h2>Sign In</h2>
+    <h2>Log In</h2>
 
     <div id="loginError"></div>
 
     <!-- Google button FIRST — prominent -->
     <div id="loginGoogleButton" class="ml-google-host" aria-label="Continue with Google"></div>
 
-    <div class="ml-divider">or sign in with email</div>
+    <div class="ml-divider">or log in with email</div>
 
     <div class="ml-field">
       <i class="fa-regular fa-envelope"></i>
@@ -93,9 +93,9 @@
 
     <a href="/mobile-forgot-password.html" class="ml-forgot">Forgot password?</a>
 
-    <button id="loginBtn" class="ml-btn-primary">Sign In</button>
+    <button id="loginBtn" class="ml-btn-primary">Log In</button>
 
-    <p class="ml-footer">Don't have an account? <a href="/mobile-signup.html">Sign Up</a></p>
+    <p class="ml-footer">Don't have an account? <a href="/mobile-signup.html">Create Account</a></p>
     <a href="/mobile.html" class="ml-back-home">Back to Home</a>
   </div>
 
@@ -237,7 +237,7 @@ function initGoogleLoginButton() {
       if (ok || attempts > 80) {
         window.clearInterval(timer);
         if (!ok && attempts > 80) {
-          errBox.textContent = 'Google sign-in is unavailable on this browser. You can still sign in with email.';
+          errBox.textContent = 'Google sign-in is unavailable on this browser. You can still log in with email.';
           errBox.style.display = 'block';
         }
       }
