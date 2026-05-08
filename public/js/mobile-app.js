@@ -349,6 +349,20 @@
     return a.displayName || [a.firstName, a.lastName].filter(Boolean).join(' ') || 'Spopeer member';
   }
 
+  function postAuthorIdentifier(post) {
+    var author = post && (post.author || post.user) || {};
+    return (post && (post.authorId || post.userId || post.authorEmail || post.userEmail || author.id || author.userId || author.email || author.userEmail)) || '';
+  }
+
+  function openPostAuthorProfile(post) {
+    var identifier = postAuthorIdentifier(post);
+    if (!identifier) return;
+    app.selectedProfile = post.author || post.user || null;
+    app.selectedProfileIdentifier = identifier;
+    app.route = 'public-profile';
+    render();
+  }
+
   function renderPostCard(post) {
     const card = document.createElement('article');
     card.className = 'spm-media-card';
@@ -398,7 +412,7 @@
       <div class="spm-feed-head">
         <div class="spm-mini-avatar"></div>
         <div class="spm-feed-title-wrap">
-          <strong>${html(authorName(post))}</strong>
+          <strong class="spm-feed-author-link" data-author-profile="1">${html(authorName(post))}</strong>
           <small>${html(formatTime(post.createdAt || post.created_at))}</small>
         </div>
       </div>
@@ -412,6 +426,13 @@
 
     var likeButton = card.querySelector('[data-like]');
     var commentButton = card.querySelector('[data-comments]');
+    var authorButton = card.querySelector('[data-author-profile]');
+
+    if (authorButton) {
+      authorButton.addEventListener('click', function () {
+        openPostAuthorProfile(post);
+      });
+    }
 
     likeButton.addEventListener('click', async function () {
       try {
