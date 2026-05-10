@@ -27,6 +27,17 @@ function isRateLimited(userId) {
 // Max message content length
 const MAX_MESSAGE_LENGTH = 5000;
 
+function readCookieValue(cookieHeader, name) {
+  const source = String(cookieHeader || '');
+  if (!source) return '';
+  const parts = source.split(';');
+  for (const part of parts) {
+    const [k, ...rest] = part.trim().split('=');
+    if (k === name) return decodeURIComponent(rest.join('='));
+  }
+  return '';
+}
+
 function initSocket(httpServer) {
   const allowedOrigins = [
     process.env.FRONTEND_URL,
@@ -47,7 +58,9 @@ function initSocket(httpServer) {
 
   // Authenticate socket connections
   io.use((socket, next) => {
-    const token = socket.handshake.auth.token;
+    const token = socket.handshake.auth && socket.handshake.auth.token
+      ? socket.handshake.auth.token
+      : readCookieValue(socket.handshake.headers && socket.handshake.headers.cookie, 'access_token');
     if (!token) return next(new Error('No token'));
     try {
       socket.user = jwt.verify(token, process.env.JWT_SECRET);
@@ -137,6 +150,9 @@ function initSocket(httpServer) {
         // Deliver to receiver if online
         io.to(`user:${receiverId}`).emit('new_message', {
           id: msg.id,
+          conversationId: conversation.id,
+          fromId: userId,
+          toId: receiverId,
           senderId: userId,
           content: trimmedContent,
           timestamp: msg.createdAt

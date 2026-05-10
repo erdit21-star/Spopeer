@@ -510,6 +510,20 @@
         body: JSON.stringify({ text: text })
       });
     },
+    markConversationRead: function (conversationId) {
+      return request('/api/messages/conversations/' + encodeURIComponent(conversationId) + '/read', {
+        method: 'PATCH'
+      });
+    },
+    uploadChatAttachment: function (file) {
+      var form = new FormData();
+      form.append('file', file);
+      form.append('caption', 'chat-attachment');
+      return request('/api/media/upload', {
+        method: 'POST',
+        body: form
+      });
+    },
     getUnreadMessageCount: function () {
       return request('/api/messages/unread-count');
     },

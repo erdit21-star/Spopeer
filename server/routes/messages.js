@@ -10,6 +10,7 @@ const {
   sequelize
 } = require('../models');
 const { findOrCreateDirectConversation } = require('../utils/conversations');
+const { notifyUser } = require('../services/socket');
 const { authenticate } = require('../middleware/auth');
 const { sanitizeString } = require('../utils/validation');
 const { createNotification } = require('../services/notifications');
@@ -35,6 +36,7 @@ function formatMessage(message) {
     receiverId: message.receiverId,
     body: message.content || message.body,
     text: message.content || message.body,
+    read: message.read,
     readAt: message.readAt,
     createdAt: message.createdAt,
     updatedAt: message.updatedAt
@@ -233,6 +235,17 @@ router.post('/conversations/:id/messages', async (req, res) => {
       readAt: null
     });
 
+    if (receiver && receiver.userId) {
+      notifyUser(receiver.userId, 'new_message', {
+        id: message.id,
+        conversationId,
+        fromId: req.userId,
+        toId: receiver.userId,
+        content: message.content,
+        timestamp: message.createdAt
+      });
+    }
+
     await createNotification({
       recipientId: receiver ? receiver.userId : null,
       senderId: req.userId,
@@ -245,6 +258,53 @@ router.post('/conversations/:id/messages', async (req, res) => {
   } catch (error) {
     logApiError('send_message', req, error);
     return fail(res, 500, 'SERVER_ERROR', 'Failed to send message.');
+  }
+});
+
+// PATCH /api/messages/conversations/:id/read
+router.patch('/conversations/:id/read', async (req, res) => {
+  try {
+    const conversationId = Number(req.params.id);
+    if (!conversationId) {
+      return fail(res, 400, 'VALIDATION', 'Invalid conversation id.');
+    }
+
+    const allowed = await isConversationParticipant(conversationId, req.userId);
+    if (!allowed) {
+      return fail(res, 403, 'FORBIDDEN', 'You are not a participant in this conversation.');
+    }
+
+    const participants = await ConversationParticipant.findAll({
+      where: { conversationId },
+      attributes: ['userId']
+    });
+    const other = participants.find((p) => p.userId !== req.userId);
+    const now = new Date();
+
+    const [updated] = await Message.update(
+      { read: true, readAt: now },
+      {
+        where: {
+          conversationId,
+          receiverId: req.userId,
+          senderId: other ? other.userId : { [Op.ne]: req.userId },
+          [Op.or]: [{ readAt: null }, { read: false }]
+        }
+      }
+    );
+
+    if (other && other.userId) {
+      notifyUser(other.userId, 'conversation_read', {
+        conversationId,
+        readerId: req.userId,
+        readAt: now.toISOString()
+      });
+    }
+
+    return ok(res, { updated });
+  } catch (error) {
+    logApiError('mark_conversation_read', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to mark conversation as read.');
   }
 });
 
@@ -294,6 +354,15 @@ router.post('/send', async (req, res) => {
     }, { transaction });
 
     await transaction.commit();
+
+    notifyUser(receiver.id, 'new_message', {
+      id: message.id,
+      conversationId: conversation.id,
+      fromId: req.userId,
+      toId: receiver.id,
+      content: message.content,
+      timestamp: message.createdAt
+    });
 
     await createNotification({
       recipientId: receiver.id,
@@ -348,7 +417,7 @@ router.post('/mark-read', async (req, res) => {
       return fail(res, 400, 'VALIDATION', 'fromId is required.');
     }
 
-    await Message.update(
+    const [updated] = await Message.update(
       { read: true, readAt: new Date() },
       {
         where: {
@@ -358,6 +427,11 @@ router.post('/mark-read', async (req, res) => {
         }
       }
     );
+
+    notifyUser(fromId, 'messages_read', {
+      readerId: req.userId,
+      updated
+    });
 
     return ok(res, { message: 'Messages marked as read.' });
   } catch (error) {

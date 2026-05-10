@@ -372,7 +372,8 @@
       <div class="compose-area">
         <div class="compose-inner">
           <div class="compose-tools">
-            <button class="tool-btn" title="Attach file"><i class="fa-solid fa-paperclip"></i></button>
+            <button class="tool-btn" id="attachFileBtn" title="Attach file"><i class="fa-solid fa-paperclip"></i></button>
+            <input type="file" id="chatAttachmentInput" style="display:none" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip,.rar"/>
             <button class="tool-btn" title="Add emoji"><i class="fa-regular fa-face-smile"></i></button>
           </div>
           <textarea id="messageText" rows="1" placeholder="Write a message…"></textarea>
@@ -404,6 +405,7 @@
   </div>
 </div>
 
+<script src="/socket.io/socket.io.js"></script>
 <script src="../../js/profile-sync-service.js"></script>
 <script>
 (function(){
@@ -426,6 +428,9 @@
   let allConvs=[];
   let messagingEnabled=true;
   let typingTimer=null;
+  let stopTypingTimer=null;
+  let socket=null;
+  let currentTypingUserId='';
   const CHAT_THEME_STORAGE_KEY='spopeer_chat_theme';
   const BACKEND_DISABLED_MSG='Messaging will be available after backend activation.';
 
@@ -467,6 +472,44 @@
       return data.data;
     }
     return data;
+  }
+
+  function parseAttachmentPayload(content){
+    var text = String(content || '').trim();
+    if (!text.startsWith('ATTACHMENT::')) return null;
+    try {
+      return JSON.parse(text.slice('ATTACHMENT::'.length));
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  function buildAttachmentMessage(payload){
+    return 'ATTACHMENT::' + JSON.stringify(payload || {});
+  }
+
+  function renderBubbleContent(content){
+    var attachment = parseAttachmentPayload(content);
+    if (!attachment || !attachment.url) {
+      return escHtml(content || '');
+    }
+
+    var safeUrl = escHtml(String(attachment.url));
+    var safeName = escHtml(String(attachment.name || 'Attachment'));
+    var safeMime = String(attachment.mimeType || '').toLowerCase();
+    if (safeMime.indexOf('image/') === 0) {
+      return '<div><img src="' + safeUrl + '" alt="Attachment" style="max-width:220px;border-radius:10px;display:block;margin-bottom:6px"/><a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:inherit;text-decoration:underline">' + safeName + '</a></div>';
+    }
+    return '<a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer" style="font-size:13px;color:inherit;text-decoration:underline"><i class="fa-solid fa-paperclip" style="margin-right:6px"></i>' + safeName + '</a>';
+  }
+
+  async function markCurrentConversationRead(){
+    if(!currentConversationId) return;
+    try {
+      await window.SpopeerAPI.markConversationRead(currentConversationId);
+    } catch (e) {
+      console.warn('markConversationRead failed:', e && e.message ? e.message : e);
+    }
   }
 
   function applyChatTheme(theme){
@@ -618,6 +661,8 @@
       if(currentConversationId){
         const data = parsePayload(await window.SpopeerAPI.getConversation(currentConversationId));
         renderMessages((data&&data.messages)||[],String(me));
+        await markCurrentConversationRead();
+        document.getElementById('typingIndicator').style.display='none';
         return;
       }
 
@@ -626,6 +671,8 @@
         const rawFallback=await rFallback.json();
         const dataFallback=parsePayload(rawFallback)||[];
         renderMessages(dataFallback,String(me));
+        await markCurrentConversationRead();
+        document.getElementById('typingIndicator').style.display='none';
         return;
       }
     }catch(e){
@@ -660,11 +707,13 @@
       const row=document.createElement('div');
       row.className='msg-row '+(isMe?'mine':'theirs');
       const unread = m.read === 0 || m.read === false;
-      const meta=new Date(createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+(unread&&!isMe?' · <span class="unread-mark">unread</span>':'');
+      const readMeta = isMe ? (unread ? ' · sent' : ' · read') : (unread ? ' · <span class="unread-mark">unread</span>' : '');
+      const meta=new Date(createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + readMeta;
+      const bubbleHtml = renderBubbleContent(content || '');
       if(!isMe){
-        row.innerHTML=`<div class="msg-av-sm">${initFor(sender)}</div><div><div class="bubble">${escHtml(content||'')}</div><div class="bubble-meta">${meta}</div></div>`;
+        row.innerHTML=`<div class="msg-av-sm">${initFor(sender)}</div><div><div class="bubble">${bubbleHtml}</div><div class="bubble-meta">${meta}</div></div>`;
       }else{
-        row.innerHTML=`<div><div class="bubble">${escHtml(content||'')}</div><div class="bubble-meta">${meta}</div></div>`;
+        row.innerHTML=`<div><div class="bubble">${bubbleHtml}</div><div class="bubble-meta">${meta}</div></div>`;
       }
       box.appendChild(row);
     });
@@ -672,9 +721,10 @@
   }
 
   /* ── Send message ── */
-  async function sendMessage(){
+  async function sendMessage(forcedText){
     if(!currentConversation||!messagingEnabled)return;
-    const text=document.getElementById('messageText').value.trim();
+    const input = document.getElementById('messageText');
+    const text=(forcedText || input.value || '').trim();
     if(!text)return;
 
     try{
@@ -685,9 +735,15 @@
 
       if(currentConversationId){
         await window.SpopeerAPI.sendConversationMessage(currentConversationId, text);
-        document.getElementById('messageText').value='';
-        document.getElementById('sendBtn').disabled=true;
+        if(!forcedText){
+          input.value='';
+          document.getElementById('sendBtn').disabled=true;
+        }
+        if(socket){
+          socket.emit('stop_typing', { receiverId: Number(currentConversation) });
+        }
         openConversation(currentConversation,currentConversationId);
+        loadConversations();
         return;
       }
 
@@ -698,19 +754,53 @@
     if (window.SpopeerToast) window.SpopeerToast.error('Failed to send message. Please try again.');
   }
 
-  document.getElementById('sendBtn').addEventListener('click',sendMessage);
+  document.getElementById('sendBtn').addEventListener('click',function(){ sendMessage(); });
   document.getElementById('messageText').addEventListener('keydown',function(e){
     if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
   });
   document.getElementById('messageText').addEventListener('input',function(){
     document.getElementById('sendBtn').disabled=!messagingEnabled||!this.value.trim();
     this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';
-    var indicator=document.getElementById('typingIndicator');
-    if(indicator){
-      indicator.textContent='Typing…';
-      indicator.style.display='block';
-      clearTimeout(typingTimer);
-      typingTimer=setTimeout(function(){indicator.style.display='none';}, 650);
+    if(!socket || !currentConversation) return;
+    socket.emit('typing', { receiverId: Number(currentConversation) });
+    clearTimeout(stopTypingTimer);
+    stopTypingTimer=setTimeout(function(){
+      if(socket && currentConversation){
+        socket.emit('stop_typing', { receiverId: Number(currentConversation) });
+      }
+    }, 800);
+  });
+
+  document.getElementById('attachFileBtn').addEventListener('click', function(e){
+    e.preventDefault();
+    if(!currentConversation){
+      if (window.SpopeerToast) window.SpopeerToast.info('Select a conversation first.');
+      return;
+    }
+    document.getElementById('chatAttachmentInput').click();
+  });
+
+  document.getElementById('chatAttachmentInput').addEventListener('change', async function(){
+    var file = this.files && this.files[0];
+    if(!file) return;
+    try {
+      var uploadedRaw = await window.SpopeerAPI.uploadChatAttachment(file);
+      var uploaded = parsePayload(uploadedRaw) || uploadedRaw || {};
+      var payload = {
+        url: uploaded.url || (uploaded.payload && uploaded.payload.url),
+        name: file.name,
+        mimeType: file.type || (uploaded.payload && uploaded.payload.mimeType) || ''
+      };
+      if(!payload.url){
+        throw new Error('Attachment upload failed.');
+      }
+      await sendMessage(buildAttachmentMessage(payload));
+      if (window.SpopeerToast) window.SpopeerToast.success('Attachment sent.');
+    } catch (e) {
+      console.error('Attachment upload/send failed:', e);
+      if (window.SpopeerToast) window.SpopeerToast.error('Failed to send attachment.');
+    } finally {
+      this.value = '';
     }
   });
 
@@ -827,19 +917,52 @@
   /* ── View profile helper ── */
   window.viewProfile=function(){if(currentConversation)window.location.href='../../pages/profiles/public-profile.html?userId='+encodeURIComponent(currentConversation);};
 
-  /* ── Socket.io realtime ── */
-  if(window.io){
+  function connectRealtime(){
+    if(!window.io) return;
     try{
-      const socket=io();
-      const me = getMe();
-      if(me)socket.emit('register',String(me));
+      socket = io({ withCredentials: true, auth: {} });
+      socket.on('connect_error', function(err){
+        console.warn('Socket connect error:', err && err.message ? err.message : err);
+      });
       socket.on('new_message',function(msg){
         loadConversations();
-        if(currentConversation&&(String(msg.fromId)===currentConversation||String(msg.toId)===currentConversation)){
-          openConversation(currentConversation);
+        var other = String(msg && (msg.fromId || msg.senderId || msg.toId) || '');
+        if(currentConversation && other && currentConversation===other){
+          openConversation(currentConversation, currentConversationId);
         }
       });
-    }catch(e){}
+      socket.on('user_typing', function(payload){
+        var senderId = String(payload && payload.userId || '');
+        if(!senderId || !currentConversation || senderId !== String(currentConversation)) return;
+        currentTypingUserId = senderId;
+        var indicator=document.getElementById('typingIndicator');
+        indicator.textContent='Typing…';
+        indicator.style.display='block';
+        clearTimeout(typingTimer);
+        typingTimer=setTimeout(function(){
+          if(currentTypingUserId===senderId){
+            indicator.style.display='none';
+          }
+        }, 1200);
+      });
+      socket.on('user_stop_typing', function(payload){
+        var senderId = String(payload && payload.userId || '');
+        if(senderId && senderId===currentTypingUserId){
+          document.getElementById('typingIndicator').style.display='none';
+        }
+      });
+      socket.on('conversation_read', function(payload){
+        if(!payload || String(payload.conversationId||'') !== String(currentConversationId||'')) return;
+        openConversation(currentConversation, currentConversationId);
+      });
+      socket.on('messages_read', function(){
+        if(currentConversation){
+          openConversation(currentConversation, currentConversationId);
+        }
+      });
+    }catch(e){
+      console.warn('Socket init failed:', e && e.message ? e.message : e);
+    }
   }
 
   /* ── Escape HTML ── */
@@ -894,6 +1017,7 @@
   }
 
   initChatTheme();
+  connectRealtime();
 
   /* ── Init ── */
   loadConversations().then(openConversationFromUrl).catch(function () {
