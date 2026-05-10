@@ -658,7 +658,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         var targetName = (payload && payload.firstName && payload.lastName) 
           ? payload.firstName + ' ' + payload.lastName
           : (payload && payload.displayName) || 'User';
-        var messagesUrl = window.location.origin + '/messages.html?userId=' + encodeURIComponent(targetUserId);
+        var messagesUrl = window.location.origin + '/pages/messaging/inbox.html?userId=' + encodeURIComponent(targetUserId);
         window.location.href = messagesUrl;
       });
     }
