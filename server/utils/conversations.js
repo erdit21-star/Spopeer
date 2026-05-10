@@ -1,16 +1,18 @@
 /**
  * Shared conversation utilities
  */
+const { Sequelize } = require('sequelize');
 const { Conversation, ConversationParticipant, sequelize } = require('../models');
 
-/**
- * Find existing direct conversation between two users, or create one
- * @param {number} userIdA
- * @param {number} userIdB
- * @param {Transaction} transaction - optional Sequelize transaction
- * @returns {Promise<Conversation>}
- */
-async function findOrCreateDirectConversation(userIdA, userIdB, transaction) {
+async function findOrCreateDirectConversationInternal(userIdA, userIdB, transaction) {
+  const leftId = Math.min(Number(userIdA), Number(userIdB));
+  const rightId = Math.max(Number(userIdA), Number(userIdB));
+
+  await sequelize.query('SELECT pg_advisory_xact_lock(:leftId, :rightId)', {
+    replacements: { leftId, rightId },
+    transaction
+  });
+
   const [rows] = await sequelize.query(
     `
       SELECT cp."conversationId"
@@ -40,6 +42,26 @@ async function findOrCreateDirectConversation(userIdA, userIdB, transaction) {
     { transaction }
   );
   return conversation;
+}
+
+/**
+ * Find existing direct conversation between two users, or create one
+ * @param {number} userIdA
+ * @param {number} userIdB
+ * @param {Transaction} transaction - optional Sequelize transaction
+ * @returns {Promise<Conversation>}
+ */
+async function findOrCreateDirectConversation(userIdA, userIdB, transaction) {
+  if (transaction) {
+    return findOrCreateDirectConversationInternal(userIdA, userIdB, transaction);
+  }
+
+  return sequelize.transaction(
+    {
+      isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
+    },
+    async (tx) => findOrCreateDirectConversationInternal(userIdA, userIdB, tx)
+  );
 }
 
 module.exports = { findOrCreateDirectConversation };

@@ -42,6 +42,10 @@ module.exports = (sequelize) => {
     readAt: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   }, {
     tableName: 'messages',

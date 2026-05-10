@@ -501,13 +501,19 @@
     listConversations: function () {
       return request('/api/messages/conversations');
     },
-    getConversation: function (conversationId) {
-      return request('/api/messages/conversations/' + encodeURIComponent(conversationId));
+    getConversation: function (conversationId, params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request('/api/messages/conversations/' + encodeURIComponent(conversationId) + qs);
     },
     sendConversationMessage: function (conversationId, text) {
       return request('/api/messages/conversations/' + encodeURIComponent(conversationId) + '/messages', {
         method: 'POST',
         body: JSON.stringify({ text: text })
+      });
+    },
+    deleteConversationMessage: function (messageId) {
+      return request('/api/messages/' + encodeURIComponent(messageId), {
+        method: 'DELETE'
       });
     },
     markConversationRead: function (conversationId) {

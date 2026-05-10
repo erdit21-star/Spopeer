@@ -19,7 +19,14 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'conversation_participants',
-    timestamps: true
+    timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ['conversationId', 'userId'],
+        name: 'conversation_participants_conversation_user_unique'
+      }
+    ]
   });
 
   return ConversationParticipant;

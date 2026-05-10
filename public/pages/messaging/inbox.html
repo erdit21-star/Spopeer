@@ -405,6 +405,10 @@
   </div>
 </div>
 
+<div id="messageContextMenu" style="display:none;position:fixed;z-index:1200;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 24px rgba(0,0,0,0.15);overflow:hidden;min-width:160px;">
+  <button id="deleteMessageAction" style="width:100%;padding:10px 12px;border:none;background:transparent;text-align:left;font-size:13px;color:#b91c1c;cursor:pointer;">Delete message</button>
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="../../js/profile-sync-service.js"></script>
 <script>
@@ -433,6 +437,11 @@
   let currentTypingUserId='';
   let openConversationSeq=0;
   let sendInFlight=false;
+  let currentMessageList=[];
+  let conversationHasMore=false;
+  let conversationOldestAt='';
+  let loadingOlder=false;
+  let deleteMenuMessageId='';
   const CHAT_THEME_STORAGE_KEY='spopeer_chat_theme';
   const BACKEND_DISABLED_MSG='Messaging will be available after backend activation.';
 
@@ -665,9 +674,12 @@
       }
 
       if(currentConversationId){
-        const data = parsePayload(await window.SpopeerAPI.getConversation(currentConversationId));
+        const data = parsePayload(await window.SpopeerAPI.getConversation(currentConversationId, { limit: 50 }));
         if (seq !== openConversationSeq) return;
-        renderMessages((data&&data.messages)||[],String(me));
+        currentMessageList=(data&&data.messages)||[];
+        conversationHasMore=!!(data&&data.hasMore);
+        conversationOldestAt=(data&&data.oldestAt)?String(data.oldestAt):'';
+        renderMessages(currentMessageList,String(me));
         await markCurrentConversationRead();
         document.getElementById('typingIndicator').style.display='none';
         return;
@@ -675,6 +687,9 @@
     }catch(e){
       console.error('Failed to load conversation:', e);
       const errMsg = (e && e.response && e.response.message) || (e && e.message) || 'Could not open conversation.';
+      currentMessageList=[];
+      conversationHasMore=false;
+      conversationOldestAt='';
       renderMessages([],String(me));
       const box = document.getElementById('messages');
       if(box) box.innerHTML='<div style="flex:1;display:flex;align-items:center;justify-content:center;color:#dc2626;font-size:13px;padding:32px;text-align:center">'+escHtml(errMsg)+' Please try again or use the New Message button.</div>';
@@ -685,78 +700,161 @@
     renderMessages([],String(me));
   }
 
+  async function loadOlderMessages(){
+    if(!currentConversationId || !conversationHasMore || loadingOlder || !conversationOldestAt) return;
+    try {
+      loadingOlder=true;
+      renderMessages(currentMessageList, String(getMe() || ''), true);
+      const box=document.getElementById('messages');
+      const prevHeight=box.scrollHeight;
+      const prevTop=box.scrollTop;
+      const data=parsePayload(await window.SpopeerAPI.getConversation(currentConversationId, {
+        limit: 50,
+        before: conversationOldestAt
+      }));
+      var older=(data&&data.messages)||[];
+      var seen=new Set(currentMessageList.map(function(m){ return String(m.id||''); }));
+      older=older.filter(function(m){
+        var id=String(m.id||'');
+        if(!id) return true;
+        return !seen.has(id);
+      });
+      currentMessageList=older.concat(currentMessageList);
+      conversationHasMore=!!(data&&data.hasMore);
+      conversationOldestAt=(data&&data.oldestAt)?String(data.oldestAt):conversationOldestAt;
+      renderMessages(currentMessageList, String(getMe() || ''), true);
+      box.scrollTop = prevTop + (box.scrollHeight - prevHeight);
+    } catch (e) {
+      console.error('Failed to load older messages:', e);
+      if (window.SpopeerToast) window.SpopeerToast.error('Could not load older messages.');
+    } finally {
+      loadingOlder=false;
+      renderMessages(currentMessageList, String(getMe() || ''), true);
+    }
+  }
+
+  function isDeletedMessage(msg){
+    if (!msg) return false;
+    if (msg.deletedAt) return true;
+    var text = String(msg.body || msg.text || msg.content || '').trim();
+    return text === '[Message deleted]';
+  }
+
+  function renderLoadOlderButton(box){
+    if(!conversationHasMore) return;
+    var wrap=document.createElement('div');
+    wrap.style.display='flex';
+    wrap.style.justifyContent='center';
+    wrap.style.padding='10px 8px 2px';
+    var btn=document.createElement('button');
+    btn.id='loadOlderBtn';
+    btn.type='button';
+    btn.textContent=loadingOlder?'Loading...':'Load older messages';
+    btn.disabled=loadingOlder;
+    btn.style.border='1px solid var(--border)';
+    btn.style.background='var(--white)';
+    btn.style.borderRadius='999px';
+    btn.style.padding='6px 12px';
+    btn.style.fontSize='12px';
+    btn.style.cursor=loadingOlder?'not-allowed':'pointer';
+    wrap.appendChild(btn);
+    box.appendChild(wrap);
+  }
+
+  function createMessageRow(m,myId){
+    const sender = m.senderId || m.fromId || m.sender;
+    const content = m.body || m.text || m.content;
+    const createdAt = m.createdAt || m.timestamp || new Date().toISOString();
+    const isMe=String(sender)===myId||String(sender)===String(myId).split('@')[0];
+    const deleted=isDeletedMessage(m);
+    const row=document.createElement('div');
+    row.className='msg-row '+(isMe?'mine':'theirs');
+    if(m.id) row.dataset.messageId=String(m.id);
+    if(isMe && m.id && !deleted) row.dataset.deletable='1';
+    const unread = m.read === 0 || m.read === false;
+    const readMeta = deleted
+      ? ' · deleted'
+      : (isMe ? (unread ? ' · sent' : ' · read') : (unread ? ' · <span class="unread-mark">unread</span>' : ''));
+    const meta=new Date(createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + readMeta;
+    const bubbleHtml = renderBubbleContent(content || '');
+    const bubbleClass = deleted ? 'bubble deleted-bubble' : 'bubble';
+    if(!isMe){
+      row.innerHTML=`<div class="msg-av-sm">${initFor(sender)}</div><div><div class="${bubbleClass}">${bubbleHtml}</div><div class="bubble-meta">${meta}</div></div>`;
+    }else{
+      row.innerHTML=`<div><div class="${bubbleClass}" title="Right-click for options">${bubbleHtml}</div><div class="bubble-meta">${meta}</div></div>`;
+    }
+    return { row, createdAt };
+  }
+
   /* ── Render messages ── */
-  function renderMessages(msgs,myId){
+  function renderMessages(msgs,myId,keepScroll){
     const box=document.getElementById('messages');
+    var prevHeight=box.scrollHeight;
+    var prevTop=box.scrollTop;
     box.innerHTML='';
+
     if(!msgs||!msgs.length){
-      box.innerHTML='<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;padding:32px;text-align:center">No messages yet. Say hello!</div>';
+      box.innerHTML='<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;padding:32px;text-align:center" data-placeholder="1">No messages yet. Say hello!</div>';
       return;
     }
+
+    renderLoadOlderButton(box);
+
     let lastDate='';
     msgs.forEach(m=>{
-      // Support current API shape and legacy message fields.
-      const sender = m.senderId || m.fromId || m.sender;
-      const content = m.body || m.text || m.content;
       const createdAt = m.createdAt || m.timestamp || new Date().toISOString();
-      
       const mDate=new Date(createdAt).toLocaleDateString([],{weekday:'long',month:'short',day:'numeric'});
       if(mDate!==lastDate){
-        const sep=document.createElement('div');sep.className='date-sep';sep.innerHTML=`<span>${mDate}</span>`;box.appendChild(sep);
+        const sep=document.createElement('div');
+        sep.className='date-sep';
+        sep.innerHTML=`<span>${mDate}</span>`;
+        box.appendChild(sep);
         lastDate=mDate;
       }
-      
-      const isMe=String(sender)===myId||String(sender)===String(myId).split('@')[0];
-      const row=document.createElement('div');
-      row.className='msg-row '+(isMe?'mine':'theirs');
-      const unread = m.read === 0 || m.read === false;
-      const readMeta = isMe ? (unread ? ' · sent' : ' · read') : (unread ? ' · <span class="unread-mark">unread</span>' : '');
-      const meta=new Date(createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + readMeta;
-      const bubbleHtml = renderBubbleContent(content || '');
-      if(!isMe){
-        row.innerHTML=`<div class="msg-av-sm">${initFor(sender)}</div><div><div class="bubble">${bubbleHtml}</div><div class="bubble-meta">${meta}</div></div>`;
-      }else{
-        row.innerHTML=`<div><div class="bubble">${bubbleHtml}</div><div class="bubble-meta">${meta}</div></div>`;
-      }
-      box.appendChild(row);
+      const rendered = createMessageRow(m,myId);
+      box.appendChild(rendered.row);
     });
-    box.scrollTop=box.scrollHeight;
+
+    if(keepScroll){
+      box.scrollTop = prevTop + (box.scrollHeight - prevHeight);
+    } else {
+      box.scrollTop=box.scrollHeight;
+    }
+  }
+
+  function upsertMessageInState(msg){
+    if (!msg) return;
+    var id = msg.id ? String(msg.id) : '';
+    if (id) {
+      var idx = currentMessageList.findIndex(function (m) { return String(m.id || '') === id; });
+      if (idx >= 0) {
+        currentMessageList[idx] = Object.assign({}, currentMessageList[idx], msg);
+      } else {
+        currentMessageList.push(msg);
+      }
+    } else {
+      currentMessageList.push(msg);
+    }
+  }
+
+  function updateMessageDeletedState(messageId, deletedAt){
+    var id = String(messageId || '');
+    if (!id) return;
+    var idx = currentMessageList.findIndex(function (m) { return String(m.id || '') === id; });
+    if (idx < 0) return;
+    currentMessageList[idx] = Object.assign({}, currentMessageList[idx], {
+      body: '[Message deleted]',
+      content: '[Message deleted]',
+      text: '[Message deleted]',
+      deletedAt: deletedAt || new Date().toISOString()
+    });
+    renderMessages(currentMessageList, String(getMe() || ''));
   }
 
   /* ── PHASE 1 STEP 2: Append single message to DOM (no full reload) ── */
   function appendMessage(msg){
-    var box=document.getElementById('messages');
-    var myId=String(getMe()||'');
-    var sender=String(msg.senderId||msg.fromId||'');
-    var content=msg.body||msg.text||msg.content||'';
-    var createdAt=msg.createdAt||msg.timestamp||new Date().toISOString();
-    var isMe=sender===myId||sender===String(myId).split('@')[0];
-
-    // Add date separator if needed
-    var mDate=new Date(createdAt).toLocaleDateString([],{weekday:'long',month:'short',day:'numeric'});
-    var lastSep=box.querySelector('.date-sep:last-of-type');
-    var lastSepText=lastSep?lastSep.querySelector('span').textContent:'';
-    if(mDate!==lastSepText){
-      var sep=document.createElement('div');sep.className='date-sep';
-      sep.innerHTML='<span>'+mDate+'</span>';
-      box.appendChild(sep);
-    }
-
-    var row=document.createElement('div');
-    row.className='msg-row '+(isMe?'mine':'theirs');
-    var meta=new Date(createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' · sent';
-    var bubbleHtml=renderBubbleContent(content||'');
-    if(!isMe){
-      row.innerHTML='<div class="msg-av-sm">'+initFor(sender)+'</div><div><div class="bubble">'+bubbleHtml+'</div><div class="bubble-meta">'+meta+'</div></div>';
-    }else{
-      row.innerHTML='<div><div class="bubble">'+bubbleHtml+'</div><div class="bubble-meta">'+meta+'</div></div>';
-    }
-    box.appendChild(row);
-    box.scrollTop=box.scrollHeight;
-
-    // Remove "No messages yet" placeholder if present
-    var placeholder=box.querySelector('[data-placeholder]');
-    if(placeholder)placeholder.remove();
+    upsertMessageInState(msg);
+    renderMessages(currentMessageList, String(getMe() || ''));
   }
 
   /* ── PHASE 2 STEP 3: Send message with optimistic UI ── */
@@ -767,6 +865,10 @@
     const sendBtn = document.getElementById('sendBtn');
     const text=(forcedText || input.value || '').trim();
     if(!text)return;
+    if(text.length>5000){
+      if(window.SpopeerToast) window.SpopeerToast.warning('Message is too long (max 5000 characters).');
+      return;
+    }
 
     // OPTIMISTIC: Show message immediately
     var optimisticMsg={
@@ -851,6 +953,57 @@
     var _r=parseInt(currentConversation,10);
     if(!isNaN(_r)&&_r>0){
       socket.emit('stop_typing',{receiverId:_r});
+    }
+  });
+
+  document.getElementById('messages').addEventListener('click', function(e){
+    var target = e.target;
+    if(target && target.id==='loadOlderBtn'){
+      e.preventDefault();
+      loadOlderMessages();
+      return;
+    }
+    var menu=document.getElementById('messageContextMenu');
+    if(menu) menu.style.display='none';
+  });
+
+  document.getElementById('messages').addEventListener('contextmenu', function(e){
+    var bubble=e.target.closest('.msg-row.mine[data-deletable="1"] .bubble');
+    if(!bubble) return;
+    e.preventDefault();
+    var row=bubble.closest('.msg-row');
+    var messageId=row && row.dataset ? row.dataset.messageId : '';
+    if(!messageId) return;
+    deleteMenuMessageId=String(messageId);
+    var menu=document.getElementById('messageContextMenu');
+    if(!menu) return;
+    menu.style.display='block';
+    menu.style.left=e.clientX+'px';
+    menu.style.top=e.clientY+'px';
+  });
+
+  document.getElementById('deleteMessageAction').addEventListener('click', async function(){
+    var messageId=deleteMenuMessageId;
+    var menu=document.getElementById('messageContextMenu');
+    if(menu) menu.style.display='none';
+    deleteMenuMessageId='';
+    if(!messageId) return;
+    if(!window.confirm('Delete this message?')) return;
+    try {
+      var resp=parsePayload(await window.SpopeerAPI.deleteConversationMessage(messageId));
+      updateMessageDeletedState(messageId, resp && resp.deletedAt);
+    } catch (e) {
+      console.error('Failed to delete message:', e);
+      if(window.SpopeerToast) window.SpopeerToast.error('Could not delete message.');
+    }
+  });
+
+  document.addEventListener('click', function(e){
+    var menu=document.getElementById('messageContextMenu');
+    if(!menu || menu.style.display==='none') return;
+    if(!menu.contains(e.target)){
+      menu.style.display='none';
+      deleteMenuMessageId='';
     }
   });
 
@@ -957,6 +1110,13 @@
       if (window.SpopeerToast) window.SpopeerToast.warning('Please select a recipient');
       return;
     }
+
+    if(firstMsg && firstMsg.length>5000){
+      errorDiv.textContent = 'First message exceeds 5000 characters.';
+      errorDiv.style.display = 'block';
+      if (window.SpopeerToast) window.SpopeerToast.warning('Message is too long (max 5000 characters).');
+      return;
+    }
     
     try {
       document.getElementById('startConvBtn').disabled = true;
@@ -1014,12 +1174,15 @@
     _pollInterval=setInterval(function(){
       if(currentConversationId){
         if(!socket||!socket.connected){
-          window.SpopeerAPI.getConversation(currentConversationId)
+          window.SpopeerAPI.getConversation(currentConversationId, { limit: 50 })
             .then(function(data){
               var msgs=parsePayload(data);
               var me=getMe();
               if(msgs&&msgs.messages){
-                renderMessages(msgs.messages,String(me));
+                currentMessageList=msgs.messages;
+                conversationHasMore=!!msgs.hasMore;
+                conversationOldestAt=msgs.oldestAt?String(msgs.oldestAt):'';
+                renderMessages(currentMessageList,String(me));
               }
             })
             .catch(function(){});
@@ -1097,6 +1260,12 @@
         if(currentConversation){
           openConversation(currentConversation, currentConversationId);
         }
+      });
+
+      socket.on('message_deleted', function(payload){
+        var convId=String(payload&&payload.conversationId||'');
+        if(!convId || convId!==String(currentConversationId||'')) return;
+        updateMessageDeletedState(payload.id, payload.deletedAt);
       });
 
       // PHASE 1 STEP 5: Add reconnection and polling fallback

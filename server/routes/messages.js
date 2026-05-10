@@ -38,9 +38,23 @@ function formatMessage(message) {
     text: message.content || message.body,
     read: message.read,
     readAt: message.readAt,
+    deletedAt: message.deletedAt,
     createdAt: message.createdAt,
     updatedAt: message.updatedAt
   };
+}
+
+function parsePageLimit(raw) {
+  const value = Number(raw);
+  if (!Number.isFinite(value)) return 50;
+  return Math.max(1, Math.min(100, Math.trunc(value)));
+}
+
+function parseBeforeCursor(raw) {
+  if (!raw) return null;
+  const asDate = new Date(String(raw));
+  if (Number.isNaN(asDate.getTime())) return null;
+  return asDate;
 }
 
 async function findUserByIdentifier(identifier, options) {
@@ -64,7 +78,9 @@ router.use(authenticate);
 
 // POST /api/messages/conversations
 router.post('/conversations', async (req, res) => {
-  const transaction = await sequelize.transaction();
+  const transaction = await sequelize.transaction({
+    isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
+  });
   try {
     const targetIdentifier = req.body.participantId || req.body.otherUserId || req.body.toId || req.body.userId;
     if (!targetIdentifier) {
@@ -175,6 +191,12 @@ router.get('/conversations/:id', async (req, res) => {
       return fail(res, 403, 'FORBIDDEN', 'You are not a participant in this conversation.');
     }
 
+    const limit = parsePageLimit(req.query.limit);
+    const before = parseBeforeCursor(req.query.before);
+    if (req.query.before && !before) {
+      return fail(res, 400, 'VALIDATION', 'Invalid before cursor. Use an ISO timestamp.');
+    }
+
     const conversation = await Conversation.findByPk(conversationId, {
       include: [
         {
@@ -185,15 +207,28 @@ router.get('/conversations/:id', async (req, res) => {
       ]
     });
 
-    const messages = await Message.findAll({
-      where: { conversationId },
-      order: [['createdAt', 'ASC']]
+    const where = { conversationId };
+    if (before) {
+      where.createdAt = { [Op.lt]: before };
+    }
+
+    const pagedMessages = await Message.findAll({
+      where,
+      order: [['createdAt', 'DESC'], ['id', 'DESC']],
+      limit: limit + 1
     });
+
+    const hasMore = pagedMessages.length > limit;
+    const pageMessages = hasMore ? pagedMessages.slice(0, limit) : pagedMessages;
+    const messages = pageMessages.reverse();
+    const oldestAt = messages.length ? messages[0].createdAt : null;
 
     return ok(res, {
       id: conversation.id,
       participants: (conversation.participants || []).map((p) => p.user),
-      messages: messages.map(formatMessage)
+      messages: messages.map(formatMessage),
+      hasMore,
+      oldestAt
     });
   } catch (error) {
     logApiError('get_conversation', req, error);
@@ -225,29 +260,44 @@ router.post('/conversations/:id/messages', async (req, res) => {
     });
     const receiver = participants.find((p) => p.userId !== req.userId);
 
+    if (!receiver || !receiver.userId) {
+      return fail(res, 400, 'VALIDATION', 'Conversation receiver not found.');
+    }
+
+    const blockExists = await Block.findOne({
+      where: {
+        [Op.or]: [
+          { blockerId: req.userId, blockedId: receiver.userId },
+          { blockerId: receiver.userId, blockedId: req.userId }
+        ]
+      }
+    });
+
+    if (blockExists) {
+      return fail(res, 403, 'BLOCKED', 'You cannot message this user.');
+    }
+
     const message = await Message.create({
       conversationId,
       senderId: req.userId,
-      receiverId: receiver ? receiver.userId : null,
+      receiverId: receiver.userId,
       body: bodyInput,
       content: bodyInput,
       read: false,
       readAt: null
     });
 
-    if (receiver && receiver.userId) {
-      notifyUser(receiver.userId, 'new_message', {
-        id: message.id,
-        conversationId,
-        fromId: req.userId,
-        toId: receiver.userId,
-        content: message.content,
-        timestamp: message.createdAt
-      });
-    }
+    notifyUser(receiver.userId, 'new_message', {
+      id: message.id,
+      conversationId,
+      fromId: req.userId,
+      toId: receiver.userId,
+      content: message.content,
+      timestamp: message.createdAt
+    });
 
     await createNotification({
-      recipientId: receiver ? receiver.userId : null,
+      recipientId: receiver.userId,
       senderId: req.userId,
       type: 'message',
       text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} sent you a message.`,
@@ -308,9 +358,69 @@ router.patch('/conversations/:id/read', async (req, res) => {
   }
 });
 
+// DELETE /api/messages/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    const messageId = Number(req.params.id);
+    if (!messageId) {
+      return fail(res, 400, 'VALIDATION', 'Invalid message id.');
+    }
+
+    const message = await Message.findByPk(messageId);
+    if (!message) {
+      return fail(res, 404, 'NOT_FOUND', 'Message not found.');
+    }
+
+    if (message.senderId !== req.userId) {
+      return fail(res, 403, 'FORBIDDEN', 'You can only delete your own messages.');
+    }
+
+    if (!message.conversationId) {
+      return fail(res, 400, 'VALIDATION', 'Message does not belong to a conversation.');
+    }
+
+    const allowed = await isConversationParticipant(message.conversationId, req.userId);
+    if (!allowed) {
+      return fail(res, 403, 'FORBIDDEN', 'You are not a participant in this conversation.');
+    }
+
+    if (message.deletedAt) {
+      return ok(res, formatMessage(message));
+    }
+
+    const participants = await ConversationParticipant.findAll({
+      where: { conversationId: message.conversationId },
+      attributes: ['userId']
+    });
+    const receiver = participants.find((p) => p.userId !== req.userId);
+    const deletedAt = new Date();
+
+    await message.update({
+      body: '[Message deleted]',
+      content: '[Message deleted]',
+      deletedAt
+    });
+
+    if (receiver && receiver.userId) {
+      notifyUser(receiver.userId, 'message_deleted', {
+        id: message.id,
+        conversationId: message.conversationId,
+        deletedAt: deletedAt.toISOString()
+      });
+    }
+
+    return ok(res, formatMessage(message));
+  } catch (error) {
+    logApiError('delete_message', req, error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to delete message.');
+  }
+});
+
 // Compatibility: POST /api/messages/send
 router.post('/send', async (req, res) => {
-  const transaction = await sequelize.transaction();
+  const transaction = await sequelize.transaction({
+    isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
+  });
   try {
     const toId = req.body.toId || req.body.receiverId || req.body.userId;
     const text = sanitizeString(req.body.text || req.body.body || req.body.content, 5000);
