@@ -431,6 +431,8 @@
   let stopTypingTimer=null;
   let socket=null;
   let currentTypingUserId='';
+  let openConversationSeq=0;
+  let sendInFlight=false;
   const CHAT_THEME_STORAGE_KEY='spopeer_chat_theme';
   const BACKEND_DISABLED_MSG='Messaging will be available after backend activation.';
 
@@ -629,6 +631,7 @@
 
   /* ── Open conversation ── */
   async function openConversation(otherId, conversationId){
+    const seq = ++openConversationSeq;
     var me = getMe();
     if(!me){if (window.SpopeerToast) window.SpopeerToast.warning('Please log in to use messaging');return;}
     if(!messagingEnabled){if (window.SpopeerToast) window.SpopeerToast.info(BACKEND_DISABLED_MSG);return;}
@@ -663,6 +666,7 @@
 
       if(currentConversationId){
         const data = parsePayload(await window.SpopeerAPI.getConversation(currentConversationId));
+        if (seq !== openConversationSeq) return;
         renderMessages((data&&data.messages)||[],String(me));
         await markCurrentConversationRead();
         document.getElementById('typingIndicator').style.display='none';
@@ -722,11 +726,18 @@
   /* ── Send message ── */
   async function sendMessage(forcedText){
     if(!currentConversation||!messagingEnabled)return;
+    if(sendInFlight)return;
     const input = document.getElementById('messageText');
+    const sendBtn = document.getElementById('sendBtn');
     const text=(forcedText || input.value || '').trim();
     if(!text)return;
 
     try{
+      sendInFlight = true;
+      if(sendBtn){
+        sendBtn.disabled = true;
+        sendBtn.setAttribute('aria-busy','true');
+      }
       if(!currentConversationId){
         const createdData = parsePayload(await window.SpopeerAPI.createConversation(String(currentConversation)));
         currentConversationId = String(createdData && createdData.id ? createdData.id : '');
@@ -736,18 +747,26 @@
         await window.SpopeerAPI.sendConversationMessage(currentConversationId, text);
         if(!forcedText){
           input.value='';
-          document.getElementById('sendBtn').disabled=true;
+          if(sendBtn) sendBtn.disabled=true;
         }
         if(socket){
           socket.emit('stop_typing', { receiverId: Number(currentConversation) });
         }
-        openConversation(currentConversation,currentConversationId);
-        loadConversations();
+        await Promise.all([
+          openConversation(currentConversation,currentConversationId),
+          loadConversations()
+        ]);
         return;
       }
 
     }catch(e){
       console.error('Failed to send message:', e);
+    } finally {
+      sendInFlight = false;
+      if(sendBtn){
+        sendBtn.removeAttribute('aria-busy');
+        sendBtn.disabled = !messagingEnabled || !document.getElementById('messageText').value.trim();
+      }
     }
 
     if (window.SpopeerToast) window.SpopeerToast.error('Failed to send message. Please try again.');
@@ -1036,7 +1055,16 @@
 
     var resolvedOther = await resolveRecipientFromUrl(urlOther);
     if (!resolvedOther) return;
-    await openConversation(resolvedOther);
+
+    // Retry a few times to absorb eventual consistency/user-store timing issues.
+    for (var attempt = 0; attempt < 3; attempt++) {
+      var beforeConversationId = currentConversationId;
+      await openConversation(resolvedOther);
+      if (currentConversationId || beforeConversationId !== currentConversationId) {
+        return;
+      }
+      await new Promise(function(resolve){ setTimeout(resolve, 250); });
+    }
   }
 
   initChatTheme();
