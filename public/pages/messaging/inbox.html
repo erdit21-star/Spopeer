@@ -24,7 +24,44 @@
     /* Inbox-specific token overrides */
     :root{--sidebar-w:320px;--accent-mid:#003366;--accent-hover:#001428;--accent-light:#cce7ff;--accent-lt2:#e8f4ff;--rS:7px;--rL:16px;}
     html,body{height:100%;overflow:hidden}
-    body{display:flex;flex-direction:column;}
+    body{display:flex;flex-direction:column;background:linear-gradient(160deg,#f6fbff 0%,#eef4ff 54%,#f9fcff 100%);transition:background .25s ease,color .25s ease;}
+    body, .panel-left, .panel-right, .chat-head, .compose-area, .conv-item, .bubble, .compose-inner, .modal-box, .search-wrap input, .modal-input {transition: background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;}
+
+    body.pulsechat-dark{background:radial-gradient(circle at top,#11324e 0%,#081523 42%,#050b14 100%);}
+    body.pulsechat-dark .topnav,
+    body.pulsechat-dark .panel-left,
+    body.pulsechat-dark .chat-head,
+    body.pulsechat-dark .compose-area,
+    body.pulsechat-dark .modal-box{background:#0f1d2b;color:#e7efff;}
+    body.pulsechat-dark .panel-right{background:#081523;}
+    body.pulsechat-dark .conv-item{border-bottom-color:#223649;}
+    body.pulsechat-dark .conv-item:hover,
+    body.pulsechat-dark .conv-item.active{background:#14293d;}
+    body.pulsechat-dark .conv-item.active{border-right-color:#4fb6ff;}
+    body.pulsechat-dark .conv-name,
+    body.pulsechat-dark .chat-head-name,
+    body.pulsechat-dark .modal-title,
+    body.pulsechat-dark .chat-empty h3,
+    body.pulsechat-dark .nav-title,
+    body.pulsechat-dark .logo-text{color:#f4f9ff;}
+    body.pulsechat-dark .conv-preview,
+    body.pulsechat-dark .conv-time,
+    body.pulsechat-dark .chat-empty p,
+    body.pulsechat-dark .typing-indicator{color:#adc7e8;}
+    body.pulsechat-dark .search-wrap input,
+    body.pulsechat-dark .modal-input,
+    body.pulsechat-dark .compose-inner{background:#102233;border-color:#26435a;color:#e7efff;}
+    body.pulsechat-dark .compose-inner:focus-within,
+    body.pulsechat-dark .search-wrap input:focus,
+    body.pulsechat-dark .modal-input:focus{border-color:#4fb6ff;box-shadow:0 0 0 3px rgba(79,182,255,.2);}
+    body.pulsechat-dark .theirs .bubble{background:#162a3d;border-color:#29435a;color:#eaf2ff;}
+    body.pulsechat-dark .date-sep span{background:#102233;border-color:#26435a;color:#c3d8f3;}
+    body.pulsechat-dark .btn-back,
+    body.pulsechat-dark .btn-cancel{border-color:#2a4156;color:#d7e8ff;}
+
+    .pulse-theme-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;}
+    .pulse-theme-btn:hover{border-color:var(--accent);}
+    body.pulsechat-dark .pulse-theme-btn{background:#102233;border-color:#2b4258;color:#9ed7ff;}
 
     /* Inbox nav overrides – full-width, non-sticky */
     .topnav{position:static;background:var(--white);backdrop-filter:none;flex-shrink:0;z-index:200;}
@@ -101,7 +138,7 @@
     .msg-row.mine{align-self:flex-end;flex-direction:row-reverse;}
     .msg-row.theirs{align-self:flex-start;}
     .msg-av-sm{width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-light);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .bubble{padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.55;word-break:break-word;position:relative;}
+    .bubble{padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.55;word-break:break-word;position:relative;animation:bubbleIn .2s ease both;}
     .mine .bubble{background:var(--accent);color:var(--accent-light);border-bottom-right-radius:4px;}
     .theirs .bubble{background:var(--white);color:var(--ink-2);border:1px solid var(--border);border-bottom-left-radius:4px;}
     .bubble-meta{font-size:10px;margin-top:4px;text-align:right;}
@@ -141,6 +178,11 @@
 
     /* typing indicator */
     .typing-indicator{display:none;padding:0 20px 6px;font-size:12px;color:var(--muted);font-style:italic;}
+
+    @keyframes bubbleIn {
+      from { opacity: 0; transform: translateY(8px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
     @media(max-width:768px){
       .messaging-layout{grid-template-columns:1fr;}
@@ -195,6 +237,7 @@
     <span class="nav-title"><i class="fa-regular fa-paper-plane" style="font-size:14px;margin-right:6px;color:var(--accent)"></i>Messages</span>
     <div class="nav-right">
       <a href="/feed.html" class="nav-icon" title="Home"><i class="fa-solid fa-house"></i></a>
+      <button class="pulse-theme-btn" id="chatThemeToggle" title="Toggle theme" aria-label="Toggle chat theme"><i class="fa-solid fa-moon"></i></button>
       <button class="nav-icon" title="Notifications"><i class="fa-regular fa-bell"></i></button>
       <div class="user-chip" id="userChip" data-user-chip>
         <span class="chip-avatar" id="chipAvatar" data-user-chip-avatar>?</span>
@@ -382,6 +425,8 @@
   let myInitials='??';
   let allConvs=[];
   let messagingEnabled=true;
+  let typingTimer=null;
+  const CHAT_THEME_STORAGE_KEY='spopeer_chat_theme';
   const BACKEND_DISABLED_MSG='Messaging will be available after backend activation.';
 
   /* ── Helper: Escape HTML ── */
@@ -422,6 +467,33 @@
       return data.data;
     }
     return data;
+  }
+
+  function applyChatTheme(theme){
+    var isDark = String(theme || '').toLowerCase() === 'dark';
+    document.body.classList.toggle('pulsechat-dark', isDark);
+    var btn = document.getElementById('chatThemeToggle');
+    if(btn){
+      btn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+      btn.title = isDark ? 'Use light theme' : 'Use dark theme';
+      btn.setAttribute('aria-label', btn.title);
+    }
+  }
+
+  function initChatTheme(){
+    var saved = localStorage.getItem(CHAT_THEME_STORAGE_KEY);
+    if(!saved){
+      saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    applyChatTheme(saved);
+    var toggle = document.getElementById('chatThemeToggle');
+    if(toggle){
+      toggle.addEventListener('click', function(){
+        var next = document.body.classList.contains('pulsechat-dark') ? 'light' : 'dark';
+        localStorage.setItem(CHAT_THEME_STORAGE_KEY, next);
+        applyChatTheme(next);
+      });
+    }
   }
 
   function setMessagingAvailability(enabled){
@@ -633,6 +705,13 @@
   document.getElementById('messageText').addEventListener('input',function(){
     document.getElementById('sendBtn').disabled=!messagingEnabled||!this.value.trim();
     this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';
+    var indicator=document.getElementById('typingIndicator');
+    if(indicator){
+      indicator.textContent='Typing…';
+      indicator.style.display='block';
+      clearTimeout(typingTimer);
+      typingTimer=setTimeout(function(){indicator.style.display='none';}, 650);
+    }
   });
 
   /* ── New message modal ── */
@@ -813,6 +892,8 @@
     if (!resolvedOther) return;
     await openConversation(resolvedOther);
   }
+
+  initChatTheme();
 
   /* ── Init ── */
   loadConversations().then(openConversationFromUrl).catch(function () {
