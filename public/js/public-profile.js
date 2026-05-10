@@ -147,7 +147,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     // Message button handler
     if(messageBtn && !isOwnProfile){
       messageBtn.addEventListener('click', function(){
-        var targetUserId = userId || (payload && payload.id) || (payload && payload.userId);
+        var targetUserId = (payload && payload.id) || (payload && payload.userId) || userId;
         if(!targetUserId){
           alert('User ID not found. Unable to send message.');
           return;

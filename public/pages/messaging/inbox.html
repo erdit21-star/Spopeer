@@ -387,13 +387,21 @@
   /* ── Helper: Escape HTML ── */
   function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
 
-  /* get userId from stored profile */
+  /* get current user id from store/local cache */
   function getMe(){
-    if(!ud)return null;
-    return String(ud.id||ud.userId||'');
+    var latest = null;
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+      latest = window.CurrentUserStore.getCurrentUser();
+    }
+    if (!latest) {
+      try { latest = JSON.parse(localStorage.getItem('spopeer_user')||'null'); } catch(e) { latest = null; }
+    }
+    if(!latest)return null;
+    ud = latest;
+    return String(latest.id||latest.userId||latest.email||'');
   }
-  const me=getMe();
-  if(me){myInitials=(me.slice(0,2).toUpperCase());}
+  const initialMe=getMe();
+  if(initialMe){myInitials=(initialMe.slice(0,2).toUpperCase());}
   if(ud){
     const _dn2 = ud.displayName || [ud.firstName, ud.lastName].filter(Boolean).join(' ') || ud.name || '';
     myInitials=_dn2.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
@@ -506,6 +514,7 @@
 
   /* ── Open conversation ── */
   async function openConversation(otherId, conversationId){
+    var me = getMe();
     if(!me){if (window.SpopeerToast) window.SpopeerToast.warning('Please log in to use messaging');return;}
     if(!messagingEnabled){if (window.SpopeerToast) window.SpopeerToast.info(BACKEND_DISABLED_MSG);return;}
     currentConversation=String(otherId);
@@ -743,6 +752,7 @@
   if(window.io){
     try{
       const socket=io();
+      const me = getMe();
       if(me)socket.emit('register',String(me));
       socket.on('new_message',function(msg){
         loadConversations();
@@ -761,12 +771,53 @@
     return d.innerHTML;
   };
 
-  /* ── Init ── */
-  loadConversations();
+  async function resolveRecipientFromUrl(rawValue) {
+    var value = String(rawValue || '').trim();
+    if (!value) return '';
 
-  /* ── Open conversation from URL param ── */
-  const urlOther=new URLSearchParams(window.location.search).get('userId')||new URLSearchParams(window.location.search).get('otherId');
-  if(urlOther)openConversation(urlOther);
+    var exact = (allConvs || []).find(function (c) {
+      var candidates = [c.otherId, c.otherUserId, c.email, c.otherEmail, c.username, c.id];
+      return candidates.some(function (candidate) {
+        return String(candidate || '').toLowerCase() === value.toLowerCase();
+      });
+    });
+    if (exact && (exact.otherId || exact.otherUserId || exact.id)) {
+      return String(exact.otherId || exact.otherUserId || exact.id);
+    }
+
+    try {
+      var searchResp = await window.SpopeerAPI.searchUsers({ query: value, limit: 6 });
+      var users = (searchResp && searchResp.data) || searchResp || [];
+      if (Array.isArray(users) && users.length) {
+        var match = users.find(function (u) {
+          var keys = [u.id, u.userId, u.email, u.username];
+          return keys.some(function (key) { return String(key || '').toLowerCase() === value.toLowerCase(); });
+        }) || users[0];
+        if (match && (match.id || match.userId)) {
+          return String(match.id || match.userId);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not resolve URL recipient via search:', e);
+    }
+
+    return value;
+  }
+
+  async function openConversationFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    var urlOther = params.get('userId') || params.get('otherId');
+    if (!urlOther) return;
+
+    var resolvedOther = await resolveRecipientFromUrl(urlOther);
+    if (!resolvedOther) return;
+    await openConversation(resolvedOther);
+  }
+
+  /* ── Init ── */
+  loadConversations().then(openConversationFromUrl).catch(function () {
+    openConversationFromUrl();
+  });
 
 })();
 </script>
