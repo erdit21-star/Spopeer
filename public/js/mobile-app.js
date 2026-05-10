@@ -139,6 +139,107 @@
     return String(messageTextValue(message)).trim() === '[Message deleted]';
   }
 
+  function upsertThreadMessage(conversationId, message) {
+    var thread = getMessageThreadState(conversationId);
+    var id = String(message && message.id || '');
+    if (!id) {
+      thread.messages.push(message);
+      return;
+    }
+    var index = thread.messages.findIndex(function (entry) {
+      return String(entry && entry.id || '') === id;
+    });
+    if (index >= 0) {
+      thread.messages[index] = Object.assign({}, thread.messages[index], message);
+    } else {
+      thread.messages.push(message);
+    }
+  }
+
+  let realtimeSocket = null;
+  let realtimeRefreshTimer = null;
+
+  function getRealtimeToken() {
+    return localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
+  }
+
+  function scheduleMessagesRefresh() {
+    if (app.route !== 'messages') return;
+    window.clearTimeout(realtimeRefreshTimer);
+    realtimeRefreshTimer = window.setTimeout(function () {
+      if (app.route === 'messages') {
+        render();
+      }
+    }, 120);
+  }
+
+  function onRealtimeNewMessage(payload) {
+    var conversationId = String(payload && payload.conversationId || '');
+    if (!conversationId) return;
+    var normalized = {
+      id: payload.id,
+      conversationId: payload.conversationId,
+      senderId: payload.senderId || payload.fromId || null,
+      fromId: payload.fromId || payload.senderId || null,
+      receiverId: payload.receiverId || payload.toId || null,
+      toId: payload.toId || payload.receiverId || null,
+      body: payload.body || payload.text || payload.content || '',
+      content: payload.content || payload.body || payload.text || '',
+      text: payload.text || payload.content || payload.body || '',
+      read: false,
+      createdAt: payload.createdAt || payload.timestamp || new Date().toISOString()
+    };
+    upsertThreadMessage(conversationId, normalized);
+    scheduleMessagesRefresh();
+  }
+
+  function onRealtimeMessageDeleted(payload) {
+    var conversationId = String(payload && payload.conversationId || '');
+    var messageId = String(payload && payload.id || '');
+    if (!conversationId || !messageId) return;
+    var thread = getMessageThreadState(conversationId);
+    var index = thread.messages.findIndex(function (message) {
+      return String(message && message.id || '') === messageId;
+    });
+    if (index >= 0) {
+      thread.messages[index] = Object.assign({}, thread.messages[index], {
+        body: '[Message deleted]',
+        content: '[Message deleted]',
+        text: '[Message deleted]',
+        deletedAt: (payload && payload.deletedAt) || new Date().toISOString()
+      });
+      scheduleMessagesRefresh();
+    }
+  }
+
+  function teardownRealtimeSocket() {
+    if (!realtimeSocket) return;
+    realtimeSocket.off('new_message', onRealtimeNewMessage);
+    realtimeSocket.off('message_deleted', onRealtimeMessageDeleted);
+    realtimeSocket.disconnect();
+    realtimeSocket = null;
+  }
+
+  function initRealtimeSocket() {
+    if (!window.io) return;
+    var token = getRealtimeToken();
+    if (!token) return;
+    if (realtimeSocket) return;
+
+    realtimeSocket = window.io({
+      withCredentials: true,
+      auth: { token: token },
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000
+    });
+
+    realtimeSocket.on('new_message', onRealtimeNewMessage);
+    realtimeSocket.on('message_deleted', onRealtimeMessageDeleted);
+    realtimeSocket.on('connect_error', function () {});
+  }
+
   function displayNameFromUser(user) {
     return user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || 'Spopeer member';
   }
@@ -3971,6 +4072,7 @@
       var drawerSignOut = document.getElementById('spmDrawerSignOut');
       if (drawerSignOut) {
         drawerSignOut.addEventListener('click', async function () {
+          teardownRealtimeSocket();
           if (window.Auth && typeof window.Auth.logout === 'function') {
             await window.Auth.logout();
           } else {
@@ -4015,12 +4117,14 @@
       try {
         const result = await window.SpopeerAPI.me();
         app.user = unwrapUser(result);
+        initRealtimeSocket();
         updateDrawerAccessByRole();
         revealTarget('#spmShell');
         render();
         refreshTopbarStats();
       } catch (_error) {
         app.user = null;
+        teardownRealtimeSocket();
         updateDrawerAccessByRole();
         revealTarget('#spmAuth');
       }
