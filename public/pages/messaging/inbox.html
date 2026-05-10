@@ -837,11 +837,17 @@
       resultsList.innerHTML = searchResults.map(u => {
         const name = [u.firstName, u.lastName].filter(Boolean).join(' ') || u.displayName || 'User';
         const displayId = u.email || u.id;
-        const safeId = String(u.id).replace(/'/g, "\\'");
+        const safeId = escHtml(String(u.id));
         const safeName = escHtml(name);
-        return '<div style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s;" onmouseover="this.style.background=\\'var(--surface);\\';" onmouseout="this.style.background=\\'transparent;\\';" onclick="setSelectedUser(\\''+safeId+'\\',\\''+safeName+'\\')" ><div style="font-weight:600;color:var(--ink);font-size:13px;">'+safeName+'</div><div style="font-size:11px;color:var(--muted);">'+escHtml(displayId)+'</div></div>';
+        const safeDisplayId = escHtml(String(displayId || ''));
+        return '<div class="usr-result" data-userid="' + safeId + '" data-username="' + safeName + '" style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s;"><div style="font-weight:600;color:var(--ink);font-size:13px;">' + safeName + '</div><div style="font-size:11px;color:var(--muted);">' + safeDisplayId + '</div></div>';
       }).join('');
       resultsContainer.style.display = 'block';
+      resultsList.querySelectorAll('.usr-result').forEach(function(item){
+        item.addEventListener('mouseover', function(){ this.style.background = 'var(--surface)'; });
+        item.addEventListener('mouseout', function(){ this.style.background = ''; });
+        item.addEventListener('click', function(){ setSelectedUser(this.dataset.userid, this.dataset.username); });
+      });
     } catch (e) {
       console.error('Search failed:', e);
       errorDiv.textContent = 'Search failed. Try entering a user ID or email.';
