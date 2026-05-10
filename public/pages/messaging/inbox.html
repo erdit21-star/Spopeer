@@ -723,6 +723,42 @@
     box.scrollTop=box.scrollHeight;
   }
 
+  /* ── PHASE 1 STEP 2: Append single message to DOM (no full reload) ── */
+  function appendMessage(msg){
+    var box=document.getElementById('messages');
+    var myId=String(getMe()||'');
+    var sender=String(msg.senderId||msg.fromId||'');
+    var content=msg.body||msg.text||msg.content||'';
+    var createdAt=msg.createdAt||msg.timestamp||new Date().toISOString();
+    var isMe=sender===myId||sender===String(myId).split('@')[0];
+
+    // Add date separator if needed
+    var mDate=new Date(createdAt).toLocaleDateString([],{weekday:'long',month:'short',day:'numeric'});
+    var lastSep=box.querySelector('.date-sep:last-of-type');
+    var lastSepText=lastSep?lastSep.querySelector('span').textContent:'';
+    if(mDate!==lastSepText){
+      var sep=document.createElement('div');sep.className='date-sep';
+      sep.innerHTML='<span>'+mDate+'</span>';
+      box.appendChild(sep);
+    }
+
+    var row=document.createElement('div');
+    row.className='msg-row '+(isMe?'mine':'theirs');
+    var meta=new Date(createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' · sent';
+    var bubbleHtml=renderBubbleContent(content||'');
+    if(!isMe){
+      row.innerHTML='<div class="msg-av-sm">'+initFor(sender)+'</div><div><div class="bubble">'+bubbleHtml+'</div><div class="bubble-meta">'+meta+'</div></div>';
+    }else{
+      row.innerHTML='<div><div class="bubble">'+bubbleHtml+'</div><div class="bubble-meta">'+meta+'</div></div>';
+    }
+    box.appendChild(row);
+    box.scrollTop=box.scrollHeight;
+
+    // Remove "No messages yet" placeholder if present
+    var placeholder=box.querySelector('[data-placeholder]');
+    if(placeholder)placeholder.remove();
+  }
+
   /* ── Send message ── */
   async function sendMessage(forcedText){
     if(!currentConversation||!messagingEnabled)return;
@@ -941,19 +977,68 @@
   /* ── View profile helper ── */
   window.viewProfile=function(){if(currentConversation)window.location.href='../../pages/profiles/public-profile.html?userId='+encodeURIComponent(currentConversation);};
 
+  /* ── PHASE 1 STEP 5: Polling fallback when socket is disconnected ── */
+  var _pollInterval=null;
+
+  function startPolling(){
+    if(_pollInterval)return;
+    _pollInterval=setInterval(function(){
+      if(currentConversationId){
+        if(!socket||!socket.connected){
+          window.SpopeerAPI.getConversation(currentConversationId)
+            .then(function(data){
+              var msgs=parsePayload(data);
+              var me=getMe();
+              if(msgs&&msgs.messages){
+                renderMessages(msgs.messages,String(me));
+              }
+            })
+            .catch(function(){});
+        }
+      }
+    },5000);
+  }
+
+  function stopPolling(){
+    if(_pollInterval){
+      clearInterval(_pollInterval);
+      _pollInterval=null;
+    }
+  }
+
   function connectRealtime(){
     if(!window.io) return;
     try{
-      socket = io({ withCredentials: true, auth: {} });
+      // PHASE 1 STEP 1: Fix Socket.IO auth — pass JWT token from localStorage
+      var _token = localStorage.getItem('spopeerToken')
+                   || localStorage.getItem('spopeer_token')
+                   || '';
+      socket = io({
+        withCredentials: true,
+        auth: { token: _token },
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 2000,
+        reconnectionDelayMax: 10000
+      });
       socket.on('connect_error', function(err){
         console.warn('Socket connect error:', err && err.message ? err.message : err);
       });
       socket.on('new_message',function(msg){
-        loadConversations();
-        var other = String(msg && (msg.fromId || msg.senderId || msg.toId) || '');
-        if(currentConversation && other && currentConversation===other){
-          openConversation(currentConversation, currentConversationId);
+        // PHASE 1 STEP 2: Append message directly instead of full reload
+        var senderId=String(msg.fromId||msg.senderId||'');
+        var convId=String(msg.conversationId||'');
+
+        var isCurrentConv=currentConversationId&&convId===String(currentConversationId);
+        var isFromCurrentOther=currentConversation&&senderId===String(currentConversation);
+
+        if(isCurrentConv||isFromCurrentOther){
+          appendMessage(msg);
+          markCurrentConversationRead();
         }
+
+        // Update conversation list in background
+        loadConversations();
       });
       socket.on('user_typing', function(payload){
         var senderId = String(payload && payload.userId || '');
@@ -984,8 +1069,26 @@
           openConversation(currentConversation, currentConversationId);
         }
       });
+
+      // PHASE 1 STEP 5: Add reconnection and polling fallback
+      socket.on('connect', function(){
+        stopPolling();
+        console.log('Socket connected.');
+      });
+
+      socket.on('disconnect', function(){
+        startPolling();
+        console.warn('Socket disconnected. Polling fallback active.');
+      });
+
+      socket.on('connect_error', function(err){
+        startPolling();
+        console.warn('Socket connect error:', err && err.message ? err.message : err);
+      });
+
     }catch(e){
       console.warn('Socket init failed:', e && e.message ? e.message : e);
+      startPolling();
     }
   }
 
@@ -1074,6 +1177,13 @@
   loadConversations().then(openConversationFromUrl).catch(function () {
     openConversationFromUrl();
   });
+
+  // PHASE 1 STEP 5: Start polling fallback if socket doesn't connect
+  setTimeout(function(){
+    if(!socket||!socket.connected){
+      startPolling();
+    }
+  },4000);
 
 })();
 </script>
