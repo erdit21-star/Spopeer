@@ -26,17 +26,22 @@ router.get('/users', authenticate, async (req, res) => {
 
     const searchTerm = `%${query.trim()}%`;
     const maxLimit = Math.min(parseInt(limit) || 5, 20);
+    const numericId = /^\d+$/.test(query.trim()) ? parseInt(query.trim(), 10) : null;
+
+    const orConditions = [
+      { firstName: { [Op.iLike]: searchTerm } },
+      { lastName: { [Op.iLike]: searchTerm } },
+      { email: { [Op.iLike]: searchTerm } }
+    ];
+    if (numericId) {
+      orConditions.push({ id: numericId });
+    }
 
     const users = await User.findAll({
       where: {
         isActive: true,
         id: { [Op.ne]: currentUserId }, // Exclude current user
-        [Op.or]: [
-          { firstName: { [Op.iLike]: searchTerm } },
-          { lastName: { [Op.iLike]: searchTerm } },
-          { email: { [Op.iLike]: searchTerm } },
-          { id: { [Op.iLike]: searchTerm } }
-        ]
+        [Op.or]: orConditions
       },
       attributes: ['id', 'email', 'firstName', 'lastName', 'displayName', 'role', 'sport', 'avatar', 'bio'],
       limit: maxLimit,
