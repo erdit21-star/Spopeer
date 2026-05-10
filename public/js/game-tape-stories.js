@@ -22,6 +22,23 @@
     default: '🏅'
   };
 
+  function createStoryPlaceholder(label, backgroundColor) {
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="${backgroundColor}"/>
+            <stop offset="100%" stop-color="#001f3f"/>
+          </linearGradient>
+        </defs>
+        <rect width="400" height="600" rx="28" fill="url(#g)"/>
+        <circle cx="200" cy="190" r="72" fill="rgba(255,255,255,0.12)"/>
+        <text x="200" y="300" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="34" font-weight="700">${label}</text>
+      </svg>
+    `.trim();
+    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+  }
+
   const demoStories = [
     {
       id: 'demo-1',
@@ -29,7 +46,7 @@
       userInitials: 'AN',
       sport: 'Running',
       mediaType: 'image',
-      mediaUrl: 'https://placehold.co/400x600/001f3f/ffffff?text=Morning+Run',
+      mediaUrl: createStoryPlaceholder('Morning Run', '#001f3f'),
       createdAt: new Date(Date.now() - 12 * 60000).toISOString(),
       isLive: false,
       isViewedByCurrentUser: false,
@@ -51,7 +68,7 @@
       userInitials: 'MC',
       sport: 'Weightlifting',
       mediaType: 'image',
-      mediaUrl: 'https://placehold.co/400x600/1a6bff/ffffff?text=Squat+PR',
+      mediaUrl: createStoryPlaceholder('Squat PR', '#1a6bff'),
       createdAt: new Date(Date.now() - 45 * 60000).toISOString(),
       isLive: false,
       isViewedByCurrentUser: false,
@@ -73,7 +90,7 @@
       userInitials: 'SR',
       sport: 'Basketball',
       mediaType: 'image',
-      mediaUrl: 'https://placehold.co/400x600/003d7a/ffffff?text=Game+Highlights',
+      mediaUrl: createStoryPlaceholder('Game Highlights', '#003d7a'),
       createdAt: new Date(Date.now() - 5 * 60000).toISOString(),
       isLive: true,
       isViewedByCurrentUser: false,
@@ -95,7 +112,7 @@
       userInitials: 'EV',
       sport: 'Cycling',
       mediaType: 'image',
-      mediaUrl: 'https://placehold.co/400x600/16a34a/ffffff?text=Hill+Climb',
+      mediaUrl: createStoryPlaceholder('Hill Climb', '#16a34a'),
       createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
       isLive: false,
       isViewedByCurrentUser: false,
