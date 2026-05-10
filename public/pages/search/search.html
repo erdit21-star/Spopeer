@@ -191,8 +191,11 @@
     }
 
     .filter-card {
-      background: var(--white); border: 1px solid var(--border);
-      border-radius: var(--rL); padding: 18px 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.94));
+      border: 1px solid var(--border);
+      border-radius: var(--rL);
+      padding: 18px 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.03);
     }
     .filter-card-title {
       font-family: var(--fD); font-size: 14px; font-weight: 800;
@@ -222,13 +225,17 @@
     /* role buttons */
     .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
     .role-btn {
-      padding: 10px 8px; border: 1.5px solid var(--border);
-      border-radius: var(--r); background: var(--white);
-      cursor: pointer; transition: .2s; text-align: center;
+      padding: 11px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(243,243,239,.9));
+      cursor: pointer;
+      transition: .2s;
+      text-align: center;
       font-family: var(--fB);
     }
-    .role-btn:hover { border-color: var(--accent); background: var(--accent-lt2); }
-    .role-btn.selected { border-color: var(--accent); background: var(--accent-light); }
+    .role-btn:hover { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-lt2), #fff); transform: translateY(-1px); }
+    .role-btn.selected { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-light), #fff); box-shadow: 0 0 0 3px rgba(0,31,63,.08); }
     .role-btn-icon { font-size: 16px; margin-bottom: 5px; color: var(--muted); display: block; }
     .role-btn.selected .role-btn-icon { color: var(--accent); }
     .role-btn-label { font-size: 12px; font-weight: 600; color: var(--ink-2); display: block; line-height: 1.2; }
@@ -258,6 +265,13 @@
     .btn-search:hover { background: var(--accent-hover); transform: translateY(-1px); }
     .btn-search:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
+    .filter-hint {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+
     /* quick searches */
     .quick-item {
       display: flex; align-items: center; gap: 9px;
@@ -282,6 +296,11 @@
     .results-header {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+      padding: 16px 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.9));
+      border: 1px solid var(--border);
+      border-radius: var(--rL);
+      box-shadow: 0 6px 20px rgba(0,0,0,.03);
     }
     .results-title { font-family: var(--fD); font-size: 20px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
     .results-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
@@ -303,7 +322,8 @@
     .active-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
     .active-tag {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 10px; background: var(--accent-light);
+      padding: 6px 11px;
+      background: linear-gradient(180deg, var(--accent-light), #fff);
       color: var(--accent); border-radius: var(--pill);
       font-size: 12px; font-weight: 600;
       border: 1px solid rgba(0,31,63,.18);
@@ -319,14 +339,17 @@
     .results-list { display: flex; flex-direction: column; gap: 8px; }
 
     .result-card {
-      background: var(--white); border: 1px solid var(--border);
-      border-radius: var(--rL); padding: 16px 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,250,248,.96));
+      border: 1px solid var(--border);
+      border-radius: var(--rL);
+      padding: 16px 18px;
       display: flex; align-items: center; gap: 14px;
       transition: border-color .2s, box-shadow .2s, transform .2s;
+      box-shadow: 0 6px 18px rgba(0,0,0,.03);
     }
     .result-card:hover {
-      border-color: #ccc;
-      box-shadow: 0 4px 16px rgba(0,0,0,.06);
+      border-color: rgba(0,31,63,.18);
+      box-shadow: 0 12px 28px rgba(0,31,63,.08);
       transform: translateY(-1px);
     }
 
@@ -335,13 +358,14 @@
       width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
       font-size: 17px; font-weight: 800; color: var(--accent-light);
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent), var(--accent-mid));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
     }
     /* subtle variety based on role */
-    .rc-av.av-coach  { background: #0052a3; }
-    .rc-av.av-club   { background: #0a6634; }
-    .rc-av.av-pro    { background: #4a1d96; }
-    .rc-av.av-mixed  { background: #0f4c81; }
+    .rc-av.av-coach  { background: linear-gradient(135deg, #0052a3, #1a6bff); }
+    .rc-av.av-club   { background: linear-gradient(135deg, #0a6634, #16a34a); }
+    .rc-av.av-pro    { background: linear-gradient(135deg, #4a1d96, #7c3aed); }
+    .rc-av.av-mixed  { background: linear-gradient(135deg, #0f4c81, #001f3f); }
 
     /* card body */
     .rc-body { flex: 1; min-width: 0; }
@@ -384,6 +408,37 @@
     .btn-connect:hover { background: var(--accent-light); }
     .btn-connect.connected { color: var(--green); border-color: var(--green); background: var(--green-lt); }
 
+    .results-list .result-card + .result-card { margin-top: 0; }
+
+    .search-empty-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+      justify-content: center;
+    }
+
+    .search-empty-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: var(--pill);
+      border: 1px solid var(--border);
+      background: var(--white);
+      color: var(--ink-2);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .search-empty-chip:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
     /* ── SKELETON ── */
     .skeleton-list { display: flex; flex-direction: column; gap: 8px; }
     .skeleton-card {
@@ -403,6 +458,7 @@
     .state-box {
       background: var(--white); border: 1px solid var(--border);
       border-radius: var(--rL); padding: 52px 24px; text-align: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,.03);
     }
     .state-icon { font-size: 38px; color: var(--muted-2); margin-bottom: 14px; }
     .state-title { font-family: var(--fD); font-size: 18px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
@@ -412,6 +468,7 @@
     .hero-state {
       background: var(--white); border: 1px solid var(--border);
       border-radius: var(--rL); padding: 40px 28px; text-align: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,.03);
     }
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 6px;
@@ -432,6 +489,13 @@
     }
     .hero-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
     .hero-chip i { color: var(--accent); }
+
+    .filter-summary {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.5;
+    }
 
     /* ── PAGINATION ── */
     .pagination {
@@ -489,6 +553,7 @@
       .rc-right { display: none; }
       .hero-title { font-size: 20px; }
       .role-grid { grid-template-columns: 1fr 1fr; }
+      .results-header { padding: 14px 14px; }
     }
   .logo {
   display: inline-flex;
@@ -627,6 +692,7 @@
       <button class="btn-search" id="searchBtn">
         <i class="fa-solid fa-magnifying-glass"></i> Search
       </button>
+      <div class="filter-hint">Type a name or email, then use the role and sport filters to refine results instantly.</div>
     </div>
 
     <!-- role -->
@@ -650,7 +716,7 @@
         </button>
         <button class="role-btn" data-value="supportive_professional">
           <span class="role-btn-icon"><i class="fa-solid fa-star"></i></span>
-          <span class="role-btn-label">Support Pro</span>
+          <span class="role-btn-label">Professional</span>
         </button>
       </div>
     </div>
@@ -847,6 +913,7 @@
         <div class="hero-chip" onclick="quickSearch('swimming')"><i class="fa-solid fa-person-swimming"></i> Swimming</div>
         <div class="hero-chip" onclick="quickSearch('physiotherapist')"><i class="fa-solid fa-heart-pulse"></i> Physio</div>
       </div>
+      <div class="filter-summary">Search first, then refine by role or sport. Role filters will update the results immediately without needing a second click.</div>
     </div>
 
     <!-- skeleton -->
@@ -868,6 +935,12 @@
       <div class="state-icon"><i class="fa-regular fa-face-sad-tear"></i></div>
       <div class="state-title">No results found</div>
       <div class="state-sub">Try adjusting your filters or searching with different keywords</div>
+      <div class="search-empty-chip-row">
+        <button class="search-empty-chip" type="button" onclick="quickRole('athlete')"><i class="fa-solid fa-person-running"></i> Athletes</button>
+        <button class="search-empty-chip" type="button" onclick="quickRole('coach')"><i class="fa-solid fa-bullseye"></i> Coaches</button>
+        <button class="search-empty-chip" type="button" onclick="quickSport('football')"><i class="fa-solid fa-futbol"></i> Football</button>
+        <button class="search-empty-chip" type="button" onclick="quickSport('basketball')"><i class="fa-solid fa-basketball"></i> Basketball</button>
+      </div>
       <button class="btn-search" style="max-width:180px;margin:0 auto" onclick="resetAll()">
         <i class="fa-solid fa-rotate-left"></i> Reset filters
       </button>
@@ -959,6 +1032,7 @@
   let selectedRole = '';
   let isLoading = false;
   let lastSearchPage = 1;
+  let searchTimer = null;
 
   /* ── hydrate user: handled by CurrentUserStore + UserUI ── */
 
@@ -984,12 +1058,14 @@
         selectedRole = val;
       }
       renderActiveTags();
+      scheduleSearch();
     });
   });
   document.getElementById('clearRole')?.addEventListener('click', ()=>{
     selectedRole='';
     document.querySelectorAll('#roleGrid .role-btn').forEach(b=>b.classList.remove('selected'));
     renderActiveTags();
+    scheduleSearch();
   });
 
   /* ── populate sports ── */
@@ -1001,22 +1077,26 @@
       const o=document.createElement('option'); o.value=s.toLowerCase(); o.textContent=s; sportSel.appendChild(o);
     });
   }
-  sportSel?.addEventListener('change', renderActiveTags);
+  sportSel?.addEventListener('change', ()=>{
+    renderActiveTags();
+    scheduleSearch();
+  });
 
   /* ── active filter tags ── */
   function renderActiveTags(){
     const wrap = document.getElementById('activeFilters');
     wrap.innerHTML = '';
     if(selectedRole){
-      const map={'athlete':'Athlete','coach':'Coach','club':'Club','supportive_professional':'Support Professional'};
+      const map={'athlete':'Athlete','coach':'Coach','club':'Club','supportive_professional':'Professional'};
       addTag(wrap, map[selectedRole]||selectedRole, ()=>{
         selectedRole='';
         document.querySelectorAll('#roleGrid .role-btn').forEach(b=>b.classList.remove('selected'));
         renderActiveTags();
+        scheduleSearch();
       });
     }
     const sp = document.getElementById('sport')?.value;
-    if(sp){ addTag(wrap, sp, ()=>{ document.getElementById('sport').value=''; renderActiveTags(); }); }
+    if(sp){ addTag(wrap, sp, ()=>{ document.getElementById('sport').value=''; renderActiveTags(); scheduleSearch(); }); }
   }
   function addTag(wrap, label, onRemove){
     const t = document.createElement('div'); t.className='active-tag';
@@ -1029,6 +1109,21 @@
   window.quickSearch = function(term){
     document.getElementById('sidebarTerm').value  = term;
     document.getElementById('mainSearchInput').value = term;
+    doSearch(1);
+  };
+
+  window.quickRole = function(role){
+    selectedRole = role;
+    document.querySelectorAll('#roleGrid .role-btn').forEach(btn=>{
+      btn.classList.toggle('selected', btn.dataset.value === role);
+    });
+    renderActiveTags();
+    doSearch(1);
+  };
+
+  window.quickSport = function(sport){
+    document.getElementById('sport').value = sport;
+    renderActiveTags();
     doSearch(1);
   };
 
@@ -1120,6 +1215,11 @@
     document.getElementById('searchBtn').disabled = false;
   }
 
+  function scheduleSearch(){
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(()=>doSearch(1), 150);
+  }
+
   // Helper function to handle search results (API + Marketplace)
   function handleSearchResults(peopleJson, marketplaceJson, currentPage, PAGE_SIZE){
     const peopleResults = Array.isArray(peopleJson?.results)
@@ -1163,14 +1263,16 @@
         card.className = 'result-card';
         const displayName = r.displayName || [r.firstName, r.lastName].filter(Boolean).join(' ') || 'User';
         const roleLabel = r.role || r.userType || 'User';
-        const sportTag = r.sport ? `<span class="rc-tag tag-sport"><i class="fa-solid fa-dumbbell" style="font-size:10px"></i> ${r.sport}</span>` : '';
-        const locTag = r.location ? `<span class="rc-tag tag-location"><i class="fa-solid fa-location-dot" style="font-size:10px"></i> ${r.location}</span>` : '';
+        const sportTag = r.sport ? `<span class="rc-tag tag-sport"><i class="fa-solid fa-dumbbell" style="font-size:10px"></i> ${escapeHtml(r.sport)}</span>` : '';
+        const locTag = r.location ? `<span class="rc-tag tag-location"><i class="fa-solid fa-location-dot" style="font-size:10px"></i> ${escapeHtml(r.location)}</span>` : '';
+        const bioText = r.bio ? `<div class="rc-handle" style="margin-top:7px;max-width:560px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(r.bio)}</div>` : '';
         card.innerHTML = `
           <div class="rc-av ${avClass(roleLabel)}">${initials(displayName)}</div>
           <div class="rc-body">
-            <div class="rc-name">${displayName}</div>
-            <div class="rc-handle">${roleLabel} · ${r.sport||'N/A'}</div>
+            <div class="rc-name">${escapeHtml(displayName)}${r.verified ? '<i class="fa-solid fa-circle-check verified"></i>' : ''}</div>
+            <div class="rc-handle">${escapeHtml(roleLabel)} · ${escapeHtml(r.sport||'N/A')}</div>
             <div class="rc-tags">${roleTagHTML(roleLabel)}${sportTag}${locTag}</div>
+            ${bioText}
           </div>
           <div class="rc-right">
             <button class="btn-view" onclick="window.location.href='../profiles/public-profile.html?userId=${encodeURIComponent(String(r.id))}'">
@@ -1265,8 +1367,14 @@
     /* header */
     const totalResults = peopleResults.length + mpResults.length;
     document.getElementById('resultsHeader').style.display = 'flex';
+    const term = document.getElementById('sidebarTerm').value.trim();
+    const sport = document.getElementById('sport').value;
+    const parts = [];
+    if(term) parts.push(`"${escapeHtml(term)}"`);
+    if(selectedRole) parts.push(selectedRole === 'supportive_professional' ? 'Professional' : selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1));
+    if(sport) parts.push(sport);
     document.getElementById('resultsMeta').innerHTML =
-      `Found <strong>${totalResults}</strong> results`;
+      `Found <strong>${totalResults}</strong> results${parts.length ? ` for ${parts.join(' · ')}` : ''}`;
 
     /* pagination - use people pagination if people results exist, else marketplace */
     if(peopleResults.length > 0){
