@@ -488,7 +488,7 @@
     removeBookmark: function (bookmarkId) {
       return request("/api/bookmarks/" + encodeURIComponent(bookmarkId), { method: "DELETE" });
     },
-    searchUsers: function (params) {
+    searchPeople: function (params) {
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request('/api/search' + qs);
     },

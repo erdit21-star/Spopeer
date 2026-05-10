@@ -1180,14 +1180,14 @@
     let marketplaceResults = null;
 
     try {
-      // Use SpopeerAPI so credentials/CSRF are included (ensures blocked users are excluded)
+      // Use the general search API so term, sport, and role filters all apply.
       const searchParams = {};
       if(term) searchParams.term = term;
       if(sport) searchParams.sport = sport;
       if(userType) searchParams.userType = userType;
       searchParams.page = currentPage;
       searchParams.pageSize = PAGE_SIZE;
-      peopleResults = await window.SpopeerAPI.searchUsers(searchParams);
+      peopleResults = await window.SpopeerAPI.searchPeople(searchParams);
     } catch(err){
       console.error('API search failed:', err);
     }
