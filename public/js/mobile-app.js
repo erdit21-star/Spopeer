@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, activeConversationTargetId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' }, notificationsState: { items: [], source: 'all', type: 'all', sort: 'newest', query: '' } };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, activeConversationTargetId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' }, notificationsState: { items: [], source: 'all', type: 'all', sort: 'newest', query: '' }, messageThreads: {} };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -112,6 +112,31 @@
 
   function unwrapConversationDetails(result) {
     return (result && result.data) || result || {};
+  }
+
+  function getMessageThreadState(conversationId) {
+    var key = String(conversationId || '');
+    if (!app.messageThreads[key]) {
+      app.messageThreads[key] = {
+        messages: [],
+        participants: [],
+        hasMore: false,
+        oldestAt: '',
+        loaded: false,
+        loadingOlder: false
+      };
+    }
+    return app.messageThreads[key];
+  }
+
+  function messageTextValue(message) {
+    return message && (message.body || message.text || message.content) || '';
+  }
+
+  function isDeletedMessage(message) {
+    if (!message) return false;
+    if (message.deletedAt) return true;
+    return String(messageTextValue(message)).trim() === '[Message deleted]';
   }
 
   function displayNameFromUser(user) {
@@ -1557,9 +1582,11 @@
             var item = document.createElement('button');
             item.type = 'button';
             item.className = 'spm-convo-item';
+            var preview = String(conversation.lastMessage || 'Say hello');
+            if (preview === '[Message deleted]') preview = 'Message deleted';
             item.innerHTML = `
               <span class="spm-convo-avatar">${html(initialForName(conversation.otherName || 'S'))}</span>
-              <span class="spm-convo-main"><strong>${html(conversation.otherName || 'Conversation')}</strong><small>${html(conversation.lastMessage || 'Say hello')}</small></span>
+              <span class="spm-convo-main"><strong>${html(conversation.otherName || 'Conversation')}</strong><small>${html(preview)}</small></span>
               <span class="spm-convo-side">${conversation.unread ? '<i>' + html(String(conversation.unread)) + '</i>' : html(formatTime(conversation.lastAt))}</span>`;
             item.addEventListener('click', function () {
               app.activeConversationId = conversation.id;
@@ -1571,10 +1598,17 @@
           return;
         }
 
-        var detailsResult = await window.SpopeerAPI.getConversation(app.activeConversationId);
+        var threadState = getMessageThreadState(app.activeConversationId);
+        var detailsResult = await window.SpopeerAPI.getConversation(app.activeConversationId, { limit: 50 });
         var details = unwrapConversationDetails(detailsResult);
-        var messages = Array.isArray(details.messages) ? details.messages : [];
-        var participants = Array.isArray(details.participants) ? details.participants : [];
+        threadState.messages = Array.isArray(details.messages) ? details.messages : [];
+        threadState.participants = Array.isArray(details.participants) ? details.participants : [];
+        threadState.hasMore = !!details.hasMore;
+        threadState.oldestAt = details.oldestAt ? String(details.oldestAt) : '';
+        threadState.loaded = true;
+
+        var messages = threadState.messages;
+        var participants = threadState.participants;
         var meId = Number(app.user && (app.user.id || app.user.userId) || 0);
         var otherParticipant = participants.find(function (participant) {
           return Number(participant && (participant.id || participant.userId) || 0) !== meId;
@@ -1596,38 +1630,156 @@
           render();
         });
 
-        var body = document.getElementById('spmChatBody');
-        if (!messages.length) {
-          body.innerHTML = '<div class="spm-empty">No messages yet. Say hello.</div>';
-        } else {
-          body.innerHTML = '';
-          messages.forEach(function (message) {
-            var bubble = document.createElement('div');
-            var isMine = Number(message.senderId || message.fromId) === Number(app.user && app.user.id);
-            bubble.className = 'spm-bubble' + (isMine ? ' me' : '');
-            bubble.textContent = message.body || message.text || message.content || '';
-            body.appendChild(bubble);
+        function upsertMessage(message) {
+          var id = String(message && message.id || '');
+          if (!id) {
+            threadState.messages.push(message);
+            return;
+          }
+          var index = threadState.messages.findIndex(function (entry) {
+            return String(entry && entry.id || '') === id;
           });
-          body.scrollTop = body.scrollHeight;
+          if (index >= 0) {
+            threadState.messages[index] = Object.assign({}, threadState.messages[index], message);
+          } else {
+            threadState.messages.push(message);
+          }
         }
+
+        async function loadOlderMessages() {
+          if (!threadState.hasMore || threadState.loadingOlder || !threadState.oldestAt) return;
+          threadState.loadingOlder = true;
+          renderChatBody(true);
+          try {
+            var olderResult = await window.SpopeerAPI.getConversation(app.activeConversationId, {
+              limit: 50,
+              before: threadState.oldestAt
+            });
+            var olderDetails = unwrapConversationDetails(olderResult);
+            var olderMessages = Array.isArray(olderDetails.messages) ? olderDetails.messages : [];
+            var seen = new Set(threadState.messages.map(function (msg) { return String(msg && msg.id || ''); }));
+            olderMessages = olderMessages.filter(function (msg) {
+              var msgId = String(msg && msg.id || '');
+              return !msgId || !seen.has(msgId);
+            });
+            threadState.messages = olderMessages.concat(threadState.messages);
+            threadState.hasMore = !!olderDetails.hasMore;
+            threadState.oldestAt = olderDetails.oldestAt ? String(olderDetails.oldestAt) : threadState.oldestAt;
+          } catch (_olderError) {
+          } finally {
+            threadState.loadingOlder = false;
+            renderChatBody(true);
+          }
+        }
+
+        async function deleteMessage(messageId) {
+          if (!messageId) return;
+          if (!window.confirm('Delete this message?')) return;
+          try {
+            var deletedRaw = await window.SpopeerAPI.deleteConversationMessage(messageId);
+            var deletedPayload = unwrapConversationDetails(deletedRaw);
+            var deletedAt = deletedPayload.deletedAt || new Date().toISOString();
+            var index = threadState.messages.findIndex(function (message) {
+              return String(message && message.id || '') === String(messageId);
+            });
+            if (index >= 0) {
+              threadState.messages[index] = Object.assign({}, threadState.messages[index], {
+                body: '[Message deleted]',
+                content: '[Message deleted]',
+                text: '[Message deleted]',
+                deletedAt: deletedAt
+              });
+              renderChatBody(false);
+            }
+          } catch (error) {
+            alert((error && error.message) || 'Could not delete message.');
+          }
+        }
+
+        function renderChatBody(keepScroll) {
+          var body = document.getElementById('spmChatBody');
+          var prevHeight = body.scrollHeight;
+          var prevTop = body.scrollTop;
+          body.innerHTML = '';
+
+          if (threadState.hasMore) {
+            var olderWrap = document.createElement('div');
+            olderWrap.className = 'spm-chat-more-wrap';
+            var olderBtn = document.createElement('button');
+            olderBtn.type = 'button';
+            olderBtn.id = 'spmLoadOlderMessages';
+            olderBtn.className = 'spm-chat-more-btn';
+            olderBtn.textContent = threadState.loadingOlder ? 'Loading...' : 'Load older messages';
+            olderBtn.disabled = !!threadState.loadingOlder;
+            olderWrap.appendChild(olderBtn);
+            body.appendChild(olderWrap);
+          }
+
+          if (!threadState.messages.length) {
+            body.innerHTML += '<div class="spm-empty">No messages yet. Say hello.</div>';
+            return;
+          }
+
+          threadState.messages.forEach(function (message) {
+            var bubbleRow = document.createElement('div');
+            var isMine = Number(message.senderId || message.fromId) === Number(app.user && app.user.id);
+            bubbleRow.className = 'spm-bubble-row' + (isMine ? ' me' : '');
+
+            var bubble = document.createElement('div');
+            bubble.className = 'spm-bubble' + (isMine ? ' me' : '') + (isDeletedMessage(message) ? ' deleted' : '');
+            bubble.textContent = isDeletedMessage(message) ? '[Message deleted]' : messageTextValue(message);
+            bubbleRow.appendChild(bubble);
+
+            if (isMine && !isDeletedMessage(message) && message.id) {
+              var deleteBtn = document.createElement('button');
+              deleteBtn.type = 'button';
+              deleteBtn.className = 'spm-delete-msg';
+              deleteBtn.dataset.messageId = String(message.id);
+              deleteBtn.textContent = 'Delete';
+              bubbleRow.appendChild(deleteBtn);
+            }
+
+            body.appendChild(bubbleRow);
+          });
+
+          if (keepScroll) {
+            body.scrollTop = prevTop + (body.scrollHeight - prevHeight);
+          } else {
+            body.scrollTop = body.scrollHeight;
+          }
+        }
+
+        var body = document.getElementById('spmChatBody');
+        renderChatBody(false);
+
+        body.addEventListener('click', function (event) {
+          var target = event.target;
+          if (target && target.id === 'spmLoadOlderMessages') {
+            loadOlderMessages();
+            return;
+          }
+          if (target && target.classList.contains('spm-delete-msg')) {
+            deleteMessage(target.dataset.messageId || '');
+          }
+        });
 
         document.getElementById('spmSendMsg').addEventListener('click', async function () {
           var input = document.getElementById('spmChatText');
           var sendBtn = document.getElementById('spmSendMsg');
           var text = input.value.trim();
           if (!text) return;
+          if (text.length > 5000) {
+            alert('Message is too long (max 5000 characters).');
+            return;
+          }
           if (sendBtn) sendBtn.disabled = true;
           try {
-            var sent = false;
-            await window.SpopeerAPI.sendConversationMessage(app.activeConversationId, text);
-            sent = true;
-
-            if (!sent) {
-              throw new Error('Primary send path did not complete.');
-            }
+            var sentMessage = await window.SpopeerAPI.sendConversationMessage(app.activeConversationId, text);
+            var sentPayload = unwrapConversationDetails(sentMessage);
+            upsertMessage(sentPayload);
 
             input.value = '';
-            render();
+            renderChatBody(false);
           } catch (error) {
             try {
               // Fallback: recover conversation id from recipient and retry once.
@@ -1636,9 +1788,10 @@
                 var recoveredId = (recovered && recovered.data && recovered.data.id) || recovered.id;
                 if (recoveredId) {
                   app.activeConversationId = recoveredId;
-                  await window.SpopeerAPI.sendConversationMessage(app.activeConversationId, text);
+                  var recoveredSent = await window.SpopeerAPI.sendConversationMessage(app.activeConversationId, text);
+                  upsertMessage(unwrapConversationDetails(recoveredSent));
                   input.value = '';
-                  render();
+                  renderChatBody(false);
                   return;
                 }
               }
@@ -1646,6 +1799,13 @@
             alert(error.message || 'Could not send message.');
           } finally {
             if (sendBtn) sendBtn.disabled = false;
+          }
+        });
+
+        document.getElementById('spmChatText').addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            document.getElementById('spmSendMsg').click();
           }
         });
       } catch (error) {
