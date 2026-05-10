@@ -1,6 +1,6 @@
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' }, notificationsState: { items: [], source: 'all', type: 'all', sort: 'newest', query: '' } };
+  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, activeConversationTargetId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' }, notificationsState: { items: [], source: 'all', type: 'all', sort: 'newest', query: '' } };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -1477,6 +1477,7 @@
         messageBtn.addEventListener('click', async function () {
           try {
             var target = profileIdentifier(user);
+            app.activeConversationTargetId = target || null;
             var convo = await window.SpopeerAPI.createConversation(target);
             var convoId = (convo && convo.data && convo.data.id) || convo.id;
             app.activeConversationId = convoId || null;
@@ -1562,6 +1563,7 @@
               <span class="spm-convo-side">${conversation.unread ? '<i>' + html(String(conversation.unread)) + '</i>' : html(formatTime(conversation.lastAt))}</span>`;
             item.addEventListener('click', function () {
               app.activeConversationId = conversation.id;
+              app.activeConversationTargetId = conversation.otherId || null;
               render();
             });
             list.appendChild(item);
@@ -1572,6 +1574,14 @@
         var detailsResult = await window.SpopeerAPI.getConversation(app.activeConversationId);
         var details = unwrapConversationDetails(detailsResult);
         var messages = Array.isArray(details.messages) ? details.messages : [];
+        var participants = Array.isArray(details.participants) ? details.participants : [];
+        var meId = Number(app.user && (app.user.id || app.user.userId) || 0);
+        var otherParticipant = participants.find(function (participant) {
+          return Number(participant && (participant.id || participant.userId) || 0) !== meId;
+        });
+        if (otherParticipant) {
+          app.activeConversationTargetId = String(otherParticipant.id || otherParticipant.userId || '');
+        }
 
         screen.innerHTML = `
           <div class="spm-chat">
@@ -1582,6 +1592,7 @@
 
         document.getElementById('spmBackToConvos').addEventListener('click', function () {
           app.activeConversationId = null;
+          app.activeConversationTargetId = null;
           render();
         });
 
@@ -1602,14 +1613,39 @@
 
         document.getElementById('spmSendMsg').addEventListener('click', async function () {
           var input = document.getElementById('spmChatText');
+          var sendBtn = document.getElementById('spmSendMsg');
           var text = input.value.trim();
           if (!text) return;
-          input.value = '';
+          if (sendBtn) sendBtn.disabled = true;
           try {
+            var sent = false;
             await window.SpopeerAPI.sendConversationMessage(app.activeConversationId, text);
+            sent = true;
+
+            if (!sent) {
+              throw new Error('Primary send path did not complete.');
+            }
+
+            input.value = '';
             render();
           } catch (error) {
+            try {
+              // Fallback: recover conversation id from recipient and retry once.
+              if (app.activeConversationTargetId) {
+                var recovered = await window.SpopeerAPI.createConversation(app.activeConversationTargetId);
+                var recoveredId = (recovered && recovered.data && recovered.data.id) || recovered.id;
+                if (recoveredId) {
+                  app.activeConversationId = recoveredId;
+                  await window.SpopeerAPI.sendConversationMessage(app.activeConversationId, text);
+                  input.value = '';
+                  render();
+                  return;
+                }
+              }
+            } catch (_fallbackError) {}
             alert(error.message || 'Could not send message.');
+          } finally {
+            if (sendBtn) sendBtn.disabled = false;
           }
         });
       } catch (error) {
