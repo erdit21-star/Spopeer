@@ -759,7 +759,7 @@
     if(placeholder)placeholder.remove();
   }
 
-  /* ── Send message ── */
+  /* ── PHASE 2 STEP 3: Send message with optimistic UI ── */
   async function sendMessage(forcedText){
     if(!currentConversation||!messagingEnabled)return;
     if(sendInFlight)return;
@@ -768,44 +768,57 @@
     const text=(forcedText || input.value || '').trim();
     if(!text)return;
 
+    // OPTIMISTIC: Show message immediately
+    var optimisticMsg={
+      senderId:getMe(),
+      body:text,
+      createdAt:new Date().toISOString(),
+      read:false
+    };
+    appendMessage(optimisticMsg);
+
+    // Clear input right away (feels instant)
+    if(!forcedText){
+      input.value='';
+      if(sendBtn) sendBtn.disabled=true;
+    }
+
     try{
-      sendInFlight = true;
+      sendInFlight=true;
       if(sendBtn){
-        sendBtn.disabled = true;
         sendBtn.setAttribute('aria-busy','true');
       }
       if(!currentConversationId){
-        const createdData = parsePayload(await window.SpopeerAPI.createConversation(String(currentConversation)));
-        currentConversationId = String(createdData && createdData.id ? createdData.id : '');
+        const createdData=parsePayload(await window.SpopeerAPI.createConversation(String(currentConversation)));
+        currentConversationId=String(createdData&&createdData.id?createdData.id:'');
+        if(!currentConversationId){
+          throw new Error('Could not create conversation.');
+        }
       }
 
       if(currentConversationId){
-        await window.SpopeerAPI.sendConversationMessage(currentConversationId, text);
-        if(!forcedText){
-          input.value='';
-          if(sendBtn) sendBtn.disabled=true;
-        }
+        await window.SpopeerAPI.sendConversationMessage(currentConversationId,text);
         if(socket){
-          socket.emit('stop_typing', { receiverId: Number(currentConversation) });
+          var _r=parseInt(currentConversation,10);
+          if(!isNaN(_r)&&_r>0){
+            socket.emit('stop_typing',{receiverId:_r});
+          }
         }
-        await Promise.all([
-          openConversation(currentConversation,currentConversationId),
-          loadConversations()
-        ]);
+        // Refresh conversation list in background (no full reload)
+        loadConversations();
         return;
       }
 
     }catch(e){
-      console.error('Failed to send message:', e);
-    } finally {
-      sendInFlight = false;
+      console.error('Failed to send message:',e);
+      if(window.SpopeerToast) window.SpopeerToast.error('Failed to send. Please try again.');
+    }finally{
+      sendInFlight=false;
       if(sendBtn){
         sendBtn.removeAttribute('aria-busy');
-        sendBtn.disabled = !messagingEnabled || !document.getElementById('messageText').value.trim();
+        sendBtn.disabled=!messagingEnabled||!document.getElementById('messageText').value.trim();
       }
     }
-
-    if (window.SpopeerToast) window.SpopeerToast.error('Failed to send message. Please try again.');
   }
 
   document.getElementById('sendBtn').addEventListener('click',function(){ sendMessage(); });
@@ -816,13 +829,29 @@
     document.getElementById('sendBtn').disabled=!messagingEnabled||!this.value.trim();
     this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';
     if(!socket || !currentConversation) return;
-    socket.emit('typing', { receiverId: Number(currentConversation) });
+    // PHASE 2 STEP 4: Fix typing indicator — validate numeric receiverId
+    var _receiverId=parseInt(currentConversation,10);
+    if(!isNaN(_receiverId)&&_receiverId>0){
+      socket.emit('typing',{receiverId:_receiverId});
+    }
     clearTimeout(stopTypingTimer);
     stopTypingTimer=setTimeout(function(){
       if(socket && currentConversation){
-        socket.emit('stop_typing', { receiverId: Number(currentConversation) });
+        var _r=parseInt(currentConversation,10);
+        if(!isNaN(_r)&&_r>0){
+          socket.emit('stop_typing',{receiverId:_r});
+        }
       }
-    }, 800);
+    },800);
+  });
+
+  // PHASE 2 STEP 4: Stop typing on blur
+  document.getElementById('messageText').addEventListener('blur',function(){
+    if(!socket||!currentConversation)return;
+    var _r=parseInt(currentConversation,10);
+    if(!isNaN(_r)&&_r>0){
+      socket.emit('stop_typing',{receiverId:_r});
+    }
   });
 
   document.getElementById('attachFileBtn').addEventListener('click', function(e){
@@ -1084,6 +1113,31 @@
       socket.on('connect_error', function(err){
         startPolling();
         console.warn('Socket connect error:', err && err.message ? err.message : err);
+      });
+
+      // PHASE 2 STEP 9: Online presence tracking
+      socket.on('user_online', function(payload){
+        var uid=String(payload&&payload.userId||'');
+        if(!uid)return;
+        var item=document.querySelector('.conv-item[data-other="'+uid+'"]');
+        if(item){
+          var av=item.querySelector('.conv-av');
+          if(av&&!av.querySelector('.online-dot')){
+            var dot=document.createElement('div');
+            dot.className='online-dot';
+            av.appendChild(dot);
+          }
+        }
+      });
+
+      socket.on('user_offline', function(payload){
+        var uid=String(payload&&payload.userId||'');
+        if(!uid)return;
+        var item=document.querySelector('.conv-item[data-other="'+uid+'"]');
+        if(item){
+          var dot=item.querySelector('.online-dot');
+          if(dot)dot.remove();
+        }
       });
 
     }catch(e){

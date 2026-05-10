@@ -8,6 +8,9 @@ const jwt = require('jsonwebtoken');
 
 let io = null;
 
+// PHASE 2 STEP 9: Track online users
+const onlineUsers = new Map(); // userId -> Set of socket IDs
+
 // Simple per-user rate limiter for socket events
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW = 10000; // 10 seconds
@@ -76,6 +79,28 @@ function initSocket(httpServer) {
     // Join the user's personal room for targeted events
     socket.join(`user:${userId}`);
     console.log(`🔌 User ${userId} connected via WebSocket`);
+
+    // PHASE 2 STEP 9: Track online users
+    if (!onlineUsers.has(userId)) {
+      onlineUsers.set(userId, new Set());
+      // Broadcast user is online (only on first connection)
+      io.emit('user_online', { userId });
+    }
+    onlineUsers.get(userId).add(socket.id);
+
+    // Handle disconnect
+    socket.on('disconnect', () => {
+      const sockets = onlineUsers.get(userId);
+      if (sockets) {
+        sockets.delete(socket.id);
+        if (sockets.size === 0) {
+          onlineUsers.delete(userId);
+          // Broadcast user is offline
+          io.emit('user_offline', { userId });
+        }
+      }
+      console.log(`🔌 User ${userId} disconnected`);
+    });
 
     // Handle real-time message sending
     socket.on('send_message', async ({ receiverId, content }) => {
@@ -205,5 +230,11 @@ function notifyUser(userId, event, data) {
   }
 }
 
-module.exports = { initSocket, notifyUser };
+// PHASE 2 STEP 9: Helper to check if user is online
+function isUserOnline(userId) {
+  const sockets = onlineUsers.get(userId);
+  return sockets ? sockets.size > 0 : false;
+}
+
+module.exports = { initSocket, notifyUser, isUserOnline };
 
