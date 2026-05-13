@@ -15,8 +15,25 @@
   function updateMobileClass() {
     document.body.classList.toggle('is-mobile', isMobileWidth());
   }
+
+  function updateViewportMetrics() {
+    var viewportHeight = window.innerHeight;
+    if (window.visualViewport && window.visualViewport.height) {
+      viewportHeight = window.visualViewport.height;
+    }
+
+    document.documentElement.style.setProperty('--sp-viewport-h', viewportHeight + 'px');
+    document.documentElement.style.setProperty('--sp-safe-bottom', 'env(safe-area-inset-bottom, 0px)');
+  }
+
   updateMobileClass();
+  updateViewportMetrics();
   window.addEventListener('resize', updateMobileClass);
+  window.addEventListener('resize', updateViewportMetrics, { passive: true });
+  window.addEventListener('orientationchange', updateViewportMetrics, { passive: true });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateViewportMetrics, { passive: true });
+  }
 
   /* ── 2. Wrap bare tables in scroll containers ── */
   function wrapTables() {
@@ -348,16 +365,28 @@
 
   /* ── 6. Ensure viewport meta exists ── */
   function ensureViewportMeta() {
-    if (document.querySelector('meta[name="viewport"]')) return;
-    var meta = document.createElement('meta');
-    meta.name = 'viewport';
-    meta.content = 'width=device-width, initial-scale=1.0';
-    document.head.appendChild(meta);
+    var meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'viewport';
+      document.head.appendChild(meta);
+    }
+
+    var content = meta.getAttribute('content') || '';
+    if (!content) {
+      meta.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+      return;
+    }
+
+    if (!/viewport-fit\s*=\s*cover/i.test(content)) {
+      meta.setAttribute('content', content.replace(/\s*,\s*$/, '') + ', viewport-fit=cover');
+    }
   }
 
   /* ── Init ── */
   function init() {
     ensureViewportMeta();
+    updateViewportMetrics();
     wrapTables();
     makeEmbedsResponsive();
     setupPublicNavMobileMenu();
