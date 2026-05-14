@@ -8,6 +8,12 @@ const MarketplaceService = {
   CACHE_KEY: 'marketplace_cache_',
   CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
 
+  unwrapResponse: function(response) {
+    if (!response || typeof response !== 'object') return response;
+    if (Array.isArray(response)) return response;
+    return response.data || response.payload || response.user || response;
+  },
+
   /**
    * Get listings with filters and pagination
    */
@@ -48,7 +54,7 @@ const MarketplaceService = {
 
     // Cache result
     localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
-    return data;
+    return this.unwrapResponse(data);
   },
 
   /**
@@ -70,7 +76,7 @@ const MarketplaceService = {
     const data = await response.json();
 
     localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
-    return data;
+    return this.unwrapResponse(data);
   },
 
   /**
@@ -95,7 +101,7 @@ const MarketplaceService = {
 
     const data = await response.json();
     this.clearListingsCache();
-    return data;
+    return this.unwrapResponse(data);
   },
 
   /**
@@ -117,7 +123,7 @@ const MarketplaceService = {
     }
 
     this.clearListingsCache();
-    return await response.json();
+    return this.unwrapResponse(await response.json());
   },
 
   /**
@@ -131,7 +137,7 @@ const MarketplaceService = {
 
     if (!response.ok) throw new Error('Failed to delete listing');
     this.clearListingsCache();
-    return await response.json();
+    return this.unwrapResponse(await response.json());
   },
 
   /**
@@ -149,7 +155,7 @@ const MarketplaceService = {
 
     if (!response.ok) throw new Error('Failed to update status');
     this.clearListingsCache();
-    return await response.json();
+    return this.unwrapResponse(await response.json());
   },
 
   /**
@@ -161,7 +167,7 @@ const MarketplaceService = {
     });
 
     if (!response.ok) throw new Error('Failed to fetch your listings');
-    return await response.json();
+    return this.unwrapResponse(await response.json()) || [];
   },
 
   /**
@@ -182,7 +188,7 @@ const MarketplaceService = {
     });
 
     if (!response.ok) throw new Error('Failed to create inquiry');
-    return await response.json();
+    return this.unwrapResponse(await response.json());
   },
 
   /**
@@ -194,7 +200,7 @@ const MarketplaceService = {
     });
 
     if (!response.ok) throw new Error('Failed to fetch inquiries');
-    return await response.json();
+    return this.unwrapResponse(await response.json()) || [];
   },
 
   /**
@@ -206,7 +212,7 @@ const MarketplaceService = {
     });
 
     if (!response.ok) throw new Error('Failed to fetch inquiries');
-    return await response.json();
+    return this.unwrapResponse(await response.json()) || [];
   },
 
   /**
@@ -223,7 +229,7 @@ const MarketplaceService = {
     });
 
     if (!response.ok) throw new Error('Failed to update inquiry status');
-    return await response.json();
+    return this.unwrapResponse(await response.json());
   },
 
   /**
@@ -236,7 +242,7 @@ const MarketplaceService = {
     });
 
     if (!response.ok) throw new Error('Failed to toggle save');
-    return await response.json();
+    return this.unwrapResponse(await response.json());
   },
 
   /**
@@ -248,7 +254,7 @@ const MarketplaceService = {
     });
 
     if (!response.ok) throw new Error('Failed to fetch saved listings');
-    return await response.json();
+    return this.unwrapResponse(await response.json()) || [];
   },
 
   /**

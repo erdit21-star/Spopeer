@@ -12,6 +12,13 @@
       el.innerHTML = `<img src="${user.avatarUrl}" alt="${escapeHtml(
         user.displayName || 'User'
       )}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      const img = el.querySelector('img');
+      if (img) {
+        img.addEventListener('error', function handleAvatarError() {
+          el.innerHTML = '';
+          el.textContent = user.initials || 'U';
+        }, { once: true });
+      }
       return;
     }
 

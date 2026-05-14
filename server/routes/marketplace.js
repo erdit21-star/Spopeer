@@ -22,6 +22,50 @@
 const express = require('express');
 const router = express.Router();
 const { Listing, User, SavedListing, Inquiry } = require('../models');
+
+function plainRecord(record) {
+  if (!record) return null;
+  return typeof record.get === 'function' ? record.get({ plain: true }) : record;
+}
+
+async function attachListingMetrics(listings) {
+  const plainListings = (listings || []).map(plainRecord);
+  if (!plainListings.length) return [];
+
+  const listingIds = plainListings.map(listing => listing.id).filter(Boolean);
+
+  const [savedRows, inquiryRows] = await Promise.all([
+    SavedListing.findAll({
+      where: { listingId: { [Op.in]: listingIds } },
+      attributes: ['listingId']
+    }),
+    Inquiry.findAll({
+      where: { listingId: { [Op.in]: listingIds } },
+      attributes: ['listingId']
+    })
+  ]);
+
+  const savedCounts = savedRows.reduce((acc, row) => {
+    const listingId = Number(row.listingId);
+    acc[listingId] = (acc[listingId] || 0) + 1;
+    return acc;
+  }, {});
+
+  const inquiryCounts = inquiryRows.reduce((acc, row) => {
+    const listingId = Number(row.listingId);
+    acc[listingId] = (acc[listingId] || 0) + 1;
+    return acc;
+  }, {});
+
+  return plainListings.map(listing => ({
+    ...listing,
+    images: Array.isArray(listing.imageUrls) ? listing.imageUrls : [],
+    imageUrls: Array.isArray(listing.imageUrls) ? listing.imageUrls : [],
+    views_count: Number(listing.viewCount || 0),
+    saves_count: Number(savedCounts[listing.id] || 0),
+    inquiries_count: Number(inquiryCounts[listing.id] || 0)
+  }));
+}
 const { authenticate } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
@@ -70,9 +114,10 @@ router.get('/my-listings', authenticate, async (req, res) => {
   try {
     const listings = await Listing.findAll({
       where: { sellerId: req.userId },
+      include: [{ model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'role'] }],
       order: [['createdAt', 'DESC']]
     });
-    ok(res, listings);
+    ok(res, await attachListingMetrics(listings));
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch your listings.');
   }
@@ -170,6 +215,10 @@ router.get('/inquiries/received', authenticate, async (req, res) => {
   try {
     const inquiries = await Inquiry.findAll({
       where: { sellerId: req.userId },
+      include: [
+        { model: User, as: 'buyer', attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'email'] },
+        { model: Listing, as: 'listing', attributes: ['id', 'title', 'imageUrls', 'status'] }
+      ],
       order: [['createdAt', 'DESC']]
     });
     ok(res, inquiries);
@@ -183,6 +232,10 @@ router.get('/inquiries/sent', authenticate, async (req, res) => {
   try {
     const inquiries = await Inquiry.findAll({
       where: { buyerId: req.userId },
+      include: [
+        { model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'email'] },
+        { model: Listing, as: 'listing', attributes: ['id', 'title', 'imageUrls', 'status'] }
+      ],
       order: [['createdAt', 'DESC']]
     });
     ok(res, inquiries);

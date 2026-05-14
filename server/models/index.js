@@ -105,6 +105,16 @@ GroupMember.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 // User <-> Listing (marketplace)
 User.hasMany(Listing, { foreignKey: 'sellerId', as: 'listings' });
 Listing.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+User.hasMany(Inquiry, { foreignKey: 'buyerId', as: 'sentMarketplaceInquiries' });
+User.hasMany(Inquiry, { foreignKey: 'sellerId', as: 'receivedMarketplaceInquiries' });
+Inquiry.belongsTo(User, { foreignKey: 'buyerId', as: 'buyer' });
+Inquiry.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+Listing.hasMany(Inquiry, { foreignKey: 'listingId', as: 'inquiries' });
+Inquiry.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
+User.hasMany(SavedListing, { foreignKey: 'userId', as: 'savedListings' });
+SavedListing.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+Listing.hasMany(SavedListing, { foreignKey: 'listingId', as: 'savedBy' });
+SavedListing.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
 
 // User <-> Thread <-> Reply (forums)
 User.hasMany(Thread, { foreignKey: 'userId', as: 'threads' });

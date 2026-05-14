@@ -80,6 +80,29 @@
     .nav-right {
       margin-left: auto; display: flex; align-items: center; gap: 12px;
     }
+    .user-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 12px 6px 6px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--pill);
+      min-width: 0;
+    }
+    .chip-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      overflow: hidden; flex-shrink: 0;
+      background: var(--accent); color: var(--accent-lt);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800;
+    }
+    .chip-avatar img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .chip-name {
+      font-size: 13px; font-weight: 600; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 160px;
+    }
 
     /* PAGE CONTAINER */
     .page-container {
@@ -402,7 +425,7 @@
 
       <!-- Views Bar Chart -->
       <div class="chart-card full-width">
-        <h3>Views Over Time</h3>
+        <h3>Views by Listing</h3>
         <div class="bar-chart" id="viewsChart">
           <!-- Bars rendered by JS -->
         </div>
@@ -460,6 +483,82 @@
     let receivedInquiries = [];
     let currentPeriod = 30;
 
+    function getDateValue(record) {
+      if (!record) return null;
+      return record.createdAt || record.created_at || record.updatedAt || record.updated_at || null;
+    }
+
+    function isWithinCurrentPeriod(record) {
+      if (currentPeriod === 'all') return true;
+      var rawDate = getDateValue(record);
+      if (!rawDate) return true;
+      var date = new Date(rawDate);
+      if (Number.isNaN(date.getTime())) return true;
+      var now = new Date();
+      var cutoff = new Date(now);
+      cutoff.setDate(now.getDate() - Number(currentPeriod || 30));
+      return date >= cutoff;
+    }
+
+    function getVisibleListings() {
+      return allListings.filter(isWithinCurrentPeriod);
+    }
+
+    function getVisibleInquiries() {
+      return receivedInquiries.filter(isWithinCurrentPeriod);
+    }
+
+    function getMetricValue(record, keys) {
+      for (var i = 0; i < keys.length; i += 1) {
+        var value = record && record[keys[i]];
+        if (value !== undefined && value !== null && value !== '') {
+          var num = Number(value);
+          return Number.isFinite(num) ? num : 0;
+        }
+      }
+      return 0;
+    }
+
+    function getListingImages(listing) {
+      if (!listing) return [];
+      if (Array.isArray(listing.images)) return listing.images.filter(Boolean);
+      if (Array.isArray(listing.imageUrls)) return listing.imageUrls.filter(Boolean);
+      return [];
+    }
+
+    function getDisplayName(user) {
+      if (!user) return 'Unknown User';
+      return user.displayName || user.name || [user.firstName, user.lastName].filter(Boolean).join(' ').trim() || user.email || 'Unknown User';
+    }
+
+    function getInitials(name) {
+      return String(name || 'U').split(' ').filter(Boolean).slice(0, 2).map(function(part) { return part.charAt(0); }).join('').toUpperCase() || 'U';
+    }
+
+    function normalizeListings(rows) {
+      return (Array.isArray(rows) ? rows : []).map(function(listing) {
+        var images = getListingImages(listing);
+        return Object.assign({}, listing, {
+          images: images,
+          imageUrls: images,
+          views_count: getMetricValue(listing, ['views_count', 'viewCount']),
+          saves_count: getMetricValue(listing, ['saves_count']),
+          inquiries_count: getMetricValue(listing, ['inquiries_count'])
+        });
+      });
+    }
+
+    function normalizeInquiries(rows) {
+      return (Array.isArray(rows) ? rows : []).map(function(inquiry) {
+        var buyer = inquiry.buyer || inquiry.user || inquiry.sender || null;
+        return Object.assign({}, inquiry, {
+          buyer: buyer,
+          created_at: inquiry.created_at || inquiry.createdAt || null,
+          listing: inquiry.listing || null
+        });
+      });
+    }
+
     async function loadAnalytics() {
       try {
         const [listings, inquiries] = await Promise.all([
@@ -467,13 +566,19 @@
           MarketplaceService.getReceivedInquiries()
         ]);
 
-        allListings = listings || [];
-        receivedInquiries = inquiries || [];
+        allListings = normalizeListings(listings || []);
+        receivedInquiries = normalizeInquiries(inquiries || []);
 
         if (allListings.length === 0) {
           document.getElementById('emptyState').style.display = 'block';
+          document.querySelector('.stats-row').style.display = 'none';
+          document.querySelector('.analytics-grid').style.display = 'none';
           return;
         }
+
+        document.getElementById('emptyState').style.display = 'none';
+        document.querySelector('.stats-row').style.display = '';
+        document.querySelector('.analytics-grid').style.display = '';
 
         renderStats();
         renderViewsChart();
@@ -487,22 +592,25 @@
     }
 
     function renderStats() {
-      var active = allListings.filter(function(l) { return l.status === 'active'; }).length;
-      var totalViews = allListings.reduce(function(s, l) { return s + (l.views_count || 0); }, 0);
-      var totalInquiries = receivedInquiries.length;
+      var visibleListings = getVisibleListings();
+      var visibleInquiries = getVisibleInquiries();
+      var active = visibleListings.filter(function(l) { return l.status === 'active'; }).length;
+      var totalViews = visibleListings.reduce(function(s, l) { return s + getMetricValue(l, ['views_count', 'viewCount']); }, 0);
+      var totalInquiries = visibleInquiries.length;
+      var totalSaved = visibleListings.reduce(function(s, l) { return s + getMetricValue(l, ['saves_count']); }, 0);
 
       document.getElementById('statActive').textContent = active;
       document.getElementById('statViews').textContent = totalViews.toLocaleString();
       document.getElementById('statInquiries').textContent = totalInquiries;
-      document.getElementById('statSaved').textContent = allListings.reduce(function(s, l) { return s + (l.saves_count || 0); }, 0);
+      document.getElementById('statSaved').textContent = totalSaved.toLocaleString();
     }
 
     function renderViewsChart() {
       var chart = document.getElementById('viewsChart');
       chart.innerHTML = '';
 
-      // Group views by listing (top 8)
-      var sorted = allListings.slice().sort(function(a, b) { return (b.views_count || 0) - (a.views_count || 0); });
+      var visibleListings = getVisibleListings();
+      var sorted = visibleListings.slice().sort(function(a, b) { return getMetricValue(b, ['views_count', 'viewCount']) - getMetricValue(a, ['views_count', 'viewCount']); });
       var top = sorted.slice(0, 8);
 
       if (top.length === 0) {
@@ -510,10 +618,10 @@
         return;
       }
 
-      var maxViews = Math.max.apply(null, top.map(function(l) { return l.views_count || 0; })) || 1;
+      var maxViews = Math.max.apply(null, top.map(function(l) { return getMetricValue(l, ['views_count', 'viewCount']); })) || 1;
 
       top.forEach(function(listing) {
-        var views = listing.views_count || 0;
+        var views = getMetricValue(listing, ['views_count', 'viewCount']);
         var pct = (views / maxViews) * 100;
         var col = document.createElement('div');
         col.className = 'bar-col';
@@ -526,10 +634,11 @@
     }
 
     function renderStatusDonut() {
-      var active = allListings.filter(function(l) { return l.status === 'active'; }).length;
-      var paused = allListings.filter(function(l) { return l.status === 'paused'; }).length;
-      var sold = allListings.filter(function(l) { return l.status === 'sold'; }).length;
-      var total = allListings.length;
+      var visibleListings = getVisibleListings();
+      var active = visibleListings.filter(function(l) { return l.status === 'active'; }).length;
+      var paused = visibleListings.filter(function(l) { return l.status === 'paused'; }).length;
+      var sold = visibleListings.filter(function(l) { return l.status === 'sold'; }).length;
+      var total = visibleListings.length;
 
       var donut = document.getElementById('statusDonut');
       var legend = document.getElementById('statusLegend');
@@ -559,7 +668,8 @@
       var tbody = document.getElementById('topListingsBody');
       tbody.innerHTML = '';
 
-      var sorted = allListings.slice().sort(function(a, b) { return (b.views_count || 0) - (a.views_count || 0); });
+      var visibleListings = getVisibleListings();
+      var sorted = visibleListings.slice().sort(function(a, b) { return getMetricValue(b, ['views_count', 'viewCount']) - getMetricValue(a, ['views_count', 'viewCount']); });
       var top = sorted.slice(0, 5);
 
       if (top.length === 0) {
@@ -568,7 +678,8 @@
       }
 
       top.forEach(function(listing) {
-        var image = listing.images && listing.images.length > 0 ? listing.images[0] : '';
+        var images = getListingImages(listing);
+        var image = images.length > 0 ? images[0] : '';
         var imgHtml = image
           ? '<img src="' + escapeAttr(image) + '" alt="' + escapeAttr(listing.title) + '">'
           : '<i class="fa-solid fa-image" style="color:var(--muted)"></i>';
@@ -579,8 +690,8 @@
         row.innerHTML =
           '<td><div class="listing-cell"><div class="listing-thumb">' + imgHtml + '</div>' +
           '<span class="listing-name">' + escapeHtml(listing.title) + '</span></div></td>' +
-          '<td>' + (listing.views_count || 0) + '</td>' +
-          '<td>' + (listing.inquiries_count || 0) + '</td>';
+          '<td>' + getMetricValue(listing, ['views_count', 'viewCount']) + '</td>' +
+          '<td>' + getMetricValue(listing, ['inquiries_count']) + '</td>';
         tbody.appendChild(row);
       });
     }
@@ -589,26 +700,36 @@
       var container = document.getElementById('recentInquiries');
       container.innerHTML = '';
 
-      if (receivedInquiries.length === 0) {
+      var visibleInquiries = getVisibleInquiries();
+
+      if (visibleInquiries.length === 0) {
         container.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:13px;padding:24px;">No inquiries received yet</p>';
         return;
       }
 
-      var recent = receivedInquiries.slice(0, 8);
+      var recent = visibleInquiries.slice().sort(function(a, b) {
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      }).slice(0, 8);
       recent.forEach(function(inq) {
-        var name = (inq.buyer && inq.buyer.name) || 'Unknown';
-        var initials = name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase();
-        var date = new Date(inq.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        var name = getDisplayName(inq.buyer);
+        var initials = getInitials(name);
+        var createdAt = inq.created_at || inq.createdAt || null;
+        var date = createdAt ? new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Unknown date';
         var status = inq.status || 'pending';
         var badgeClass = status === 'replied' ? 'badge-replied' : 'badge-pending';
+        var avatarUrl = inq.buyer && (inq.buyer.avatarUrl || inq.buyer.avatar);
+        var avatarHtml = avatarUrl
+          ? '<img src="' + escapeAttr(avatarUrl) + '" alt="' + escapeAttr(name) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+          : escapeHtml(initials);
+        var messageText = inq.message || ((inq.listing && inq.listing.title) ? ('Inquiry about ' + inq.listing.title) : 'No message');
 
         var item = document.createElement('div');
         item.className = 'inquiry-item';
         item.innerHTML =
-          '<div class="inquiry-avatar">' + escapeHtml(initials) + '</div>' +
+          '<div class="inquiry-avatar">' + avatarHtml + '</div>' +
           '<div class="inquiry-info">' +
             '<div class="inquiry-name">' + escapeHtml(name) + '</div>' +
-            '<div class="inquiry-text">' + escapeHtml(inq.message || 'No message') + '</div>' +
+            '<div class="inquiry-text">' + escapeHtml(messageText) + '</div>' +
           '</div>' +
           '<span class="badge ' + badgeClass + '">' + escapeHtml(status) + '</span>' +
           '<span class="inquiry-date">' + date + '</span>';
@@ -647,7 +768,6 @@
     loadAnalytics();
   </script>
 <script src="/js/navigation.js"></script>
-</script>
 <script src="/js/current-user-store.js"></script>
 <script src="/js/user-ui.js"></script>
 <script>
