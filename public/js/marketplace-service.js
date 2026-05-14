@@ -395,6 +395,21 @@ const MarketplaceService = {
   },
 
   /**
+   * Get time-series analytics data for a listing
+   */
+  getTimeSeriesAnalytics: async function(listingId, period = '30') {
+    try {
+      const response = await fetch(`/api/marketplace/analytics/${listingId}/time-series?period=${period}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      return this.unwrapResponse(result);
+    } catch (err) {
+      console.error('Failed to fetch time-series analytics:', err);
+      return { timeSeries: [], total: 0 };
+    }
+  },
+
+  /**
    * Track search activity for analytics
    */
   trackSearch: function(query, filters) {

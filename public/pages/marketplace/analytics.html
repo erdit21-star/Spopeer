@@ -211,6 +211,56 @@
       font-size: 10px; font-weight: 700; color: var(--ink);
     }
 
+    /* TIME-SERIES CHART */
+    .bar-col-timeseries {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; gap: 4px; height: 100%;
+      justify-content: flex-end; min-width: 20px;
+    }
+    .bar-value-ts {
+      font-size: 8px; color: var(--muted); font-weight: 600;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .bar-container-ts {
+      width: 100%; max-width: 24px; display: flex;
+      flex-direction: column; height: 120px; background: var(--surface);
+      border-radius: 2px; overflow: hidden;
+    }
+    .bar-views {
+      width: 100%; background: var(--accent);
+      transition: height 0.3s ease;
+      min-height: 1px;
+    }
+    .bar-inquiries {
+      width: 100%; background: #e85d04;
+      transition: height 0.3s ease;
+      min-height: 1px;
+    }
+    .bar-label-ts {
+      font-size: 8px; color: var(--muted); font-weight: 600;
+      white-space: nowrap;
+    }
+    .view-count {
+      color: var(--accent); font-weight: 700;
+    }
+    .inquiry-count {
+      color: #e85d04; font-weight: 700;
+    }
+    .timeseries-legend {
+      display: flex; gap: 16px; justify-content: center;
+      margin-top: 16px; font-size: 12px; color: var(--muted);
+    }
+    .legend-color {
+      display: inline-block; width: 12px; height: 12px;
+      border-radius: 2px; margin-right: 6px; vertical-align: middle;
+    }
+    .legend-color.views {
+      background: var(--accent);
+    }
+    .legend-color.inquiries {
+      background: #e85d04;
+    }
+
     /* TOP LISTINGS TABLE */
     .top-table {
       width: 100%; border-collapse: collapse;
@@ -337,6 +387,8 @@
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
   <script src="/js/topnav-normalizer.js"></script>
   <script src="/js/mobile-enhancements.js" defer></script>
+    <script src="/js/session-activity-tracker.js" defer></script>
+    <script src="/js/smooth-navigation.js" defer></script>
 </head>
 <body>
   <script>
@@ -569,6 +621,27 @@
         allListings = normalizeListings(listings || []);
         receivedInquiries = normalizeInquiries(inquiries || []);
 
+        // Load time-series data for each listing
+        await Promise.all(allListings.map(async function(listing) {
+          try {
+            const timeSeriesData = await MarketplaceService.getTimeSeriesAnalytics(listing.id, currentPeriod);
+            listing.analyticsEvents = [];
+            if (timeSeriesData && timeSeriesData.timeSeries) {
+              timeSeriesData.timeSeries.forEach(function(day) {
+                if (day.view > 0) {
+                  listing.analyticsEvents.push({ date: day.date, eventType: 'view' });
+                }
+                for (let i = 0; i < day.inquiry; i++) {
+                  listing.analyticsEvents.push({ date: day.date, eventType: 'inquiry' });
+                }
+              });
+            }
+          } catch (err) {
+            console.debug('Failed to load time-series for listing ' + listing.id, err);
+            listing.analyticsEvents = [];
+          }
+        }));
+
         if (allListings.length === 0) {
           document.getElementById('emptyState').style.display = 'block';
           document.querySelector('.stats-row').style.display = 'none';
@@ -610,27 +683,83 @@
       chart.innerHTML = '';
 
       var visibleListings = getVisibleListings();
-      var sorted = visibleListings.slice().sort(function(a, b) { return getMetricValue(b, ['views_count', 'viewCount']) - getMetricValue(a, ['views_count', 'viewCount']); });
-      var top = sorted.slice(0, 8);
-
-      if (top.length === 0) {
+      if (visibleListings.length === 0) {
         chart.innerHTML = '<p style="margin:auto;color:var(--muted);font-size:13px;">No data yet</p>';
         return;
       }
 
-      var maxViews = Math.max.apply(null, top.map(function(l) { return getMetricValue(l, ['views_count', 'viewCount']); })) || 1;
+      // Aggregate time-series data across all visible listings
+      var timeSeriesData = {};
+      var maxViewsPerDay = 0;
+      var maxInquiriesPerDay = 0;
 
-      top.forEach(function(listing) {
-        var views = getMetricValue(listing, ['views_count', 'viewCount']);
-        var pct = (views / maxViews) * 100;
+      visibleListings.forEach(function(listing) {
+        if (!listing.analyticsEvents) return;
+        listing.analyticsEvents.forEach(function(event) {
+          if (!timeSeriesData[event.date]) {
+            timeSeriesData[event.date] = { views: 0, inquiries: 0 };
+          }
+          if (event.eventType === 'view') {
+            timeSeriesData[event.date].views++;
+          } else if (event.eventType === 'inquiry') {
+            timeSeriesData[event.date].inquiries++;
+          }
+          maxViewsPerDay = Math.max(maxViewsPerDay, timeSeriesData[event.date].views);
+          maxInquiriesPerDay = Math.max(maxInquiriesPerDay, timeSeriesData[event.date].inquiries);
+        });
+      });
+
+      var dates = Object.keys(timeSeriesData).sort();
+      if (dates.length === 0) {
+        // Fallback: show top listings by views
+        var sorted = visibleListings.slice().sort(function(a, b) { return getMetricValue(b, ['views_count', 'viewCount']) - getMetricValue(a, ['views_count', 'viewCount']); });
+        var top = sorted.slice(0, 8);
+        var maxViews = Math.max.apply(null, top.map(function(l) { return getMetricValue(l, ['views_count', 'viewCount']); })) || 1;
+        top.forEach(function(listing) {
+          var views = getMetricValue(listing, ['views_count', 'viewCount']);
+          var pct = (views / maxViews) * 100;
+          var col = document.createElement('div');
+          col.className = 'bar-col';
+          col.innerHTML =
+            '<div class="bar-value">' + views + '</div>' +
+            '<div class="bar" style="height:' + Math.max(pct, 2) + '%"></div>' +
+            '<div class="bar-label">' + truncate(listing.title, 8) + '</div>';
+          chart.appendChild(col);
+        });
+        return;
+      }
+
+      // Show last 14 dates or fewer
+      var displayDates = dates.slice(-14);
+      var maxValue = Math.max(maxViewsPerDay, maxInquiriesPerDay) || 1;
+
+      displayDates.forEach(function(date) {
+        var data = timeSeriesData[date];
+        var viewsPct = (data.views / maxValue) * 100;
+        var inquiriesPct = (data.inquiries / maxValue) * 100;
+
         var col = document.createElement('div');
-        col.className = 'bar-col';
+        col.className = 'bar-col-timeseries';
         col.innerHTML =
-          '<div class="bar-value">' + views + '</div>' +
-          '<div class="bar" style="height:' + Math.max(pct, 2) + '%"></div>' +
-          '<div class="bar-label">' + truncate(listing.title, 8) + '</div>';
+          '<div class="bar-value-ts">' +
+          '<span class="view-count" title="Views">' + data.views + '</span>' +
+          '<span class="inquiry-count" title="Inquiries">' + data.inquiries + '</span>' +
+          '</div>' +
+          '<div class="bar-container-ts">' +
+          '<div class="bar-views" style="height:' + Math.max(viewsPct, 1) + '%"></div>' +
+          '<div class="bar-inquiries" style="height:' + Math.max(inquiriesPct, 1) + '%"></div>' +
+          '</div>' +
+          '<div class="bar-label-ts">' + date.substring(5) + '</div>';
         chart.appendChild(col);
       });
+
+      // Add legend
+      var legend = document.createElement('div');
+      legend.className = 'timeseries-legend';
+      legend.innerHTML =
+        '<div><span class="legend-color views"></span> Views</div>' +
+        '<div><span class="legend-color inquiries"></span> Inquiries</div>';
+      chart.appendChild(legend);
     }
 
     function renderStatusDonut() {
@@ -737,11 +866,41 @@
       });
     }
 
-    function setPeriod(p) {
+    async function setPeriod(p) {
       currentPeriod = p;
       document.querySelectorAll('.period-btn').forEach(function(btn) { btn.classList.remove('active'); });
       document.querySelector('[data-period="' + p + '"]').classList.add('active');
-      // Re-render with period filter (data is already loaded)
+      
+      // Reload time-series data with new period
+      try {
+        await Promise.all(allListings.map(async function(listing) {
+          try {
+            const timeSeriesData = await MarketplaceService.getTimeSeriesAnalytics(listing.id, p);
+            listing.analyticsEvents = [];
+            if (timeSeriesData && timeSeriesData.timeSeries) {
+              timeSeriesData.timeSeries.forEach(function(day) {
+                if (day.view > 0) {
+                  for (let i = 0; i < day.view; i++) {
+                    listing.analyticsEvents.push({ date: day.date, eventType: 'view' });
+                  }
+                }
+                if (day.inquiry > 0) {
+                  for (let i = 0; i < day.inquiry; i++) {
+                    listing.analyticsEvents.push({ date: day.date, eventType: 'inquiry' });
+                  }
+                }
+              });
+            }
+          } catch (err) {
+            console.debug('Failed to load time-series for listing ' + listing.id, err);
+            listing.analyticsEvents = [];
+          }
+        }));
+      } catch (err) {
+        console.error('Error reloading period data:', err);
+      }
+      
+      // Re-render with period filter
       renderStats();
       renderViewsChart();
       renderStatusDonut();
@@ -778,3 +937,4 @@
 </script>
 </body>
 </html>
+

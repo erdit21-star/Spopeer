@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Spopeer — Connect. Share. Play.</title>
+<title>Spopeer � Connect. Share. Play.</title>
 <meta name="description" content="The sports networking platform for athletes, coaches, clubs, and professionals. Build your sports identity, share your journey, and grow your network.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +34,7 @@
 html{scroll-behavior:smooth}
 body{font-family:var(--fb);background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden}
 
-/* ── NAV ── */
+/* -- NAV -- */
 nav{
   position:sticky;top:0;z-index:200;
   background:rgba(246,245,240,.9);
@@ -112,7 +112,7 @@ nav{
 .mobile-menu .btn{width:100%;justify-content:center;padding:13px;border-radius:var(--r)}
 .mobile-menu .btn-ghost{margin-bottom:4px}
 
-/* ── HERO ── */
+/* -- HERO -- */
 .hero{
   max-width:1180px;margin:0 auto;
   padding:72px 24px 52px;
@@ -163,7 +163,7 @@ nav{
 .hero-stat strong{display:block;font-family:var(--fd);font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.03em}
 .hero-stat span{font-size:12px;color:var(--muted);font-weight:500}
 
-/* ── HERO VISUAL ── */
+/* -- HERO VISUAL -- */
 .hero-visual{position:relative}
 .phone-frame{
   background:var(--white);
@@ -223,7 +223,7 @@ nav{
   font-size:10px;font-weight:700;margin-bottom:6px;
 }
 
-/* ── ROLES SECTION ── */
+/* -- ROLES SECTION -- */
 .roles{
   max-width:1180px;margin:0 auto;padding:64px 24px;
 }
@@ -273,7 +273,7 @@ nav{
 .role-link i{font-size:10px;transition:transform .15s}
 .role-card:hover .role-link i{transform:translateX(3px)}
 
-/* ── FEATURES STRIP ── */
+/* -- FEATURES STRIP -- */
 .features{
   background:var(--navy);color:#fff;
   padding:72px 0;overflow:hidden;
@@ -305,7 +305,7 @@ nav{
 .feat-cell h4{font-size:15px;font-weight:700;color:#fff;margin-bottom:6px}
 .feat-cell p{font-size:13px;color:rgba(255,255,255,.55);line-height:1.6}
 
-/* ── SOCIAL PROOF / SPORTS STRIP ── */
+/* -- SOCIAL PROOF / SPORTS STRIP -- */
 .sports-strip{
   padding:36px 0;
   background:var(--surface);
@@ -363,7 +363,7 @@ nav{
   to   { transform: translateX(-50%); }
 }
 
-/* ── HOW IT WORKS ── */
+/* -- HOW IT WORKS -- */
 .how{max-width:1180px;margin:0 auto;padding:72px 24px}
 .steps-grid{
   display:grid;grid-template-columns:repeat(3,1fr);
@@ -382,7 +382,7 @@ nav{
 .step h3{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:8px}
 .step p{font-size:14px;color:var(--muted);line-height:1.6}
 
-/* ── CTA BAND ── */
+/* -- CTA BAND -- */
 .cta-band{
   background:linear-gradient(135deg,var(--navy) 0%,#0d3a8e 50%,#1a5cff 100%);
   padding:80px 24px;text-align:center;position:relative;overflow:hidden;
@@ -417,7 +417,7 @@ nav{
 }
 .btn-cta-ghost:hover{background:rgba(255,255,255,.2)}
 
-/* ── FOOTER ── */
+/* -- FOOTER -- */
 footer{
   background:var(--ink);color:rgba(255,255,255,.45);
   padding:32px 24px 24px;
@@ -457,7 +457,7 @@ footer{
 }
 .footer-bottom p{font-size:12px;color:rgba(255,255,255,.3)}
 
-/* ── ANIMATIONS ── */
+/* -- ANIMATIONS -- */
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes heroBlink{0%,100%{opacity:1}50%{opacity:0}}
 .hero-copy,.hero-visual{animation:fadeUp .6s ease both}
@@ -467,7 +467,7 @@ footer{
 .role-card:nth-child(3){animation:fadeUp .5s .19s ease both}
 .role-card:nth-child(4){animation:fadeUp .5s .26s ease both}
 
-/* ── RESPONSIVE ── */
+/* -- RESPONSIVE -- */
 @media(max-width:960px){
   .hero{grid-template-columns:1fr;gap:40px;padding:52px 20px 40px}
   .hero-visual{display:none}
@@ -494,12 +494,14 @@ footer{
 
   <link rel="stylesheet" href="/css/mobile-responsive.css">
   <script src="/js/mobile-enhancements.js" defer></script>
+    <script src="/js/session-activity-tracker.js" defer></script>
+    <script src="/js/smooth-navigation.js" defer></script>
   <script src="/js/auth.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/home-auth-modal.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-  /* ── AUTH MODAL ── */
+  /* -- AUTH MODAL -- */
   .auth-modal{
     display:none;
     position:fixed;
@@ -520,7 +522,7 @@ footer{
     box-shadow:0 40px 100px rgba(0,0,0,.35);
     max-height:92vh;
   }
-  /* ── LEFT BRAND PANEL ── */
+  /* -- LEFT BRAND PANEL -- */
   .auth-left{
     flex:1;
     background:linear-gradient(145deg,#001233 0%,#0d3a8e 55%,#1a5cff 100%);
@@ -560,7 +562,7 @@ footer{
     font-size:12px;font-weight:600;color:rgba(255,255,255,.85);
     backdrop-filter:blur(4px);
   }
-  /* ── RIGHT FORM PANEL ── */
+  /* -- RIGHT FORM PANEL -- */
   .auth-right{
     flex:1;padding:48px 44px;overflow-y:auto;position:relative;min-width:0;
   }
@@ -576,7 +578,7 @@ footer{
     z-index:10000;
   }
   .auth-close-btn:hover{background:rgba(255,255,255,0.28);color:#fff}
-  /* Form panels — visibility driven by JS inline styles */
+  /* Form panels � visibility driven by JS inline styles */
   .auth-panel-title{
     font-family:var(--fd);font-size:24px;font-weight:800;
     color:var(--ink);letter-spacing:-.03em;margin-bottom:4px;
@@ -675,7 +677,7 @@ footer{
 </head>
 <body>
 
-<!-- ── NAV ── -->
+<!-- -- NAV -- -->
 <nav>
   <div class="nav-inner">
     <a href="index.html" class="logo" data-home-link>
@@ -710,7 +712,7 @@ footer{
   </div>
 </nav>
 
-<!-- ── HERO ── -->
+<!-- -- HERO -- -->
 <section class="hero">
   <div class="hero-copy">
     <div class="hero-badge"><i class="fa-solid fa-circle-check"></i> Sports networking, built right</div>
@@ -726,7 +728,7 @@ footer{
     </div>
     <div class="hero-stats">
       <div class="hero-stat"><strong>1,000+</strong><span>Sports covered</span></div>
-      <div class="hero-stat"><strong>4 roles</strong><span>Athlete · Coach · Club · Pro</span></div>
+      <div class="hero-stat"><strong>4 roles</strong><span>Athlete � Coach � Club � Pro</span></div>
       <div class="hero-stat"><strong>Free</strong><span>to get started</span></div>
     </div>
   </div>
@@ -754,21 +756,21 @@ footer{
 <script>
 (function(){
   var POSTS=[
-    {av:'AP',cls:'a1',name:'Alex Petrov',role:'Athlete · Football',tag:'fa-futbol','tagTxt':'Transfer',body:'FC Spartans just sent me a connection request. Big opportunity — let\'s see where this goes! 🔥',likes:87,comments:31,live:false},
-    {av:'MC',cls:'a2',name:'Maria Chen',role:'Athlete · Swimming',tag:'fa-microphone','tagTxt':'Live Interview',body:'🔴 LIVE NOW — I\'m being interviewed by Sports Weekly. Join the session and ask me anything!',likes:214,comments:68,live:true},
-    {av:'UH',cls:'a3',name:'United Hawks FC',role:'Club · Football',tag:'fa-shield-halved','tagTxt':'Club News',body:'We\'re in early talks with Coach Daniel Moreira for our head-coaching role next season. Exciting times ahead.',likes:142,comments:44,live:false},
-    {av:'BW',cls:'a1',name:'Coach Brian Walsh',role:'Coach · Football',tag:'fa-whistle','tagTxt':'Opportunity',body:'Had a very productive first meeting with River United FC today. A fascinating project — details soon.',likes:76,comments:19,live:false},
-    {av:'LB',cls:'a2',name:'Lucas Bianchi',role:'Athlete · Basketball',tag:'fa-basketball','tagTxt':'Transfer',body:'Real Madrid Baloncesto just sent me a trial offer. This is what I\'ve been working for my whole career 🏀✨',likes:531,comments:127,live:false},
-    {av:'NS',cls:'a3',name:'Nordic Ski Club',role:'Club · Skiing',tag:'fa-person-skiing','tagTxt':'Scouting',body:'We\'ve opened dialogue with three promising junior athletes from the national championships. Scouting underway.',likes:64,comments:18,live:false},
-    {av:'AT',cls:'a1',name:'Ava Torres',role:'Athlete · Tennis',tag:'fa-microphone','tagTxt':'Live Interview',body:'🔴 LIVE — Tennis Channel is interviewing me about the upcoming season. Watch and drop your questions!',likes:309,comments:92,live:true},
-    {av:'SM',cls:'a2',name:'Coach Sandra Melo',role:'Coach · Athletics',tag:'fa-stopwatch','tagTxt':'Coaching Win',body:'My athlete just ran a new 400m PB — 47.83! Months of specific track work finally coming together 🎉',likes:188,comments:53,live:false},
-    {av:'JO',cls:'a3',name:'James Okafor',role:'Athlete · Football',tag:'fa-pen-nib','tagTxt':'Signed',body:'Signed my first professional contract today 🖊️ Grateful for every coach, club, and person who believed in me.',likes:894,comments:241,live:false},
-    {av:'EP',cls:'a1',name:'Dr. Emma Park',role:'Professional · Sports Medicine',tag:'fa-heart-pulse','tagTxt':'Sports Science',body:'Pre-season physicals completed for the full squad — everyone cleared to begin full training. Great group! 💪',likes:112,comments:27,live:false},
-    {av:'HR',cls:'a2',name:'Horizon RFC',role:'Club · Rugby',tag:'fa-shield-halved','tagTxt':'Recruitment',body:'🔍 Seeking a wing forward with top-level speed and experience. Apply now via the Spopeer Marketplace.',likes:58,comments:14,live:false},
-    {av:'MS',cls:'a3',name:'Marco Silva',role:'Athlete · Cycling',tag:'fa-bicycle','tagTxt':'Opportunity',body:'The team director from ProCycling Ventures just messaged me. Something big could be on the horizon 🚴‍♂️',likes:143,comments:38,live:false},
-    {av:'KN',cls:'a1',name:'Keita Ndiaye',role:'Athlete · Basketball',tag:'fa-basketball','tagTxt':'Training',body:'Back-to-back triple-doubles in scrimmage this week. The new offence scheme is clicking perfectly 🏀',likes:267,comments:74,live:false},
-    {av:'CF',cls:'a2',name:'City Futsal FC',role:'Club · Futsal',tag:'fa-futbol','tagTxt':'Club Update',body:'Our new training facility opens next Monday. Huge step forward for youth development in our region.',likes:195,comments:62,live:false},
-    {av:'RL',cls:'a3',name:'Coach Rosa Lima',role:'Coach · Athletics',tag:'fa-whistle','tagTxt':'Tactics',body:'Shared a full sprint mechanics breakdown in my community group. Free to read — link in bio 👇',likes:334,comments:89,live:false}
+    {av:'AP',cls:'a1',name:'Alex Petrov',role:'Athlete � Football',tag:'fa-futbol','tagTxt':'Transfer',body:'FC Spartans just sent me a connection request. Big opportunity � let\'s see where this goes! ??',likes:87,comments:31,live:false},
+    {av:'MC',cls:'a2',name:'Maria Chen',role:'Athlete � Swimming',tag:'fa-microphone','tagTxt':'Live Interview',body:'?? LIVE NOW � I\'m being interviewed by Sports Weekly. Join the session and ask me anything!',likes:214,comments:68,live:true},
+    {av:'UH',cls:'a3',name:'United Hawks FC',role:'Club � Football',tag:'fa-shield-halved','tagTxt':'Club News',body:'We\'re in early talks with Coach Daniel Moreira for our head-coaching role next season. Exciting times ahead.',likes:142,comments:44,live:false},
+    {av:'BW',cls:'a1',name:'Coach Brian Walsh',role:'Coach � Football',tag:'fa-whistle','tagTxt':'Opportunity',body:'Had a very productive first meeting with River United FC today. A fascinating project � details soon.',likes:76,comments:19,live:false},
+    {av:'LB',cls:'a2',name:'Lucas Bianchi',role:'Athlete � Basketball',tag:'fa-basketball','tagTxt':'Transfer',body:'Real Madrid Baloncesto just sent me a trial offer. This is what I\'ve been working for my whole career ???',likes:531,comments:127,live:false},
+    {av:'NS',cls:'a3',name:'Nordic Ski Club',role:'Club � Skiing',tag:'fa-person-skiing','tagTxt':'Scouting',body:'We\'ve opened dialogue with three promising junior athletes from the national championships. Scouting underway.',likes:64,comments:18,live:false},
+    {av:'AT',cls:'a1',name:'Ava Torres',role:'Athlete � Tennis',tag:'fa-microphone','tagTxt':'Live Interview',body:'?? LIVE � Tennis Channel is interviewing me about the upcoming season. Watch and drop your questions!',likes:309,comments:92,live:true},
+    {av:'SM',cls:'a2',name:'Coach Sandra Melo',role:'Coach � Athletics',tag:'fa-stopwatch','tagTxt':'Coaching Win',body:'My athlete just ran a new 400m PB � 47.83! Months of specific track work finally coming together ??',likes:188,comments:53,live:false},
+    {av:'JO',cls:'a3',name:'James Okafor',role:'Athlete � Football',tag:'fa-pen-nib','tagTxt':'Signed',body:'Signed my first professional contract today ??? Grateful for every coach, club, and person who believed in me.',likes:894,comments:241,live:false},
+    {av:'EP',cls:'a1',name:'Dr. Emma Park',role:'Professional � Sports Medicine',tag:'fa-heart-pulse','tagTxt':'Sports Science',body:'Pre-season physicals completed for the full squad � everyone cleared to begin full training. Great group! ??',likes:112,comments:27,live:false},
+    {av:'HR',cls:'a2',name:'Horizon RFC',role:'Club � Rugby',tag:'fa-shield-halved','tagTxt':'Recruitment',body:'?? Seeking a wing forward with top-level speed and experience. Apply now via the Spopeer Marketplace.',likes:58,comments:14,live:false},
+    {av:'MS',cls:'a3',name:'Marco Silva',role:'Athlete � Cycling',tag:'fa-bicycle','tagTxt':'Opportunity',body:'The team director from ProCycling Ventures just messaged me. Something big could be on the horizon ?????',likes:143,comments:38,live:false},
+    {av:'KN',cls:'a1',name:'Keita Ndiaye',role:'Athlete � Basketball',tag:'fa-basketball','tagTxt':'Training',body:'Back-to-back triple-doubles in scrimmage this week. The new offence scheme is clicking perfectly ??',likes:267,comments:74,live:false},
+    {av:'CF',cls:'a2',name:'City Futsal FC',role:'Club � Futsal',tag:'fa-futbol','tagTxt':'Club Update',body:'Our new training facility opens next Monday. Huge step forward for youth development in our region.',likes:195,comments:62,live:false},
+    {av:'RL',cls:'a3',name:'Coach Rosa Lima',role:'Coach � Athletics',tag:'fa-whistle','tagTxt':'Tactics',body:'Shared a full sprint mechanics breakdown in my community group. Free to read � link in bio ??',likes:334,comments:89,live:false}
   ];
 
   var colMap={a1:'linear-gradient(135deg,#001233,#1a5cff)',a2:'linear-gradient(135deg,#12a150,#00c17a)',a3:'linear-gradient(135deg,#f59e0b,#ff7c00)'};
@@ -806,7 +808,7 @@ footer{
   }
   seed();
 
-  // every 6 s swap top post — fade only, no translate so left column never shifts
+  // every 6 s swap top post � fade only, no translate so left column never shifts
   setInterval(function(){
     var newPost=buildPost(POSTS[idx%POSTS.length]);
     idx=(idx+1)%POSTS.length;
@@ -829,7 +831,7 @@ footer{
 })();
 </script>
 
-<!-- ── SPORTS STRIP ── -->
+<!-- -- SPORTS STRIP -- -->
 <div class="sports-strip">
   <div class="strip-label">1,000+ sports supported on Spopeer</div>
   <div class="sports-marquee">
@@ -837,7 +839,7 @@ footer{
   </div>
 </div>
 
-<!-- ── ROLES ── -->
+<!-- -- ROLES -- -->
 <section class="roles" id="user-types">
   <div class="section-label">Built for every role in sport</div>
   <h2 class="section-title">Who It's For</h2>
@@ -865,13 +867,13 @@ footer{
     <a class="role-card" href="pages/features/professional-read-more.html">
       <div class="role-icon ri-pro"><i class="fa-solid fa-briefcase-medical"></i></div>
       <h3>Supportive Professionals</h3>
-      <p>Sports doctors, physios, agents, nutritionists — offer your services and find the right clients.</p>
+      <p>Sports doctors, physios, agents, nutritionists � offer your services and find the right clients.</p>
       <div class="role-link">Learn more <i class="fa-solid fa-arrow-right"></i></div>
     </a>
   </div>
 </section>
 
-<!-- ── FEATURES ── -->
+<!-- -- FEATURES -- -->
 <section class="features" id="features">
   <div class="features-inner">
     <div class="section-label">Platform features</div>
@@ -887,7 +889,7 @@ footer{
       <div class="feat-cell">
         <i class="fa-solid fa-store"></i>
         <h4>Sports Marketplace</h4>
-        <p>Buy, sell, and offer sports equipment, services, and opportunities — all within the same network.</p>
+        <p>Buy, sell, and offer sports equipment, services, and opportunities � all within the same network.</p>
       </div>
       <div class="feat-cell">
         <i class="fa-solid fa-message"></i>
@@ -913,7 +915,7 @@ footer{
   </div>
 </section>
 
-<!-- ── HOW IT WORKS ── -->
+<!-- -- HOW IT WORKS -- -->
 <section class="how" id="how-it-works">
   <div class="section-label">Simple to get started</div>
   <h2 class="section-title">Up and running in minutes.</h2>
@@ -923,7 +925,7 @@ footer{
     <div class="step">
       <div class="step-num">01</div>
       <h3>Create your profile</h3>
-      <p>Create account, choose your role — athlete, coach, club, or professional — and set up your sports identity with your bio, sport, and photo.</p>
+      <p>Create account, choose your role � athlete, coach, club, or professional � and set up your sports identity with your bio, sport, and photo.</p>
     </div>
     <div class="step">
       <div class="step-num">02</div>
@@ -938,7 +940,7 @@ footer{
   </div>
 </section>
 
-<!-- ── CTA BAND ── -->
+<!-- -- CTA BAND -- -->
 <section class="cta-band">
   <div class="cta-band-inner">
     <h2>Your sports network starts here.</h2>
@@ -954,7 +956,7 @@ footer{
   </div>
 </section>
 
-<!-- ── FOOTER ── -->
+<!-- -- FOOTER -- -->
 <footer>
   <div class="footer-inner">
     <div class="footer-brand">
@@ -962,7 +964,7 @@ footer{
         <div class="logo-mark"><img src="assets/images/logo-s.jpg" alt="Spopeer"></div>
         <span class="logo-text">Spopeer</span>
       </div>
-      <p>Connect. Share. Play. — The sports networking platform for athletes, coaches, clubs, and professionals.</p>
+      <p>Connect. Share. Play. � The sports networking platform for athletes, coaches, clubs, and professionals.</p>
       <div class="footer-brand-social">
         <a class="social-btn" href="https://instagram.com/spopeer" target="_blank" rel="noopener" aria-label="Spopeer on Instagram"><i class="fa-brands fa-instagram"></i></a>
         <a class="social-btn" href="https://facebook.com/spopeer" target="_blank" rel="noopener" aria-label="Spopeer on Facebook"><i class="fa-brands fa-facebook-f"></i></a>
@@ -996,7 +998,7 @@ footer{
   </div>
 
   <div class="footer-bottom">
-    <p>© 2026 Sports For All. Spopeer — All rights reserved.</p>
+    <p>� 2026 Sports For All. Spopeer � All rights reserved.</p>
   </div>
 </footer>
 
@@ -1009,7 +1011,7 @@ function toggleMenu(){
 }
 </script>
 
-<!-- ── AUTH MODAL ── -->
+<!-- -- AUTH MODAL -- -->
 <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Log in or Create account" aria-hidden="true">
   <button class="auth-close-btn" onclick="closeAuth()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
   <div class="auth-box">
@@ -1083,7 +1085,7 @@ function toggleMenu(){
       <!-- SIGNUP PANEL -->
       <div class="auth-panel" id="signupPanel" style="display:none">
         <p class="auth-panel-title">Create Account</p>
-        <p class="auth-panel-sub">Join the global sports community — free</p>
+        <p class="auth-panel-sub">Join the global sports community � free</p>
         <button type="button" id="modalSignupGoogleBtn" class="auth-google-btn">
           <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
             <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
@@ -1125,7 +1127,7 @@ function toggleMenu(){
             </div>
           </div>
           <div class="form-grp">
-            <label for="modalRoleSelect">I am a…</label>
+            <label for="modalRoleSelect">I am a�</label>
             <select id="modalRoleSelect" required>
               <option value="">Select your role</option>
               <option value="athlete">Athlete</option>
@@ -1309,3 +1311,4 @@ loadSportsStrip();
 <script src="/js/mobile-redirect.js"></script>
 </body>
 </html>
+

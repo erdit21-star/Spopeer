@@ -34,6 +34,7 @@ const EventResponse = require('./EventResponse')(sequelize);
 const SavedListing = require('./SavedListing')(sequelize);
 const Inquiry = require('./Inquiry')(sequelize);
 const Story = require('./Story')(sequelize);
+const MarketplaceAnalyticsEvent = require('./MarketplaceAnalyticsEvent')(sequelize);
 
 // ─── ASSOCIATIONS ───
 
@@ -115,6 +116,12 @@ User.hasMany(SavedListing, { foreignKey: 'userId', as: 'savedListings' });
 SavedListing.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Listing.hasMany(SavedListing, { foreignKey: 'listingId', as: 'savedBy' });
 SavedListing.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
+
+// Marketplace Analytics Events
+Listing.hasMany(MarketplaceAnalyticsEvent, { foreignKey: 'listingId', as: 'analyticsEvents' });
+MarketplaceAnalyticsEvent.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
+User.hasMany(MarketplaceAnalyticsEvent, { foreignKey: 'userId', as: 'analyticsEvents' });
+MarketplaceAnalyticsEvent.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 // User <-> Thread <-> Reply (forums)
 User.hasMany(Thread, { foreignKey: 'userId', as: 'threads' });
@@ -200,6 +207,7 @@ module.exports = {
   EventResponse,
   SavedListing,
   Inquiry,
-  Story
+  Story,
+  MarketplaceAnalyticsEvent
 };
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -34,7 +34,7 @@
       background: var(--background);
     }
 
-    /* ─── NAVBAR ─── */
+    /* --- NAVBAR --- */
     header {
       position: sticky; top: 0; z-index: 200;
       background: rgba(246,245,240,0.9);
@@ -570,6 +570,8 @@
 
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
   <script src="../../js/mobile-enhancements.js" defer></script>
+    <script src="/js/session-activity-tracker.js" defer></script>
+    <script src="/js/smooth-navigation.js" defer></script>
 </head>
 <body>
   <header>
@@ -710,7 +712,7 @@
         <span class="logo-text">Spopeer</span>
       </a>
 
-      <p>Connecting the global sports community — athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+      <p>Connecting the global sports community � athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
 
       <div class="social-row">
         <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
@@ -783,7 +785,7 @@
         return;
       }
 
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting�'; }
 
       try {
         const res = await fetch('/api/reports/abuse', {
@@ -811,3 +813,4 @@
 <script src="/js/navigation.js"></script>
 </body>
 </html>
+

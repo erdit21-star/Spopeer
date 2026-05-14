@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spopeer � Home</title>
+  <title>Spopeer · Home</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <script src="/js/auth.js"></script>
   <script src="/js/sanitize.js"></script>
@@ -14,7 +14,7 @@
   <script>
     window.Auth.requireAuth();
   </script>
-  <!-- Register service worker � inline so it runs regardless of JS cache state -->
+  <!-- Register service worker — inline so it runs regardless of JS cache state -->
   <script>
     if ('serviceWorker' in navigator && !navigator.webdriver) {
       navigator.serviceWorker.register('/js/service-worker.js').catch(function (err) {
@@ -136,7 +136,7 @@
     .sidebar-inner::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
     .sidebar-inner:hover::-webkit-scrollbar-thumb { background: rgba(0,0,0,.18); }
 
-    /* Collapsed state � icon-only mode */
+    /* Collapsed state — icon-only mode */
     .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-collapse-content,
     .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-extras {
       display: none;
@@ -146,15 +146,6 @@
       justify-content: center;
       padding: 0;
       width: 100%;
-    }
-    .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-inner {
-      justify-content: space-evenly;
-      gap: 0;
-      padding-top: 12px;
-      padding-bottom: 12px;
-    }
-    .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-inner > .nav-item {
-      min-height: 46px;
     }
     .app-layout.left-sidebar-collapsed .sidebar-left .nav-item .nav-label,
     .app-layout.left-sidebar-collapsed .sidebar-left .nav-item .nav-badge {
@@ -166,7 +157,7 @@
     }
 
     /* user mini-card */
-    /* -- SIDEBAR PROFILE CARD -- */
+    /* ── SIDEBAR PROFILE CARD ── */
     .sidebar-profile {
       width: 100%;
       max-width: calc(var(--left-w) - 20px);
@@ -177,7 +168,7 @@
       position: relative;
     }
 
-    /* -- COVER BANNER -- */
+    /* ── COVER BANNER ── */
     .sp-cover {
       height: 72px;
       background: linear-gradient(135deg, var(--accent) 0%, #003d7a 50%, var(--blue) 100%);
@@ -212,7 +203,7 @@
       display: none;
     }
 
-    /* cover photo upload hint � only shows on hover */
+    /* cover photo upload hint — only shows on hover */
     .sp-cover-edit {
       position: absolute;
       bottom: 8px;
@@ -233,7 +224,7 @@
     }
     .sp-cover:hover .sp-cover-edit { opacity: 1; }
 
-    /* -- BODY -- */
+    /* ── BODY ── */
     .sp-body {
       padding: 0 16px 16px;
       display: flex;
@@ -242,7 +233,7 @@
       text-align: center;
     }
 
-    /* -- AVATAR -- */
+    /* ── AVATAR ── */
     .sp-avatar-wrap {
       position: relative;
       margin-top: -28px;
@@ -320,7 +311,7 @@
       box-shadow: 0 0 0 2px rgba(22,163,74,.25);
     }
 
-    /* -- VERIFICATION BADGE -- */
+    /* ── VERIFICATION BADGE ── */
     .sp-verified {
       display: inline-flex;
       align-items: center;
@@ -337,7 +328,7 @@
       margin-bottom: 4px;
     }
 
-    /* -- NAME -- */
+    /* ── NAME ── */
     .sp-name {
       font-family: var(--fD);
       font-size: 15px;
@@ -354,7 +345,7 @@
       font-weight: 400;
     }
 
-    /* -- ROLE + SPORT ROW -- */
+    /* ── ROLE + SPORT ROW ── */
     .sp-badges-row {
       display: flex;
       align-items: center;
@@ -383,7 +374,7 @@
       border: 1px solid var(--border);
     }
 
-    /* -- LOCATION + PLAN ROW -- */
+    /* ── LOCATION + PLAN ROW ── */
     .sp-meta-row {
       display: flex;
       align-items: center;
@@ -403,7 +394,7 @@
       border-radius: 50%;
     }
 
-    /* -- SUBSCRIPTION PLAN PILL -- */
+    /* ── SUBSCRIPTION PLAN PILL ── */
     .sp-plan-pill {
       display: inline-flex; align-items: center; gap: 4px;
       font-size: 9px; font-weight: 800;
@@ -414,7 +405,7 @@
     .sp-plan-pill.pro     { background: linear-gradient(90deg, #001f3f, #1a6bff); color: #fff; }
     .sp-plan-pill.elite   { background: linear-gradient(90deg, #7c3aed, #c026d3); color: #fff; }
 
-    /* -- BIO -- */
+    /* ── BIO ── */
     .sp-bio {
       font-size: 11px;
       color: var(--muted);
@@ -425,7 +416,7 @@
       max-width: 200px;
     }
 
-    /* -- STATS ROW -- */
+    /* ── STATS ROW ── */
     .sp-stats-row {
       display: flex;
       align-items: stretch;
@@ -465,7 +456,7 @@
       margin: 8px 0;
     }
 
-    /* -- QUICK INFO STRIP -- */
+    /* ── QUICK INFO STRIP ── */
     .sp-info-strip {
       width: 100%;
       display: flex;
@@ -502,7 +493,7 @@
       flex-shrink: 0;
     }
 
-    /* -- ACTION BUTTONS -- */
+    /* ── ACTION BUTTONS ── */
     .sp-actions {
       width: 100%;
       display: flex;
@@ -545,7 +536,7 @@
       background: var(--accent-lt);
     }
 
-    /* -- COMPLETION BAR -- */
+    /* ── COMPLETION BAR ── */
     .sp-completion {
       width: 100%;
       margin-top: 12px;
@@ -600,7 +591,7 @@
     }
     .sp-completion-tip a:hover { text-decoration: underline; }
 
-    /* -- MEMBER SINCE FOOTER -- */
+    /* ── MEMBER SINCE FOOTER ── */
     .sp-footer {
       width: 100%;
       margin-top: 12px;
@@ -1312,7 +1303,7 @@
     .nav-item.soon:hover { background: transparent; color: var(--ink-2); }
     .nav-item.soon:hover i { color: var(--muted); }
 
-    /* -- Coming Soon collapsible section -- */
+    /* ── Coming Soon collapsible section ── */
     .coming-soon-section {
       border: none; margin-top: 4px;
     }
@@ -1432,11 +1423,10 @@
     .feed-tabs {
       display: flex; align-items: center; gap: 0;
       background: var(--white); border: 1.5px solid var(--border);
-      border-radius: var(--rL); padding: 8px 5px; overflow-x: auto;
+      border-radius: var(--rL); padding: 5px; overflow-x: auto;
       scrollbar-width: none;
       -ms-overflow-style: none;
       position: relative;
-      min-height: 44px;
     }
     .feed-tabs::-webkit-scrollbar { display: none; }
     .feed-tab {
@@ -1563,7 +1553,7 @@
     }
 
     .sports-dropdown-item.primary-sport .sports-dropdown-item-icon::before {
-      content: '?';
+      content: '★';
       color: var(--accent);
     }
 
@@ -1577,13 +1567,13 @@
     .create-card {
       background: var(--white);
       border: 1px solid var(--border);
-      /* create post � #sp-inline-composer is injected by feed-engine.js */
+      /* create post — #sp-inline-composer is injected by feed-engine.js */
       border-radius: 24px; overflow: hidden; transition: .2s;
       box-shadow: 0 2px 8px rgba(0,0,0,.03);
     }
     .post-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,.08); border-color: #ddd; }
 
-    /* -- Empty feed state -- */
+    /* ── Empty feed state ── */
     .feed-empty-state {
       background: var(--white); border: 1.5px solid var(--border);
       border-radius: var(--rL); padding: 48px 32px; text-align: center;
@@ -1747,7 +1737,7 @@
       font-size: 12px; font-weight: 600; color: var(--blue);
       background: var(--blue-lt); padding: 3px 10px; border-radius: var(--pill);
 
-        /* -- event post card -- */
+        /* ── event post card ── */
         .post-event-card {
           margin-top: 12px;
           border-radius: 14px;
@@ -1992,7 +1982,7 @@
     .trend-name { font-size: 14px; font-weight: 700; color: var(--ink); margin: 2px 0; }
     .trend-count { font-size: 12px; color: var(--muted); }
 
-    /* -- SPOPEER AGENT HUB -- */
+    /* ══ SPOPEER AGENT HUB ══ */
     .spopeer-agent-card {
       background: var(--white);
       border: 1.5px solid var(--border);
@@ -2795,7 +2785,7 @@
       cursor: not-allowed;
     }
 
-/* -- SHARE PROFILE MODAL -- */
+/* ── SHARE PROFILE MODAL ── */
 .share-modal-overlay {
   position: fixed; inset: 0; z-index: 999999; /* Very high z-index */
   background: rgba(0,0,0,.55);
@@ -2968,7 +2958,7 @@
 .profile-card-variant { display: none; }
 .profile-card-variant.active { display: block; }
 
-/* Feed � Minimal List variant */
+/* Feed — Minimal List variant */
 .feed-pc-minimal { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--rL); overflow: hidden; margin-bottom: 12px; }
 .feed-pc-minimal-top { display: flex; align-items: center; gap: 10px; padding: 14px; }
 .feed-pc-minimal-av { width: 40px; height: 40px; border-radius: 8px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
@@ -2987,7 +2977,7 @@
 .feed-pc-minimal-stat-num { font-size: 14px; font-weight: 700; color: var(--ink); text-align: center; }
 .feed-pc-minimal-stat-label { font-size: 10px; color: var(--muted); text-align: center; }
 
-/* Feed � Sports Card variant */
+/* Feed — Sports Card variant */
 .feed-pc-sports { border-radius: var(--rL); overflow: hidden; border: 1.5px solid var(--border); margin-bottom: 12px; }
 .feed-pc-sports-header { background: linear-gradient(135deg, #0a1e35, #163a6a); padding: 16px 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .feed-pc-sports-av { width: 44px; height: 44px; border-radius: 50%; background: #152d4a; border: 2px solid #2a5a9a; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #7ab2e0; overflow: hidden; }
@@ -3014,8 +3004,6 @@
   <link rel="stylesheet" href="/css/mobile-responsive.css">
   <script src="/js/topnav-normalizer.js"></script>
   <script src="/js/mobile-enhancements.js" defer></script>
-    <script src="/js/session-activity-tracker.js" defer></script>
-    <script src="/js/smooth-navigation.js" defer></script>
 </head>
 <body>
 
@@ -3042,7 +3030,7 @@
       </div>
       <div class="user-chip" id="userChip" data-user-chip>
         <span class="chip-avatar" data-user-chip-avatar>U</span>
-        <span class="chip-name" data-user-chip-name>Loading�</span>
+        <span class="chip-name" data-user-chip-name>Loading…</span>
         <i class="fa-solid fa-chevron-down chip-caret"></i>
       </div>
 
@@ -3121,7 +3109,7 @@
 
     <div class="sidebar-inner">
 
-    <!-- Profile cards � hidden when collapsed -->
+    <!-- Profile cards — hidden when collapsed -->
     <div class="sidebar-collapse-content">
     <!-- SIDEBAR PROFILE CARD -->
     <div class="profile-card-variant active" data-variant="card-stack" id="feedCardVariantStack">
@@ -3326,7 +3314,8 @@
     </div>
     </div><!-- /.sidebar-collapse-content -->
 
-    <!-- Nav items � always visible; icon-only when sidebar is collapsed -->
+    <!-- Nav items — always visible; icon-only when sidebar is collapsed -->
+    <a class="nav-item active" href="/feed.html"><i class="fa-solid fa-house"></i><span class="nav-label"> Home</span></a>
     <a class="nav-item" href="/pages/library/index.html"><i class="fa-regular fa-bookmark"></i><span class="nav-label"> Library</span></a>
     <a class="nav-item" href="/pages/events/event.html"><i class="fa-regular fa-calendar"></i><span class="nav-label"> Events </span><span class="nav-badge">3</span></a>
     <a class="nav-item" href="/pages/sponsorship/sponsor.html"><i class="fa-solid fa-handshake-angle"></i><span class="nav-label"> Sponsorship</span></a>
@@ -3336,11 +3325,11 @@
     <a class="nav-item" href="/pages/marketplace/marketplace.html"><i class="fa-solid fa-store"></i><span class="nav-label"> Marketplace</span></a>
     <button class="nav-item" id="openAdminDashboardBtn" style="display:none;"><i class="fa-solid fa-shield-halved"></i><span class="nav-label"> Admin Dashboard</span></button>
 
-    <!-- Divider + coming soon � hidden when collapsed -->
+    <!-- Divider + coming soon — hidden when collapsed -->
     <div class="sidebar-extras">
     <div class="sidebar-divider"></div>
 
-    <!-- -- COMING SOON (collapsed) -- -->
+    <!-- ── COMING SOON (collapsed) ── -->
     <details class="coming-soon-section">
       <summary>
         <i class="fa-solid fa-rocket" style="color:var(--blue);font-size:13px"></i>
@@ -3398,7 +3387,7 @@
       <div class="game-tape-wrapper">
         <div class="game-tape-header">
           <div class="game-tape-title">
-            <span class="game-tape-title-icon">??</span>
+            <span class="game-tape-title-icon">🎥</span>
             <span>Highlights</span>
             <span class="game-tape-badge" id="gameTapeNewBadge">0 new</span>
           </div>
@@ -3422,10 +3411,10 @@
             <div class="game-viewer-avatar" id="viewerAvatar">SP</div>
             <div class="game-viewer-name">
               <h4 id="viewerName">Spopeer Athlete</h4>
-              <p id="viewerMeta">Sport � now</p>
+              <p id="viewerMeta">Sport · now</p>
             </div>
           </div>
-          <button type="button" class="game-viewer-close" id="closeViewerBtn" aria-label="Close story">?</button>
+          <button type="button" class="game-viewer-close" id="closeViewerBtn" aria-label="Close story">✕</button>
         </div>
 
         <div class="game-viewer-media" id="viewerMedia">
@@ -3436,8 +3425,8 @@
           <!-- Injected by JS -->
         </div>
 
-        <button type="button" class="game-viewer-nav prev" id="viewerPrevBtn" aria-label="Previous story">�</button>
-        <button type="button" class="game-viewer-nav next" id="viewerNextBtn" aria-label="Next story">�</button>
+        <button type="button" class="game-viewer-nav prev" id="viewerPrevBtn" aria-label="Previous story">‹</button>
+        <button type="button" class="game-viewer-nav next" id="viewerNextBtn" aria-label="Next story">›</button>
 
         <div class="game-reply-composer" id="replyComposer">
           <input type="text" class="game-reply-input" id="replyInput" placeholder="Reply to this story...">
@@ -3973,7 +3962,7 @@
     applyFeedCardStyle(profile);
   }
 
-  // Format count for display (e.g. 1200 ? "1.2K")
+  // Format count for display (e.g. 1200 → "1.2K")
   function formatCount(num) {
     if (typeof num !== 'number') num = parseInt(num) || 0;
     if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -4201,7 +4190,7 @@
       cover.style.background = coverGradients[type] || coverGradients.athlete;
     }
 
-    // Update avatar � show uploaded photo if available, else role gradient
+    // Update avatar — show uploaded photo if available, else role gradient
     const avatar = document.getElementById('sidebarAvatar');
     if (avatar) {
       const avatarGradients = {
@@ -4565,7 +4554,7 @@
     const sender = randomSender();
     createNotification({
       type: 'like',
-      text: `${sender.name} liked your post �${postTitle}=`,
+      text: `${sender.name} liked your post “${postTitle}=`,
       href: 'feed.html',
       sender,
       target: { type: 'post', title: postTitle, url: 'feed.html' }
@@ -4691,7 +4680,7 @@
   /* ====== profile menu ====== */
   const profileMenu = (window.getProfileMenuElement && typeof window.getProfileMenuElement === 'function') ? window.getProfileMenuElement() : document.getElementById('profileMenu');
 
-  /* -- SEARCH BAR -- */
+  /* ── SEARCH BAR ── */
   const navSearchInput = document.getElementById('navSearchInput');
   if (navSearchInput) {
     // Search on Enter key
@@ -4949,7 +4938,7 @@
 
   /* shared connection runtime is attached from js/shared-ui.js */
 
-  /* -- TRENDING SYSTEM -- */
+  /* ══ TRENDING SYSTEM ══ */
   function analyzeTrendingData() {
     const postCards = document.querySelectorAll('.post-card');
     const trends = {hashtags: {}, sports: {}, roles: {}, combined: []};
@@ -4991,7 +4980,7 @@
   document.querySelectorAll('.conn-accept').forEach(btn => btn.addEventListener('click', () => btn.closest('li').remove()));
   document.querySelectorAll('.conn-reject').forEach(btn => btn.addEventListener('click', () => btn.closest('li').remove()));
 
-  /* -- SIDEBAR STATS INTERACTION -- */
+  /* ── SIDEBAR STATS INTERACTION ── */
   const followersBtn = document.getElementById('followersBtn');
   const followingBtn = document.getElementById('followingBtn');
   const postsBtn = document.getElementById('postsBtn');
@@ -5025,7 +5014,7 @@
     }
   });
 
-  /* -- POST CREATION FEATURE -- */
+  /* ── POST CREATION FEATURE ── */
   const createInput = document.querySelector('.create-input');
   const createPostBtn = document.querySelector('.create-post-btn');
   const createTools = document.querySelectorAll('.create-tool');
@@ -5416,7 +5405,7 @@
                 <div class="author-name">${userName}</div>
                 <div class="author-meta">
                   <span class="role-tag ${roleTagClass}">${userRole}</span>
-                  @${userData.username || 'user'} � now
+                  @${userData.username || 'user'} · now
                 </div>
               </div>
             </div>
@@ -5473,7 +5462,7 @@
     }
   });
 
-  /* -- FEED ENGINE TABS -- */
+  /* ── FEED ENGINE TABS ── */
 
   const feedTabs = document.querySelectorAll(".feed-tab");
   const sportTabWrap = document.getElementById("sportTabWrap");
@@ -5682,7 +5671,7 @@
             </div>
           </div>
           <div class="post-meta">
-            ${post.sport || "General"} � ${new Date(post.createdAt).toLocaleString()}
+            ${post.sport || "General"} · ${new Date(post.createdAt).toLocaleString()}
           </div>
           <div class="post-text">${escapeHtml(post.text || "")}</div>
           ${mediaHtml}
@@ -5694,7 +5683,7 @@
               data-like-button="${post.id}"
               data-count="${post.likesCount || 0}"
               onclick="likePost(${post.id})">
-              <span>?</span>
+              <span>♥</span>
               <span class="action-count">${post.likesCount || 0}</span>
             </button>
             <button
@@ -5703,7 +5692,7 @@
               data-comment-button="${post.id}"
               data-count="${post.commentsCount || 0}"
               onclick="toggleComments(${post.id})">
-              <span>??</span>
+              <span>💬</span>
               <span class="action-count">${post.commentsCount || 0}</span>
             </button>
             <button
@@ -5712,7 +5701,7 @@
               data-repost-button="${post.id}"
               data-count="${post.repostsCount || 0}"
               onclick="repostPost(${post.id})">
-              <span>?</span>
+              <span>↻</span>
               <span class="action-count">${post.repostsCount || 0}</span>
             </button>
             <button
@@ -5720,7 +5709,7 @@
               class="post-action-btn"
               data-save-button="${post.id}"
               onclick="savePost(${post.id})">
-              <span>??</span>
+              <span>🔖</span>
               <span class="action-label">Save</span>
             </button>
           </div>
@@ -6011,7 +6000,7 @@
 
 })();
 
-/* -- SHARE PROFILE MODAL -- */
+/* ── SHARE PROFILE MODAL ── */
 function openShareModal() {
   try {
     const ud = getCurrentUserData();
@@ -6688,7 +6677,7 @@ function generatePostHTML(post) {
               <div class="author-name">${authorProfileHref ? `<a class="author-name-link" href="${authorProfileHref}">${post.authorName}</a>` : post.authorName}</div>
               <div class="author-meta">
                 <span class="role-tag ${role.tagCls}">${role.tag}</span>
-                @${post.authorEmail.split('@')[0]} � ${timeAgo}
+                @${post.authorEmail.split('@')[0]} · ${timeAgo}
               </div>
             </div>
           </div>
@@ -6772,13 +6761,13 @@ function escapeHtml(text) {
       list.innerHTML = events.map((event) => `
         <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface);">
           <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">
-            ${event.sport} � ${event.type}
+            ${event.sport} · ${event.type}
           </div>
           <div style="font-size:15px;font-weight:800;color:var(--ink);margin-bottom:4px;">
             ${event.title}
           </div>
           <div style="font-size:13px;color:var(--muted);">
-            ${new Date(event.date).toLocaleString()} � ${event.location}
+            ${new Date(event.date).toLocaleString()} · ${event.location}
           </div>
         </div>
       `).join("");
@@ -6940,7 +6929,7 @@ function escapeHtml(text) {
         '<div class="suggest-av av-blue">' + initialsFor(u) + '</div>' +
         '<div class="suggest-info">' +
         '<div class="suggest-name">' + name + '</div>' +
-        '<div class="suggest-role">' + roleLabel(u.role) + ' � ' + sportText + '</div>' +
+        '<div class="suggest-role">' + roleLabel(u.role) + ' · ' + sportText + '</div>' +
         '</div>' +
         '<button class="follow-btn" type="button">Follow</button>' +
       '</div>';
@@ -7196,7 +7185,7 @@ function escapeHtml(text) {
 <script src="/js/navigation.js"></script>
 
 <script>
-/* -- SPOPEER AGENT HUB -- */
+/* ══ SPOPEER AGENT HUB ══ */
 (function () {
   const AGENT_MODES = {
     secretary: {
@@ -7209,7 +7198,7 @@ function escapeHtml(text) {
       ]
     },
     manager: {
-      greeting: "Hi! I'm your Manager Agent. I help you grow your sports career � visibility, connections, and opportunities.",
+      greeting: "Hi! I'm your Manager Agent. I help you grow your sports career — visibility, connections, and opportunities.",
       actions: [
         { label: 'Find coaches', url: '/pages/search/search.html', icon: 'fa-whistle' },
         { label: 'Find athletes', url: '/pages/search/search.html', icon: 'fa-person-running' },
@@ -7414,7 +7403,6 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="/js/mobile-redirect.js"></script>
 </body>
 </html>
-
 
 
 

@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Contact — Spopeer</title>
+  <title>Contact � Spopeer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
     }
     body{font-family:var(--fb);background:var(--bg);color:var(--ink);line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
 
-    /* ── NAV ── */
+    /* -- NAV -- */
     nav{
       position:sticky;top:0;z-index:100;
       background:rgba(246,245,240,.9);
@@ -71,7 +71,7 @@
     .mobile-menu .btn{width:100%;justify-content:center;padding:13px;border-radius:var(--r)}
     .mobile-menu .btn-ghost{margin-bottom:4px}
 
-    /* ── MAIN ── */
+    /* -- MAIN -- */
     main{flex:1;max-width:1180px;margin:0 auto;padding:64px 24px;width:100%}
 
     .page-header{margin-bottom:48px}
@@ -93,7 +93,7 @@
 
     .contact-layout{display:grid;grid-template-columns:1fr 1.4fr;gap:48px;align-items:start}
 
-    /* ── INFO COLUMN ── */
+    /* -- INFO COLUMN -- */
     .contact-info{display:flex;flex-direction:column;gap:28px}
     .info-card{
       background:var(--white);border:1px solid var(--border);
@@ -110,7 +110,7 @@
     .info-card a{color:var(--blue);text-decoration:none;font-weight:500}
     .info-card a:hover{text-decoration:underline}
 
-    /* ── FORM COLUMN ── */
+    /* -- FORM COLUMN -- */
     .contact-form-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:36px}
     .contact-form-wrap h2{font-family:var(--fd);font-size:22px;font-weight:800;margin-bottom:6px;color:var(--ink)}
     .contact-form-wrap > p{font-size:14px;color:var(--ink2);margin-bottom:28px}
@@ -140,7 +140,7 @@
     .form-note{font-size:12px;color:var(--ink2);text-align:center;margin-top:14px}
     .form-note a{color:var(--blue);text-decoration:none}
 
-    /* ── SUCCESS STATE ── */
+    /* -- SUCCESS STATE -- */
     .form-success{
       display:none;flex-direction:column;align-items:center;
       justify-content:center;text-align:center;padding:48px 24px;gap:16px;
@@ -154,7 +154,7 @@
     .form-success h3{font-family:var(--fd);font-size:22px;font-weight:800;color:var(--ink)}
     .form-success p{font-size:15px;color:var(--ink2);max-width:320px}
 
-    /* ── FOOTER ── */
+    /* -- FOOTER -- */
     footer{
       background:#0a0a0a;color:rgba(255,255,255,.7);
       font-size:13px;margin-top:auto;
@@ -186,7 +186,7 @@
     }
     .social-btn:hover{background:rgba(255,255,255,.08);color:#fff}
 
-    /* ── RESPONSIVE ── */
+    /* -- RESPONSIVE -- */
     @media(max-width:900px){
       .contact-layout{grid-template-columns:1fr}
       .footer-inner{grid-template-columns:1fr}
@@ -203,10 +203,12 @@
 
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
   <script src="../../js/mobile-enhancements.js" defer></script>
+    <script src="/js/session-activity-tracker.js" defer></script>
+    <script src="/js/smooth-navigation.js" defer></script>
 </head>
 <body>
 
-<!-- ── NAV ── -->
+<!-- -- NAV -- -->
 <nav>
   <div class="nav-inner">
     <a href="/index.html" class="logo" data-home-link>
@@ -241,7 +243,7 @@
   </div>
 </nav>
 
-<!-- ── MAIN ── -->
+<!-- -- MAIN -- -->
 <main>
   <div class="page-header">
     <div class="page-badge"><i class="fa-solid fa-envelope"></i> Get in touch</div>
@@ -304,7 +306,7 @@
         <div class="form-field">
           <label for="subject">Subject</label>
           <select id="subject" name="subject" required>
-            <option value="" disabled selected>Select a topic…</option>
+            <option value="" disabled selected>Select a topic�</option>
             <option value="general">General enquiry</option>
             <option value="support">Account / technical support</option>
             <option value="partnership">Partnerships &amp; sponsorships</option>
@@ -317,7 +319,7 @@
 
         <div class="form-field">
           <label for="message">Message</label>
-          <textarea id="message" name="message" placeholder="Tell us how we can help…" required></textarea>
+          <textarea id="message" name="message" placeholder="Tell us how we can help�" required></textarea>
         </div>
 
         <button type="submit" class="btn-submit">
@@ -340,7 +342,7 @@
   </div>
 </main>
 
-<!-- ── FOOTER ── -->
+<!-- -- FOOTER -- -->
 <footer>
   <div class="footer-inner">
     <div class="footer-brand">
@@ -348,7 +350,7 @@
         <span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span>
         <span class="logo-text">Spopeer</span>
       </a>
-      <p>Connect. Share. Play. — The sports networking platform for athletes, coaches, clubs, and professionals.</p>
+      <p>Connect. Share. Play. � The sports networking platform for athletes, coaches, clubs, and professionals.</p>
     </div>
 
     <div class="footer-links">
@@ -387,7 +389,7 @@
   </div>
 
   <div class="footer-bottom">
-    <p>© 2026 Sports For All. Spopeer — All rights reserved.</p>
+    <p>� 2026 Sports For All. Spopeer � All rights reserved.</p>
     <div class="footer-social">
       <a class="social-btn" href="../../pages/community/community.html" aria-label="Community"><i class="fa-solid fa-people-group"></i></a>
       <a class="social-btn" href="../../pages/community/reels.html" aria-label="Reels"><i class="fa-solid fa-circle-play"></i></a>
@@ -424,7 +426,7 @@ document.getElementById('contactForm').addEventListener('submit', async function
 
   const submitBtn = f.querySelector('[type="submit"]');
   const originalText = submitBtn ? submitBtn.textContent : '';
-  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
+  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Sending�'; }
 
   try {
     const res = await fetch('/api/contact', {
@@ -447,3 +449,4 @@ document.getElementById('contactForm').addEventListener('submit', async function
 <script src="/js/navigation.js"></script>
 </body>
 </html>
+

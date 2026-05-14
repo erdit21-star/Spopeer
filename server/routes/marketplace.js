@@ -21,7 +21,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { Listing, User, SavedListing, Inquiry } = require('../models');
+const { Listing, User, SavedListing, Inquiry, MarketplaceAnalyticsEvent } = require('../models');
 
 function plainRecord(record) {
   if (!record) return null;
@@ -203,6 +203,24 @@ router.post('/inquiries', authenticate, async (req, res) => {
       message: message || ''
     });
 
+    // Track inquiry event
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await MarketplaceAnalyticsEvent.create({
+        listingId: listing_id,
+        userId: req.userId,
+        eventType: 'inquiry',
+        eventDate: today,
+        metadata: {
+          inquiryId: inquiry.id,
+          messageLength: (message || '').length
+        }
+      });
+    } catch (analyticsErr) {
+      console.error('Failed to track inquiry event:', analyticsErr);
+      // Don't fail the request if analytics tracking fails
+    }
+
     created(res, inquiry);
   } catch (error) {
     console.error('Create inquiry error:', error);
@@ -363,6 +381,24 @@ router.get('/listings/:id', async (req, res) => {
     // Increment view count
     await listing.increment('viewCount');
 
+    // Track analytics event
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await MarketplaceAnalyticsEvent.create({
+        listingId: listing.id,
+        userId: req.userId || null,
+        eventType: 'view',
+        eventDate: today,
+        metadata: {
+          userAgent: req.get('user-agent'),
+          referer: req.get('referer')
+        }
+      });
+    } catch (analyticsErr) {
+      console.error('Failed to track view event:', analyticsErr);
+      // Don't fail the request if analytics tracking fails
+    }
+
     ok(res, listing);
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch listing.');
@@ -400,6 +436,67 @@ router.delete('/listings/:id', authenticate, async (req, res) => {
     ok(res, { message: 'Listing deleted.' });
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to delete listing.');
+  }
+});
+
+// ─── TIME-SERIES ANALYTICS ───
+router.get('/analytics/:listingId/time-series', authenticate, async (req, res) => {
+  try {
+    const { listingId } = req.params;
+    const { period = '30' } = req.query; // 7, 30, 90, or 'all'
+
+    const listing = await Listing.findByPk(listingId);
+    if (!listing) return fail(res, 404, 'NOT_FOUND', 'Listing not found.');
+    if (listing.sellerId !== req.userId) return fail(res, 403, 'FORBIDDEN', 'Not authorized.');
+
+    // Calculate date range
+    let dateFilter = {};
+    const today = new Date();
+    if (period !== 'all') {
+      const daysBack = parseInt(period);
+      const startDate = new Date();
+      startDate.setDate(today.getDate() - daysBack);
+      dateFilter = {
+        eventDate: {
+          [Op.gte]: startDate.toISOString().split('T')[0],
+          [Op.lte]: today.toISOString().split('T')[0]
+        }
+      };
+    }
+
+    // Fetch all events for this listing within the period
+    const events = await MarketplaceAnalyticsEvent.findAll({
+      where: {
+        listingId,
+        ...dateFilter
+      },
+      attributes: ['eventType', 'eventDate'],
+      raw: true
+    });
+
+    // Aggregate by date and event type
+    const aggregated = {};
+    events.forEach(event => {
+      if (!aggregated[event.eventDate]) {
+        aggregated[event.eventDate] = {
+          date: event.eventDate,
+          view: 0,
+          inquiry: 0,
+          click: 0,
+          impression: 0
+        };
+      }
+      aggregated[event.eventDate][event.eventType]++;
+    });
+
+    // Convert to sorted array
+    const timeSeries = Object.values(aggregated)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    ok(res, { timeSeries, total: timeSeries.length });
+  } catch (error) {
+    console.error('Time-series analytics error:', error);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch time-series analytics.');
   }
 });
 
