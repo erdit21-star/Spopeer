@@ -158,6 +158,37 @@
     return notification;
   }
 
+  function isPublicAuthEndpoint(path) {
+    var safePath = String(path || '').toLowerCase();
+    return safePath.indexOf('/api/auth/login') === 0
+      || safePath.indexOf('/api/auth/signup') === 0
+      || safePath.indexOf('/api/auth/forgot-password') === 0
+      || safePath.indexOf('/api/auth/reset-password') === 0
+      || safePath.indexOf('/api/auth/csrf') === 0;
+  }
+
+  function handleUnauthorized(path) {
+    clearAuthStorage();
+    try { sessionStorage.clear(); } catch (err) { console.debug('sessionStorage.clear failed during unauthorized handler', err); }
+
+    window.dispatchEvent(new CustomEvent('spopeer:auth-required', {
+      detail: {
+        code: 'UNAUTHORIZED',
+        endpoint: path || '',
+        at: Date.now()
+      }
+    }));
+
+    var currentPath = String(window.location.pathname || '').toLowerCase();
+    if (currentPath.indexOf('/pages/auth/') === 0 || currentPath === '/index.html' || currentPath === '/') {
+      return;
+    }
+
+    var next = window.location.pathname + window.location.search + window.location.hash;
+    var loginHref = '/pages/auth/login.html?reason=auth_required&next=' + encodeURIComponent(next);
+    window.location.replace(loginHref);
+  }
+
   async function request(path, options) {
     const config = options || {};
     const headers = { ...(config.headers || {}) };
@@ -190,6 +221,9 @@
 
     const data = await response.json().catch(function () { return {}; });
     if (response.status === 401) {
+      if (!isPublicAuthEndpoint(path)) {
+        handleUnauthorized(path);
+      }
       const msg = (data.error && data.error.message) || data.message || data.error || "Session expired. Please log in again.";
       const err = new Error(msg);
       err.code = "UNAUTHORIZED";
