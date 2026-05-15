@@ -63,10 +63,19 @@ module.exports = (sequelize) => {
     expiresAt: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    isArchived: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     }
   }, {
     tableName: 'stories',
-    timestamps: true
+    timestamps: true,
+    indexes: [
+      { fields: ['userId'] },
+      { fields: ['isActive', 'expiresAt'] },
+      { fields: ['isArchived'] }
+    ]
   });
 
   return Story;

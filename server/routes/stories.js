@@ -117,4 +117,103 @@ router.post('/:id/view', authenticate, async (req, res) => {
   }
 });
 
+/**
+ * GET user's active stories
+ */
+router.get('/user/:userId', optionalAuth, async (req, res) => {
+  try {
+    const stories = await Story.findAll({
+      where: {
+        userId: req.params.userId,
+        isActive: true,
+        isArchived: false,
+        [Op.or]: [
+          { expiresAt: null },
+          { expiresAt: { [Op.gt]: new Date() } }
+        ]
+      },
+      include: [{
+        model: User,
+        as: 'author',
+        attributes: ['id', 'firstName', 'lastName', 'avatarUrl']
+      }],
+      order: [['createdAt', 'DESC']]
+    });
+
+    ok(res, stories);
+  } catch (err) {
+    console.error(err);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch user stories');
+  }
+});
+
+/**
+ * GET archived stories
+ */
+router.get('/archived/list', optionalAuth, async (req, res) => {
+  try {
+    const stories = await Story.findAll({
+      where: {
+        isArchived: true
+      },
+      include: [{
+        model: User,
+        as: 'author',
+        attributes: ['id', 'firstName', 'lastName', 'avatarUrl']
+      }],
+      order: [['createdAt', 'DESC']],
+      limit: 50
+    });
+
+    ok(res, stories);
+  } catch (err) {
+    console.error(err);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch archived stories');
+  }
+});
+
+/**
+ * AUTO-ARCHIVE: Move expired stories to archive
+ * (Call this periodically from a cron job or scheduler)
+ */
+router.post('/maintenance/archive-expired', async (req, res) => {
+  try {
+    const now = new Date();
+    const result = await Story.update(
+      { isArchived: true, isActive: false },
+      {
+        where: {
+          expiresAt: { [Op.lt]: now },
+          isArchived: false
+        }
+      }
+    );
+
+    ok(res, { archivedCount: result[0] });
+  } catch (err) {
+    console.error(err);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to archive expired stories');
+  }
+});
+
+/**
+ * DELETE story (only by owner or admin)
+ */
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    const story = await Story.findByPk(req.params.id);
+    if (!story) return fail(res, 404, 'NOT_FOUND', 'Story not found');
+
+    if (story.userId !== req.userId) {
+      return fail(res, 403, 'FORBIDDEN', 'You cannot delete this story');
+    }
+
+    await story.destroy();
+    ok(res, { message: 'Story deleted' });
+  } catch (err) {
+    console.error(err);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to delete story');
+  }
+});
+
 module.exports = router;

@@ -1,0 +1,477 @@
+/**
+ * Stories Styles - 24-hour story feature
+ */
+
+/* ─── Stories Carousel ─── */
+.stories-carousel {
+  position: relative;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.carousel-content {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 0.5rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 31, 63, 0.3) transparent;
+}
+
+.carousel-content::-webkit-scrollbar {
+  height: 6px;
+}
+
+.carousel-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.carousel-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 31, 63, 0.3);
+  border-radius: 3px;
+}
+
+.carousel-prev,
+.carousel-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 31, 63, 0.8);
+  color: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.carousel-prev:hover,
+.carousel-next:hover {
+  background: rgba(0, 31, 63, 1);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-prev {
+  left: 0;
+}
+
+.carousel-next {
+  right: 0;
+}
+
+/* ─── Story Card ─── */
+.story-card {
+  flex-shrink: 0;
+  width: 220px;
+  height: 280px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.story-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.story-card.expired {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.story-media-container {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.story-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, transparent 60%, rgba(0, 0, 0, 0.2) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.75rem;
+  color: white;
+  z-index: 2;
+}
+
+.story-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.story-author {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.story-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+}
+
+.story-avatar-initials {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 12px;
+  border: 2px solid white;
+}
+
+.story-author-name {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.story-timer {
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.story-timer.expired {
+  background: rgba(220, 38, 38, 0.6);
+}
+
+.story-caption {
+  font-size: 12px;
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.story-footer {
+  padding: 0.75rem;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.story-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.story-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.story-stat .icon {
+  font-size: 14px;
+}
+
+.story-stat .count {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.story-action-btn {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #001f3f;
+  transition: all 0.2s ease;
+}
+
+.story-action-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.story-action-btn.liked {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+/* ─── Stories Upload Modal ─── */
+.stories-upload-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.stories-upload-container {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.stories-upload-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stories-upload-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+}
+
+.stories-upload-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s ease;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stories-upload-close:hover {
+  color: #1f2937;
+}
+
+.stories-upload-content {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stories-drop-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+.stories-drop-zone:hover,
+.stories-drop-zone.dragover {
+  border-color: #001f3f;
+  background: #eff6ff;
+}
+
+.stories-drop-icon {
+  font-size: 40px;
+  margin-bottom: 0.5rem;
+}
+
+.stories-drop-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.stories-drop-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0.5rem 0;
+}
+
+.stories-upload-btn-primary {
+  background: #001f3f;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.stories-upload-btn-primary:hover {
+  background: #001a33;
+}
+
+.stories-file-hint {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.stories-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stories-form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.stories-form-group input,
+.stories-form-group textarea,
+.stories-form-group select {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.stories-form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.stories-upload-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.stories-upload-btn-cancel,
+.stories-upload-btn-submit {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.stories-upload-btn-cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.stories-upload-btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.stories-upload-btn-submit {
+  background: #001f3f;
+  color: white;
+}
+
+.stories-upload-btn-submit:hover:not(:disabled) {
+  background: #001a33;
+}
+
+.stories-upload-btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Stories Empty State ─── */
+.stories-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .story-card {
+    width: 180px;
+    height: 240px;
+  }
+
+  .carousel-prev,
+  .carousel-next {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .stories-upload-container {
+    width: 95%;
+    max-width: 100%;
+  }
+}

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stories Archive - Spopeer</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/stories.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Navigation -->
+    <nav id="topnav" class="top-nav" data-nav-group="main"></nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+      <aside class="left-sidebar" id="leftSidebar"></aside>
+
+      <div class="main-content">
+        <div class="page-header">
+          <h1>Stories Archive</h1>
+          <p>View all stories that have expired</p>
+        </div>
+
+        <div class="stories-archive-container" id="archiveContainer">
+          <div style="text-align: center; padding: 2rem; color: #6b7280;">
+            <p>Loading stories...</p>
+          </div>
+        </div>
+      </div>
+
+      <aside class="right-sidebar" id="rightSidebar"></aside>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/current-user-store.js"></script>
+  <script src="/js/user-ui.js"></script>
+  <script src="/js/topnav-normalizer.js"></script>
+  <script src="/js/shared-ui.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/stories-manager.js"></script>
+
+  <script>
+    (function () {
+      async function initArchive() {
+        try {
+          const stories = await window.storiesManager.fetchArchivedStories();
+          const container = document.getElementById('archiveContainer');
+
+          if (stories.length === 0) {
+            container.innerHTML = `
+              <div class="stories-empty">
+                <p>No archived stories yet.</p>
+              </div>
+            `;
+            return;
+          }
+
+          const grid = document.createElement('div');
+          grid.style.cssText = `
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+          `;
+
+          stories.forEach(story => {
+            const card = document.createElement('div');
+            card.innerHTML = window.storiesManager.renderStoryCard(story);
+            grid.appendChild(card.firstElementChild);
+          });
+
+          container.innerHTML = '';
+          container.appendChild(grid);
+        } catch (err) {
+          console.error('Error loading archived stories:', err);
+          document.getElementById('archiveContainer').innerHTML = `
+            <div class="stories-empty">
+              <p>Error loading archived stories</p>
+            </div>
+          `;
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initArchive);
+      } else {
+        initArchive();
+      }
+    })();
+  </script>
+
+  <style>
+    .page-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 24px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .page-header p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .stories-archive-container {
+      padding: 1.5rem;
+    }
+  </style>
+</body>
+</html>
