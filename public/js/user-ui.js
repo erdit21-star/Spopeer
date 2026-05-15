@@ -62,15 +62,17 @@
   function renderChip(root, user) {
     if (!root) return;
 
-    renderAvatar(root.querySelector('[data-user-chip-avatar]'), user);
-    renderShortName(root.querySelector('[data-user-chip-name]'), user);
-    renderFullName(root.querySelector('[data-user-full-name]'), user);
-    renderHandle(root.querySelector('[data-user-handle]'), user);
-    renderRole(root.querySelector('[data-user-role]'), user);
+    renderAvatar(root.querySelector('[data-user-chip-avatar]') || root.querySelector('.chip-avatar'), user);
+    renderShortName(root.querySelector('[data-user-chip-name]') || root.querySelector('.chip-name'), user);
+    renderFullName(root.querySelector('[data-user-full-name]') || root.querySelector('.full-name'), user);
+    renderHandle(root.querySelector('[data-user-handle]') || root.querySelector('.chip-handle'), user);
+    renderRole(root.querySelector('[data-user-role]') || root.querySelector('.chip-role'), user);
   }
 
   function bindChip(root) {
     if (!root || !window.CurrentUserStore) return function noop() {};
+    if (root.dataset.userChipBound === '1') return function noop() {};
+    root.dataset.userChipBound = '1';
 
     const update = function (user) {
       renderChip(root, user);
@@ -81,7 +83,17 @@
   }
 
   function bindAllChips() {
-    document.querySelectorAll('[data-user-chip]').forEach(bindChip);
+    var roots = [];
+    document.querySelectorAll('[data-user-chip]').forEach(function (el) {
+      roots.push(el);
+    });
+
+    var legacy = document.getElementById('userChip');
+    if (legacy && roots.indexOf(legacy) === -1) {
+      roots.push(legacy);
+    }
+
+    roots.forEach(bindChip);
   }
 
   function escapeHtml(text) {
