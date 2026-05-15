@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spopeer · Home</title>
+  <title>Spopeer ï¿½ Home</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <script src="/js/auth.js"></script>
   <script src="/js/sanitize.js"></script>
@@ -14,7 +14,7 @@
   <script>
     window.Auth.requireAuth();
   </script>
-  <!-- Register service worker — inline so it runs regardless of JS cache state -->
+  <!-- Register service worker ï¿½ inline so it runs regardless of JS cache state -->
   <script>
     if ('serviceWorker' in navigator && !navigator.webdriver) {
       navigator.serviceWorker.register('/js/service-worker.js').catch(function (err) {
@@ -136,7 +136,7 @@
     .sidebar-inner::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
     .sidebar-inner:hover::-webkit-scrollbar-thumb { background: rgba(0,0,0,.18); }
 
-    /* Collapsed state — icon-only mode */
+    /* Collapsed state ï¿½ icon-only mode */
     .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-collapse-content,
     .app-layout.left-sidebar-collapsed .sidebar-left .sidebar-extras {
       display: none;
@@ -212,7 +212,7 @@
       display: none;
     }
 
-    /* cover photo upload hint — only shows on hover */
+    /* cover photo upload hint ï¿½ only shows on hover */
     .sp-cover-edit {
       position: absolute;
       bottom: 8px;
@@ -1577,7 +1577,7 @@
     .create-card {
       background: var(--white);
       border: 1px solid var(--border);
-      /* create post — #sp-inline-composer is injected by feed-engine.js */
+      /* create post ï¿½ #sp-inline-composer is injected by feed-engine.js */
       border-radius: 24px; overflow: hidden; transition: .2s;
       box-shadow: 0 2px 8px rgba(0,0,0,.03);
     }
@@ -1678,10 +1678,28 @@
 
     .post-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
     .post-author { display: flex; align-items: center; gap: 11px; }
+    .author-profile-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      text-decoration: none;
+      min-width: 0;
+      color: inherit;
+    }
+    .author-info { min-width: 0; }
     .author-av {
       width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
       font-size: 15px; font-weight: 800; color: #fff;
+      overflow: hidden;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .author-av img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
     .av-orange { background: linear-gradient(135deg,#001233,#1a5cff); }
     .av-blue   { background: linear-gradient(135deg,#1a6bff,#6ca3ff); }
@@ -1691,6 +1709,7 @@
     .author-name { font-size: 14px; font-weight: 700; color: var(--ink); }
     .author-name-link { color: inherit; text-decoration: none; }
     .author-name-link:hover { color: var(--blue); text-decoration: underline; }
+    .author-profile-link:hover .author-name { color: var(--blue); text-decoration: underline; text-underline-offset: 2px; }
     .author-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
     .author-meta .role-tag {
       display: inline-flex; align-items: center;
@@ -1811,8 +1830,8 @@
     }
     .post-action-btn {
       min-width: 56px;
-      height: 34px;
-      padding: 0 14px;
+      height: 36px;
+      padding: 0 12px;
       border: 1.5px solid var(--border);
       border-radius: 999px;
       background: var(--white);
@@ -1820,7 +1839,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 7px;
       font-size: 13px;
       font-weight: 600;
       font-family: var(--fB);
@@ -1830,6 +1849,33 @@
     .post-action-btn:hover { background: var(--surface); color: var(--ink); border-color: #d0d0cc; }
     .post-action-btn.active { background: #e6f4f1; color: #0f766e; border-color: #a7d8d0; font-weight: 700; }
     .post-action-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .post-action-btn i {
+      font-size: 14px;
+      line-height: 1;
+    }
+    .post-action-btn .action-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .post-action-btn .action-count {
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--ink-2);
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .post-action-btn.active .action-count {
+      background: #d3ede8;
+      color: #0f766e;
+    }
     .post-meta {
       color: #64748b;
       font-size: 13px;
@@ -2968,7 +3014,7 @@
 .profile-card-variant { display: none; }
 .profile-card-variant.active { display: block; }
 
-/* Feed — Minimal List variant */
+/* Feed ï¿½ Minimal List variant */
 .feed-pc-minimal { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--rL); overflow: hidden; margin-bottom: 12px; }
 .feed-pc-minimal-top { display: flex; align-items: center; gap: 10px; padding: 14px; }
 .feed-pc-minimal-av { width: 40px; height: 40px; border-radius: 8px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
@@ -2987,7 +3033,7 @@
 .feed-pc-minimal-stat-num { font-size: 14px; font-weight: 700; color: var(--ink); text-align: center; }
 .feed-pc-minimal-stat-label { font-size: 10px; color: var(--muted); text-align: center; }
 
-/* Feed — Sports Card variant */
+/* Feed ï¿½ Sports Card variant */
 .feed-pc-sports { border-radius: var(--rL); overflow: hidden; border: 1.5px solid var(--border); margin-bottom: 12px; }
 .feed-pc-sports-header { background: linear-gradient(135deg, #0a1e35, #163a6a); padding: 16px 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .feed-pc-sports-av { width: 44px; height: 44px; border-radius: 50%; background: #152d4a; border: 2px solid #2a5a9a; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #7ab2e0; overflow: hidden; }
@@ -3042,7 +3088,7 @@
       </div>
       <div class="user-chip" id="userChip" data-user-chip>
         <span class="chip-avatar" data-user-chip-avatar>U</span>
-        <span class="chip-name" data-user-chip-name>Loading…</span>
+        <span class="chip-name" data-user-chip-name>Loadingï¿½</span>
         <i class="fa-solid fa-chevron-down chip-caret"></i>
       </div>
 
@@ -3121,7 +3167,7 @@
 
     <div class="sidebar-inner">
 
-    <!-- Profile cards — hidden when collapsed -->
+    <!-- Profile cards ï¿½ hidden when collapsed -->
     <div class="sidebar-collapse-content">
     <!-- SIDEBAR PROFILE CARD -->
     <div class="profile-card-variant active" data-variant="card-stack" id="feedCardVariantStack">
@@ -3326,7 +3372,7 @@
     </div>
     </div><!-- /.sidebar-collapse-content -->
 
-    <!-- Nav items — always visible; icon-only when sidebar is collapsed -->
+    <!-- Nav items ï¿½ always visible; icon-only when sidebar is collapsed -->
     <a class="nav-item" href="/pages/library/index.html"><i class="fa-regular fa-bookmark"></i><span class="nav-label"> Library</span></a>
     <a class="nav-item" href="/pages/events/event.html"><i class="fa-regular fa-calendar"></i><span class="nav-label"> Events </span><span class="nav-badge">3</span></a>
     <a class="nav-item" href="/pages/sponsorship/sponsor.html"><i class="fa-solid fa-handshake-angle"></i><span class="nav-label"> Sponsorship</span></a>
@@ -3336,7 +3382,7 @@
     <a class="nav-item" href="/pages/marketplace/marketplace.html"><i class="fa-solid fa-store"></i><span class="nav-label"> Marketplace</span></a>
     <button class="nav-item" id="openAdminDashboardBtn" style="display:none;"><i class="fa-solid fa-shield-halved"></i><span class="nav-label"> Admin Dashboard</span></button>
 
-    <!-- Divider + coming soon — hidden when collapsed -->
+    <!-- Divider + coming soon ï¿½ hidden when collapsed -->
     <div class="sidebar-extras">
     <div class="sidebar-divider"></div>
 
@@ -3422,7 +3468,7 @@
             <div class="game-viewer-avatar" id="viewerAvatar">SP</div>
             <div class="game-viewer-name">
               <h4 id="viewerName">Spopeer Athlete</h4>
-              <p id="viewerMeta">Sport · now</p>
+              <p id="viewerMeta">Sport ï¿½ now</p>
             </div>
           </div>
           <button type="button" class="game-viewer-close" id="closeViewerBtn" aria-label="Close story">?</button>
@@ -3436,8 +3482,8 @@
           <!-- Injected by JS -->
         </div>
 
-        <button type="button" class="game-viewer-nav prev" id="viewerPrevBtn" aria-label="Previous story">‹</button>
-        <button type="button" class="game-viewer-nav next" id="viewerNextBtn" aria-label="Next story">›</button>
+        <button type="button" class="game-viewer-nav prev" id="viewerPrevBtn" aria-label="Previous story">ï¿½</button>
+        <button type="button" class="game-viewer-nav next" id="viewerNextBtn" aria-label="Next story">ï¿½</button>
 
         <div class="game-reply-composer" id="replyComposer">
           <input type="text" class="game-reply-input" id="replyInput" placeholder="Reply to this story...">
@@ -4201,7 +4247,7 @@
       cover.style.background = coverGradients[type] || coverGradients.athlete;
     }
 
-    // Update avatar — show uploaded photo if available, else role gradient
+    // Update avatar ï¿½ show uploaded photo if available, else role gradient
     const avatar = document.getElementById('sidebarAvatar');
     if (avatar) {
       const avatarGradients = {
@@ -4565,7 +4611,7 @@
     const sender = randomSender();
     createNotification({
       type: 'like',
-      text: `${sender.name} liked your post “${postTitle}=`,
+      text: `${sender.name} liked your post ï¿½${postTitle}=`,
       href: 'feed.html',
       sender,
       target: { type: 'post', title: postTitle, url: 'feed.html' }
@@ -5360,6 +5406,14 @@
     }[userRole] || 'av-orange';
 
     const roleTagClass = userRole === 'Coach' || userRole === 'Pro' ? 'blue' : '';
+    const userIdentifier = userData.id || userData.userId || userData.email || userData.userEmail || userData.username || '';
+    const userProfileHref = userIdentifier
+      ? `/pages/profiles/public-profile.html?userId=${encodeURIComponent(userIdentifier)}`
+      : '';
+    const avatarUrl = userData.avatarUrl || userData.profileImage || '';
+    const userAvatarHtml = avatarUrl
+      ? `<img src="${escapeHtml(String(avatarUrl))}" alt="${escapeHtml(userName)} profile picture" loading="lazy">`
+      : userInitials;
 
     // Build media HTML
     let mediaHTML = '';
@@ -5411,14 +5465,18 @@
         <div class="post-body">
           <div class="post-head">
             <div class="post-author">
-              <div class="author-av ${avatarClass}">${userInitials}</div>
-              <div class="author-info">
-                <div class="author-name">${userName}</div>
-                <div class="author-meta">
-                  <span class="role-tag ${roleTagClass}">${userRole}</span>
-                  @${userData.username || 'user'} · now
+              ${userProfileHref
+                ? `<a class="author-profile-link" href="${userProfileHref}" aria-label="View ${escapeHtml(userName)} profile">`
+                : '<div class="author-profile-link">'}
+                <div class="author-av ${avatarClass}">${userAvatarHtml}</div>
+                <div class="author-info">
+                  <div class="author-name">${escapeHtml(userName)}</div>
+                  <div class="author-meta">
+                    <span class="role-tag ${roleTagClass}">${escapeHtml(userRole)}</span>
+                    @${escapeHtml(userData.username || 'user')} now
+                  </div>
                 </div>
-              </div>
+              ${userProfileHref ? '</a>' : '</div>'}
             </div>
             <button class="post-menu-btn"><i class="fa-solid fa-ellipsis"></i></button>
           </div>
@@ -5666,23 +5724,38 @@
       }
     }
 
+    var authorName = post.authorName || 'Unknown user';
+    var authorIdentifier = post.authorId || post.userId || post.authorEmail || post.userEmail || post.authorUsername || '';
+    var authorProfileHref = authorIdentifier
+      ? '/pages/profiles/public-profile.html?userId=' + encodeURIComponent(authorIdentifier)
+      : '';
+    var authorInitials = (post.authorInitials || authorName.split(' ').map(function (n) { return n[0] || ''; }).join('').slice(0, 2)).toUpperCase() || 'U';
+    var authorAvatarUrl = post.authorAvatarUrl || post.avatarUrl || '';
+    var authorAvatarHtml = authorAvatarUrl
+      ? '<img src="' + escapeHtml(String(authorAvatarUrl)) + '" alt="' + escapeHtml(authorName) + ' profile picture" loading="lazy">'
+      : authorInitials;
+
     return `
       <article class="post-card" data-post-id="${post.id}">
         <div class="post-body">
           <div class="post-head">
             <div class="post-author">
-              <div class="author-av av-orange">${(post.authorName || "U").split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}</div>
-              <div>
-                <div class="author-name">${post.authorName || "Unknown user"}</div>
-                <div class="author-meta">
-                  <span class="role-tag">${post.role || "athlete"}</span>
-                  <span>${post.sport || ""}</span>
+              ${authorProfileHref
+                ? `<a class="author-profile-link" href="${authorProfileHref}" aria-label="View ${escapeHtml(authorName)} profile">`
+                : '<div class="author-profile-link">'}
+                <div class="author-av av-orange">${authorAvatarHtml}</div>
+                <div class="author-info">
+                  <div class="author-name">${escapeHtml(authorName)}</div>
+                  <div class="author-meta">
+                    <span class="role-tag">${escapeHtml(post.role || "athlete")}</span>
+                    <span>${escapeHtml(post.sport || "")}</span>
+                  </div>
                 </div>
-              </div>
+              ${authorProfileHref ? '</a>' : '</div>'}
             </div>
           </div>
           <div class="post-meta">
-            ${post.sport || "General"} · ${new Date(post.createdAt).toLocaleString()}
+            ${post.sport || "General"} ï¿½ ${new Date(post.createdAt).toLocaleString()}
           </div>
           <div class="post-text">${escapeHtml(post.text || "")}</div>
           ${mediaHtml}
@@ -5694,7 +5767,8 @@
               data-like-button="${post.id}"
               data-count="${post.likesCount || 0}"
               onclick="likePost(${post.id})">
-              <span>?</span>
+              <i class="fa-${post.liked ? 'solid' : 'regular'} fa-heart" aria-hidden="true"></i>
+              <span class="action-label">Like</span>
               <span class="action-count">${post.likesCount || 0}</span>
             </button>
             <button
@@ -5703,7 +5777,8 @@
               data-comment-button="${post.id}"
               data-count="${post.commentsCount || 0}"
               onclick="toggleComments(${post.id})">
-              <span>??</span>
+              <i class="fa-regular fa-comment-dots" aria-hidden="true"></i>
+              <span class="action-label">Comment</span>
               <span class="action-count">${post.commentsCount || 0}</span>
             </button>
             <button
@@ -5712,7 +5787,8 @@
               data-repost-button="${post.id}"
               data-count="${post.repostsCount || 0}"
               onclick="repostPost(${post.id})">
-              <span>?</span>
+              <i class="fa-solid fa-retweet" aria-hidden="true"></i>
+              <span class="action-label">Repost</span>
               <span class="action-count">${post.repostsCount || 0}</span>
             </button>
             <button
@@ -5720,7 +5796,7 @@
               class="post-action-btn"
               data-save-button="${post.id}"
               onclick="savePost(${post.id})">
-              <span>??</span>
+              <i class="fa-regular fa-bookmark" aria-hidden="true"></i>
               <span class="action-label">Save</span>
             </button>
           </div>
@@ -5822,6 +5898,8 @@
       authorName: authorName,
       authorId: post.authorId || post.userId || (author && (author.id || author.userId)) || '',
       authorEmail: post.authorEmail || post.userEmail || (author && (author.email || author.userEmail)) || '',
+      authorUsername: post.authorUsername || post.username || (author && author.username) || '',
+      authorAvatarUrl: post.authorAvatarUrl || post.avatarUrl || post.profilePicture || (author && (author.avatarUrl || author.profilePicture || author.profileImage)) || '',
       role: post.role || post.userType || (author && author.role) || 'athlete',
       sport: post.sport || (author && author.sport) || '',
       createdAt: post.createdAt || new Date().toISOString(),
@@ -6188,13 +6266,15 @@ document.addEventListener('DOMContentLoaded', function() {
 // Normalize a server-format post to the display format used by generatePostHTML
 function normalizePost(p) {
   if (p.author && typeof p.author === 'object') {
+    const authorInitials = ((p.author.firstName || '').charAt(0) + (p.author.lastName || '').charAt(0)).toUpperCase() || 'U';
     return {
       id: p.id,
       authorId: p.author.id,
       authorName: ((p.author.firstName || '') + ' ' + (p.author.lastName || '')).trim() || 'User',
       authorEmail: p.author.email || '',
       authorType: p.author.role || 'athlete',
-      authorAvatar: p.author.avatarUrl || ((p.author.firstName || '').charAt(0) + (p.author.lastName || '').charAt(0)).toUpperCase() || 'U',
+      authorAvatarUrl: p.author.avatarUrl || p.author.profilePicture || p.author.profileImage || '',
+      authorAvatar: authorInitials,
       content: p.content || '',
       image: p.image || null,
       media: p.media || [],
@@ -6677,20 +6757,28 @@ function generatePostHTML(post) {
   const authorProfileHref = authorIdentifier
     ? `/pages/profiles/public-profile.html?userId=${encodeURIComponent(authorIdentifier)}`
     : '';
+  const profileAvatarUrl = post.authorAvatarUrl || '';
+  const authorAvatarHtml = profileAvatarUrl
+    ? `<img src="${escapeHtml(String(profileAvatarUrl))}" alt="${escapeHtml(post.authorName || 'User')} profile picture" loading="lazy">`
+    : escapeHtml(post.authorAvatar || 'U');
   
   return `
     <div class="post-card" data-post-id="${post.id}" data-sport="${escapeHtml(post.sport || '')}">
       <div class="post-body">
         <div class="post-head">
           <div class="post-author">
-            <div class="author-av ${role.cls}">${post.authorAvatar}</div>
-            <div class="author-info">
-              <div class="author-name">${authorProfileHref ? `<a class="author-name-link" href="${authorProfileHref}">${post.authorName}</a>` : post.authorName}</div>
-              <div class="author-meta">
-                <span class="role-tag ${role.tagCls}">${role.tag}</span>
-                @${post.authorEmail.split('@')[0]} · ${timeAgo}
+            ${authorProfileHref
+              ? `<a class="author-profile-link" href="${authorProfileHref}" aria-label="View ${escapeHtml(post.authorName || 'User')} profile">`
+              : '<div class="author-profile-link">'}
+              <div class="author-av ${role.cls}">${authorAvatarHtml}</div>
+              <div class="author-info">
+                <div class="author-name">${escapeHtml(post.authorName || 'Unknown user')}</div>
+                <div class="author-meta">
+                  <span class="role-tag ${role.tagCls}">${role.tag}</span>
+                  @${escapeHtml((post.authorEmail || '').split('@')[0] || 'user')} ï¿½ ${timeAgo}
+                </div>
               </div>
-            </div>
+            ${authorProfileHref ? '</a>' : '</div>'}
           </div>
           <button class="post-menu-btn"><i class="fa-solid fa-ellipsis"></i></button>
         </div>
@@ -6772,13 +6860,13 @@ function escapeHtml(text) {
       list.innerHTML = events.map((event) => `
         <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface);">
           <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">
-            ${event.sport} · ${event.type}
+            ${event.sport} ï¿½ ${event.type}
           </div>
           <div style="font-size:15px;font-weight:800;color:var(--ink);margin-bottom:4px;">
             ${event.title}
           </div>
           <div style="font-size:13px;color:var(--muted);">
-            ${new Date(event.date).toLocaleString()} · ${event.location}
+            ${new Date(event.date).toLocaleString()} ï¿½ ${event.location}
           </div>
         </div>
       `).join("");
@@ -6940,7 +7028,7 @@ function escapeHtml(text) {
         '<div class="suggest-av av-blue">' + initialsFor(u) + '</div>' +
         '<div class="suggest-info">' +
         '<div class="suggest-name">' + name + '</div>' +
-        '<div class="suggest-role">' + roleLabel(u.role) + ' · ' + sportText + '</div>' +
+        '<div class="suggest-role">' + roleLabel(u.role) + ' ï¿½ ' + sportText + '</div>' +
         '</div>' +
         '<button class="follow-btn" type="button">Follow</button>' +
       '</div>';
@@ -7209,7 +7297,7 @@ function escapeHtml(text) {
       ]
     },
     manager: {
-      greeting: "Hi! I'm your Manager Agent. I help you grow your sports career — visibility, connections, and opportunities.",
+      greeting: "Hi! I'm your Manager Agent. I help you grow your sports career ï¿½ visibility, connections, and opportunities.",
       actions: [
         { label: 'Find coaches', url: '/pages/search/search.html', icon: 'fa-whistle' },
         { label: 'Find athletes', url: '/pages/search/search.html', icon: 'fa-person-running' },
