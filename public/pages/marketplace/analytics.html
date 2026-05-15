@@ -49,6 +49,7 @@
       background: var(--bg);
       color: var(--ink);
       overflow-x: hidden;
+      background-image: radial-gradient(circle at top right, rgba(0, 31, 63, 0.08), transparent 38%);
     }
 
     /* TOPNAV */
@@ -125,6 +126,110 @@
     }
     .btn-back:hover { background: var(--accent); color: var(--accent-lt); }
 
+    /* SELLER SUMMARY */
+    .seller-summary {
+      display: grid;
+      grid-template-columns: minmax(280px, 1.3fr) 1fr;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .seller-card,
+    .insight-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 10px 24px rgba(11, 26, 51, 0.04);
+    }
+    .seller-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+    }
+    .seller-avatar {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--accent-lt);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .seller-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .seller-meta { min-width: 0; }
+    .seller-name {
+      font-family: var(--fD);
+      font-size: 21px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .seller-sub {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .seller-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: var(--pill);
+      background: var(--accent-lt);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .seller-email {
+      margin-top: 5px;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 360px;
+    }
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .insight-mini {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 70px;
+    }
+    .insight-mini .kicker {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .insight-mini .value {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+
     /* PERIOD SELECTOR */
     .period-bar {
       display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
@@ -151,6 +256,12 @@
       background: var(--white); border: 1px solid var(--border);
       border-radius: var(--r); padding: 24px;
       display: flex; align-items: center; gap: 16px;
+      box-shadow: 0 8px 20px rgba(11, 26, 51, 0.04);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(11, 26, 51, 0.08);
     }
     .stat-icon {
       width: 56px; height: 56px; background: var(--surface);
@@ -180,6 +291,7 @@
     .chart-card {
       background: var(--white); border: 1px solid var(--border);
       border-radius: var(--r); padding: 24px;
+      box-shadow: 0 10px 24px rgba(11, 26, 51, 0.05);
     }
     .chart-card.full-width { grid-column: 1 / -1; }
     .chart-card h3 {
@@ -374,6 +486,7 @@
     @media (max-width: 960px) {
       .analytics-grid { grid-template-columns: 1fr; }
       .chart-card.full-width { grid-column: auto; }
+      .seller-summary { grid-template-columns: 1fr; }
     }
     @media (max-width: 640px) {
       .page-container { padding: 16px; }
@@ -381,6 +494,8 @@
       .stats-row { grid-template-columns: 1fr 1fr; }
       .bar-chart { height: 140px; }
       .donut-wrap { justify-content: center; }
+      .insight-grid { grid-template-columns: 1fr; }
+      .seller-name { font-size: 18px; }
     }
   </style>
   <link rel="stylesheet" href="/css/fonts.css">
@@ -429,6 +544,36 @@
         <i class="fa-solid fa-arrow-left"></i> My Listings
       </a>
     </div>
+
+    <section class="seller-summary" aria-label="Seller overview">
+      <div class="seller-card">
+        <div class="seller-avatar" id="sellerAvatar">S</div>
+        <div class="seller-meta">
+          <h2 class="seller-name" id="sellerName">Seller</h2>
+          <div class="seller-sub">
+            <span class="seller-pill" id="sellerRole">Seller</span>
+            <span id="sellerLocation">Marketplace</span>
+          </div>
+          <div class="seller-email" id="sellerEmail">Loading profile...</div>
+        </div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-grid">
+          <div class="insight-mini">
+            <div class="kicker">Avg Views / Listing</div>
+            <div class="value" id="insightAvgViews">0</div>
+          </div>
+          <div class="insight-mini">
+            <div class="kicker">Inquiry Rate</div>
+            <div class="value" id="insightInquiryRate">0%</div>
+          </div>
+          <div class="insight-mini">
+            <div class="kicker">Last 7 Days</div>
+            <div class="value" id="insightWeekInquiries">0 inquiries</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- PERIOD SELECTOR -->
     <div class="period-bar">
@@ -534,6 +679,55 @@
     let allListings = [];
     let receivedInquiries = [];
     let currentPeriod = 30;
+    let currentUserProfile = null;
+
+    function normalizeRoleLabel(role) {
+      var value = String(role || 'seller').trim();
+      if (!value) return 'Seller';
+      return value.replace(/_/g, ' ').replace(/\b\w/g, function(ch) { return ch.toUpperCase(); });
+    }
+
+    function loadCurrentUserProfile() {
+      var user = null;
+      try {
+        if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+          user = window.CurrentUserStore.getCurrentUser();
+        }
+      } catch (err) {
+        console.debug('CurrentUserStore.getCurrentUser failed in analytics page', err);
+      }
+      if (!user) {
+        try { user = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('user') || 'null'); } catch (e) { user = null; }
+      }
+      return user || null;
+    }
+
+    function hydrateSellerSummary() {
+      currentUserProfile = loadCurrentUserProfile();
+      var user = currentUserProfile || {};
+      var name = user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ').trim() || user.username || 'Seller';
+      var role = normalizeRoleLabel(user.role);
+      var location = user.location || user.country || user.city || 'Marketplace';
+      var email = user.email || user.userEmail || 'No email available';
+      var initials = String(name || 'S').split(' ').filter(Boolean).slice(0, 2).map(function(part) { return part.charAt(0); }).join('').toUpperCase() || 'S';
+      var avatarUrl = user.avatarUrl || user.profilePicture || user.profileImage || '';
+
+      var avatarEl = document.getElementById('sellerAvatar');
+      var nameEl = document.getElementById('sellerName');
+      var roleEl = document.getElementById('sellerRole');
+      var locationEl = document.getElementById('sellerLocation');
+      var emailEl = document.getElementById('sellerEmail');
+
+      if (nameEl) nameEl.textContent = name;
+      if (roleEl) roleEl.textContent = role;
+      if (locationEl) locationEl.textContent = location;
+      if (emailEl) emailEl.textContent = email;
+      if (avatarEl) {
+        avatarEl.innerHTML = avatarUrl
+          ? '<img src="' + escapeAttr(avatarUrl) + '" alt="' + escapeAttr(name) + ' profile picture">'
+          : escapeHtml(initials);
+      }
+    }
 
     function getDateValue(record) {
       if (!record) return null;
@@ -671,11 +865,23 @@
       var totalViews = visibleListings.reduce(function(s, l) { return s + getMetricValue(l, ['views_count', 'viewCount']); }, 0);
       var totalInquiries = visibleInquiries.length;
       var totalSaved = visibleListings.reduce(function(s, l) { return s + getMetricValue(l, ['saves_count']); }, 0);
+      var avgViews = visibleListings.length ? (totalViews / visibleListings.length) : 0;
+      var inquiryRate = totalViews ? ((totalInquiries / totalViews) * 100) : 0;
+      var now = new Date();
+      var weekCutoff = new Date(now);
+      weekCutoff.setDate(now.getDate() - 7);
+      var weekInquiries = visibleInquiries.filter(function(inquiry) {
+        var dt = new Date(getDateValue(inquiry) || 0);
+        return !Number.isNaN(dt.getTime()) && dt >= weekCutoff;
+      }).length;
 
       document.getElementById('statActive').textContent = active;
       document.getElementById('statViews').textContent = totalViews.toLocaleString();
       document.getElementById('statInquiries').textContent = totalInquiries;
       document.getElementById('statSaved').textContent = totalSaved.toLocaleString();
+      document.getElementById('insightAvgViews').textContent = avgViews.toFixed(avgViews >= 10 ? 0 : 1);
+      document.getElementById('insightInquiryRate').textContent = inquiryRate.toFixed(inquiryRate >= 10 ? 0 : 1) + '%';
+      document.getElementById('insightWeekInquiries').textContent = weekInquiries + ' inquiries';
     }
 
     function renderViewsChart() {
@@ -924,7 +1130,12 @@
     }
 
     // Initial load
+    hydrateSellerSummary();
     loadAnalytics();
+
+    window.addEventListener('currentUserChanged', function() {
+      hydrateSellerSummary();
+    });
   </script>
 <script src="/js/navigation.js"></script>
 <script src="/js/current-user-store.js"></script>
