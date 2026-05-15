@@ -1,7 +1,10 @@
-<!-- Updated  -->
 # Spopeer — Connect. Share. Play.
 
-Spopeer is a sports networking platform built for athletes, coaches, clubs, and sports professionals. It gives everyone in the sports world a dedicated space to connect, share, and grow together.
+Spopeer is a sports networking platform for athletes, coaches, clubs, and sports professionals. It gives everyone in the sports world a dedicated space to connect, share, and grow together.
+
+**Platform**: [www.spopeer.com](https://www.spopeer.com)  
+**Company**: Sports For All  
+**Slogan**: Connect. Share. Play.
 
 ---
 
@@ -9,11 +12,7 @@ Spopeer is a sports networking platform built for athletes, coaches, clubs, and 
 
 Spopeer is built around one idea: sports professionals deserve their own network.
 
-Whether you're an athlete looking for your next opportunity, a coach scouting for talent, a club building a community, or a sports professional growing your business — Spopeer brings all of these people into one place.
-
-**Platform**: [www.spopeer.com](https://www.spopeer.com)  
-**Company**: Sports For All  
-**Slogan**: Connect. Share. Play.
+Whether you're an athlete looking for your next opportunity, a coach building your reputation, a club recruiting talent, or a sports professional growing your business — Spopeer brings all of these people into one place.
 
 ---
 
@@ -25,7 +24,7 @@ Whether you're an athlete looking for your next opportunity, a coach scouting fo
 
 **Sports Clubs** — Find and recruit players, manage communications, organise events, and grow your community.
 
-**Supportive Professionals** — Sports doctors, nutritionists, physiotherapists, agents, and anyone else who works in sport can network, offer services, and connect with the right people.
+**Sports Professionals** — Doctors, nutritionists, physiotherapists, agents, and anyone else who works in sport can network, offer services, and connect with the right people.
 
 ---
 
@@ -50,25 +49,24 @@ Whether you're an athlete looking for your next opportunity, a coach scouting fo
 |---|---|
 | Frontend | HTML5, CSS3, JavaScript |
 | Backend | Node.js + Express |
-| Database | PostgreSQL (via Sequelize ORM) |
-| Authentication | JWT + bcrypt |
+| Database | PostgreSQL (Supabase) |
+| Authentication | JWT + bcrypt + Google OAuth |
 | Real-time | Socket.io |
 | File Storage | Cloudinary |
-| Admin Panel | Custom HTML dashboard |
+| Email | Resend |
+| Deployment | Render |
 
 ---
 
 ## Project Status
 
-Spopeer is currently in active development. The MVP includes all core social networking features and is being refined ahead of a public launch.
+Spopeer is currently in active development. The MVP covers all core social networking features and is being refined ahead of a public launch.
 
 ---
 
 ## Get Involved
 
 We're always open to collaborations — whether you're a developer, designer, sports professional, or just someone who believes in what we're building.
-
-If you'd like to contribute, partner, or just say hello, reach out:
 
 **Website**: [www.spopeer.com](https://www.spopeer.com)
 
