@@ -68,6 +68,8 @@
   <link rel="stylesheet" href="/css/components/ads-rotation.css" />
   <link rel="stylesheet" href="/css/components/game-tape-stories.css" />
   <link rel="stylesheet" href="/css/stories.css" />
+  <link rel="stylesheet" href="/css/user-chip-f.css" />
+  <link rel="stylesheet" href="/css/user-chip-f.css" />
   <style>
 
     /* ================================================================================================
@@ -3136,8 +3138,12 @@
       </div>
       <div class="user-chip" id="userChip" data-user-chip>
         <span class="chip-avatar" data-user-chip-avatar>U</span>
-        <span class="chip-name" data-user-chip-name>Loading�</span>
-        <i class="fa-solid fa-chevron-down chip-caret"></i>
+        <div class="chip-text">
+          <span class="chip-name" data-user-chip-name>User</span>
+          <span class="chip-handle" data-user-chip-handle>@user</span>
+        </div>
+        <span class="chip-online-dot" data-chip-online-dot></span>
+        <svg class="chip-caret" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
 
       <div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">

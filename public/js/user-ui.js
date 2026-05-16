@@ -67,6 +67,17 @@
     renderFullName(root.querySelector('[data-user-full-name]') || root.querySelector('.full-name'), user);
     renderHandle(root.querySelector('[data-user-handle]') || root.querySelector('.chip-handle'), user);
     renderRole(root.querySelector('[data-user-role]') || root.querySelector('.chip-role'), user);
+
+    // Update online status dot
+    const onlineDot = root.querySelector('[data-chip-online-dot]');
+    if (onlineDot) {
+      const isOnline = user && user.isOnline !== false;
+      if (isOnline) {
+        onlineDot.classList.remove('offline');
+      } else {
+        onlineDot.classList.add('offline');
+      }
+    }
   }
 
   function bindChip(root) {
