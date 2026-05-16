@@ -175,6 +175,14 @@
       || safePath.indexOf('/api/auth/csrf') === 0;
   }
 
+  function shouldForceReauth(path) {
+    var safePath = String(path || '').toLowerCase();
+    return safePath.indexOf('/api/auth/me') === 0
+      || safePath.indexOf('/api/auth/profile') === 0
+      || safePath.indexOf('/api/auth/refresh') === 0
+      || safePath.indexOf('/api/profile/me') === 0;
+  }
+
   function handleUnauthorized(path) {
     var endpoint = String(path || '').toLowerCase();
     var recentAuthAt = parseInt(localStorage.getItem('spopeer_last_auth_at') || '0', 10) || 0;
@@ -264,7 +272,7 @@
 
     const data = await response.json().catch(function () { return {}; });
     if (response.status === 401) {
-      if (!isPublicAuthEndpoint(path)) {
+      if (!isPublicAuthEndpoint(path) && shouldForceReauth(path)) {
         handleUnauthorized(path);
       }
       const msg = (data.error && data.error.message) || data.message || data.error || "Session expired. Please log in again.";
