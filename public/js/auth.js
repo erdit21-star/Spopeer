@@ -11,8 +11,22 @@ const Auth = {
     );
   },
 
+  hasAnyStoredUser() {
+    return !!(
+      localStorage.getItem('spopeer_user')
+      || localStorage.getItem('spopeerUser')
+      || localStorage.getItem('user')
+    );
+  },
+
+  hasLocalSessionSignal() {
+    return this.hasAnyStoredUser()
+      || localStorage.getItem('spopeer_loggedIn') === 'true'
+      || this.hasAnyAuthToken();
+  },
+
   isLoggedIn() {
-    const hasUser = !!(localStorage.getItem(this.userKey) || localStorage.getItem('user'));
+    const hasUser = this.hasAnyStoredUser();
     const hasFlag = localStorage.getItem("spopeer_loggedIn") === "true";
     return (hasFlag && hasUser) || this.hasAnyAuthToken();
   },
@@ -25,6 +39,7 @@ const Auth = {
     try {
       const raw =
         localStorage.getItem(this.userKey) ||
+        localStorage.getItem("spopeerUser") ||
         localStorage.getItem("user") ||
         "{}";
       return JSON.parse(raw);
@@ -151,9 +166,28 @@ const Auth = {
       return; // page continues rendering optimistically
     }
 
-    // If localStorage says not logged in, redirect immediately — no need to hit the server.
+    // If local signals are missing, still verify once with backend before redirecting.
+    // This avoids false logout bounces when storage hydration lags behind cookie auth.
     if (!locallyLoggedIn) {
-      window.location.href = '/pages/auth/login.html';
+      try {
+        if (window.CurrentUserStore) {
+          const warmUser = await window.CurrentUserStore.refreshCurrentUser();
+          if (warmUser) {
+            return;
+          }
+        } else {
+          const me = await window.SpopeerAPI.me();
+          if (me && (me.user || (me.data && me.data.user) || me.payload || (me.payload && me.payload.user))) {
+            return;
+          }
+        }
+      } catch (err) {
+        console.debug('Auth.requireAuth initial auth probe failed', err);
+      }
+
+      if (!this.hasLocalSessionSignal()) {
+        window.location.href = '/pages/auth/login.html';
+      }
       return;
     }
 

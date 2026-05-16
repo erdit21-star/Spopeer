@@ -3291,8 +3291,19 @@ if (window.profileRuntime) {
         await window.SpopeerAPI.me();
       }
     } catch (err) {
-      window.location.href = '../auth/login.html';
-      return;
+      var hasLocalSessionSignal = !!(
+        localStorage.getItem('spopeer_user')
+        || localStorage.getItem('spopeerUser')
+        || localStorage.getItem('user')
+        || localStorage.getItem('spopeer_token')
+        || localStorage.getItem('spopeerToken')
+        || localStorage.getItem('token')
+      );
+      if (!hasLocalSessionSignal) {
+        window.location.href = '../auth/login.html';
+        return;
+      }
+      console.debug('edit-profile: ignoring transient me() failure because local session exists', err);
     }
 
     // 2. Fetch full profile from backend (source of truth) and re-hydrate form

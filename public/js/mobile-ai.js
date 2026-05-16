@@ -70,8 +70,19 @@
     try {
       await window.SpopeerAPI.me();
     } catch (_error) {
-      window.location.href = '/mobile-login.html';
-      return;
+      var hasLocalSessionSignal = !!(
+        localStorage.getItem('spopeer_user')
+        || localStorage.getItem('spopeerUser')
+        || localStorage.getItem('user')
+        || localStorage.getItem('spopeer_token')
+        || localStorage.getItem('spopeerToken')
+        || localStorage.getItem('token')
+      );
+      if (!hasLocalSessionSignal) {
+        window.location.href = '/mobile-login.html';
+        return;
+      }
+      console.debug('mobile-ai: me() failed but local session exists, continuing', _error);
     }
 
     var responses = await Promise.allSettled([

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Posts · Spopeer</title>
   <script>
-    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
-    var _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+    var _ud = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('spopeerUser') || localStorage.getItem('user') || 'null');
+    var _li = localStorage.getItem('spopeer_loggedIn') === 'true' || !!_ud || !!(localStorage.getItem('spopeer_token') || localStorage.getItem('spopeerToken') || localStorage.getItem('token'));
     if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
   </script>
     <script src="/js/auth.js"></script>
@@ -862,8 +862,8 @@
 <script src="../../js/profile-identity.js"></script>
 <script>
 (async function () {
-  const _ud = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
-  const _li = localStorage.getItem('spopeer_loggedIn') === 'true';
+  const _ud = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('spopeerUser') || localStorage.getItem('user') || 'null');
+  const _li = localStorage.getItem('spopeer_loggedIn') === 'true' || !!_ud || !!(localStorage.getItem('spopeer_token') || localStorage.getItem('spopeerToken') || localStorage.getItem('token'));
   if (!_ud || !_li) { window.location.href = '../../pages/auth/login.html'; return; }
 
   /* ── IIFE-scope vars shared with renderPost ── */
