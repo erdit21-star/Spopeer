@@ -214,27 +214,21 @@
       var errorBox = document.getElementById('modalLoginError');
       var btn = document.getElementById('modalLoginBtn');
 
-      errorBox.textContent = '';
-      errorBox.style.display = 'none';
-      if (!email || !password) {
-        errorBox.textContent = 'Please fill in both fields.';
+      if (!window.SpopeerAuthFlow || typeof window.SpopeerAuthFlow.loginWithEmail !== 'function') {
+        errorBox.textContent = 'Login service is unavailable. Please refresh and try again.';
         errorBox.style.display = 'block';
         return;
       }
 
-      btn.disabled = true;
-      btn.textContent = 'Signing in...';
-      try {
-        var result = await window.SpopeerAPI.login({ email: email, password: password });
-        var user = (result.data && result.data.user) || result.user;
-        if (user && window.Auth) window.Auth.login(user);
-        window.location.href = '/feed.html';
-      } catch (err) {
-        errorBox.textContent = err.message || 'Login failed.';
-        errorBox.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = 'Log In';
-      }
+      await window.SpopeerAuthFlow.loginWithEmail({
+        email: email,
+        password: password,
+        errorEl: errorBox,
+        submitButton: btn,
+        idleText: 'Log In',
+        loadingText: 'Signing in...',
+        fallbackTarget: '/feed.html'
+      });
     });
   }
 

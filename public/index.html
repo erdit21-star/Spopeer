@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Spopeer — Connect. Share. Play.</title>
+<title>Spopeer ï¿½ Connect. Share. Play.</title>
 <meta name="description" content="The sports networking platform for athletes, coaches, clubs, and professionals. Build your sports identity, share your journey, and grow your network.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -498,6 +498,7 @@ footer{
     <script src="/js/smooth-navigation.js" defer></script>
   <script src="/js/auth.js"></script>
   <script src="/js/api.js"></script>
+  <script src="/js/auth-login-flow.js"></script>
   <script src="/js/home-auth-modal.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
@@ -578,7 +579,7 @@ footer{
     z-index:10000;
   }
   .auth-close-btn:hover{background:rgba(255,255,255,0.28);color:#fff}
-  /* Form panels — visibility driven by JS inline styles */
+  /* Form panels ï¿½ visibility driven by JS inline styles */
   .auth-panel-title{
     font-family:var(--fd);font-size:24px;font-weight:800;
     color:var(--ink);letter-spacing:-.03em;margin-bottom:4px;
@@ -728,7 +729,7 @@ footer{
     </div>
     <div class="hero-stats">
       <div class="hero-stat"><strong>1,000+</strong><span>Sports covered</span></div>
-      <div class="hero-stat"><strong>4 roles</strong><span>Athlete · Coach · Club · Pro</span></div>
+      <div class="hero-stat"><strong>4 roles</strong><span>Athlete ï¿½ Coach ï¿½ Club ï¿½ Pro</span></div>
       <div class="hero-stat"><strong>Free</strong><span>to get started</span></div>
     </div>
   </div>
@@ -756,21 +757,21 @@ footer{
 <script>
 (function(){
   var POSTS=[
-    {av:'AP',cls:'a1',name:'Alex Petrov',role:'Athlete · Football',tag:'fa-futbol','tagTxt':'Transfer',body:'FC Spartans just sent me a connection request. Big opportunity — let\'s see where this goes! ??',likes:87,comments:31,live:false},
-    {av:'MC',cls:'a2',name:'Maria Chen',role:'Athlete · Swimming',tag:'fa-microphone','tagTxt':'Live Interview',body:'?? LIVE NOW — I\'m being interviewed by Sports Weekly. Join the session and ask me anything!',likes:214,comments:68,live:true},
-    {av:'UH',cls:'a3',name:'United Hawks FC',role:'Club · Football',tag:'fa-shield-halved','tagTxt':'Club News',body:'We\'re in early talks with Coach Daniel Moreira for our head-coaching role next season. Exciting times ahead.',likes:142,comments:44,live:false},
-    {av:'BW',cls:'a1',name:'Coach Brian Walsh',role:'Coach · Football',tag:'fa-whistle','tagTxt':'Opportunity',body:'Had a very productive first meeting with River United FC today. A fascinating project — details soon.',likes:76,comments:19,live:false},
-    {av:'LB',cls:'a2',name:'Lucas Bianchi',role:'Athlete · Basketball',tag:'fa-basketball','tagTxt':'Transfer',body:'Real Madrid Baloncesto just sent me a trial offer. This is what I\'ve been working for my whole career ???',likes:531,comments:127,live:false},
-    {av:'NS',cls:'a3',name:'Nordic Ski Club',role:'Club · Skiing',tag:'fa-person-skiing','tagTxt':'Scouting',body:'We\'ve opened dialogue with three promising junior athletes from the national championships. Scouting underway.',likes:64,comments:18,live:false},
-    {av:'AT',cls:'a1',name:'Ava Torres',role:'Athlete · Tennis',tag:'fa-microphone','tagTxt':'Live Interview',body:'?? LIVE — Tennis Channel is interviewing me about the upcoming season. Watch and drop your questions!',likes:309,comments:92,live:true},
-    {av:'SM',cls:'a2',name:'Coach Sandra Melo',role:'Coach · Athletics',tag:'fa-stopwatch','tagTxt':'Coaching Win',body:'My athlete just ran a new 400m PB — 47.83! Months of specific track work finally coming together ??',likes:188,comments:53,live:false},
-    {av:'JO',cls:'a3',name:'James Okafor',role:'Athlete · Football',tag:'fa-pen-nib','tagTxt':'Signed',body:'Signed my first professional contract today ??? Grateful for every coach, club, and person who believed in me.',likes:894,comments:241,live:false},
-    {av:'EP',cls:'a1',name:'Dr. Emma Park',role:'Professional · Sports Medicine',tag:'fa-heart-pulse','tagTxt':'Sports Science',body:'Pre-season physicals completed for the full squad — everyone cleared to begin full training. Great group! ??',likes:112,comments:27,live:false},
-    {av:'HR',cls:'a2',name:'Horizon RFC',role:'Club · Rugby',tag:'fa-shield-halved','tagTxt':'Recruitment',body:'?? Seeking a wing forward with top-level speed and experience. Apply now via the Spopeer Marketplace.',likes:58,comments:14,live:false},
-    {av:'MS',cls:'a3',name:'Marco Silva',role:'Athlete · Cycling',tag:'fa-bicycle','tagTxt':'Opportunity',body:'The team director from ProCycling Ventures just messaged me. Something big could be on the horizon ?????',likes:143,comments:38,live:false},
-    {av:'KN',cls:'a1',name:'Keita Ndiaye',role:'Athlete · Basketball',tag:'fa-basketball','tagTxt':'Training',body:'Back-to-back triple-doubles in scrimmage this week. The new offence scheme is clicking perfectly ??',likes:267,comments:74,live:false},
-    {av:'CF',cls:'a2',name:'City Futsal FC',role:'Club · Futsal',tag:'fa-futbol','tagTxt':'Club Update',body:'Our new training facility opens next Monday. Huge step forward for youth development in our region.',likes:195,comments:62,live:false},
-    {av:'RL',cls:'a3',name:'Coach Rosa Lima',role:'Coach · Athletics',tag:'fa-whistle','tagTxt':'Tactics',body:'Shared a full sprint mechanics breakdown in my community group. Free to read — link in bio ??',likes:334,comments:89,live:false}
+    {av:'AP',cls:'a1',name:'Alex Petrov',role:'Athlete ï¿½ Football',tag:'fa-futbol','tagTxt':'Transfer',body:'FC Spartans just sent me a connection request. Big opportunity ï¿½ let\'s see where this goes! ??',likes:87,comments:31,live:false},
+    {av:'MC',cls:'a2',name:'Maria Chen',role:'Athlete ï¿½ Swimming',tag:'fa-microphone','tagTxt':'Live Interview',body:'?? LIVE NOW ï¿½ I\'m being interviewed by Sports Weekly. Join the session and ask me anything!',likes:214,comments:68,live:true},
+    {av:'UH',cls:'a3',name:'United Hawks FC',role:'Club ï¿½ Football',tag:'fa-shield-halved','tagTxt':'Club News',body:'We\'re in early talks with Coach Daniel Moreira for our head-coaching role next season. Exciting times ahead.',likes:142,comments:44,live:false},
+    {av:'BW',cls:'a1',name:'Coach Brian Walsh',role:'Coach ï¿½ Football',tag:'fa-whistle','tagTxt':'Opportunity',body:'Had a very productive first meeting with River United FC today. A fascinating project ï¿½ details soon.',likes:76,comments:19,live:false},
+    {av:'LB',cls:'a2',name:'Lucas Bianchi',role:'Athlete ï¿½ Basketball',tag:'fa-basketball','tagTxt':'Transfer',body:'Real Madrid Baloncesto just sent me a trial offer. This is what I\'ve been working for my whole career ???',likes:531,comments:127,live:false},
+    {av:'NS',cls:'a3',name:'Nordic Ski Club',role:'Club ï¿½ Skiing',tag:'fa-person-skiing','tagTxt':'Scouting',body:'We\'ve opened dialogue with three promising junior athletes from the national championships. Scouting underway.',likes:64,comments:18,live:false},
+    {av:'AT',cls:'a1',name:'Ava Torres',role:'Athlete ï¿½ Tennis',tag:'fa-microphone','tagTxt':'Live Interview',body:'?? LIVE ï¿½ Tennis Channel is interviewing me about the upcoming season. Watch and drop your questions!',likes:309,comments:92,live:true},
+    {av:'SM',cls:'a2',name:'Coach Sandra Melo',role:'Coach ï¿½ Athletics',tag:'fa-stopwatch','tagTxt':'Coaching Win',body:'My athlete just ran a new 400m PB ï¿½ 47.83! Months of specific track work finally coming together ??',likes:188,comments:53,live:false},
+    {av:'JO',cls:'a3',name:'James Okafor',role:'Athlete ï¿½ Football',tag:'fa-pen-nib','tagTxt':'Signed',body:'Signed my first professional contract today ??? Grateful for every coach, club, and person who believed in me.',likes:894,comments:241,live:false},
+    {av:'EP',cls:'a1',name:'Dr. Emma Park',role:'Professional ï¿½ Sports Medicine',tag:'fa-heart-pulse','tagTxt':'Sports Science',body:'Pre-season physicals completed for the full squad ï¿½ everyone cleared to begin full training. Great group! ??',likes:112,comments:27,live:false},
+    {av:'HR',cls:'a2',name:'Horizon RFC',role:'Club ï¿½ Rugby',tag:'fa-shield-halved','tagTxt':'Recruitment',body:'?? Seeking a wing forward with top-level speed and experience. Apply now via the Spopeer Marketplace.',likes:58,comments:14,live:false},
+    {av:'MS',cls:'a3',name:'Marco Silva',role:'Athlete ï¿½ Cycling',tag:'fa-bicycle','tagTxt':'Opportunity',body:'The team director from ProCycling Ventures just messaged me. Something big could be on the horizon ?????',likes:143,comments:38,live:false},
+    {av:'KN',cls:'a1',name:'Keita Ndiaye',role:'Athlete ï¿½ Basketball',tag:'fa-basketball','tagTxt':'Training',body:'Back-to-back triple-doubles in scrimmage this week. The new offence scheme is clicking perfectly ??',likes:267,comments:74,live:false},
+    {av:'CF',cls:'a2',name:'City Futsal FC',role:'Club ï¿½ Futsal',tag:'fa-futbol','tagTxt':'Club Update',body:'Our new training facility opens next Monday. Huge step forward for youth development in our region.',likes:195,comments:62,live:false},
+    {av:'RL',cls:'a3',name:'Coach Rosa Lima',role:'Coach ï¿½ Athletics',tag:'fa-whistle','tagTxt':'Tactics',body:'Shared a full sprint mechanics breakdown in my community group. Free to read ï¿½ link in bio ??',likes:334,comments:89,live:false}
   ];
 
   var colMap={a1:'linear-gradient(135deg,#001233,#1a5cff)',a2:'linear-gradient(135deg,#12a150,#00c17a)',a3:'linear-gradient(135deg,#f59e0b,#ff7c00)'};
@@ -808,7 +809,7 @@ footer{
   }
   seed();
 
-  // every 6 s swap top post — fade only, no translate so left column never shifts
+  // every 6 s swap top post ï¿½ fade only, no translate so left column never shifts
   setInterval(function(){
     var newPost=buildPost(POSTS[idx%POSTS.length]);
     idx=(idx+1)%POSTS.length;
@@ -867,7 +868,7 @@ footer{
     <a class="role-card" href="pages/features/professional-read-more.html">
       <div class="role-icon ri-pro"><i class="fa-solid fa-briefcase-medical"></i></div>
       <h3>Supportive Professionals</h3>
-      <p>Sports doctors, physios, agents, nutritionists — offer your services and find the right clients.</p>
+      <p>Sports doctors, physios, agents, nutritionists ï¿½ offer your services and find the right clients.</p>
       <div class="role-link">Learn more <i class="fa-solid fa-arrow-right"></i></div>
     </a>
   </div>
@@ -889,7 +890,7 @@ footer{
       <div class="feat-cell">
         <i class="fa-solid fa-store"></i>
         <h4>Sports Marketplace</h4>
-        <p>Buy, sell, and offer sports equipment, services, and opportunities — all within the same network.</p>
+        <p>Buy, sell, and offer sports equipment, services, and opportunities ï¿½ all within the same network.</p>
       </div>
       <div class="feat-cell">
         <i class="fa-solid fa-message"></i>
@@ -925,7 +926,7 @@ footer{
     <div class="step">
       <div class="step-num">01</div>
       <h3>Create your profile</h3>
-      <p>Create account, choose your role — athlete, coach, club, or professional — and set up your sports identity with your bio, sport, and photo.</p>
+      <p>Create account, choose your role ï¿½ athlete, coach, club, or professional ï¿½ and set up your sports identity with your bio, sport, and photo.</p>
     </div>
     <div class="step">
       <div class="step-num">02</div>
@@ -964,7 +965,7 @@ footer{
         <div class="logo-mark"><img src="assets/images/logo-s.jpg" alt="Spopeer"></div>
         <span class="logo-text">Spopeer</span>
       </div>
-      <p>Connect. Share. Play. — The sports networking platform for athletes, coaches, clubs, and professionals.</p>
+      <p>Connect. Share. Play. ï¿½ The sports networking platform for athletes, coaches, clubs, and professionals.</p>
       <div class="footer-brand-social">
         <a class="social-btn" href="https://instagram.com/spopeer" target="_blank" rel="noopener" aria-label="Spopeer on Instagram"><i class="fa-brands fa-instagram"></i></a>
         <a class="social-btn" href="https://facebook.com/spopeer" target="_blank" rel="noopener" aria-label="Spopeer on Facebook"><i class="fa-brands fa-facebook-f"></i></a>
@@ -998,7 +999,7 @@ footer{
   </div>
 
   <div class="footer-bottom">
-    <p>© 2026 Sports For All. Spopeer — All rights reserved.</p>
+    <p>ï¿½ 2026 Sports For All. Spopeer ï¿½ All rights reserved.</p>
   </div>
 </footer>
 
@@ -1085,7 +1086,7 @@ function toggleMenu(){
       <!-- SIGNUP PANEL -->
       <div class="auth-panel" id="signupPanel" style="display:none">
         <p class="auth-panel-title">Create Account</p>
-        <p class="auth-panel-sub">Join the global sports community — free</p>
+        <p class="auth-panel-sub">Join the global sports community ï¿½ free</p>
         <button type="button" id="modalSignupGoogleBtn" class="auth-google-btn">
           <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
             <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.5 3.2 29.5 1 24 1 14.8 1 7 6.6 3.7 14.4l6.9 5.4C12.2 13.5 17.6 9.5 24 9.5z"/>
@@ -1127,7 +1128,7 @@ function toggleMenu(){
             </div>
           </div>
           <div class="form-grp">
-            <label for="modalRoleSelect">I am a…</label>
+            <label for="modalRoleSelect">I am aï¿½</label>
             <select id="modalRoleSelect" required>
               <option value="">Select your role</option>
               <option value="athlete">Athlete</option>
