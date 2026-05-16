@@ -122,7 +122,11 @@ async function postGoogleCredential(credential) {
 }
 
 function completeAuthNavigation(path) {
-  var targetPath = path || '/mobile.html';
+  var params = new URLSearchParams(window.location.search || '');
+  var requestedPath = params.get('next') || params.get('redirect') || path || '/mobile.html';
+  var targetPath = (window.SpopeerAPI && typeof window.SpopeerAPI.getSafeNextPath === 'function')
+    ? window.SpopeerAPI.getSafeNextPath(requestedPath, '/mobile.html')
+    : (String(requestedPath || '/mobile.html').charAt(0) === '/' ? String(requestedPath) : '/mobile.html');
   // Mobile browsers are unreliable with opener/popup close flows.
   // Always navigate the current tab to avoid ending on a blank white page.
   try { localStorage.setItem('spopeer_google_auth_complete', String(Date.now())); } catch (_error) {}

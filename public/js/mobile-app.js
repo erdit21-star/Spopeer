@@ -44,6 +44,35 @@
     return (result && result.data && result.data.user) || (result && result.user) || (result && result.data) || result || null;
   }
 
+  function getStoredSessionUser() {
+    var raw = localStorage.getItem('spopeer_user')
+      || localStorage.getItem('spopeerUser')
+      || localStorage.getItem('user')
+      || '';
+    if (!raw) {
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+        return window.CurrentUserStore.getCurrentUser() || null;
+      }
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  function hasLocalSessionSignal() {
+    return !!(
+      getStoredSessionUser()
+      || localStorage.getItem('spopeer_loggedIn') === 'true'
+      || localStorage.getItem('spopeer_token')
+      || localStorage.getItem('spopeerToken')
+      || localStorage.getItem('token')
+    );
+  }
+
   function unwrapSearchUsers(result) {
     if (!result) return [];
     if (Array.isArray(result)) return result;
@@ -4076,7 +4105,7 @@
           if (window.Auth && typeof window.Auth.logout === 'function') {
             await window.Auth.logout();
           } else {
-            ['token','user','session','sb-auth-token','supabase.auth.token','spopeer_loggedIn','spopeer_user','spopeer_token'].forEach(function(k){ localStorage.removeItem(k); });
+            ['token','user','session','sb-auth-token','supabase.auth.token','spopeer_loggedIn','spopeer_user','spopeerUser','spopeer_token','spopeerToken','spopeer_last_auth_at'].forEach(function(k){ localStorage.removeItem(k); });
             sessionStorage.clear();
           }
           window.location.href = '/mobile.html';
@@ -4123,6 +4152,18 @@
         render();
         refreshTopbarStats();
       } catch (_error) {
+        // Keep mobile app in signed-in shell when local session still exists,
+        // mirroring desktop anti-bounce behavior for transient /me failures.
+        if (hasLocalSessionSignal()) {
+          app.user = getStoredSessionUser() || app.user || null;
+          initRealtimeSocket();
+          updateDrawerAccessByRole();
+          revealTarget('#spmShell');
+          render();
+          refreshTopbarStats();
+          return;
+        }
+
         app.user = null;
         teardownRealtimeSocket();
         updateDrawerAccessByRole();
