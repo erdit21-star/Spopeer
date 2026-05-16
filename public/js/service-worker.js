@@ -4,9 +4,9 @@
  * Handles caching strategies and offline functionality
  */
 
-const CACHE_NAME = 'spopeer-cache-v5';
-const ASSETS_CACHE = 'spopeer-assets-v5';
-const API_CACHE = 'spopeer-api-v5';
+const CACHE_NAME = 'spopeer-cache-v6';
+const ASSETS_CACHE = 'spopeer-assets-v6';
+const API_CACHE = 'spopeer-api-v6';
 const _STALE_WHILE_REVALIDATE_TTL = 5 * 60 * 1000; // 5 minutes
 
 const CRITICAL_ASSETS = [
@@ -22,6 +22,15 @@ const CRITICAL_ASSETS = [
   '/js/profile-sync-service.js',
   '/pages/marketplace/marketplace.html'
 ];
+
+const AUTH_CRITICAL_SCRIPTS = new Set([
+  '/js/api.js',
+  '/js/auth.js',
+  '/js/current-user-store.js',
+  '/js/navigation.js',
+  '/js/auth-guard.js',
+  '/js/mobile-app.js'
+]);
 
 /**
  * Install event - cache critical assets
@@ -82,6 +91,12 @@ self.addEventListener('fetch', (event) => {
 
   // API requests - Network First strategy
   if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirstStrategy(request));
+    return;
+  }
+
+  // Auth/runtime scripts should always hit network first to avoid stale login logic.
+  if (AUTH_CRITICAL_SCRIPTS.has(url.pathname)) {
     event.respondWith(networkFirstStrategy(request));
     return;
   }
