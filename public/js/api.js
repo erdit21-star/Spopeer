@@ -186,13 +186,32 @@
     }));
 
     var currentPath = String(window.location.pathname || '').toLowerCase();
-    if (currentPath.indexOf('/pages/auth/') === 0 || currentPath === '/index.html' || currentPath === '/') {
+    if (
+      currentPath.indexOf('/pages/auth/') === 0
+      || currentPath === '/index.html'
+      || currentPath === '/'
+      || currentPath === '/mobile.html'
+      || currentPath.indexOf('/mobile-') === 0
+    ) {
       return;
     }
 
     var next = window.location.pathname + window.location.search + window.location.hash;
     var loginHref = '/pages/auth/login.html?reason=auth_required&next=' + encodeURIComponent(next);
     window.location.replace(loginHref);
+  }
+
+  function getSafeNextPath(rawValue, fallbackPath) {
+    var fallback = fallbackPath || '/feed.html';
+    var raw = String(rawValue || '').trim();
+    if (!raw) return fallback;
+    if (raw.indexOf('http://') === 0 || raw.indexOf('https://') === 0 || raw.indexOf('//') === 0) {
+      return fallback;
+    }
+    if (raw[0] !== '/') {
+      raw = '/' + raw;
+    }
+    return raw;
   }
 
   async function request(path, options) {
@@ -379,6 +398,7 @@
     getUser,
     setUser,
     clearAuthStorage,
+    getSafeNextPath,
     logout,
     showNotification,
     request,

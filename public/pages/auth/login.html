@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Log In — Spopeer</title>
+  <title>Log In ï¿½ Spopeer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -113,7 +113,7 @@
         <span class="logo-text">Spopeer</span>
       </a>
 
-      <p>Connecting the global sports community — athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
+      <p>Connecting the global sports community ï¿½ athletes, coaches, clubs, and supportive professionals in one powerful platform.</p>
 
       <div class="social-row">
         <a href="https://x.com/Spopeer" target="_blank" class="soc-btn"><i class="fab fa-x-twitter"></i></a>
@@ -211,12 +211,18 @@
       if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Signing in...'; }
 
       try {
+        const params = new URLSearchParams(window.location.search);
+        const fallbackTarget = '/feed.html';
+        const rawNext = params.get('next') || params.get('redirect') || '';
+        const nextTarget = (window.SpopeerAPI && typeof window.SpopeerAPI.getSafeNextPath === 'function')
+          ? window.SpopeerAPI.getSafeNextPath(rawNext, fallbackTarget)
+          : (rawNext && rawNext.charAt(0) === '/' ? rawNext : fallbackTarget);
         const result = await window.SpopeerAPI.login({ email: email, password: password });
         const user = (result.data && result.data.user) || result.user;
         const token = (result.data && result.data.token) || result.token;
         if (token) localStorage.setItem('token', token);
         if (user) window.Auth.login(user);
-        window.location.href = '/feed.html';
+        window.location.href = nextTarget;
       } catch (err) {
         if (errorBox) {
           errorBox.textContent = err.message || 'Login failed.';

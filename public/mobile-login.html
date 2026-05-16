@@ -138,7 +138,11 @@ async function postGoogleCredential(credential) {
 }
 
 function completeAuthNavigation(path) {
-  var targetPath = path || '/mobile.html';
+  var params = new URLSearchParams(window.location.search || '');
+  var requestedPath = params.get('next') || params.get('redirect') || path || '/mobile.html';
+  var targetPath = (window.SpopeerAPI && typeof window.SpopeerAPI.getSafeNextPath === 'function')
+    ? window.SpopeerAPI.getSafeNextPath(requestedPath, '/mobile.html')
+    : (String(requestedPath || '/mobile.html').charAt(0) === '/' ? String(requestedPath) : '/mobile.html');
   // Mobile browsers are unreliable with opener/popup close flows.
   // Always navigate the current tab to avoid ending on a blank white page.
   try { localStorage.setItem('spopeer_google_auth_complete', String(Date.now())); } catch (_error) {}
@@ -256,12 +260,17 @@ document.getElementById('loginBtn').onclick = async function() {
   errBox.style.display = 'none';
   if (!email || !password) { errBox.textContent = 'Please enter your email and password.'; errBox.style.display = 'block'; return; }
   try {
+    const params = new URLSearchParams(window.location.search || '');
+    const requestedPath = params.get('next') || params.get('redirect') || '/mobile.html';
+    const nextTarget = (window.SpopeerAPI && typeof window.SpopeerAPI.getSafeNextPath === 'function')
+      ? window.SpopeerAPI.getSafeNextPath(requestedPath, '/mobile.html')
+      : (String(requestedPath || '/mobile.html').charAt(0) === '/' ? String(requestedPath) : '/mobile.html');
     const res = await window.SpopeerAPI.login({ email, password });
     const user = (res.data && res.data.user) || res.user || null;
     const token = res.token || (res.data && res.data.token);
     if (token) localStorage.setItem('token', token);
     if (user && window.Auth) window.Auth.login(user);
-    window.location.assign('/mobile.html');
+    window.location.assign(nextTarget);
   } catch(e) {
     errBox.textContent = (e && e.message) || 'Login failed. Check your credentials.';
     errBox.style.display = 'block';
