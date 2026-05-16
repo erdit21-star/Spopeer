@@ -3,8 +3,18 @@ const Auth = {
   tokenKey: "spopeer_loggedIn",
   userKey: "spopeer_user",
 
+  hasAnyAuthToken() {
+    return !!(
+      localStorage.getItem('spopeer_token')
+      || localStorage.getItem('spopeerToken')
+      || localStorage.getItem('token')
+    );
+  },
+
   isLoggedIn() {
-    return localStorage.getItem("spopeer_loggedIn") === "true" && !!localStorage.getItem(this.userKey);
+    const hasUser = !!(localStorage.getItem(this.userKey) || localStorage.getItem('user'));
+    const hasFlag = localStorage.getItem("spopeer_loggedIn") === "true";
+    return (hasFlag && hasUser) || this.hasAnyAuthToken();
   },
 
   getToken() {
@@ -158,6 +168,11 @@ const Auth = {
       }
     } catch (err) {
       console.debug("Auth.requireAuth background check failed — session expired", err);
+      const hasUser = !!(localStorage.getItem('spopeer_user') || localStorage.getItem('user'));
+      if (hasUser || this.hasAnyAuthToken()) {
+        // Keep the user on-page; downstream API calls can retry/refresh without login bounce.
+        return;
+      }
       localStorage.removeItem('spopeer_user');
       localStorage.removeItem('spopeer_loggedIn');
       localStorage.removeItem('user');
