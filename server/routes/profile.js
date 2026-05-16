@@ -6,6 +6,14 @@ const { ok, fail } = require('../utils/response');
 const { pickAllowedUpdates, normalizeUser } = require('../utils/profileUtils');
 const { getEffectivePlan } = require('../utils/subscription-plans');
 
+const allowedCardStylesByType = {
+  athlete: ['athlete_neon', 'athlete_elite'],
+  coach: ['coach_tactical'],
+  club: ['club_legacy'],
+  professional: ['professional_premium'],
+  supportive_professional: ['professional_premium']
+};
+
 // GET /api/profile/me
 router.get('/me', authenticate, async (req, res) => {
   try {
@@ -111,6 +119,39 @@ router.patch('/subscription', authenticate, async (req, res) => {
   } catch (error) {
     console.error('[PROFILE] patch_subscription failed:', error);
     return fail(res, 500, 'SERVER_ERROR', 'Failed to update subscription.');
+  }
+});
+
+// PATCH /api/profile/me/card-style
+router.patch('/me/card-style', authenticate, async (req, res) => {
+  try {
+    const cardStyle = String(req.body.cardStyle || '').trim();
+    if (!cardStyle) {
+      return fail(res, 400, 'VALIDATION', 'cardStyle is required.');
+    }
+
+    const user = await User.findByPk(req.userId);
+    if (!user || !user.isActive) {
+      return fail(res, 404, 'NOT_FOUND', 'Profile not found.');
+    }
+
+    const userType = String(user.userType || user.role || 'athlete').toLowerCase();
+    const allowedStyles = allowedCardStylesByType[userType] || allowedCardStylesByType.athlete;
+
+    if (!allowedStyles.includes(cardStyle)) {
+      return fail(res, 400, 'VALIDATION', 'This card style is not allowed for your profile type.');
+    }
+
+    await user.update({
+      cardStyle,
+      ogImageUrl: null,
+      ogImageUpdatedAt: null
+    });
+
+    return ok(res, { cardStyle }, { message: 'Card style saved.' });
+  } catch (error) {
+    console.error('[PROFILE] patch_card_style failed:', error);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to save card style.');
   }
 });
 

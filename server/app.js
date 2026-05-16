@@ -51,6 +51,8 @@ const mediaRoutes = require('./routes/media');
 const sponsorshipRoutes = require('./routes/sponsorships');
 const moderationRoutes = require('./routes/moderation');
 const storyRoutes = require('./routes/stories');
+const ogRoutes = require('./routes/og.routes');
+const { getProfileCardDataBySlug } = require('./services/og/profile-card-data');
 
 const errorHandler = require('./middleware/errorHandler');
 const { sentryErrorHandler } = require('./services/sentry');
@@ -260,9 +262,63 @@ app.use('/api/media', uploadLimiter, mediaRoutes);
 app.use('/api/sponsorships', apiLimiter, sponsorshipRoutes);
 app.use('/api/moderation', apiLimiter, moderationRoutes);
 app.use('/api/stories', apiLimiter, storyRoutes);
+app.use('/api/og', apiLimiter, ogRoutes);
 app.use('/api/contact',    apiLimiter, require('./routes/contact'));
 app.use('/api/reports',    apiLimiter, require('./routes/reports'));
 app.use('/api/careers',    apiLimiter, require('./routes/careers'));
+
+app.get('/u/:slug', async (req, res) => {
+  try {
+    const profile = await getProfileCardDataBySlug(req.params.slug);
+
+    if (!profile) {
+      return res.status(404).send('Profile not found');
+    }
+
+    const siteUrl = process.env.PUBLIC_SITE_URL || process.env.FRONTEND_URL || process.env.APP_URL || 'https://spopeer.onrender.com';
+    const profileUrl = `${siteUrl}/u/${profile.publicSlug}`;
+    const imageUrl = profile.ogImageUrl || `${siteUrl}/api/og/profile/${encodeURIComponent(profile.publicSlug)}.png`;
+    const roleLabel = profile.sport || profile.userType || 'athlete';
+    const title = `${profile.fullName} | ${roleLabel} | Spopeer`;
+    const description = `Connect with ${profile.fullName} on Spopeer - passport to the world of sports.`;
+    const frontendProfileUrl = `${siteUrl}/pages/profiles/public-profile.html?userId=${encodeURIComponent(profile.publicSlug)}`;
+
+    const esc = (value) => String(value || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+
+    return res.send(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${esc(title)}</title>
+  <meta name="description" content="${esc(description)}">
+  <meta property="og:title" content="${esc(title)}">
+  <meta property="og:description" content="${esc(description)}">
+  <meta property="og:image" content="${esc(imageUrl)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="profile">
+  <meta property="og:url" content="${esc(profileUrl)}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${esc(title)}">
+  <meta name="twitter:description" content="${esc(description)}">
+  <meta name="twitter:image" content="${esc(imageUrl)}">
+  <meta http-equiv="refresh" content="0; url=${esc(frontendProfileUrl)}">
+</head>
+<body>
+  <a href="${esc(frontendProfileUrl)}">Open ${esc(profile.fullName)} on Spopeer</a>
+  <script>window.location.replace(${JSON.stringify(frontendProfileUrl)});</script>
+</body>
+</html>`);
+  } catch (error) {
+    console.error('Public share route failed:', error);
+    return res.status(500).send('Failed to load profile preview');
+  }
+});
 
 // ─── SENTRY DEBUG (non-production only) ───
 if (process.env.NODE_ENV !== 'production') {

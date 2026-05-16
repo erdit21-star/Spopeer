@@ -14,12 +14,17 @@ const PROFILE_STRING_FIELDS = {
   contactEmail: 255, contactPhone: 100, contactAddress: 500,
   playingLevel: 100, position: 100, currentTeam: 150,
   achievements: 2000, avatarUrl: 500, coverPhotoUrl: 500,
-  profileVisibility: 50
+  profileVisibility: 50,
+  userType: 40, cardStyle: 80, publicSlug: 120,
+  clubName: 180, country: 120, city: 120,
+  height: 80, weight: 80, dominantSide: 80,
+  headline: 255, profilePhotoUrl: 1000, clubLogoUrl: 1000
 };
 
-const PROFILE_JSON_FIELDS = ['stats', 'mediaLinks', 'sharingPreferences', 'visibility', 'extendedProfile'];
+const PROFILE_JSON_FIELDS = ['stats', 'mediaLinks', 'sharingPreferences', 'visibility', 'extendedProfile', 'services'];
 const PROFILE_DATE_FIELDS = ['dateOfBirth'];
 const PROFILE_BOOL_FIELDS = ['privacyPublic'];
+const PROFILE_NUM_FIELDS = ['age', 'rating'];
 
 const SYSTEM_FIELDS = new Set([
   'id', 'email', 'password', 'followersCount', 'followingCount', 'postsCount',
@@ -62,6 +67,16 @@ function pickAllowedUpdates(body) {
     knownFields.add(field);
     if (source[field] !== undefined) {
       updates[field] = !!source[field];
+    }
+  }
+
+  for (const field of PROFILE_NUM_FIELDS) {
+    knownFields.add(field);
+    if (source[field] !== undefined) {
+      const num = Number(source[field]);
+      if (!Number.isNaN(num)) {
+        updates[field] = num;
+      }
     }
   }
 
@@ -108,12 +123,29 @@ function normalizeUser(user) {
     firstName: src.firstName, lastName: src.lastName,
     displayName: src.displayName, username: src.username,
     role: src.role, avatarUrl: src.avatarUrl, coverPhotoUrl: src.coverPhotoUrl,
+    userType: src.userType || src.role,
+    cardStyle: src.cardStyle || src.profileCardStyle,
+    publicSlug: src.publicSlug,
+    ogImageUrl: src.ogImageUrl,
+    ogImageUpdatedAt: src.ogImageUpdatedAt,
     // Sport & career
     bio: src.bio, sport: src.sport, primarySport: src.primarySport,
     profession: src.profession, location: src.location,
     nationality: src.nationality, dateOfBirth: src.dateOfBirth,
     gender: src.gender, playingLevel: src.playingLevel,
     position: src.position, currentTeam: src.currentTeam, achievements: src.achievements,
+    clubName: src.clubName,
+    country: src.country,
+    city: src.city,
+    age: src.age,
+    height: src.height,
+    weight: src.weight,
+    dominantSide: src.dominantSide,
+    headline: src.headline,
+    rating: Number(src.rating || 0),
+    profilePhotoUrl: src.profilePhotoUrl || src.avatarUrl,
+    clubLogoUrl: src.clubLogoUrl,
+    services: src.services || [],
     // Contact
     contactEmail: src.contactEmail, contactPhone: src.contactPhone,
     contactAddress: src.contactAddress,

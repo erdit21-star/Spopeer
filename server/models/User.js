@@ -61,6 +61,77 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(500),
       allowNull: true
     },
+    publicSlug: {
+      type: DataTypes.STRING(120),
+      allowNull: true,
+      unique: true
+    },
+    cardStyle: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    ogImageUrl: {
+      type: DataTypes.STRING(1000),
+      allowNull: true
+    },
+    ogImageUpdatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    userType: {
+      type: DataTypes.STRING(40),
+      allowNull: true
+    },
+    clubName: {
+      type: DataTypes.STRING(180),
+      allowNull: true
+    },
+    country: {
+      type: DataTypes.STRING(120),
+      allowNull: true
+    },
+    city: {
+      type: DataTypes.STRING(120),
+      allowNull: true
+    },
+    age: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    height: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    weight: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    dominantSide: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    headline: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    profilePhotoUrl: {
+      type: DataTypes.STRING(1000),
+      allowNull: true
+    },
+    clubLogoUrl: {
+      type: DataTypes.STRING(1000),
+      allowNull: true
+    },
+    rating: {
+      type: DataTypes.DECIMAL(4, 2),
+      allowNull: false,
+      defaultValue: 0
+    },
+    services: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: []
+    },
     followersCount: {
       type: DataTypes.INTEGER,
       defaultValue: 0
