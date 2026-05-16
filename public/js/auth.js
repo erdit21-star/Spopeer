@@ -66,6 +66,7 @@ const Auth = {
     localStorage.setItem(this.userKey, JSON.stringify(normalizedUser));
     localStorage.setItem("user", JSON.stringify(normalizedUser));
     localStorage.setItem("spopeer_loggedIn", "true");
+    localStorage.setItem('spopeer_last_auth_at', Date.now().toString());
     localStorage.setItem("_profileLastUpdated_", Date.now().toString());
 
     window.dispatchEvent(new CustomEvent("profileUpdated", {
@@ -97,6 +98,7 @@ const Auth = {
 
     [
       "spopeer_token",
+      "spopeer_last_auth_at",
       "spopeer_user",
       "spopeer_loggedIn",
       "authToken",

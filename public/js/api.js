@@ -51,6 +51,7 @@
     localStorage.setItem("spopeerUser", JSON.stringify(user));
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("spopeer_loggedIn", "true");
+    localStorage.setItem('spopeer_last_auth_at', Date.now().toString());
     localStorage.setItem("_profileLastUpdated_", Date.now().toString());
     if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
       window.CurrentUserStore.setCurrentUser(user);
@@ -66,6 +67,7 @@
 
   function clearAuthStorage() {
     [
+      'spopeer_last_auth_at',
       'spopeer_token',
       'spopeerToken',
       'token',
@@ -174,6 +176,17 @@
   }
 
   function handleUnauthorized(path) {
+    var endpoint = String(path || '').toLowerCase();
+    var recentAuthAt = parseInt(localStorage.getItem('spopeer_last_auth_at') || '0', 10) || 0;
+    var msSinceAuth = recentAuthAt > 0 ? (Date.now() - recentAuthAt) : Number.POSITIVE_INFINITY;
+    var hasLocalSession = localStorage.getItem('spopeer_loggedIn') === 'true' && !!(localStorage.getItem('spopeer_user') || localStorage.getItem('user'));
+
+    // Avoid bouncing users back to login on transient /me race right after login.
+    if (endpoint.indexOf('/api/auth/me') === 0 && hasLocalSession && msSinceAuth <= 2 * 60 * 1000) {
+      console.debug('Suppressing immediate unauthorized redirect for /api/auth/me during post-login grace window');
+      return;
+    }
+
     clearAuthStorage();
     try { sessionStorage.clear(); } catch (err) { console.debug('sessionStorage.clear failed during unauthorized handler', err); }
 
