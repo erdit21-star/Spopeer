@@ -7,7 +7,9 @@ function errorHandler(err, req, res, _next) {
   // Log with request context
   const meta = req.requestId ? `[${req.requestId}]` : '';
   console.error(`${meta} Server error:`, err);
-  const maxSizeMb = Math.max(1, Math.round((parseInt(process.env.MAX_FILE_SIZE, 10) || 10 * 1024 * 1024) / (1024 * 1024)));
+  const defaultMaxSizeBytes = parseInt(process.env.MAX_FILE_SIZE, 10) || 10 * 1024 * 1024;
+  const limitBytes = Number(err && err.limit) || defaultMaxSizeBytes;
+  const maxSizeMb = Math.max(1, Math.round(limitBytes / (1024 * 1024)));
 
   // Entity too large (body-parser)
   if (err.type === 'entity.too.large') {

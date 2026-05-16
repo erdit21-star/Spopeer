@@ -1019,6 +1019,9 @@
 
   async function createStoryFromFile(file, caption, sport) {
     if (!file) throw new Error('Choose an image or video first.');
+    if (file.size > 100 * 1024 * 1024) {
+      throw new Error('File too large. Maximum size is 100MB.');
+    }
     var formData = new FormData();
     formData.append('media', file);
     formData.append('caption', caption || '');

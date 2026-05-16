@@ -47,11 +47,13 @@ const fileFilter = (_req, file, cb) => {
 // Always use memory storage so buffer is available for cloud upload
 const memStorage = multer.memoryStorage();
 
-const maxSize = parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024; // 10 MB
+const maxSize = parseInt(process.env.MAX_FILE_SIZE, 10) || 10 * 1024 * 1024; // 10 MB
+const storyMaxSize = parseInt(process.env.MAX_STORY_FILE_SIZE, 10) || 100 * 1024 * 1024; // 100 MB
 
 const uploadAvatar = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize, files: 1 } });
 const uploadCover  = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize, files: 1 } });
 const uploadPost   = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize * 2, files: 1 } }); // 20 MB
+const uploadStory  = multer({ storage: memStorage, fileFilter, limits: { fileSize: storyMaxSize, files: 1 } }); // 100 MB
 
 /**
  * Persist the uploaded file (Cloudinary when available, local disk otherwise).
@@ -85,6 +87,6 @@ async function persistFile(file, folder, userId) {
   return { url, provider: 'local' };
 }
 
-module.exports = { uploadAvatar, uploadCover, uploadPost, persistFile };
+module.exports = { uploadAvatar, uploadCover, uploadPost, uploadStory, persistFile };
 
 
