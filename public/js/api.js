@@ -19,7 +19,10 @@
   }
 
   function getToken() {
-    return null; // Auth is cookie-based — no client-side token
+    return localStorage.getItem('spopeer_token')
+      || localStorage.getItem('spopeerToken')
+      || localStorage.getItem('token')
+      || null;
   }
 
   function getUser() {
@@ -63,6 +66,9 @@
 
   function clearAuthStorage() {
     [
+      'spopeer_token',
+      'spopeerToken',
+      'token',
       "spopeer_user",
       "spopeerUser",
       "spopeer_loggedIn",
@@ -199,6 +205,11 @@
       headers["Content-Type"] = headers["Content-Type"] || "application/json";
     }
 
+    const bearerToken = getToken();
+    if (bearerToken && !headers.Authorization) {
+      headers.Authorization = `Bearer ${bearerToken}`;
+    }
+
     if (requiresCsrf(method)) {
       const csrfToken = await ensureCsrfToken();
       if (csrfToken) {
@@ -269,6 +280,11 @@
       method: "POST",
       body: JSON.stringify(payload)
     });
+    const token = (data && data.data && data.data.token) || data.token || null;
+    if (token) {
+      localStorage.setItem('spopeer_token', token);
+      localStorage.setItem('token', token);
+    }
     // Store user profile for UI — auth is cookie-based
     const user = unwrapUser(data);
     if (user) {

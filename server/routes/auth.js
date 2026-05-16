@@ -445,6 +445,7 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
       success: true,
       data: {
         message: 'Login successful.',
+        token,
         user: {
           ...buildAuthUserPayload(user),
           isActive: user.isActive,
