@@ -235,6 +235,30 @@
     return raw;
   }
 
+  var _refreshPromise = null;
+
+  async function tryRefreshToken() {
+    if (_refreshPromise) return _refreshPromise;
+    _refreshPromise = (async () => {
+      try {
+        const csrfToken = await ensureCsrfToken();
+        const refreshHeaders = {};
+        if (csrfToken) refreshHeaders['X-CSRF-Token'] = csrfToken;
+        const res = await fetch(buildUrl('/api/auth/refresh'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: refreshHeaders
+        });
+        return res.ok;
+      } catch (_) {
+        return false;
+      } finally {
+        _refreshPromise = null;
+      }
+    })();
+    return _refreshPromise;
+  }
+
   async function request(path, options) {
     const config = options || {};
     const headers = { ...(config.headers || {}) };
@@ -272,12 +296,20 @@
 
     const data = await response.json().catch(function () { return {}; });
     if (response.status === 401) {
+      const respCode = (data && (data.code || (data.error && data.error.code))) || '';
+      // Silently refresh the access token once and retry the original request
+      if (!config._isRetry && !isPublicAuthEndpoint(path)) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+          return request(path, Object.assign({}, config, { _isRetry: true }));
+        }
+      }
       if (!isPublicAuthEndpoint(path) && shouldForceReauth(path)) {
         handleUnauthorized(path);
       }
       const msg = (data.error && data.error.message) || data.message || data.error || "Session expired. Please log in again.";
       const err = new Error(msg);
-      err.code = "UNAUTHORIZED";
+      err.code = respCode || "UNAUTHORIZED";
       throw err;
     }
     if (!response.ok) {

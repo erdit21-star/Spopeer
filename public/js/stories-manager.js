@@ -26,6 +26,15 @@
         formData.append('sport', sport || '');
         formData.append('type', mediaFile.type.startsWith('video/') ? 'video' : 'image');
 
+        // Route through SpopeerAPI so auth, CSRF, and token refresh are handled
+        if (window.SpopeerAPI && typeof window.SpopeerAPI.createStory === 'function') {
+          const result = await window.SpopeerAPI.createStory(formData);
+          if (window.SpopeerToast) {
+            window.SpopeerToast.success('Story uploaded! It will expire in 24 hours.');
+          }
+          return (result && result.data) || result;
+        }
+
         const response = await fetch('/api/stories', {
           method: 'POST',
           credentials: 'include',
@@ -34,7 +43,7 @@
 
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.message || 'Upload failed');
+          throw new Error((error.error && error.error.message) || error.message || 'Upload failed');
         }
 
         const result = await response.json();
