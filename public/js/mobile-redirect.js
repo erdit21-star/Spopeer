@@ -12,12 +12,19 @@
     return;
   }
 
-  // Never redirect desktop app shell and desktop page routes.
-  if (
-    path === '/feed.html' ||
-    path.indexOf('/pages/') === 0 ||
-    path.indexOf('/api/') === 0
-  ) {
+  // Detect mobile user agent or narrow screen
+  var isMobileUa = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent || '');
+  var isNarrowScreen = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+  var isMobileUser = isMobileUa || isNarrowScreen;
+
+  // Redirect from desktop feed to mobile feed
+  if (isMobileUser && path === '/feed.html') {
+    window.location.replace('/mobile.html');
+    return;
+  }
+
+  // Never redirect desktop app shell (pages/*) and API endpoints
+  if (path.indexOf('/pages/') === 0 || path.indexOf('/api/') === 0) {
     return;
   }
 
@@ -33,10 +40,7 @@
     return;
   }
 
-  var isMobileUa = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent || '');
-  var isNarrowScreen = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-
-  if (isMobileUa || isNarrowScreen) {
+  if (isMobileUser) {
     window.location.replace('/mobile.html');
   }
 })();
