@@ -1489,12 +1489,16 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
 <script src="../../js/shared-ui.js"></script>
 <script>
   if (window.sharedUi && window.sharedUi.setupSocialFeedRuntime) {
-    window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+    var hasSession = localStorage.getItem('spopeer_loggedIn') === 'true' && !!(localStorage.getItem('spopeer_user') || localStorage.getItem('user'));
+    if (hasSession) {
+      window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
+    }
   }
 </script>
 <script>
   document.addEventListener('DOMContentLoaded', async function () {
-    if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
+    var hasSession = localStorage.getItem('spopeer_loggedIn') === 'true' && !!(localStorage.getItem('spopeer_user') || localStorage.getItem('user'));
+    if (hasSession && window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
     if (window.UserUI) window.UserUI.bindAllChips();
   });
 </script>

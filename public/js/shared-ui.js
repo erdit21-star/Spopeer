@@ -567,7 +567,8 @@
       }
     };
 
-    if (window.SpopeerAPI && typeof window.SpopeerAPI.listNotifications === 'function') {
+    var hasSession = localStorage.getItem('spopeer_loggedIn') === 'true' && !!(localStorage.getItem('spopeer_user') || localStorage.getItem('user'));
+    if (hasSession && window.SpopeerAPI && typeof window.SpopeerAPI.listNotifications === 'function') {
       window.SpopeerAPI.listNotifications({ page: 1, limit: 1 }).then(function (result) {
         var unreadCount = 0;
         if (result && result.meta && typeof result.meta.unreadCount === 'number') unreadCount = result.meta.unreadCount;
