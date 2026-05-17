@@ -2,7 +2,19 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('stories', {
+    const tableName = 'stories';
+    const tables = await queryInterface.showAllTables();
+    const normalized = new Set((tables || []).map((t) => {
+      if (typeof t === 'string') return t;
+      if (t && typeof t.tableName === 'string') return t.tableName;
+      return String(t || '');
+    }));
+
+    if (normalized.has(tableName)) {
+      return;
+    }
+
+    await queryInterface.createTable(tableName, {
       id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
 
       userId: {
@@ -36,6 +48,18 @@ module.exports = {
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable('stories');
+    const tableName = 'stories';
+    const tables = await queryInterface.showAllTables();
+    const normalized = new Set((tables || []).map((t) => {
+      if (typeof t === 'string') return t;
+      if (t && typeof t.tableName === 'string') return t.tableName;
+      return String(t || '');
+    }));
+
+    if (!normalized.has(tableName)) {
+      return;
+    }
+
+    await queryInterface.dropTable(tableName);
   }
 };
