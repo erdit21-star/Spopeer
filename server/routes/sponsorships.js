@@ -74,9 +74,7 @@ router.get('/', authenticate, async (req, res) => {
       return json;
     });
 
-    res.json({
-      status: 'ok',
-      sponsorships: payload,
+    ok(res, payload, {
       pagination: { total: count, page, pages: Math.ceil(count / limit) }
     });
   } catch (error) {

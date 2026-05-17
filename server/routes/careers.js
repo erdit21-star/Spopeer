@@ -3,6 +3,7 @@ const express = require('express');
 const router  = express.Router();
 const { sendEmail } = require('../services/email');
 const { createLimiter } = require('../services/rateLimiter');
+const { ok, fail } = require('../utils/response');
 
 const CONTACT_RECIPIENT = process.env.CONTACT_TO_EMAIL || 'erditgr@yahoo.gr';
 
@@ -18,10 +19,10 @@ router.post('/', careersLimiter, async (req, res) => {
   const { name, email, phone, position, resume, portfolio, coverLetter } = req.body || {};
 
   if (!name || !email || !position || !resume || !coverLetter) {
-    return res.status(400).json({ success: false, error: 'Please fill in all required fields.' });
+    return fail(res, 400, 'VALIDATION', 'Please fill in all required fields.');
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ success: false, error: 'Invalid email address.' });
+    return fail(res, 400, 'VALIDATION_EMAIL', 'Invalid email address.');
   }
 
   const escHtml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -54,14 +55,14 @@ router.post('/', careersLimiter, async (req, res) => {
     if (!result.success) {
       console.error('[Careers] Email send failed:', result.error);
       if (process.env.NODE_ENV === 'production') {
-        return res.status(500).json({ success: false, error: 'Failed to submit application. Please try again.' });
+        return fail(res, 500, 'EMAIL_SEND_FAILED', 'Failed to submit application. Please try again.');
       }
     }
 
-    res.json({ success: true, message: 'Your application has been submitted. We\'ll be in touch soon!' });
+    return ok(res, { message: 'Your application has been submitted. We\'ll be in touch soon!' });
   } catch (err) {
     console.error('[Careers] Error:', err.message);
-    res.status(500).json({ success: false, error: 'Failed to submit application. Please try again.' });
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to submit application. Please try again.');
   }
 });
 

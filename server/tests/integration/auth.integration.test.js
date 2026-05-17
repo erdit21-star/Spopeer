@@ -5,6 +5,7 @@
  */
 
 require('./setup-common');
+const crypto = require('crypto');
 
 // In-memory fake user store
 const mockBcryptHashSync = (pw) => `hashed_${pw}`;
@@ -12,6 +13,10 @@ const mockBcryptCompare = (pw, hash) => Promise.resolve(hash === `hashed_${pw}`)
 let mockFakeUsers = [];
 let mockFakeUserIdSeq = 1;
 let mockFakePasswordResetTokens = [];
+
+function hashToken(token) {
+  return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
 
 function mockCreateFakeUser(data) {
   const hash = mockBcryptHashSync(data.password);
@@ -375,6 +380,35 @@ describe('Auth Integration', () => {
         .send({ currentPassword: 'old', newPassword: 'NewPass123!' });
 
       expect(res.statusCode).toBe(401);
+    });
+  });
+
+  // ─── EMAIL VERIFICATION ───
+  describe('GET /api/auth/verify', () => {
+    test('activates account and redirects on valid verification token', async () => {
+      const rawToken = 'verify-token-123';
+      const user = mockCreateFakeUser({
+        email: 'verify@example.com',
+        password: 'StrongPass123!',
+        isActive: false,
+        emailVerified: false,
+        emailVerifyToken: hashToken(rawToken)
+      });
+
+      const res = await request(app).get('/api/auth/verify').query({ token: rawToken });
+
+      expect(res.statusCode).toBe(302);
+      expect(res.headers.location).toContain('/pages/auth/login.html?verified=1');
+      expect(user.isActive).toBe(true);
+      expect(user.emailVerified).toBe(true);
+      expect(user.emailVerifyToken).toBeNull();
+    });
+
+    test('returns 400 for invalid token', async () => {
+      const res = await request(app).get('/api/auth/verify').query({ token: 'invalid-token' });
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe('TOKEN_INVALID');
     });
   });
 

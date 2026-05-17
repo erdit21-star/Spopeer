@@ -3,6 +3,7 @@ const express = require('express');
 const router  = express.Router();
 const { sendEmail } = require('../services/email');
 const { createLimiter } = require('../services/rateLimiter');
+const { ok, fail } = require('../utils/response');
 
 const CONTACT_RECIPIENT = process.env.CONTACT_TO_EMAIL || 'erditgr@yahoo.gr';
 
@@ -17,10 +18,10 @@ router.post('/', contactLimiter, async (req, res) => {
   const { firstName, lastName, email, subject, message, type } = req.body || {};
 
   if (!firstName || !lastName || !email || !subject || !message) {
-    return res.status(400).json({ success: false, error: 'All fields are required.' });
+    return fail(res, 400, 'VALIDATION', 'All fields are required.');
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ success: false, error: 'Invalid email address.' });
+    return fail(res, 400, 'VALIDATION_EMAIL', 'Invalid email address.');
   }
 
   const html = `
@@ -48,13 +49,13 @@ router.post('/', contactLimiter, async (req, res) => {
 
     if (!result.success && process.env.NODE_ENV === 'production') {
       console.error('[Contact] Email send failed:', result.error);
-      return res.status(500).json({ success: false, error: 'Failed to send message. Please try again.' });
+      return fail(res, 500, 'EMAIL_SEND_FAILED', 'Failed to send message. Please try again.');
     }
 
-    res.json({ success: true, message: 'Your message has been sent. We\'ll be in touch soon!' });
+    return ok(res, { message: 'Your message has been sent. We\'ll be in touch soon!' });
   } catch (err) {
     console.error('[Contact] Error:', err.message);
-    res.status(500).json({ success: false, error: 'Failed to send message. Please try again.' });
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to send message. Please try again.');
   }
 });
 

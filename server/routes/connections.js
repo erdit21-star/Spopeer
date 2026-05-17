@@ -155,8 +155,7 @@ router.get('/status/:userId', authenticate, async (req, res) => {
       where: { followerId: req.userId, followingId: req.params.userId }
     });
 
-    res.json({
-      status: 'ok',
+    ok(res, {
       isFollowing: !!connection,
       connectionStatus: connection ? connection.status : null
     });
