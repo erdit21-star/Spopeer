@@ -20,7 +20,7 @@ const express = require('express');
 const router = express.Router();
 const { Post, User, Like, Comment, Connection, SavedPost } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { uploadPost, persistFile } = require('../middleware/upload');
+const { uploadPost, persistFile, validateUploadedFile } = require('../middleware/upload');
 const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
 const { createPostSchema, validate } = require('../utils/schemas');
@@ -203,7 +203,7 @@ router.get('/', optionalAuth, async (req, res) => {
 });
 
 // ─── CREATE POST ───
-router.post('/', authenticate, uploadPost.single('image'), validate(createPostSchema), async (req, res) => {
+router.post('/', authenticate, uploadPost.single('image'), validateUploadedFile, validate(createPostSchema), async (req, res) => {
   try {
     const { content, sport, type, pollOptions } = req.body;
 
