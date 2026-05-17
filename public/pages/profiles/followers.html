@@ -903,9 +903,9 @@
     </div>
 
     <div class="nav-right">
-      <button class="nav-btn" onclick="window.location.href='/feed.html'" title="Home">
+      <a class="nav-btn" href="/feed.html" title="Home">
         <i class="fa-solid fa-house"></i>
-      </button>
+      </a>
       <button class="nav-btn" title="Messages">
         <i class="fa-regular fa-paper-plane"></i>
       </button>
@@ -994,11 +994,11 @@
         <div class="profile-mini-name" id="sidebarName">Your Name</div>
         <div class="profile-mini-type" id="sidebarType">Athlete</div>
         <div class="profile-mini-stats">
-          <div class="pstat" onclick="switchTab('followers')">
+          <div class="pstat" data-action="switch-followers">
             <div class="pstat-n" id="statFollowers">0</div>
             <div class="pstat-l">Followers</div>
           </div>
-          <div class="pstat" onclick="switchTab('following')">
+          <div class="pstat" data-action="switch-following">
             <div class="pstat-n" id="statFollowing">0</div>
             <div class="pstat-l">Following</div>
           </div>

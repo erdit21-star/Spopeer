@@ -97,7 +97,7 @@ function closeModal() {
   document.getElementById('modalFooter').style.display = 'flex';
 }
 
-function handleOverlayClick(e) {
+function _handleOverlayClick(e) {
   if (e.target === document.getElementById('createModal')) closeModal();
 }
 
@@ -220,7 +220,7 @@ function switchTab(tab, el) {
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
   el.classList.add('active');
 }
-function togglePlacement(input) {
+function togglePlacement(_input) {
   // visual feedback � production would call API
 }
 
@@ -232,10 +232,89 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 /* -- KEYBOARD -- */
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+
+/* -- DELEGATED EVENTS -- */
 document.addEventListener('click', function(e) {
   var menu = document.getElementById('profileMenu');
   var chip = document.getElementById('userChip');
   if (menu && chip && !chip.contains(e.target) && !menu.contains(e.target)) {
     menu.classList.remove('visible');
+  }
+
+  var t = e.target;
+
+  // nav-icon navigation buttons
+  var navBtn = t.closest('[data-nav-href]');
+  if (navBtn) { window.location.href = navBtn.dataset.navHref; return; }
+
+  // profile menu toggle
+  if (t.closest('[data-action="toggle-profile-menu"]')) {
+    if (window.toggleProfileMenuGlobal) window.toggleProfileMenuGlobal();
+    return;
+  }
+
+  // sidebar tab switching
+  var tabLink = t.closest('[data-tab]');
+  if (tabLink) { e.preventDefault(); switchTab(tabLink.dataset.tab, tabLink); return; }
+
+  // date range pills (overview chart range)
+  var rangePill = t.closest('[data-date-range-pill]');
+  if (rangePill) { setDatePill(rangePill); return; }
+
+  // campaign filter pills
+  var filterPill = t.closest('[data-filter]');
+  if (filterPill) { filterCamps(filterPill, filterPill.dataset.filter); return; }
+
+  // open modal
+  if (t.closest('[data-action="open-modal"]')) { openModal(); return; }
+
+  // close modal
+  if (t.closest('[data-action="close-modal"]')) { closeModal(); return; }
+
+  // modal overlay click-outside
+  if (t.dataset.action === 'modal-overlay-click' && t === e.target) { closeModal(); return; }
+
+  // wizard step navigation
+  if (t.closest('[data-action="next-step"]')) { nextStep(); return; }
+  if (t.closest('[data-action="prev-step"]')) { prevStep(); return; }
+  if (t.closest('[data-action="launch-campaign"]')) { launchCampaign(); return; }
+
+  // objective card selection
+  var objCard = t.closest('[data-action="select-obj"]');
+  if (objCard) { selectObj(objCard); return; }
+
+  // format card selection
+  var fmtCard = t.closest('[data-action="select-format"]');
+  if (fmtCard) { selectFormat(fmtCard); return; }
+
+  // tag-pill toggle
+  var tagPill = t.closest('[data-action="toggle-pill"]');
+  if (tagPill) { tagPill.classList.toggle('sel'); return; }
+
+  // CTA option selection
+  var ctaOpt = t.closest('[data-action="select-cta"]');
+  if (ctaOpt) { selectCTA(ctaOpt); return; }
+
+  // creative drop zone
+  if (t.closest('[data-action="trigger-creative-upload"]')) {
+    document.getElementById('creativeInput').click(); return;
+  }
+
+  // remove creative
+  if (t.closest('[data-action="remove-creative"]')) { removeCreative(); return; }
+});
+
+document.addEventListener('change', function(e) {
+  if (e.target.dataset.placementToggle !== undefined || e.target.hasAttribute('data-placement-toggle')) {
+    togglePlacement(e.target);
+  }
+  if (e.target.dataset.creativeInput !== undefined || e.target.hasAttribute('data-creative-input')) {
+    handleCreativeUpload(e.target);
+  }
+});
+
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'budgetSlider' || e.target.hasAttribute('data-budget-slider')) {
+    updateBudget(e.target.value);
   }
 });

@@ -592,12 +592,12 @@
     </div>
 
     <div class="nav-right">
-      <button class="nav-icon" title="Home" onclick="window.location.href='/feed.html'"><i class="fa-solid fa-house"></i></button>
-      <button class="nav-icon" title="Messages" onclick="window.location.href='../../pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
-      <button class="nav-icon" title="Notifications" onclick="window.location.href='../../pages/dashboard/notifications.html'">
+      <a class="nav-icon" href="/feed.html" title="Home"><i class="fa-solid fa-house"></i></a>
+      <a class="nav-icon" href="../../pages/messaging/inbox.html" title="Messages"><i class="fa-regular fa-paper-plane"></i></a>
+      <a class="nav-icon" href="../../pages/dashboard/notifications.html" title="Notifications">
         <i class="fa-regular fa-bell"></i>
         <span class="notif-badge"></span>
-      </button>
+      </a>
       <div class="user-chip" id="userChip" data-user-chip>
         <span class="chip-avatar" id="chipAvatar" data-user-chip-avatar>?</span>
         <span class="chip-name" id="chipName" data-user-chip-name>Loading…</span>
@@ -698,9 +698,9 @@
           </span>
         </div>
         <div class="banner-stats">
-          <div class="bstat" onclick="window.location.href='/feed.html'">
-            <div class="bstat-num" id="statPosts">0</div>
-            <div class="bstat-label">Posts</div>
+          <div class="bstat">
+            <a href="/feed.html" style="text-decoration:none;color:inherit;display:contents;">
+            <div class="bstat-label">Posts</div></a>
           </div>
           <div class="bstat">
             <div class="bstat-num" id="statFollowers">0</div>
@@ -731,7 +731,7 @@
     <!-- Story Viewer Modal -->
     <div class="story-viewer" id="storyViewer">
       <div class="story-viewer-container">
-        <button class="story-nav-btn prev" onclick="prevStory()"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="story-nav-btn prev" data-action="prev-story"><i class="fa-solid fa-chevron-left"></i></button>
         <div class="story-viewer-content" id="storyContent">
           <div class="story-progress-bar">
             <div class="story-progress-fill" id="storyProgress"></div>
@@ -750,8 +750,8 @@
             <button class="story-action-btn primary">👤 View Profile</button>
           </div>
         </div>
-        <button class="story-nav-btn next" onclick="nextStory()"><i class="fa-solid fa-chevron-right"></i></button>
-        <button class="story-close-btn" onclick="closeStories()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="story-nav-btn next" data-action="next-story"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="story-close-btn" data-action="close-stories"><i class="fa-solid fa-xmark"></i></button>
       </div>
     </div>
 
@@ -782,9 +782,9 @@
       <div class="empty-icon"><i class="fa-regular fa-rectangle-list"></i></div>
       <div class="empty-title">No posts yet</div>
       <div class="empty-text">When you share posts on Spopeer, they'll appear here for others to see.</div>
-      <button class="btn-create-post" onclick="window.location.href='/feed.html'">
+      <a class="btn-create-post" href="/feed.html">
         <i class="fa-regular fa-pen-to-square"></i> Create Your First Post
-      </button>
+      </a>
     </div>
 
   </div>

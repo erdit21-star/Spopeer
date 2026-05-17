@@ -69,10 +69,10 @@ document.addEventListener('DOMContentLoaded', async function () {
           '<span>Spopeer User</span>' +
         '</div>' +
         '<div class="article-actions">' +
-          '<button onclick="likeArticle(this)"><i class="fa-regular fa-thumbs-up"></i> Like <span class="action-count">0</span></button>' +
-          '<button onclick="voteArticle(this)"><i class="fa-solid fa-trophy"></i> Vote <span class="action-count">0</span></button>' +
-          '<button onclick="repostArticle(this)"><i class="fa-solid fa-retweet"></i> Repost</button>' +
-          '<button onclick="shareArticle()"><i class="fa-solid fa-arrow-up-from-bracket"></i> Share</button>' +
+          '<button data-action="like-article"><i class="fa-regular fa-thumbs-up"></i> Like <span class="action-count">0</span></button>' +
+          '<button data-action="vote-article"><i class="fa-solid fa-trophy"></i> Vote <span class="action-count">0</span></button>' +
+          '<button data-action="repost-article"><i class="fa-solid fa-retweet"></i> Repost</button>' +
+          '<button data-action="share-article"><i class="fa-solid fa-arrow-up-from-bracket"></i> Share</button>' +
         '</div>';
 
       var feed = document.getElementById('articlesFeed');
@@ -122,3 +122,24 @@ document.addEventListener('DOMContentLoaded', async function () {
         article.style.display = (type === 'All' || article.dataset.type === type) ? '' : 'none';
       });
     }
+
+/* -- DELEGATED EVENTS -- */
+document.addEventListener('click', function(e) {
+  var t = e.target;
+
+  if (t.closest('[data-action="open-composer"]')) { openArticleComposer(); return; }
+  if (t.closest('[data-action="close-composer"]')) { closeArticleComposer(); return; }
+  if (t.closest('[data-action="publish-article"]')) { publishArticle(); return; }
+
+  var filterBtn = t.closest('[data-filter]');
+  if (filterBtn) { filterArticles(filterBtn.dataset.filter, filterBtn); return; }
+
+  var likeBtn = t.closest('[data-action="like-article"]');
+  if (likeBtn) { likeArticle(likeBtn); return; }
+
+  var voteBtn = t.closest('[data-action="vote-article"]');
+  if (voteBtn) { voteArticle(voteBtn); return; }
+
+  if (t.closest('[data-action="repost-article"]')) { repostArticle(); return; }
+  if (t.closest('[data-action="share-article"]')) { shareArticle(); return; }
+});

@@ -161,12 +161,12 @@
       <input type="text" id="navSearchInput" placeholder="Search athletes, clubs, coaches">
     </div>
     <div class="nav-right">
-      <button class="nav-icon" title="Home" onclick="window.location.href='/feed.html'"><i class="fa-solid fa-house"></i></button>
-      <button class="nav-icon" title="Messages" onclick="window.location.href='../../pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
-      <button class="nav-icon" title="Notifications" onclick="window.location.href='notifications.html'">
+      <a class="nav-icon" href="/feed.html" title="Home"><i class="fa-solid fa-house"></i></a>
+      <a class="nav-icon" href="../../pages/messaging/inbox.html" title="Messages"><i class="fa-regular fa-paper-plane"></i></a>
+      <a class="nav-icon" href="notifications.html" title="Notifications">
         <i class="fa-regular fa-bell"></i>
         <span class="notif-badge"></span>
-      </button>
+      </a>
       <div class="user-chip" id="userChip" data-user-chip>
         <span class="chip-avatar" id="chipAvatar" data-user-chip-avatar>?</span>
         <span class="chip-name" id="chipName" data-user-chip-name>Loading…</span>

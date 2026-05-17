@@ -158,8 +158,8 @@
       <input type="text" placeholder="Search athletes, clubs, sports…">
     </div>
     <div class="nav-right">
-      <button class="nav-icon" title="Home" onclick="window.location.href='/feed.html'"><i class="fa-solid fa-house"></i></button>
-      <button class="nav-icon" title="Messages" onclick="window.location.href='../messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
+      <a class="nav-icon" href="/feed.html" title="Home"><i class="fa-solid fa-house"></i></a>
+      <a class="nav-icon" href="../messaging/inbox.html" title="Messages"><i class="fa-regular fa-paper-plane"></i></a>
       <button class="nav-icon active-page" title="Notifications">
         <i class="fa-solid fa-bell"></i>
       </button>
@@ -243,10 +243,10 @@
       </div>
     </div>
 
-    <button class="nav-item" onclick="window.location.href='/feed.html'"><i class="fa-solid fa-house"></i>Home</button>
-    <button class="nav-item" onclick="window.location.href='../messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i> Messages</button>
-    <button class="nav-item" onclick="window.location.href='../sponsorship/sponsor.html'"><i class="fa-solid fa-handshake-angle"></i> Sponsorship</button>
-    <button class="nav-item" onclick="window.location.href='settings.html'"><i class="fa-regular fa-gear"></i> Settings</button>
+    <a class="nav-item" href="/feed.html"><i class="fa-solid fa-house"></i>Home</a>
+    <a class="nav-item" href="../messaging/inbox.html"><i class="fa-regular fa-paper-plane"></i> Messages</a>
+    <a class="nav-item" href="../sponsorship/sponsor.html"><i class="fa-solid fa-handshake-angle"></i> Sponsorship</a>
+    <a class="nav-item" href="settings.html"><i class="fa-regular fa-gear"></i> Settings</a>
   </aside>
 
   <!-- MAIN NOTIFICATIONS COLUMN -->
@@ -262,7 +262,7 @@
       </div>
       <div class="page-header-actions">
         <button class="btn-mark-all" id="markAllReadBtn">Mark all read</button>
-        <button class="btn-settings" title="Notification settings" onclick="window.location.href='settings.html'"><i class="fa-regular fa-gear"></i></button>
+        <a class="btn-settings" href="settings.html" title="Notification settings"><i class="fa-regular fa-gear"></i></a>
       </div>
     </div>
 

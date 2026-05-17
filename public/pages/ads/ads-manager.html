@@ -423,14 +423,14 @@
       <input type="text" id="navSearchInput" placeholder="Search campaigns, audiences, reports�">
     </div>
     <div class="nav-right">
-      <button class="nav-icon" title="Marketplace" onclick="window.location.href='/pages/marketplace/marketplace.html'"><i class="fa-solid fa-store"></i></button>
-      <button class="nav-icon" title="Explore" onclick="window.location.href='/pages/search/search.html'"><i class="fa-regular fa-compass"></i></button>
-      <button class="nav-icon" title="Messages" onclick="window.location.href='/pages/messaging/inbox.html'"><i class="fa-regular fa-paper-plane"></i></button>
+      <button class="nav-icon" title="Marketplace" data-nav-href="/pages/marketplace/marketplace.html"><i class="fa-solid fa-store"></i></button>
+      <button class="nav-icon" title="Explore" data-nav-href="/pages/search/search.html"><i class="fa-regular fa-compass"></i></button>
+      <button class="nav-icon" title="Messages" data-nav-href="/pages/messaging/inbox.html"><i class="fa-regular fa-paper-plane"></i></button>
       <button class="nav-icon" title="Notifications" id="notifBtn">
         <i class="fa-regular fa-bell"></i>
         <span class="notif-badge-dot" id="notifBadge" style="display:none;"></span>
       </button>
-      <div class="user-chip" id="userChip" data-user-chip onclick="toggleProfileMenuGlobal()">
+      <div class="user-chip" id="userChip" data-user-chip data-action="toggle-profile-menu">
         <span class="chip-avatar" data-user-chip-avatar>U</span>
         <span class="chip-name" data-user-chip-name>Loading�</span>
         <i class="fa-solid fa-chevron-down chip-caret"></i>
@@ -516,11 +516,11 @@
     <div class="sidebar-section-label">Ads Manager</div>
 
     <a class="nav-item active" href="#"><i class="fa-solid fa-rectangle-ad"></i> Overview</a>
-    <a class="nav-item" href="#" onclick="switchTab('campaigns',this)"><i class="fa-solid fa-layer-group"></i> Campaigns</a>
-    <a class="nav-item" href="#" onclick="switchTab('audience',this)"><i class="fa-solid fa-users"></i> Audience</a>
-    <a class="nav-item" href="#" onclick="switchTab('placements',this)"><i class="fa-solid fa-map-pin"></i> Placements</a>
-    <a class="nav-item" href="#" onclick="switchTab('billing',this)"><i class="fa-solid fa-credit-card"></i> Billing</a>
-    <a class="nav-item" href="#" onclick="switchTab('reports',this)"><i class="fa-solid fa-chart-bar"></i> Reports</a>
+    <a class="nav-item" href="#" data-tab="campaigns"><i class="fa-solid fa-layer-group"></i> Campaigns</a>
+    <a class="nav-item" href="#" data-tab="audience"><i class="fa-solid fa-users"></i> Audience</a>
+    <a class="nav-item" href="#" data-tab="placements"><i class="fa-solid fa-map-pin"></i> Placements</a>
+    <a class="nav-item" href="#" data-tab="billing"><i class="fa-solid fa-credit-card"></i> Billing</a>
+    <a class="nav-item" href="#" data-tab="reports"><i class="fa-solid fa-chart-bar"></i> Reports</a>
 
     <div class="sidebar-divider"></div>
     <div class="sidebar-section-label">Back to Platform</div>
@@ -544,11 +544,11 @@
       </div>
       <div style="display:flex;gap:10px;align-items:center;">
         <div class="date-range-row">
-          <button class="date-pill active" onclick="setDatePill(this)">7d</button>
-          <button class="date-pill" onclick="setDatePill(this)">30d</button>
-          <button class="date-pill" onclick="setDatePill(this)">90d</button>
+          <button class="date-pill active" data-date-range-pill>7d</button>
+          <button class="date-pill" data-date-range-pill>30d</button>
+          <button class="date-pill" data-date-range-pill>90d</button>
         </div>
-        <button class="btn-primary" onclick="openModal()">
+        <button class="btn-primary" data-action="open-modal">
           <i class="fa-solid fa-plus"></i> New Campaign
         </button>
       </div>
@@ -629,12 +629,12 @@
         <div class="section-title"><i class="fa-solid fa-layer-group"></i> Your Campaigns</div>
         <div style="display:flex;gap:8px;align-items:center;">
           <div style="display:flex;gap:5px;">
-            <button class="date-pill active" style="font-size:10px;" onclick="filterCamps(this,'all')">All</button>
-            <button class="date-pill" style="font-size:10px;" onclick="filterCamps(this,'live')">Live</button>
-            <button class="date-pill" style="font-size:10px;" onclick="filterCamps(this,'paused')">Paused</button>
-            <button class="date-pill" style="font-size:10px;" onclick="filterCamps(this,'ended')">Ended</button>
+            <button class="date-pill active" style="font-size:10px;" data-filter="all">All</button>
+            <button class="date-pill" style="font-size:10px;" data-filter="live">Live</button>
+            <button class="date-pill" style="font-size:10px;" data-filter="paused">Paused</button>
+            <button class="date-pill" style="font-size:10px;" data-filter="ended">Ended</button>
           </div>
-          <button class="btn-primary" style="font-size:11px;padding:7px 14px;" onclick="openModal()">
+          <button class="btn-primary" style="font-size:11px;padding:7px 14px;" data-action="open-modal">
             <i class="fa-solid fa-plus"></i> New
           </button>
         </div>
@@ -782,7 +782,7 @@
 
 
 <!-- CREATE CAMPAIGN MODAL -->
-<div class="modal-overlay" id="createModal" onclick="handleOverlayClick(event)">
+<div class="modal-overlay" id="createModal" data-action="modal-overlay-click">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
 
     <div class="modal-topbar">
@@ -790,7 +790,7 @@
         <div class="modal-title" id="modalTitle">Create a Campaign</div>
         <div class="modal-subtitle" id="modalSubtitle">Step 1 of 4 � Choose your objective</div>
       </div>
-      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      <button class="modal-close" data-action="close-modal"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
     <div class="step-progress">
@@ -811,7 +811,7 @@
         <div class="form-group">
           <label class="form-label">Objective <span class="form-required">*</span></label>
           <div class="obj-grid">
-            <div class="obj-card selected" onclick="selectObj(this)">
+            <div class="obj-card selected" data-action="select-obj">
               <div class="obj-icon">??</div>
               <div class="obj-name">Awareness</div>
               <div class="obj-desc">Get your club or sport seen by more people</div>
@@ -850,7 +850,7 @@
         <div class="form-group">
           <label class="form-label">Ad Format <span class="form-required">*</span></label>
           <div class="format-grid">
-            <div class="format-card selected" onclick="selectFormat(this)">
+            <div class="format-card selected" data-action="select-format">
               <div class="format-card-icon">??</div>
               <div>
                 <div class="format-card-name">Sponsored Feed Post</div>
@@ -883,12 +883,12 @@
         <div class="form-group">
           <label class="form-label">Target Audience � Profile Type</label>
           <div class="tag-cloud">
-            <span class="tag-pill sel" onclick="this.classList.toggle('sel')">Athletes</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Coaches</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Clubs</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Support Professionals</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Sponsors</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Fans</span>
+            <span class="tag-pill sel" data-action="toggle-pill">Athletes</span>
+            <span class="tag-pill" data-action="toggle-pill">Coaches</span>
+            <span class="tag-pill" data-action="toggle-pill">Clubs</span>
+            <span class="tag-pill" data-action="toggle-pill">Support Professionals</span>
+            <span class="tag-pill" data-action="toggle-pill">Sponsors</span>
+            <span class="tag-pill" data-action="toggle-pill">Fans</span>
           </div>
         </div>
         <div class="form-row">
@@ -926,14 +926,14 @@
         <div class="form-group">
           <label class="form-label">Community Interest Tags</label>
           <div class="tag-cloud">
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Club Formation</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Federation</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Tryouts</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Training &amp; Coaching</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Events</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Sponsorship</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Youth Development</span>
-            <span class="tag-pill" onclick="this.classList.toggle('sel')">Niche Sports</span>
+            <span class="tag-pill" data-action="toggle-pill">Club Formation</span>
+            <span class="tag-pill" data-action="toggle-pill">Federation</span>
+            <span class="tag-pill" data-action="toggle-pill">Tryouts</span>
+            <span class="tag-pill" data-action="toggle-pill">Training &amp; Coaching</span>
+            <span class="tag-pill" data-action="toggle-pill">Events</span>
+            <span class="tag-pill" data-action="toggle-pill">Sponsorship</span>
+            <span class="tag-pill" data-action="toggle-pill">Youth Development</span>
+            <span class="tag-pill" data-action="toggle-pill">Niche Sports</span>
           </div>
         </div>
       </div>
@@ -953,22 +953,22 @@
         <div class="form-group">
           <label class="form-label">Call-to-Action Button</label>
           <div class="cta-btn-row">
-            <span class="cta-option selected" onclick="selectCTA(this)">Join Us</span>
-            <span class="cta-option" onclick="selectCTA(this)">Learn More</span>
-            <span class="cta-option" onclick="selectCTA(this)">Create Account</span>
-            <span class="cta-option" onclick="selectCTA(this)">Register Now</span>
-            <span class="cta-option" onclick="selectCTA(this)">View Profile</span>
-            <span class="cta-option" onclick="selectCTA(this)">Shop Now</span>
-            <span class="cta-option" onclick="selectCTA(this)">Contact Us</span>
+            <span class="cta-option selected" data-action="select-cta">Join Us</span>
+            <span class="cta-option" data-action="select-cta">Learn More</span>
+            <span class="cta-option" data-action="select-cta">Create Account</span>
+            <span class="cta-option" data-action="select-cta">Register Now</span>
+            <span class="cta-option" data-action="select-cta">View Profile</span>
+            <span class="cta-option" data-action="select-cta">Shop Now</span>
+            <span class="cta-option" data-action="select-cta">Contact Us</span>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Ad Creative</label>
-          <div class="creative-drop" id="creativeDrop" onclick="document.getElementById('creativeInput').click()">
+          <div class="creative-drop" id="creativeDrop" data-action="trigger-creative-upload">
             <div class="creative-drop-icon"><i class="fa-regular fa-image"></i></div>
             <h4>Upload your ad image</h4>
             <p>JPG, PNG or GIF � Recommended 1200�628px � Max 5MB</p>
-            <input type="file" id="creativeInput" accept="image/*" style="display:none;" onchange="handleCreativeUpload(this)">
+            <input type="file" id="creativeInput" accept="image/*" style="display:none;" data-creative-input>
           </div>
           <div class="creative-preview" id="creativePreview">
             <div class="creative-preview-thumb">??</div>
@@ -976,13 +976,13 @@
               <div class="creative-preview-name" id="creativeName">ad-image.jpg</div>
               <div class="creative-preview-size" id="creativeSize">1200 � 628 � 340 KB</div>
             </div>
-            <button class="icon-btn danger" onclick="removeCreative()"><i class="fa-solid fa-trash"></i></button>
+            <button class="icon-btn danger" data-action="remove-creative"><i class="fa-solid fa-trash"></i></button>
           </div>
         </div>
         <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
         <div class="form-group">
           <label class="form-label">Daily Budget (�)</label>
-          <input type="range" class="budget-slider" id="budgetSlider" min="5" max="200" value="25" step="5" oninput="updateBudget(this.value)">
+          <input type="range" class="budget-slider" id="budgetSlider" min="5" max="200" value="25" step="5" data-budget-slider>
           <div class="budget-preview">
             <span class="budget-preview-label">Daily budget</span>
             <span class="budget-preview-val" id="budgetDisplay">�25 / day</span>
@@ -1043,7 +1043,7 @@
           <div class="success-icon"><i class="fa-solid fa-check"></i></div>
           <div class="success-title">Campaign Submitted!</div>
           <div class="success-sub" id="successMsg">Your campaign is now under review. You will receive a notification once it goes live � usually within 24 hours.</div>
-          <button class="btn-primary" onclick="closeModal()" style="margin:0 auto;">
+          <button class="btn-primary" data-action="close-modal" style="margin:0 auto;">
             <i class="fa-solid fa-chart-bar"></i> Back to Dashboard
           </button>
         </div>
@@ -1056,9 +1056,9 @@
         <span class="step-indicator-text" id="stepIndicatorText">Step 1 of 4</span>
       </div>
       <div style="display:flex;gap:8px;">
-        <button class="btn-back" id="btnBack" style="display:none;" onclick="prevStep()">? Back</button>
-        <button class="btn-next" id="btnNext" onclick="nextStep()">Continue <i class="fa-solid fa-arrow-right"></i></button>
-        <button class="btn-launch" id="btnLaunch" style="display:none;" onclick="launchCampaign()">
+        <button class="btn-back" id="btnBack" style="display:none;" data-action="prev-step">? Back</button>
+        <button class="btn-next" id="btnNext" data-action="next-step">Continue <i class="fa-solid fa-arrow-right"></i></button>
+        <button class="btn-launch" id="btnLaunch" style="display:none;" data-action="launch-campaign">
           <i class="fa-solid fa-rocket"></i> Launch Campaign
         </button>
       </div>

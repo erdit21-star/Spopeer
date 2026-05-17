@@ -116,7 +116,7 @@
           can publish stories, press releases, opinions, news, announcements and sport-related content.
         </p>
       </div>
-      <button class="primary-btn" onclick="openArticleComposer()">
+      <button class="primary-btn" data-action="open-composer">
         <i class="fa-solid fa-pen-nib"></i> Write Article
       </button>
     </section>
@@ -126,7 +126,7 @@
       <div class="composer-card">
         <div class="composer-header">
           <h2>Create Article</h2>
-          <button onclick="closeArticleComposer()" aria-label="Close composer">×</button>
+          <button data-action="close-composer" aria-label="Close composer">×</button>
         </div>
 
         <label for="articleType">Article type</label>
@@ -157,7 +157,7 @@
 
         <div id="composerError" style="display:none;color:#dc2626;font-size:13px;font-weight:700;margin-top:8px;padding:8px 12px;background:#fef2f2;border-radius:10px;"></div>
 
-        <button class="primary-btn full" onclick="publishArticle()">
+        <button class="primary-btn full" data-action="publish-article">
           <i class="fa-solid fa-paper-plane"></i> Publish Article
         </button>
       </div>
@@ -168,25 +168,25 @@
 
       <aside class="articles-filters">
         <h3>Filter articles</h3>
-        <button class="filter-btn active" onclick="filterArticles('All', this)">
+        <button class="filter-btn active" data-filter="All">
           <i class="fa-solid fa-border-all"></i> All Articles
         </button>
-        <button class="filter-btn" onclick="filterArticles('Press Release', this)">
+        <button class="filter-btn" data-filter="Press Release">
           <i class="fa-regular fa-file-lines"></i> Press Releases
         </button>
-        <button class="filter-btn" onclick="filterArticles('Athlete Story', this)">
+        <button class="filter-btn" data-filter="Athlete Story">
           <i class="fa-solid fa-person-running"></i> Athlete Stories
         </button>
-        <button class="filter-btn" onclick="filterArticles('Club Announcement', this)">
+        <button class="filter-btn" data-filter="Club Announcement">
           <i class="fa-solid fa-shield-halved"></i> Club Announcements
         </button>
-        <button class="filter-btn" onclick="filterArticles('Coach Opinion', this)">
+        <button class="filter-btn" data-filter="Coach Opinion">
           <i class="fa-solid fa-whistle"></i> Coach Opinions
         </button>
-        <button class="filter-btn" onclick="filterArticles('Sport News', this)">
+        <button class="filter-btn" data-filter="Sport News">
           <i class="fa-regular fa-newspaper"></i> Sport News
         </button>
-        <button class="filter-btn" onclick="filterArticles('General Article', this)">
+        <button class="filter-btn" data-filter="General Article">
           <i class="fa-solid fa-file-word"></i> General Articles
         </button>
       </aside>
@@ -208,10 +208,10 @@
             <span>Football · Greece</span>
           </div>
           <div class="article-actions">
-            <button onclick="likeArticle(this)"><i class="fa-regular fa-thumbs-up"></i> Like <span class="action-count">0</span></button>
-            <button onclick="voteArticle(this)"><i class="fa-solid fa-trophy"></i> Vote <span class="action-count">0</span></button>
-            <button onclick="repostArticle(this)"><i class="fa-solid fa-retweet"></i> Repost</button>
-            <button onclick="shareArticle()"><i class="fa-solid fa-arrow-up-from-bracket"></i> Share</button>
+            <button data-action="like-article"><i class="fa-regular fa-thumbs-up"></i> Like <span class="action-count">0</span></button>
+            <button data-action="vote-article"><i class="fa-solid fa-trophy"></i> Vote <span class="action-count">0</span></button>
+            <button data-action="repost-article"><i class="fa-solid fa-retweet"></i> Repost</button>
+            <button data-action="share-article"><i class="fa-solid fa-arrow-up-from-bracket"></i> Share</button>
           </div>
         </article>
 
@@ -230,10 +230,10 @@
             <span>Basketball · Europe</span>
           </div>
           <div class="article-actions">
-            <button onclick="likeArticle(this)"><i class="fa-regular fa-thumbs-up"></i> Like <span class="action-count">0</span></button>
-            <button onclick="voteArticle(this)"><i class="fa-solid fa-trophy"></i> Vote <span class="action-count">0</span></button>
-            <button onclick="repostArticle(this)"><i class="fa-solid fa-retweet"></i> Repost</button>
-            <button onclick="shareArticle()"><i class="fa-solid fa-arrow-up-from-bracket"></i> Share</button>
+            <button data-action="like-article"><i class="fa-regular fa-thumbs-up"></i> Like <span class="action-count">0</span></button>
+            <button data-action="vote-article"><i class="fa-solid fa-trophy"></i> Vote <span class="action-count">0</span></button>
+            <button data-action="repost-article"><i class="fa-solid fa-retweet"></i> Repost</button>
+            <button data-action="share-article"><i class="fa-solid fa-arrow-up-from-bracket"></i> Share</button>
           </div>
         </article>
 
