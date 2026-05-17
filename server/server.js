@@ -21,8 +21,11 @@ async function startServer() {
   try {
     try { assertEmailReady(); } catch (e) { console.warn('⚠️ Email not configured:', e.message); }
 
-    // 🔥 CRITICAL FIX: ensure DB schema is correct before handling requests
-    await runDatabaseRepairs(sequelize);
+    // DB repair: opt-in only via RUN_DB_REPAIR_ON_BOOT=true — never run automatically in production
+    if (process.env.RUN_DB_REPAIR_ON_BOOT === 'true') {
+      console.log('[startup] RUN_DB_REPAIR_ON_BOOT=true — running database repairs...');
+      await runDatabaseRepairs(sequelize);
+    }
 
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`\n🚀 Spopeer Server running on http://0.0.0.0:${PORT}`);

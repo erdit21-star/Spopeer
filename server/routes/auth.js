@@ -414,7 +414,7 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
       return fail(res, 500, 'TOKEN_GENERATION_FAILED', 'Login succeeded but session could not be created. Please contact support.');
     }
 
-    // Issue DB-backed refresh session (safe: do not crash on failure)
+    // RefreshSession is mandatory — without it the user will be silently logged out after 15 min
     stage = 'session_write';
     const refreshToken = generateRefreshToken(user);
     try {
@@ -426,8 +426,8 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       });
     } catch (err) {
-      console.error('[LOGIN] RefreshSession failed (non-fatal, continuing login):', err.message);
-      // Session table may not exist in this environment — login still succeeds without a refresh session
+      console.error('[LOGIN] RefreshSession.create failed — cannot complete login safely:', err.message);
+      return fail(res, 503, 'SESSION_UNAVAILABLE', 'Login succeeded but session could not be stored. Please try again.');
     }
 
     res.cookie('access_token', token, getCookieOptions(15 * 60 * 1000));
@@ -445,7 +445,6 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
       success: true,
       data: {
         message: 'Login successful.',
-        token,
         user: {
           ...buildAuthUserPayload(user),
           isActive: user.isActive,
@@ -957,25 +956,27 @@ router.post('/google', googleLimiter, async (req, res) => {
       user: curatedUser
     };
 
-    ok(res, responsePayload);
-
-    // Persist session asynchronously — non-fatal if DB is under pressure.
-    withRetries(
-      () => withTimeout(
-        RefreshSession.create({
-          userId: user.id,
-          tokenHash: refreshTokenHash,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        }),
-        authDbTimeoutMs,
+    // Persist refresh session before responding — mandatory for stable sessions
+    try {
+      await withRetries(
+        () => withTimeout(
+          RefreshSession.create({
+            userId: user.id,
+            tokenHash: refreshTokenHash,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          }),
+          authDbTimeoutMs,
+          'auth.google.createRefreshSession'
+        ),
+        authDbRetries,
         'auth.google.createRefreshSession'
-      ),
-      authDbRetries,
-      'auth.google.createRefreshSession'
-    ).catch((sessionErr) => {
-      console.error('[GOOGLE_AUTH] RefreshSession.create failed (non-fatal):', sessionErr && sessionErr.message ? sessionErr.message : sessionErr);
-    });
+      );
+    } catch (sessionErr) {
+      console.error('[GOOGLE_AUTH] RefreshSession.create failed — aborting login:', sessionErr && sessionErr.message ? sessionErr.message : sessionErr);
+      return fail(res, 503, 'SESSION_UNAVAILABLE', 'Sign-in succeeded but session could not be stored. Please try again.');
+    }
 
+    ok(res, responsePayload);
     return;
   } catch (error) {
     console.error('[GOOGLE_AUTH] failed', {

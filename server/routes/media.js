@@ -10,9 +10,10 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { uploadPost, persistFile } = require('../middleware/upload');
-const { Media } = require('../models');
+const { Media, User } = require('../models');
 const path = require('path');
 const fs = require('fs/promises');
+const { deleteFromCloud, isCloudEnabled } = require('../services/cloudinary');
 
 // ─── UPLOAD ───
 const { ok, created, fail } = require('../utils/response');
@@ -69,6 +70,26 @@ router.get('/my', authenticate, async (req, res) => {
 router.get('/user/:userId', optionalAuth, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
+    const requesterId = req.userId || null;
+
+    // Privacy: only the owner can view all their media.
+    // Other users may only see media belonging to public profiles.
+    if (requesterId !== userId) {
+      const owner = await User.findByPk(userId, {
+        attributes: ['id', 'isActive', 'profileVisibility', 'privacyPublic']
+      });
+      if (!owner || !owner.isActive) {
+        return fail(res, 404, 'NOT_FOUND', 'User not found.');
+      }
+      const isPublicProfile =
+        owner.privacyPublic === true ||
+        owner.profileVisibility === 'public' ||
+        owner.profileVisibility == null; // default to public when unset
+      if (!isPublicProfile) {
+        return ok(res, []);
+      }
+    }
+
     const userMedia = await Media.findAll({
       where: { userId },
       order: [['createdAt', 'DESC']]
@@ -95,13 +116,21 @@ router.delete('/:mediaId', authenticate, async (req, res) => {
       return fail(res, 403, 'FORBIDDEN', 'Not authorized.');
     }
 
-    // Remove physical file
-    const filePath = path.join(__dirname, '..', entry.url);
-    try {
-      await fs.unlink(filePath);
-    } catch (unlinkErr) {
-      if (unlinkErr.code !== 'ENOENT') {
-        throw unlinkErr;
+    const provider = entry.storageProvider || 'local';
+    if (provider === 'cloudinary') {
+      // Delete from Cloudinary using stored publicId; fall back to url-derived path
+      const publicId = entry.publicId || entry.cloudinaryPublicId || null;
+      if (publicId) {
+        const resourceType = (entry.mimeType || '').startsWith('video/') ? 'video' : 'image';
+        await deleteFromCloud(publicId, resourceType);
+      }
+    } else {
+      // Delete local file
+      const filePath = path.join(__dirname, '..', entry.url);
+      try {
+        await fs.unlink(filePath);
+      } catch (unlinkErr) {
+        if (unlinkErr.code !== 'ENOENT') throw unlinkErr;
       }
     }
 

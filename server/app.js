@@ -107,7 +107,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://apis.google.com"],
-      scriptSrcAttr: ["'unsafe-inline'"],
+      // scriptSrcAttr: unsafe-inline removed — disallows inline event handlers (onclick=, etc.)
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://accounts.google.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "blob:", "https:"],
@@ -129,13 +129,15 @@ function normalizeOrigin(value) {
   return String(value || '').trim().replace(/\/+$/, '').toLowerCase();
 }
 
+const _localhostOrigins = process.env.NODE_ENV !== 'production'
+  ? ['http://localhost:5000', 'http://127.0.0.1:5000', 'http://localhost:3000']
+  : [];
+
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.APP_URL,
   process.env.RENDER_EXTERNAL_URL,
-  'http://localhost:5000',
-  'http://127.0.0.1:5000',
-  'http://localhost:3000'
+  ..._localhostOrigins
 ]
   .filter(Boolean)
   .flatMap((v) => String(v).split(','))
@@ -444,9 +446,14 @@ app.get('/admin/{*rest}', authenticate, requireAdmin, (req, res) => {
 });
 
 // ─── CATCH-ALL: serve index.html for frontend routes ───
+const ASSET_EXT = /\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|eot|map|json|txt|pdf|zip)$/i;
 app.get('{*path}', (req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'API endpoint not found.' } });
+  }
+  // Return 404 for static asset requests so missing files are not silently served as index.html
+  if (ASSET_EXT.test(req.path)) {
+    return res.status(404).send('Not found.');
   }
   const filePath = path.join(__dirname, '..', 'public', req.path);
   res.sendFile(filePath, (err) => {

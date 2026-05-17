@@ -352,7 +352,7 @@
       method: "POST",
       body: JSON.stringify(payload)
     });
-    const token = (data && data.data && data.data.token) || data.token || null;
+    const token = null; // JWT is no longer returned in login response — auth is cookie-based
     if (token) {
       localStorage.setItem('spopeer_token', token);
       localStorage.setItem('token', token);
