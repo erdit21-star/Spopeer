@@ -18,22 +18,15 @@
     }
   }
 
-  function getToken() {
-    return localStorage.getItem('spopeer_token')
-      || localStorage.getItem('spopeerToken')
-      || localStorage.getItem('token')
-      || null;
-  }
-
   function getUser() {
     try {
       if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
-        return window.CurrentUserStore.getCurrentUser() || parseStoredJson("spopeer_user") || parseStoredJson("spopeerUser") || parseStoredJson("user") || null;
+        return window.CurrentUserStore.getCurrentUser() || parseStoredJson("spopeer_user") || null;
       }
     } catch (err) {
       console.debug("CurrentUserStore.getCurrentUser failed in api.js", err);
     }
-    return parseStoredJson("spopeer_user") || parseStoredJson("spopeerUser") || parseStoredJson("user") || null;
+    return parseStoredJson("spopeer_user") || null;
   }
 
   function dispatchProfileUpdated(profile, source) {
@@ -48,8 +41,6 @@
 
   function setUser(user, source) {
     localStorage.setItem("spopeer_user", JSON.stringify(user));
-    localStorage.setItem("spopeerUser", JSON.stringify(user));
-    localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("spopeer_loggedIn", "true");
     localStorage.setItem('spopeer_last_auth_at', Date.now().toString());
     localStorage.setItem("_profileLastUpdated_", Date.now().toString());
@@ -68,13 +59,8 @@
   function clearAuthStorage() {
     [
       'spopeer_last_auth_at',
-      'spopeer_token',
-      'spopeerToken',
-      'token',
       "spopeer_user",
-      "spopeerUser",
       "spopeer_loggedIn",
-      "user",
       "_profileLastUpdated_"
     ].forEach((key) => localStorage.removeItem(key));
   }
@@ -187,7 +173,7 @@
     var endpoint = String(path || '').toLowerCase();
     var recentAuthAt = parseInt(localStorage.getItem('spopeer_last_auth_at') || '0', 10) || 0;
     var msSinceAuth = recentAuthAt > 0 ? (Date.now() - recentAuthAt) : Number.POSITIVE_INFINITY;
-    var hasLocalSession = localStorage.getItem('spopeer_loggedIn') === 'true' && !!(localStorage.getItem('spopeer_user') || localStorage.getItem('user'));
+    var hasLocalSession = localStorage.getItem('spopeer_loggedIn') === 'true' && !!localStorage.getItem('spopeer_user');
 
     // Avoid bouncing users back to login on transient /me race right after login.
     if (endpoint.indexOf('/api/auth/me') === 0 && hasLocalSession && msSinceAuth <= 2 * 60 * 1000) {
@@ -269,11 +255,6 @@
       headers["Content-Type"] = headers["Content-Type"] || "application/json";
     }
 
-    const bearerToken = getToken();
-    if (bearerToken && !headers.Authorization) {
-      headers.Authorization = `Bearer ${bearerToken}`;
-    }
-
     if (requiresCsrf(method)) {
       const csrfToken = await ensureCsrfToken();
       if (csrfToken) {
@@ -352,11 +333,6 @@
       method: "POST",
       body: JSON.stringify(payload)
     });
-    const token = null; // JWT is no longer returned in login response — auth is cookie-based
-    if (token) {
-      localStorage.setItem('spopeer_token', token);
-      localStorage.setItem('token', token);
-    }
     // Store user profile for UI — auth is cookie-based
     const user = unwrapUser(data);
     if (user) {
