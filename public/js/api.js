@@ -93,6 +93,15 @@
     return token;
   }
 
+  function getToken() {
+    // Auth is cookie-based, but return token if it exists in storage for compatibility
+    try {
+      return localStorage.getItem('spopeer_auth_token') || sessionStorage.getItem('spopeer_auth_token') || '';
+    } catch {
+      return '';
+    }
+  }
+
   async function logout() {
     try {
       await request("/api/auth/logout", { method: "POST" });
