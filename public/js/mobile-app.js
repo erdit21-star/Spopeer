@@ -67,9 +67,6 @@
     return !!(
       getStoredSessionUser()
       || localStorage.getItem('spopeer_loggedIn') === 'true'
-      || localStorage.getItem('spopeer_token')
-      || localStorage.getItem('spopeerToken')
-      || localStorage.getItem('token')
     );
   }
 
@@ -189,7 +186,7 @@
   let realtimeRefreshTimer = null;
 
   function getRealtimeToken() {
-    return localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
+    return '';
   }
 
   function scheduleMessagesRefresh() {

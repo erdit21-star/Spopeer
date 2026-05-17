@@ -94,8 +94,6 @@
           };
           const result = await window.SpopeerAPI.signup(payload);
           const user = (result.data && result.data.user) || result.user;
-          const token = (result.data && result.data.token) || result.token;
-          if (token) localStorage.setItem('token', token);
           if (user) {
             window.Auth.login(user);
             window.location.href = '/feed.html';

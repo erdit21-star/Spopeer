@@ -256,6 +256,10 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(128),
       allowNull: true
     },
+    emailVerifyExpiresAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
     googleId: {
       type: DataTypes.STRING(128),
       allowNull: true,

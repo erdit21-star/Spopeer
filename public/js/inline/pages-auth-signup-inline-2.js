@@ -14,7 +14,6 @@ async function handleGoogleCredential(response) {
 
         let userData = (data.data && data.data.user) || data.user || null;
         const accessToken = data.data && data.data.accessToken;
-        if (accessToken) localStorage.setItem('spopeerToken', accessToken);
 
         if (!userData && window.SpopeerAPI && typeof window.SpopeerAPI.me === 'function') {
           const me = await window.SpopeerAPI.me();

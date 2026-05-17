@@ -39,6 +39,11 @@ const { getEffectivePlan } = require('../utils/subscription-plans');
 const isTest = process.env.NODE_ENV === 'test';
 const isProd = process.env.NODE_ENV === 'production';
 const requireEmailVerification = isProd || String(process.env.REQUIRE_EMAIL_VERIFICATION || 'false').toLowerCase() === 'true';
+const emailVerifyTtlHours = parseInt(process.env.EMAIL_VERIFY_TOKEN_HOURS || '24', 10);
+
+function getRefreshSecret() {
+  return process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+}
 
 // Do not enforce CSRF during unit tests to keep test requests simple
 const requireCsrf = isTest ? (req, res, next) => next() : csrfProtection();
@@ -265,7 +270,11 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
     let emailSent = null;
     try {
       const verifyToken = crypto.randomBytes(32).toString('hex');
-      await user.update({ emailVerifyToken: sha256(verifyToken), emailVerified: false });
+      await user.update({
+        emailVerifyToken: sha256(verifyToken),
+        emailVerifyExpiresAt: new Date(Date.now() + (Number.isFinite(emailVerifyTtlHours) ? emailVerifyTtlHours : 24) * 60 * 60 * 1000),
+        emailVerified: false
+      });
       try {
         const emailRes = await sendVerificationEmail(user.email, verifyToken);
         emailSent = !!(emailRes && emailRes.success);
@@ -678,7 +687,10 @@ router.post('/resend-verification', forgotLimiter, async (req, res) => {
     }
 
     const verifyToken = crypto.randomBytes(32).toString('hex');
-    await user.update({ emailVerifyToken: sha256(verifyToken) });
+    await user.update({
+      emailVerifyToken: sha256(verifyToken),
+      emailVerifyExpiresAt: new Date(Date.now() + (Number.isFinite(emailVerifyTtlHours) ? emailVerifyTtlHours : 24) * 60 * 60 * 1000)
+    });
 
     sendVerificationEmail(user.email, verifyToken).catch(err => {
       console.error('Failed to resend verification email:', err.message);
@@ -698,12 +710,25 @@ router.get('/verify', async (req, res) => {
     if (!token) return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Token required.');
 
     const tokenHash = sha256(token);
-    const user = await User.findOne({ where: { emailVerifyToken: tokenHash } });
+    const user = await User.findOne({
+      where: {
+        emailVerifyToken: tokenHash,
+        [Op.or]: [
+          { emailVerifyExpiresAt: null },
+          { emailVerifyExpiresAt: { [Op.gt]: new Date() } }
+        ]
+      }
+    });
     if (!user) {
       return fail(res, 400, 'TOKEN_INVALID', 'Invalid or expired verification link.');
     }
 
-    await user.update({ isActive: true, emailVerifyToken: null, emailVerified: true });
+    await user.update({
+      isActive: true,
+      emailVerifyToken: null,
+      emailVerifyExpiresAt: null,
+      emailVerified: true
+    });
 
     // Send welcome email and surface failures in production by appending a flag.
     let welcomeOk = null;
@@ -758,7 +783,7 @@ router.post('/refresh', requireCsrf, async (req, res) => {
 
     let decoded;
     try {
-      decoded = jwt.verify(rawToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+      decoded = jwt.verify(rawToken, getRefreshSecret(), { algorithms: ['HS256'] });
     } catch (err) {
       clearAuthCookies(res);
       return fail(res, 401, 'TOKEN_INVALID', 'Invalid or expired refresh token.');

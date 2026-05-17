@@ -6,13 +6,24 @@ require('./config/env');
 
 // ─── PRODUCTION STARTUP GUARDS ───
 if (process.env.NODE_ENV === 'production') {
-  if (!process.env.JWT_SECRET) {
-    console.error('FATAL: JWT_SECRET is required in production');
+  const hasAccessSecret = !!(process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET);
+  const hasRefreshSecret = !!(process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+  if (!hasAccessSecret || !hasRefreshSecret) {
+    console.error('FATAL: JWT_ACCESS_SECRET and JWT_REFRESH_SECRET are required in production (JWT_SECRET fallback supported temporarily).');
     process.exit(1);
   }
-  const recommended = ['FRONTEND_URL', 'APP_URL'].filter(k => !process.env[k]);
-  if (recommended.length) {
-    console.warn(`WARNING: Missing recommended env vars: ${recommended.join(', ')} — CORS and readiness checks may be degraded`);
+
+  const required = ['FRONTEND_URL', 'APP_URL', 'EMAIL_FROM', 'CONTACT_TO_EMAIL'];
+  const missingRequired = required.filter(k => !process.env[k]);
+  if (missingRequired.length) {
+    console.error(`FATAL: Missing required env vars in production: ${missingRequired.join(', ')}`);
+    process.exit(1);
+  }
+
+  const missingCloudinary = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'].filter(k => !process.env[k]);
+  if (missingCloudinary.length) {
+    console.error(`FATAL: Missing required Cloudinary vars in production: ${missingCloudinary.join(', ')}`);
+    process.exit(1);
   }
 }
 
@@ -413,19 +424,25 @@ app.get('/api/ready', async (req, res) => {
 
   // Required secrets check
   checks.secrets = process.env.JWT_SECRET ? 'ok' : 'fail';
-  if (!process.env.JWT_SECRET) ready = false;
+  const hasAccessSecret = !!(process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET);
+  const hasRefreshSecret = !!(process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+  checks.secrets = hasAccessSecret && hasRefreshSecret ? 'ok' : 'fail';
+  if (!hasAccessSecret || !hasRefreshSecret) ready = false;
 
   // Email provider check (fail only in production)
-  const emailOk = !!process.env.RESEND_API_KEY;
+  const emailOk = !!(process.env.RESEND_API_KEY && process.env.EMAIL_FROM && process.env.CONTACT_TO_EMAIL);
   checks.email = emailOk ? 'ok' : (process.env.NODE_ENV === 'production' ? 'fail' : 'warn');
   if (process.env.NODE_ENV === 'production' && !emailOk) ready = false;
 
   // Storage provider check
   const storageOk = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
-  checks.storage = storageOk ? 'ok' : (process.env.NODE_ENV === 'production' ? 'warn' : 'warn');
+  checks.storage = storageOk ? 'ok' : (process.env.NODE_ENV === 'production' ? 'fail' : 'warn');
+  if (process.env.NODE_ENV === 'production' && !storageOk) ready = false;
 
   // App URL check
-  checks.appUrl = (process.env.APP_URL && process.env.FRONTEND_URL) ? 'ok' : 'warn';
+  const hasAppUrls = !!(process.env.APP_URL && process.env.FRONTEND_URL);
+  checks.appUrl = hasAppUrls ? 'ok' : (process.env.NODE_ENV === 'production' ? 'fail' : 'warn');
+  if (process.env.NODE_ENV === 'production' && !hasAppUrls) ready = false;
 
   res.status(ready ? 200 : 503).json({
     success: ready,

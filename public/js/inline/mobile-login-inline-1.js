@@ -62,7 +62,6 @@ async function handleGoogleCredential(response) {
 
     let userData = (data.data && data.data.user) || data.user || null;
     const accessToken = (data.data && data.data.accessToken) || data.token;
-    if (accessToken) localStorage.setItem('spopeerToken', accessToken);
 
     if (!userData && window.SpopeerAPI && typeof window.SpopeerAPI.me === 'function') {
       const me = await window.SpopeerAPI.me();
@@ -163,8 +162,6 @@ document.getElementById('loginBtn').onclick = async function() {
       : (String(requestedPath || '/mobile.html').charAt(0) === '/' ? String(requestedPath) : '/mobile.html');
     const res = await window.SpopeerAPI.login({ email, password });
     const user = (res.data && res.data.user) || res.user || null;
-    const token = res.token || (res.data && res.data.token);
-    if (token) localStorage.setItem('token', token);
     if (user && window.Auth) window.Auth.login(user);
     window.location.assign(nextTarget);
   } catch(e) {

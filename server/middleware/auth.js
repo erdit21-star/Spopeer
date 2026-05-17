@@ -7,6 +7,14 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { User } = require('../models');
 
+function getAccessSecret() {
+  return process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+}
+
+function getRefreshSecret() {
+  return process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+}
+
 /**
  * Extract token from cookies (preferred) or Authorization header (fallback).
  */
@@ -39,7 +47,7 @@ async function authenticate(req, res, next) {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    const decoded = jwt.verify(token, getAccessSecret(), { algorithms: ['HS256'] });
     const user = await User.findByPk(decoded.userId);
 
     if (!user || !user.isActive) {
@@ -80,7 +88,7 @@ async function optionalAuth(req, res, next) {
   try {
     const token = extractToken(req);
     if (token) {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+      const decoded = jwt.verify(token, getAccessSecret(), { algorithms: ['HS256'] });
       const user = await User.findByPk(decoded.userId);
       if (user && user.isActive) {
         req.user = user;
@@ -100,7 +108,7 @@ async function optionalAuth(req, res, next) {
 function generateAccessToken(user) {
   return jwt.sign(
     { userId: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET,
+    getAccessSecret(),
     { expiresIn: '15m' }
   );
 }
@@ -111,7 +119,7 @@ function generateAccessToken(user) {
 function generateRefreshToken(user) {
   return jwt.sign(
     { userId: user.id, type: 'refresh', jti: crypto.randomBytes(16).toString('hex') },
-    process.env.JWT_SECRET,
+    getRefreshSecret(),
     { expiresIn: '7d' }
   );
 }
@@ -165,6 +173,12 @@ function clearAuthCookies(res) {
   };
   res.clearCookie('access_token', options);
   res.clearCookie('refresh_token', options);
+  res.clearCookie('csrf_token', {
+    httpOnly: false,
+    secure,
+    sameSite,
+    path: '/'
+  });
 }
 
 module.exports = {

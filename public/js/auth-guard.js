@@ -6,23 +6,13 @@
     if (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') {
       return window.CurrentUserStore.isLoggedIn();
     }
-    var hasUser = !!(
-      localStorage.getItem('spopeer_user')
-      || localStorage.getItem('spopeerUser')
-      || localStorage.getItem('user')
-    );
-    var hasToken = !!(
-      localStorage.getItem('spopeer_token')
-      || localStorage.getItem('spopeerToken')
-      || localStorage.getItem('token')
-    );
-    return (localStorage.getItem('spopeer_loggedIn') === 'true' && hasUser) || hasToken || hasUser;
+    var hasUser = !!localStorage.getItem('spopeer_user');
+    return localStorage.getItem('spopeer_loggedIn') === 'true' && hasUser;
   }
 
   function clearLocalAuth() {
     localStorage.removeItem('spopeer_user');
     localStorage.removeItem('spopeer_loggedIn');
-    localStorage.removeItem('user');
   }
 
   async function requireAuth(loginPath) {

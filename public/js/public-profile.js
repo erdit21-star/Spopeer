@@ -187,10 +187,8 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     return !!(obj && typeof obj === 'object' && Object.keys(obj).length > 0);
   }
 
-  const authToken = localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
-  
-  // Build headers — include auth cookie so server can identify the viewer
-  const _headers = authToken ? { Authorization: 'Bearer ' + authToken } : {};
+  // Cookie-based auth only; do not read/store JWT in localStorage.
+  const _headers = {};
 
   // Try /api/profile/:id (handles numeric id and username)
   if(userId){

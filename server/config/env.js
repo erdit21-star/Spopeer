@@ -25,9 +25,29 @@ function validate() {
   }
 
   if (isProduction) {
+    const hasAccessSecret = !!(process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET);
+    const hasRefreshSecret = !!(process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+
     const missingProduction = REQUIRED_IN_PRODUCTION.filter(v => !process.env[v]);
     if (missingProduction.length) {
       console.error('Production is missing required environment variables:', missingProduction.join(', '));
+      process.exit(1);
+    }
+
+    if (!hasAccessSecret || !hasRefreshSecret) {
+      console.error('Production requires JWT_ACCESS_SECRET and JWT_REFRESH_SECRET (JWT_SECRET can be used as temporary fallback).');
+      process.exit(1);
+    }
+
+    const missingEmail = ['EMAIL_FROM', 'CONTACT_TO_EMAIL'].filter(v => !process.env[v]);
+    if (missingEmail.length) {
+      console.error('Production is missing required email routing variables:', missingEmail.join(', '));
+      process.exit(1);
+    }
+
+    const missingCloudinary = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'].filter(v => !process.env[v]);
+    if (missingCloudinary.length) {
+      console.error('Production is missing required Cloudinary variables:', missingCloudinary.join(', '));
       process.exit(1);
     }
 
@@ -53,6 +73,8 @@ const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProduction: process.env.NODE_ENV === 'production',
   jwtSecret: process.env.JWT_SECRET,
+  jwtAccessSecret: process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET,
+  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   appUrl: process.env.APP_URL || `http://localhost:${process.env.PORT || 5000}`,
   frontendUrl: process.env.FRONTEND_URL || '',

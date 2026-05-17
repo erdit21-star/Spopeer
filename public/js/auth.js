@@ -4,31 +4,22 @@ const Auth = {
   userKey: "spopeer_user",
 
   hasAnyAuthToken() {
-    return !!(
-      localStorage.getItem('spopeer_token')
-      || localStorage.getItem('spopeerToken')
-      || localStorage.getItem('token')
-    );
+    return false;
   },
 
   hasAnyStoredUser() {
-    return !!(
-      localStorage.getItem('spopeer_user')
-      || localStorage.getItem('spopeerUser')
-      || localStorage.getItem('user')
-    );
+    return !!localStorage.getItem('spopeer_user');
   },
 
   hasLocalSessionSignal() {
     return this.hasAnyStoredUser()
-      || localStorage.getItem('spopeer_loggedIn') === 'true'
-      || this.hasAnyAuthToken();
+      || localStorage.getItem('spopeer_loggedIn') === 'true';
   },
 
   isLoggedIn() {
     const hasUser = this.hasAnyStoredUser();
     const hasFlag = localStorage.getItem("spopeer_loggedIn") === "true";
-    return (hasFlag && hasUser) || this.hasAnyAuthToken();
+    return hasFlag && hasUser;
   },
 
   getToken() {
@@ -37,11 +28,7 @@ const Auth = {
 
   getUser() {
     try {
-      const raw =
-        localStorage.getItem(this.userKey) ||
-        localStorage.getItem("spopeerUser") ||
-        localStorage.getItem("user") ||
-        "{}";
+      const raw = localStorage.getItem(this.userKey) || "{}";
       return JSON.parse(raw);
     } catch {
       return {};
@@ -89,7 +76,6 @@ const Auth = {
     const normalizedUser = this.normalizeUserForSession({ ...this.getUser(), ...user });
 
     localStorage.setItem(this.userKey, JSON.stringify(normalizedUser));
-    localStorage.setItem("user", JSON.stringify(normalizedUser));
     localStorage.setItem("spopeer_loggedIn", "true");
     localStorage.setItem('spopeer_last_auth_at', Date.now().toString());
     localStorage.setItem("_profileLastUpdated_", Date.now().toString());
@@ -122,15 +108,9 @@ const Auth = {
     }
 
     [
-      "spopeer_token",
       "spopeer_last_auth_at",
       "spopeer_user",
       "spopeer_loggedIn",
-      "authToken",
-      "token",
-      "user",
-      "userToken",
-      "userData",
       "_profileLastUpdated_"
     ].forEach((key) => localStorage.removeItem(key));
 
@@ -203,13 +183,12 @@ const Auth = {
     } catch (err) {
       console.debug("Auth.requireAuth background check failed — session expired", err);
       const hasUser = !!(localStorage.getItem('spopeer_user') || localStorage.getItem('user'));
-      if (hasUser || this.hasAnyAuthToken()) {
+      if (hasUser) {
         // Keep the user on-page; downstream API calls can retry/refresh without login bounce.
         return;
       }
       localStorage.removeItem('spopeer_user');
       localStorage.removeItem('spopeer_loggedIn');
-      localStorage.removeItem('user');
       window.location.href = "/pages/auth/login.html";
     }
   },

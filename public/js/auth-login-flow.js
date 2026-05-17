@@ -61,10 +61,6 @@
     try {
       var result = await window.SpopeerAPI.login({ email: email, password: password });
       var user = (result && result.data && result.data.user) || (result && result.user) || null;
-      var token = (result && result.data && result.data.token) || (result && result.token) || null;
-      if (token) {
-        localStorage.setItem('token', token);
-      }
       if (user && window.Auth && typeof window.Auth.login === 'function') {
         window.Auth.login(user);
       }

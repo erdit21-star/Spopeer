@@ -72,11 +72,7 @@
     } catch (_error) {
       var hasLocalSessionSignal = !!(
         localStorage.getItem('spopeer_user')
-        || localStorage.getItem('spopeerUser')
-        || localStorage.getItem('user')
-        || localStorage.getItem('spopeer_token')
-        || localStorage.getItem('spopeerToken')
-        || localStorage.getItem('token')
+        || localStorage.getItem('spopeer_loggedIn') === 'true'
       );
       if (!hasLocalSessionSignal) {
         window.location.href = '/mobile-login.html';
