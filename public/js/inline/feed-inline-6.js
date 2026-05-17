@@ -2266,16 +2266,8 @@
     }
   });
 
-  // Expose functions that HTML onclick attributes depend on
-  window.closeStories = closeStories;
-  window.nextStory = nextStory;
-  window.prevStory = prevStory;
-  window.viewStory = viewStory;
-  window.likePost = likePost;
-  window.votePoll = votePoll;
-  window.repostPost = repostPost;
-  window.savePost = savePost;
-  window.openComments = openComments;
+  // Functions previously exposed for legacy onclick handlers are now handled via delegated listeners
+  // Removed deprecated window function assignments: closeStories, nextStory, prevStory, viewStory, likePost, votePoll, repostPost, savePost, openComments
 
   updateSportIndicator();
   populateSportsDropdown();
