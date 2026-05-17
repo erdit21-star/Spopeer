@@ -54,6 +54,13 @@
       : profile.displayName
       ? profile.displayName
       : 'This user';
+    
+      const safeUserName = String(userName)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 
     const profileType = {
       athlete: '🏃 Athlete',
@@ -66,7 +73,7 @@
       <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center;">
         <div>
           <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 800; font-family: 'Syne', Arial, sans-serif;">
-            Want to connect with ${userName}?
+              Want to connect with ${safeUserName}?
           </h3>
           <p style="margin: 0; font-size: 14px; opacity: 0.9; line-height: 1.5;">
             Join Spopeer to message, follow, and collaborate with ${profileType} in the global sports network. 

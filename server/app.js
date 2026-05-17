@@ -6,10 +6,10 @@ require('./config/env');
 
 // ─── PRODUCTION STARTUP GUARDS ───
 if (process.env.NODE_ENV === 'production') {
-  const hasAccessSecret = !!(process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET);
-  const hasRefreshSecret = !!(process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+  const hasAccessSecret = !!process.env.JWT_ACCESS_SECRET;
+  const hasRefreshSecret = !!process.env.JWT_REFRESH_SECRET;
   if (!hasAccessSecret || !hasRefreshSecret) {
-    console.error('FATAL: JWT_ACCESS_SECRET and JWT_REFRESH_SECRET are required in production (JWT_SECRET fallback supported temporarily).');
+    console.error('FATAL: JWT_ACCESS_SECRET and JWT_REFRESH_SECRET are required in production.');
     process.exit(1);
   }
 
@@ -428,9 +428,8 @@ app.get('/api/ready', async (req, res) => {
   }
 
   // Required secrets check
-  checks.secrets = process.env.JWT_SECRET ? 'ok' : 'fail';
-  const hasAccessSecret = !!(process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET);
-  const hasRefreshSecret = !!(process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+  const hasAccessSecret = !!(process.env.NODE_ENV === 'production' ? process.env.JWT_ACCESS_SECRET : (process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET));
+  const hasRefreshSecret = !!(process.env.NODE_ENV === 'production' ? process.env.JWT_REFRESH_SECRET : (process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET));
   checks.secrets = hasAccessSecret && hasRefreshSecret ? 'ok' : 'fail';
   if (!hasAccessSecret || !hasRefreshSecret) ready = false;
 

@@ -8,10 +8,16 @@ const crypto = require('crypto');
 const { User } = require('../models');
 
 function getAccessSecret() {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.JWT_ACCESS_SECRET;
+  }
   return process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
 }
 
 function getRefreshSecret() {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.JWT_REFRESH_SECRET;
+  }
   return process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
 }
 

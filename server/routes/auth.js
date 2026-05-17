@@ -42,6 +42,9 @@ const requireEmailVerification = isProd || String(process.env.REQUIRE_EMAIL_VERI
 const emailVerifyTtlHours = parseInt(process.env.EMAIL_VERIFY_TOKEN_HOURS || '24', 10);
 
 function getRefreshSecret() {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.JWT_REFRESH_SECRET;
+  }
   return process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
 }
 

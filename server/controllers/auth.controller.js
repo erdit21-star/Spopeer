@@ -7,7 +7,13 @@ const { sequelize } = require('../config/database');
 const { sendPasswordResetEmail } = require('../services/email');
 const { extractToken, getCookieOptions, clearAuthCookies } = require('../middleware/auth');
 const { issueCsrfToken } = require('../middleware/csrf');
-const ACCESS_JWT_SECRET = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+
+function getAccessSecret() {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.JWT_ACCESS_SECRET;
+  }
+  return process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+}
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -16,12 +22,13 @@ function setAccessTokenCookie(res, token) {
 }
 
 function signAuthToken(user) {
-  if (!ACCESS_JWT_SECRET) {
+  const accessSecret = getAccessSecret();
+  if (!accessSecret) {
     throw new Error('Missing JWT access signing secret');
   }
   return jwt.sign(
     { userId: user.id, id: user.id, email: user.email, role: user.role },
-    ACCESS_JWT_SECRET,
+    accessSecret,
     { expiresIn: '7d' }
   );
 }
@@ -71,10 +78,11 @@ exports.login = async (req, res) => {
 exports.verifyToken = (req, res, next) => {
   const token = extractToken(req);
   if (!token) return res.status(401).json({ error: 'No token provided' });
-  if (!ACCESS_JWT_SECRET) {
+  const accessSecret = getAccessSecret();
+  if (!accessSecret) {
     return res.status(500).json({ error: 'Server token configuration error' });
   }
-  jwt.verify(token, ACCESS_JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, accessSecret, (err, decoded) => {
     if (err) return res.status(401).json({ error: 'Invalid token' });
     const userId = decoded.userId || decoded.id;
     if (!userId) return res.status(401).json({ error: 'Invalid token payload' });

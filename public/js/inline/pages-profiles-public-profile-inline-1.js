@@ -7,6 +7,12 @@ function bumpNumericStat(id, delta) {
   el.textContent = Math.max(0, current + delta);
 }
 
+function escapeText(value) {
+  const node = document.createElement('div');
+  node.textContent = String(value == null ? '' : value);
+  return node.innerHTML;
+}
+
 document.querySelectorAll('.follow-btn').forEach(btn => {
   btn.addEventListener('click', async function () {
     const targetId = btn.closest('.follow-item')?.dataset?.id || '';
@@ -401,7 +407,15 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     document.title=`${name} — Spopeer`;
     const avatarEl=document.getElementById('avatar');
     if(core.avatarUrl){
-      avatarEl.innerHTML=`<img src="${core.avatarUrl}" alt="${name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      avatarEl.innerHTML='';
+      const img=document.createElement('img');
+      img.src=String(core.avatarUrl);
+      img.alt=name;
+      img.style.width='100%';
+      img.style.height='100%';
+      img.style.objectFit='cover';
+      img.style.borderRadius='50%';
+      avatarEl.appendChild(img);
     } else {
       avatarEl.textContent=initials;
     }
@@ -465,7 +479,19 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     }
     if(extras.length){
       const g=document.createElement('div');g.className='about-grid';
-      extras.forEach(([l,v])=>{const d=document.createElement('div');d.className='about-item';d.innerHTML=`<div class="about-label">${l}</div><div class="about-value">${v}</div>`;g.appendChild(d);});
+      extras.forEach(([l,v])=>{
+        const d=document.createElement('div');
+        d.className='about-item';
+        const label=document.createElement('div');
+        label.className='about-label';
+        label.textContent=String(l);
+        const value=document.createElement('div');
+        value.className='about-value';
+        value.textContent=String(v);
+        d.appendChild(label);
+        d.appendChild(value);
+        g.appendChild(d);
+      });
       document.getElementById('extra-info').innerHTML='';
       document.getElementById('extra-info').appendChild(g);
     }
@@ -731,7 +757,11 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       var mlAv = document.getElementById('ml-avatar');
       if (mlAv) {
         if (core.avatarUrl) {
-          mlAv.innerHTML = '<img src="' + core.avatarUrl + '" alt="' + name + '">';
+          mlAv.innerHTML = '';
+          var mlImg = document.createElement('img');
+          mlImg.src = String(core.avatarUrl);
+          mlImg.alt = name;
+          mlAv.appendChild(mlImg);
         } else {
           mlAv.textContent = initials;
         }
@@ -753,7 +783,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         var rows = '';
         compactFields.forEach(function(field) {
           if (field.visible) {
-            rows += '<div class="pc-minimal-row"><span class="pc-minimal-fl">' + field.label + '</span><span class="pc-minimal-fv" style="' + (field.value ? '' : 'color:var(--muted);') + '">' + (field.value || getRoleEmptyPlaceholder(data.userType || 'athlete', field.label)) + '</span></div>';
+            rows += '<div class="pc-minimal-row"><span class="pc-minimal-fl">' + escapeText(field.label) + '</span><span class="pc-minimal-fv" style="' + (field.value ? '' : 'color:var(--muted);') + '">' + escapeText(field.value || getRoleEmptyPlaceholder(data.userType || 'athlete', field.label)) + '</span></div>';
           }
         });
         mlFields.innerHTML = rows || '<div class="pc-minimal-row"><span class="pc-minimal-fl" style="color:var(--muted)">No public fields</span></div>';
@@ -774,7 +804,11 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       var scAv = document.getElementById('sc-avatar');
       if (scAv) {
         if (core.avatarUrl) {
-          scAv.innerHTML = '<img src="' + core.avatarUrl + '" alt="' + sName + '">';
+          scAv.innerHTML = '';
+          var scImg = document.createElement('img');
+          scImg.src = String(core.avatarUrl);
+          scImg.alt = sName;
+          scAv.appendChild(scImg);
         } else {
           scAv.textContent = sInitials;
         }
@@ -795,8 +829,8 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
       if (scPills) {
         var pills = '';
         var pillFields = getCompactPills(sportCardFields);
-        if (pillFields[0]) pills += '<span class="pc-sports-pill pc-sports-pill--pos">' + pillFields[0].value + '</span>';
-        if (pillFields[1]) pills += '<span class="pc-sports-pill pc-sports-pill--lvl">' + pillFields[1].value + '</span>';
+        if (pillFields[0]) pills += '<span class="pc-sports-pill pc-sports-pill--pos">' + escapeText(pillFields[0].value) + '</span>';
+        if (pillFields[1]) pills += '<span class="pc-sports-pill pc-sports-pill--lvl">' + escapeText(pillFields[1].value) + '</span>';
         scPills.innerHTML = pills;
       }
 
@@ -807,7 +841,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
         sportCardFields.forEach(function(field) {
           if (field.visible) {
             var tileVal = field.value || getRoleEmptyPlaceholder(data.userType || 'athlete', field.label);
-            tiles += '<div class="pc-sports-tile"><div class="pc-sports-tile-label">' + field.label + '</div><div class="pc-sports-tile-val" style="' + (field.value ? '' : 'color:var(--muted);font-weight:500;') + '">' + tileVal + '</div></div>';
+            tiles += '<div class="pc-sports-tile"><div class="pc-sports-tile-label">' + escapeText(field.label) + '</div><div class="pc-sports-tile-val" style="' + (field.value ? '' : 'color:var(--muted);font-weight:500;') + '">' + escapeText(tileVal) + '</div></div>';
           }
         });
         scFields.innerHTML = tiles || '<div class="pc-sports-tile"><div class="pc-sports-tile-label" style="color:var(--muted)">No public fields</div></div>';

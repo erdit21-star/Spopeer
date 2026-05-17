@@ -5,7 +5,13 @@
  */
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
-const ACCESS_JWT_SECRET = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+
+function getAccessSecret() {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.JWT_ACCESS_SECRET;
+  }
+  return process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+}
 
 let io = null;
 
@@ -66,9 +72,10 @@ function initSocket(httpServer) {
       ? socket.handshake.auth.token
       : readCookieValue(socket.handshake.headers && socket.handshake.headers.cookie, 'access_token');
     if (!token) return next(new Error('No token'));
-    if (!ACCESS_JWT_SECRET) return next(new Error('Server token configuration error'));
+    const accessSecret = getAccessSecret();
+    if (!accessSecret) return next(new Error('Server token configuration error'));
     try {
-      socket.user = jwt.verify(token, ACCESS_JWT_SECRET);
+      socket.user = jwt.verify(token, accessSecret);
       next();
     } catch {
       next(new Error('Invalid token'));
@@ -85,8 +92,6 @@ function initSocket(httpServer) {
     // PHASE 2 STEP 9: Track online users
     if (!onlineUsers.has(userId)) {
       onlineUsers.set(userId, new Set());
-      // Broadcast user is online (only on first connection)
-      io.emit('user_online', { userId });
     }
     onlineUsers.get(userId).add(socket.id);
 
@@ -97,8 +102,6 @@ function initSocket(httpServer) {
         sockets.delete(socket.id);
         if (sockets.size === 0) {
           onlineUsers.delete(userId);
-          // Broadcast user is offline
-          io.emit('user_offline', { userId });
         }
       }
       console.log(`🔌 User ${userId} disconnected`);
