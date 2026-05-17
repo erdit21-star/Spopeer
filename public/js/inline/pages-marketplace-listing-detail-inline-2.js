@@ -315,8 +315,38 @@ ProfileSyncService.init();
 
     async function toggleFollow() {
       const btn = document.getElementById('followBtn');
-      btn.classList.toggle('following');
-      // TODO: Implement follow API call
+      const sellerId = btn.getAttribute('data-seller-id');
+      
+      if (!sellerId) {
+        api.showNotification('Error: seller ID not found', 'error');
+        return;
+      }
+
+      const isFollowing = btn.classList.contains('following');
+      
+      try {
+        const method = isFollowing ? 'DELETE' : 'POST';
+        const endpoint = `/api/follows/${sellerId}`;
+        
+        await api.request(endpoint, { method });
+        
+        btn.classList.toggle('following');
+        const label = btn.querySelector('.btn-label');
+        if (label) {
+          label.textContent = isFollowing ? 'Follow' : 'Following';
+        }
+        
+        api.showNotification(
+          isFollowing ? 'Unfollowed successfully' : 'Followed successfully',
+          'success'
+        );
+      } catch (error) {
+        btn.classList.toggle('following'); // Revert on error
+        api.showNotification(
+          error.message || 'Failed to update follow status',
+          'error'
+        );
+      }
     }
 
     // Close modal on background click
