@@ -652,7 +652,7 @@ footer{
     font-size:13px;font-weight:600;border:1px solid #a7f3d0;
   }
   .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  /* Button element resets so <button onclick="openAuth(...)"> look identical to the old <a> elements */
+  /* Button element resets so auth-action buttons look identical to the old <a> elements */
   button.btn-hero,button.btn-cta-white{border:none}
   button.btn-hero,button.btn-hero-out,button.btn-cta-white,button.btn-cta-ghost{
     cursor:pointer;font-family:var(--fb);
@@ -696,11 +696,11 @@ footer{
     </nav>
 
     <div class="nav-ctas">
-      <button type="button" class="btn btn-ghost" onclick="openAuth('login')">Log in</button>
-      <button type="button" class="btn btn-solid" onclick="openAuth('signup')">Create account free</button>
+      <button type="button" class="btn btn-ghost" data-auth-open="login">Log in</button>
+      <button type="button" class="btn btn-solid" data-auth-open="signup">Create account free</button>
     </div>
 
-    <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <button class="hamburger" data-nav-action="toggle-menu" aria-label="Menu">
       <i class="fa-solid fa-bars" id="menuIcon"></i>
     </button>
   </div>
@@ -709,8 +709,8 @@ footer{
     <a class="nav-link" href="#features">Features</a>
     <a class="nav-link" href="#how-it-works">How It Works</a>
     <div style="height:8px"></div>
-    <button type="button" class="btn btn-ghost" onclick="openAuth('login')">Log in</button>
-    <button type="button" class="btn btn-solid" onclick="openAuth('signup')">Create account free</button>
+    <button type="button" class="btn btn-ghost" data-auth-open="login">Log in</button>
+    <button type="button" class="btn btn-solid" data-auth-open="signup">Create account free</button>
   </div>
 </nav>
 
@@ -721,10 +721,10 @@ footer{
     <h1>Where sports people <em>connect</em> and grow.</h1>
     <p class="hero-sub">Spopeer is the dedicated network for athletes, coaches, clubs, and sports professionals. Build your identity, share your story, and find the right connections.</p>
     <div class="hero-actions">
-      <button type="button" class="btn-hero" onclick="openAuth('signup')">
+      <button type="button" class="btn-hero" data-auth-open="signup">
         <i class="fa-solid fa-user-plus"></i> Create free account
       </button>
-      <button type="button" class="btn-hero-out" onclick="openAuth('login')">
+      <button type="button" class="btn-hero-out" data-auth-open="login">
         <i class="fa-solid fa-arrow-right-to-bracket"></i> Log in
       </button>
     </div>
@@ -872,10 +872,10 @@ footer{
     <h2>Your sports network starts here.</h2>
     <p>Join athletes, coaches, clubs, and professionals who are already building their presence on Spopeer.</p>
     <div class="cta-btns">
-      <button type="button" class="btn-cta-white" onclick="openAuth('signup')">
+      <button type="button" class="btn-cta-white" data-auth-open="signup">
         <i class="fa-solid fa-user-plus"></i> Create free account
       </button>
-      <button type="button" class="btn-cta-ghost" onclick="openAuth('login')">
+      <button type="button" class="btn-cta-ghost" data-auth-open="login">
         <i class="fa-solid fa-arrow-right-to-bracket"></i> Already have an account
       </button>
     </div>
@@ -901,8 +901,8 @@ footer{
     <div class="footer-links">
       <div class="footer-col">
         <h4>Platform</h4>
-        <button type="button" onclick="openAuth('signup')">Create account</button>
-        <button type="button" onclick="openAuth('login')">Log in</button>
+        <button type="button" data-auth-open="signup">Create account</button>
+        <button type="button" data-auth-open="login">Log in</button>
         <a href="pages/search/search.html">Search</a>
       </div>
       <div class="footer-col">
@@ -932,7 +932,7 @@ footer{
 
 <!-- -- AUTH MODAL -- -->
 <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="Log in or Create account" aria-hidden="true">
-  <button class="auth-close-btn" onclick="closeAuth()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+  <button class="auth-close-btn" data-auth-action="close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
   <div class="auth-box">
     <div class="auth-sheet-handle" aria-hidden="true"></div>
 
@@ -994,10 +994,10 @@ footer{
           </div>
           <div class="remember-row">
             <label><input type="checkbox" id="modalRemember" /> Remember me</label>
-            <a href="#" class="forgot-link" onclick="switchAuth('forgot'); return false;">Forgot password?</a>
+            <a href="#" class="forgot-link" data-auth-switch="forgot">Forgot password?</a>
           </div>
           <button type="submit" class="auth-submit-btn" id="modalLoginBtn">Log In</button>
-          <p class="auth-switch-row">Don't have an account? <a href="#" onclick="switchAuth('signup'); return false;">Create account free</a></p>
+          <p class="auth-switch-row">Don't have an account? <a href="#" data-auth-switch="signup">Create account free</a></p>
         </form>
       </div>
 
@@ -1069,7 +1069,7 @@ footer{
             <input id="modalSecondarySports" type="text" placeholder="e.g. Tennis, Swimming" />
           </div>
           <button type="submit" class="auth-submit-btn" id="modalSignupBtn">Create Account</button>
-          <p class="auth-switch-row">Already have an account? <a href="#" onclick="switchAuth('login'); return false;">Log in</a></p>
+          <p class="auth-switch-row">Already have an account? <a href="#" data-auth-switch="login">Log in</a></p>
         </form>
       </div>
 
@@ -1085,7 +1085,7 @@ footer{
             <input id="modalForgotEmail" type="email" placeholder="you@email.com" required autocomplete="email" />
           </div>
           <button type="submit" class="auth-submit-btn" id="modalForgotBtn">Send Reset Link</button>
-          <p class="auth-switch-row"><a href="#" onclick="switchAuth('login'); return false;"><i class="fa-solid fa-arrow-left" style="font-size:11px;margin-right:4px"></i>Back to Log In</a></p>
+          <p class="auth-switch-row"><a href="#" data-auth-switch="login"><i class="fa-solid fa-arrow-left" style="font-size:11px;margin-right:4px"></i>Back to Log In</a></p>
         </form>
       </div>
 

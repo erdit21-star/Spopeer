@@ -247,7 +247,7 @@
             ${bioText}
           </div>
           <div class="rc-right">
-            <button class="btn-view" onclick="window.location.href='../profiles/public-profile.html?userId=${encodeURIComponent(String(r.id))}'">
+            <button class="btn-view" data-search-action="view-profile" data-user-id="${encodeURIComponent(String(r.id))}">
               View Profile
             </button>
             <button class="btn-connect" data-id="${r.id}">Follow</button>
@@ -321,8 +321,9 @@
         card.className = 'marketplace-result-card';
         const image = listing.images && listing.images.length > 0 ? listing.images[0] : '/assets/images/placeholder.png';
         const price = listing.price ? `$${parseFloat(listing.price).toFixed(2)}` : 'Contact';
+        const listingId = encodeURIComponent(String(listing.id || ''));
         card.innerHTML = `
-          <img src="${image}" alt="${listing.title}" class="marketplace-result-image" onclick="window.location.href='../marketplace/listing-detail.html?id=${listing.id}'">
+          <img src="${image}" alt="${listing.title}" class="marketplace-result-image" data-search-action="view-listing" data-listing-id="${listingId}">
           <div class="marketplace-result-content">
             <div class="marketplace-result-title">${listing.title || 'Untitled'}</div>
             <div class="marketplace-result-price">${price}</div>
@@ -423,6 +424,58 @@
 
   /* ── retry ── */
   document.getElementById('retryBtn')?.addEventListener('click',()=>doSearch(lastSearchPage));
+
+  document.addEventListener('click', function (event) {
+    const actionNode = event.target && event.target.closest('[data-search-action]');
+    if (!actionNode) return;
+
+    const action = actionNode.getAttribute('data-search-action');
+    if (!action) return;
+
+    if (action === 'quick-search') {
+      const term = actionNode.getAttribute('data-search-term') || '';
+      window.quickSearch(term);
+      return;
+    }
+
+    if (action === 'quick-role') {
+      const role = actionNode.getAttribute('data-search-role') || '';
+      if (role) window.quickRole(role);
+      return;
+    }
+
+    if (action === 'quick-sport') {
+      const sport = actionNode.getAttribute('data-search-sport') || '';
+      if (sport) window.quickSport(sport);
+      return;
+    }
+
+    if (action === 'switch-tab') {
+      const tab = actionNode.getAttribute('data-search-tab') || 'people';
+      switchResultsTab(tab);
+      return;
+    }
+
+    if (action === 'reset-all') {
+      window.resetAll();
+      return;
+    }
+
+    if (action === 'view-profile') {
+      const userId = actionNode.getAttribute('data-user-id') || '';
+      if (userId) {
+        window.location.href = '../profiles/public-profile.html?userId=' + userId;
+      }
+      return;
+    }
+
+    if (action === 'view-listing') {
+      const listingId = actionNode.getAttribute('data-listing-id') || '';
+      if (listingId) {
+        window.location.href = '../marketplace/listing-detail.html?id=' + listingId;
+      }
+    }
+  });
 
   /* ── search button ── */
   document.getElementById('searchBtn')?.addEventListener('click',()=>doSearch(1));

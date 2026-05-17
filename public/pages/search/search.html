@@ -735,23 +735,23 @@
     <div class="filter-card">
       <div class="filter-card-title">Quick Search</div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <button class="quick-item" onclick="quickSearch('marathon runner')">
+        <button class="quick-item" data-search-action="quick-search" data-search-term="marathon runner">
           <span class="quick-icon"><i class="fa-solid fa-person-running" style="font-size:11px"></i></span>
           <span class="quick-label">Marathon Runners</span>
         </button>
-        <button class="quick-item" onclick="quickSearch('football coach')">
+        <button class="quick-item" data-search-action="quick-search" data-search-term="football coach">
           <span class="quick-icon"><i class="fa-solid fa-futbol" style="font-size:11px"></i></span>
           <span class="quick-label">Football Coaches</span>
         </button>
-        <button class="quick-item" onclick="quickSearch('basketball')">
+        <button class="quick-item" data-search-action="quick-search" data-search-term="basketball">
           <span class="quick-icon"><i class="fa-solid fa-basketball" style="font-size:11px"></i></span>
           <span class="quick-label">Basketball Players</span>
         </button>
-        <button class="quick-item" onclick="quickSearch('physiotherapist')">
+        <button class="quick-item" data-search-action="quick-search" data-search-term="physiotherapist">
           <span class="quick-icon"><i class="fa-solid fa-heart-pulse" style="font-size:11px"></i></span>
           <span class="quick-label">Physiotherapists</span>
         </button>
-        <button class="quick-item" onclick="quickSearch('swimming')">
+        <button class="quick-item" data-search-action="quick-search" data-search-term="swimming">
           <span class="quick-icon"><i class="fa-solid fa-person-swimming" style="font-size:11px"></i></span>
           <span class="quick-label">Swimmers</span>
         </button>
@@ -765,10 +765,10 @@
 
     <!-- TAB BAR -->
     <div id="resultsTabBar" style="display:none; border-bottom: 1px solid var(--border); margin-bottom: 20px; display: flex; gap: 0;">
-      <button id="peopleTab" class="result-tab active" onclick="switchResultsTab('people')" style="padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; margin-bottom: -1px;">
+      <button id="peopleTab" class="result-tab active" data-search-action="switch-tab" data-search-tab="people" style="padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; margin-bottom: -1px;">
         <i class="fa-solid fa-users" style="margin-right: 6px;"></i> People
       </button>
-      <button id="marketplaceTab" class="result-tab" onclick="switchResultsTab('marketplace')" style="padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; margin-bottom: -1px;">
+      <button id="marketplaceTab" class="result-tab" data-search-action="switch-tab" data-search-tab="marketplace" style="padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; margin-bottom: -1px;">
         <i class="fa-solid fa-store" style="margin-right: 6px;"></i> Marketplace
       </button>
     </div>
@@ -908,12 +908,12 @@
       <div class="hero-title">Find your next connection</div>
       <div class="hero-sub">Search 15,000+ athletes, coaches, clubs, and sports professionals across 50+ countries</div>
       <div class="hero-chips">
-        <div class="hero-chip" onclick="quickSearch('runner')"><i class="fa-solid fa-person-running"></i> Runners</div>
-        <div class="hero-chip" onclick="quickSearch('coach')"><i class="fa-solid fa-bullseye"></i> Coaches</div>
-        <div class="hero-chip" onclick="quickSearch('football')"><i class="fa-solid fa-futbol"></i> Football</div>
-        <div class="hero-chip" onclick="quickSearch('basketball')"><i class="fa-solid fa-basketball"></i> Basketball</div>
-        <div class="hero-chip" onclick="quickSearch('swimming')"><i class="fa-solid fa-person-swimming"></i> Swimming</div>
-        <div class="hero-chip" onclick="quickSearch('physiotherapist')"><i class="fa-solid fa-heart-pulse"></i> Physio</div>
+        <div class="hero-chip" data-search-action="quick-search" data-search-term="runner"><i class="fa-solid fa-person-running"></i> Runners</div>
+        <div class="hero-chip" data-search-action="quick-search" data-search-term="coach"><i class="fa-solid fa-bullseye"></i> Coaches</div>
+        <div class="hero-chip" data-search-action="quick-search" data-search-term="football"><i class="fa-solid fa-futbol"></i> Football</div>
+        <div class="hero-chip" data-search-action="quick-search" data-search-term="basketball"><i class="fa-solid fa-basketball"></i> Basketball</div>
+        <div class="hero-chip" data-search-action="quick-search" data-search-term="swimming"><i class="fa-solid fa-person-swimming"></i> Swimming</div>
+        <div class="hero-chip" data-search-action="quick-search" data-search-term="physiotherapist"><i class="fa-solid fa-heart-pulse"></i> Physio</div>
       </div>
       <div class="filter-summary">Search first, then refine by role or sport. Role filters will update the results immediately without needing a second click.</div>
     </div>
@@ -938,12 +938,12 @@
       <div class="state-title">No results found</div>
       <div class="state-sub">Try adjusting your filters or searching with different keywords</div>
       <div class="search-empty-chip-row">
-        <button class="search-empty-chip" type="button" onclick="quickRole('athlete')"><i class="fa-solid fa-person-running"></i> Athletes</button>
-        <button class="search-empty-chip" type="button" onclick="quickRole('coach')"><i class="fa-solid fa-bullseye"></i> Coaches</button>
-        <button class="search-empty-chip" type="button" onclick="quickSport('football')"><i class="fa-solid fa-futbol"></i> Football</button>
-        <button class="search-empty-chip" type="button" onclick="quickSport('basketball')"><i class="fa-solid fa-basketball"></i> Basketball</button>
+        <button class="search-empty-chip" type="button" data-search-action="quick-role" data-search-role="athlete"><i class="fa-solid fa-person-running"></i> Athletes</button>
+        <button class="search-empty-chip" type="button" data-search-action="quick-role" data-search-role="coach"><i class="fa-solid fa-bullseye"></i> Coaches</button>
+        <button class="search-empty-chip" type="button" data-search-action="quick-sport" data-search-sport="football"><i class="fa-solid fa-futbol"></i> Football</button>
+        <button class="search-empty-chip" type="button" data-search-action="quick-sport" data-search-sport="basketball"><i class="fa-solid fa-basketball"></i> Basketball</button>
       </div>
-      <button class="btn-search" style="max-width:180px;margin:0 auto" onclick="resetAll()">
+      <button class="btn-search" style="max-width:180px;margin:0 auto" data-search-action="reset-all">
         <i class="fa-solid fa-rotate-left"></i> Reset filters
       </button>
     </div>
@@ -1019,7 +1019,7 @@
 </footer>
 
 <!-- original external scripts preserved -->
-<script src="../../js/search-widget.js" onerror=""></script>
+<script src="../../js/search-widget.js"></script>
 
 <!-- Ensure API helpers and FollowManager are available for result buttons -->
 <script src="../../js/follow.js"></script>
