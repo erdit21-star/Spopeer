@@ -5,7 +5,7 @@
  */
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
-const REQUIRED = ['JWT_SECRET'];
+const REQUIRED = [];
 const REQUIRED_IN_PRODUCTION = ['APP_URL', 'FRONTEND_URL'];
 
 function validate() {
@@ -13,6 +13,12 @@ function validate() {
   if (missing.length) {
     console.error('Missing required environment variables:', missing.join(', '));
     console.error('Copy .env.example to .env and fill in the values.');
+    process.exit(1);
+  }
+
+  const hasJwtSecret = !!(process.env.JWT_ACCESS_SECRET || process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+  if (!hasJwtSecret) {
+    console.error('Missing JWT secret configuration: set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET (or temporary JWT_SECRET fallback).');
     process.exit(1);
   }
 

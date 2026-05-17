@@ -5,6 +5,7 @@
  */
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
+const ACCESS_JWT_SECRET = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
 
 let io = null;
 
@@ -65,8 +66,9 @@ function initSocket(httpServer) {
       ? socket.handshake.auth.token
       : readCookieValue(socket.handshake.headers && socket.handshake.headers.cookie, 'access_token');
     if (!token) return next(new Error('No token'));
+    if (!ACCESS_JWT_SECRET) return next(new Error('Server token configuration error'));
     try {
-      socket.user = jwt.verify(token, process.env.JWT_SECRET);
+      socket.user = jwt.verify(token, ACCESS_JWT_SECRET);
       next();
     } catch {
       next(new Error('Invalid token'));

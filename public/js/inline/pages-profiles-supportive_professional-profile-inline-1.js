@@ -1,6 +1,6 @@
 (function(){
       var ud = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('spopeerUser') || localStorage.getItem('user') || 'null');
-      var li = localStorage.getItem('spopeer_loggedIn') === 'true' || !!ud || !!(localStorage.getItem('spopeer_token') || localStorage.getItem('spopeerToken') || localStorage.getItem('token'));
+      var li = localStorage.getItem('spopeer_loggedIn') === 'true' || !!ud;
       if (!ud || !li) { window.location.replace('../../pages/auth/login.html'); return; }
       if (!ud.userType || ud.userType !== 'supportive_professional') {
         ud.userType = 'supportive_professional';

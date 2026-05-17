@@ -10,9 +10,7 @@
 
   async function refreshCurrentUserFromBackend() {
     try {
-      var token = localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
-      var headers = token ? { Authorization: 'Bearer ' + token } : {};
-      var res = await fetch('/api/profile/me', { headers: headers, credentials: 'include' });
+      var res = await fetch('/api/profile/me', { credentials: 'include' });
       if (!res.ok) return null;
       var data = await res.json().catch(function () { return {}; });
       var user = (data.data && (data.data.user || data.data.payload)) || data.user || data.payload || null;
@@ -321,15 +319,12 @@
     /*
     (async () => {
       try {
-        const token = localStorage.getItem('spopeer_token');
         const userEmail = ud.email || ud.userEmail;
         
-        if (token && userEmail) {
+        if (userEmail) {
           // Fetch fresh profile data from API in background
           const response = await fetch(`/api/profiles/${encodeURIComponent(userEmail)}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+            credentials: 'include'
           });
           
           if (response.ok) {

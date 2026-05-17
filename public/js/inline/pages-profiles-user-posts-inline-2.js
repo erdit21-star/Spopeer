@@ -1,6 +1,6 @@
 (async function () {
   const _ud = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('spopeerUser') || localStorage.getItem('user') || 'null');
-  const _li = localStorage.getItem('spopeer_loggedIn') === 'true' || !!_ud || !!(localStorage.getItem('spopeer_token') || localStorage.getItem('spopeerToken') || localStorage.getItem('token'));
+  const _li = localStorage.getItem('spopeer_loggedIn') === 'true' || !!_ud;
   if (!_ud || !_li) { window.location.href = '../../pages/auth/login.html'; return; }
 
   /* ── IIFE-scope vars shared with renderPost ── */

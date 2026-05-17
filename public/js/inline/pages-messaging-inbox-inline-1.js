@@ -58,9 +58,7 @@
   function initFor(id){return String(id||'?').slice(0,2).toUpperCase();}
 
   function getAuthHeaders(extra){
-    var token = localStorage.getItem('spopeerToken') || localStorage.getItem('spopeer_token') || '';
     var headers = Object.assign({}, extra || {});
-    if (token) headers.Authorization = 'Bearer ' + token;
     return headers;
   }
 
@@ -787,13 +785,9 @@
   function connectRealtime(){
     if(!window.io) return;
     try{
-      // PHASE 1 STEP 1: Fix Socket.IO auth — pass JWT token from localStorage
-      var _token = localStorage.getItem('spopeerToken')
-                   || localStorage.getItem('spopeer_token')
-                   || '';
       socket = io({
         withCredentials: true,
-        auth: { token: _token },
+        auth: {},
         reconnection: true,
         reconnectionAttempts: 10,
         reconnectionDelay: 2000,

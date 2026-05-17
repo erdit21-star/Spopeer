@@ -10,9 +10,6 @@
         localStorage.getItem('spopeer_user')
         || localStorage.getItem('spopeerUser')
         || localStorage.getItem('user')
-        || localStorage.getItem('spopeer_token')
-        || localStorage.getItem('spopeerToken')
-        || localStorage.getItem('token')
       );
       if (!hasLocalSessionSignal) {
         window.location.href = '../auth/login.html';

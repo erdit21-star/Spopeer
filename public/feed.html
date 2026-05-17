@@ -3332,14 +3332,14 @@
           <div class="sp-completion-track sp2-strength-track">
             <div class="sp-completion-fill sp2-strength-fill" id="spCompletionFill" style="width:75%"></div>
           </div>
-          <div class="sp-completion-tip sp2-strength-tip">Add your <button type="button" class="sp-inline-action" onclick="navigateToEditProfile()">highlights and profile details</button> to reach 100%</div>
+          <div class="sp-completion-tip sp2-strength-tip">Add your <button type="button" class="sp-inline-action" data-feed-action="navigate-edit-profile">highlights and profile details</button> to reach 100%</div>
         </div>
 
         <div class="sp-actions sp2-actions">
-          <a href="pages/profiles/public-profile.html" class="sp-btn-primary" id="editProfileBtn" onclick="event.preventDefault(); navigateToEditProfile();">
+          <a href="pages/profiles/public-profile.html" class="sp-btn-primary" id="editProfileBtn" data-feed-action="navigate-edit-profile-link">
             <i class="fa-regular fa-pen-to-square" style="font-size:10px"></i> Edit Profile
           </a>
-          <button class="sp-btn-secondary" id="shareProfileBtn" type="button" onclick="openShareModal()">
+          <button class="sp-btn-secondary" id="shareProfileBtn" type="button" data-feed-action="open-share-modal">
             <i class="fa-regular fa-share-from-square"></i>
           </button>
         </div>
@@ -3602,7 +3602,7 @@
               <input type="text" class="poll-option-input" data-poll-option="true" placeholder="Option 1">
               <input type="text" class="poll-option-input" data-poll-option="true" placeholder="Option 2">
             </div>
-            <button type="button" class="add-poll-option-btn" onclick="addPollOption()">+ Add Option</button>
+            <button type="button" class="add-poll-option-btn" data-feed-action="add-poll-option">+ Add Option</button>
           </div>
 
           <!-- Event Creator -->
@@ -3836,7 +3836,7 @@
   <div class="share-modal">
     <div class="share-modal-head">
       <span class="share-modal-title">Share Profile</span>
-      <button class="share-close-btn" onclick="closeShareModal()">
+      <button class="share-close-btn" data-feed-action="close-share-modal">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
@@ -3856,7 +3856,7 @@
       <div class="share-section-label">Profile link</div>
       <div class="share-link-box">
         <span class="share-link-url" id="shareModalUrl">spopeer.com/u/johnsmith</span>
-        <button class="share-copy-btn" id="shareCopyBtn" onclick="copyShareLink()">
+        <button class="share-copy-btn" id="shareCopyBtn" data-feed-action="copy-share-link">
           <i class="fa-regular fa-copy" style="font-size:11px"></i> Copy
         </button>
       </div>
@@ -3865,19 +3865,19 @@
     <div class="share-platforms-section">
       <div class="share-section-label">Share via</div>
       <div class="share-platforms-grid">
-        <button class="share-platform-btn" onclick="shareVia('x')">
+        <button class="share-platform-btn" data-feed-action="share-via" data-share-platform="x">
           <div class="share-platform-icon spi-x"><i class="fa-brands fa-x-twitter"></i></div>
           <span class="share-platform-name">X / Twitter</span>
         </button>
-        <button class="share-platform-btn" onclick="shareVia('whatsapp')">
+        <button class="share-platform-btn" data-feed-action="share-via" data-share-platform="whatsapp">
           <div class="share-platform-icon spi-wa"><i class="fa-brands fa-whatsapp"></i></div>
           <span class="share-platform-name">WhatsApp</span>
         </button>
-        <button class="share-platform-btn" onclick="shareVia('instagram')">
+        <button class="share-platform-btn" data-feed-action="share-via" data-share-platform="instagram">
           <div class="share-platform-icon spi-ig"><i class="fa-brands fa-instagram"></i></div>
           <span class="share-platform-name">Instagram</span>
         </button>
-        <button class="share-platform-btn" onclick="shareVia('linkedin')">
+        <button class="share-platform-btn" data-feed-action="share-via" data-share-platform="linkedin">
           <div class="share-platform-icon spi-li"><i class="fa-brands fa-linkedin"></i></div>
           <span class="share-platform-name">LinkedIn</span>
         </button>

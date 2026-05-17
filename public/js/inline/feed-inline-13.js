@@ -19,4 +19,62 @@ document.addEventListener('DOMContentLoaded', function () {
       collapsed ? '1' : '0'
     );
   });
+
+  document.addEventListener('click', function (event) {
+    var actionNode = event.target && event.target.closest('[data-feed-action]');
+    if (!actionNode) return;
+
+    var action = actionNode.getAttribute('data-feed-action');
+    if (!action) return;
+
+    if (action === 'navigate-edit-profile') {
+      if (typeof window.navigateToEditProfile === 'function') {
+        window.navigateToEditProfile();
+      }
+      return;
+    }
+
+    if (action === 'navigate-edit-profile-link') {
+      event.preventDefault();
+      if (typeof window.navigateToEditProfile === 'function') {
+        window.navigateToEditProfile();
+      }
+      return;
+    }
+
+    if (action === 'open-share-modal') {
+      if (typeof window.openShareModal === 'function') {
+        window.openShareModal();
+      }
+      return;
+    }
+
+    if (action === 'add-poll-option') {
+      if (typeof window.addPollOption === 'function') {
+        window.addPollOption();
+      }
+      return;
+    }
+
+    if (action === 'close-share-modal') {
+      if (typeof window.closeShareModal === 'function') {
+        window.closeShareModal();
+      }
+      return;
+    }
+
+    if (action === 'copy-share-link') {
+      if (typeof window.copyShareLink === 'function') {
+        window.copyShareLink();
+      }
+      return;
+    }
+
+    if (action === 'share-via') {
+      var platform = actionNode.getAttribute('data-share-platform') || '';
+      if (typeof window.shareVia === 'function' && platform) {
+        window.shareVia(platform);
+      }
+    }
+  });
 });
