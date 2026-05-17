@@ -61,6 +61,15 @@ async function mockApi(page) {
       return;
     }
 
+    if (url.pathname === '/api/profile/me' || url.pathname === '/api/users/me') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { user: viewer }, payload: viewer })
+      });
+      return;
+    }
+
     if (url.pathname.startsWith('/api/users/')) {
       await route.fulfill({
         status: 200,

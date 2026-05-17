@@ -27,6 +27,15 @@ async function mockApi(page, options) {
     const reqUrl = route.request().url();
     const url = new URL(reqUrl);
 
+    if (url.pathname === '/api/profile/me' || url.pathname === '/api/users/me') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { user: authMeUser }, payload: authMeUser })
+      });
+      return;
+    }
+
     if (url.pathname.startsWith('/api/users/')) {
       const userId = decodeURIComponent(url.pathname.split('/').pop() || '');
       const profile = profilesById[userId] || profilesById.default || {};
