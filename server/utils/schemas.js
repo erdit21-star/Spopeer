@@ -27,7 +27,7 @@ const signupSchema = z.object({
       return dob && isOldEnoughForService(dob, 18);
     },
     'You must be at least 18 years old to sign up.'
-  ),
+  ).optional(),
   role: z.string().max(50).optional(),
   sport: z.string().max(100).optional(),
   profession: z.string().max(200).optional(),

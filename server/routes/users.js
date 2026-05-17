@@ -171,13 +171,13 @@ router.get('/:id', optionalAuth, async (req, res) => {
     let user;
     if (/^\d+$/.test(param)) {
       user = await User.findByPk(param, {
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ['password', 'passwordHash'] }
       });
     } else {
       // Treat non-numeric param as email lookup
       user = await User.findOne({
         where: { email: param.toLowerCase(), isActive: true },
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ['password', 'passwordHash'] }
       });
     }
 
@@ -187,6 +187,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
     const payload = (typeof user.toJSON === 'function') ? user.toJSON() : { ...user };
     delete payload.password;
+    delete payload.passwordHash;
     if (payload.role && !payload.userType) payload.userType = payload.role;
 
     ok(res, payload);
