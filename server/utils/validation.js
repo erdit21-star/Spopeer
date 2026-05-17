@@ -96,6 +96,59 @@ function validatePassword(pw) {
  */
 const ALLOWED_ROLES = PUBLIC_USER_ROLES;
 
+/**
+ * Calculate user age from date of birth.
+ * @param {string|Date} dateOfBirth - ISO date string or Date object
+ * @returns {number|null} - Age in years, or null if invalid
+ */
+function calculateAge(dateOfBirth) {
+  if (!dateOfBirth) return null;
+  
+  const dob = dateOfBirth instanceof Date ? dateOfBirth : new Date(dateOfBirth);
+  if (isNaN(dob.getTime())) return null;
+  
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  
+  return age;
+}
+
+/**
+ * Check if user is old enough for service.
+ * @param {string|Date} dateOfBirth - ISO date string or Date object
+ * @param {number} minAge - Minimum required age (default: 18)
+ * @returns {boolean} - True if user is old enough
+ */
+function isOldEnoughForService(dateOfBirth, minAge = 18) {
+  const age = calculateAge(dateOfBirth);
+  return age !== null && age >= minAge;
+}
+
+/**
+ * Validate date of birth format and return parsed date.
+ * @param {string} dateString - ISO date string (YYYY-MM-DD)
+ * @returns {Date|null} - Parsed date or null if invalid
+ */
+function validateDateOfBirth(dateString) {
+  if (typeof dateString !== 'string') return null;
+  
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!regex.test(dateString)) return null;
+  
+  const date = new Date(dateString + 'T00:00:00Z');
+  if (isNaN(date.getTime())) return null;
+  
+  // Date of birth cannot be in the future
+  if (date > new Date()) return null;
+  
+  return date;
+}
+
 module.exports = {
   sanitizeString,
   isValidEmail,
@@ -105,5 +158,8 @@ module.exports = {
   isValidUrl,
   normalizeUserRole,
   validatePassword,
-  ALLOWED_ROLES
+  ALLOWED_ROLES,
+  calculateAge,
+  isOldEnoughForService,
+  validateDateOfBirth
 };

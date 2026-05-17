@@ -27,7 +27,8 @@ const {
   isAllowedValue,
   normalizeUserRole,
   validatePassword,
-  ALLOWED_ROLES
+  ALLOWED_ROLES,
+  calculateAge
 } = require('../utils/validation');
 const {
   sendPasswordResetEmail,
@@ -274,6 +275,7 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
       password,
       firstName,
       lastName,
+      dateOfBirth: req.validated.dateOfBirth || null,
       role: safeRole || 'athlete',
       sport: sport || null,
       profession: profession || null,
@@ -625,6 +627,100 @@ router.get('/unsubscribe', async (req, res) => {
   } catch (error) {
     console.error('[UNSUBSCRIBE] Error:', { message: error && error.message, requestId: req.requestId });
     return fail(res, 500, 'SERVER_ERROR', 'Failed to process unsubscribe request.');
+  }
+});
+
+// ─── AGE GATING: REQUEST VERIFICATION (ADMIN-ONLY) ───
+router.post('/request-age-verification', authenticate, requireCsrf, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    // Only admins can request age verification
+    if (req.user?.role !== 'admin') {
+      return fail(res, 403, 'FORBIDDEN', 'Only admins can request age verification.');
+    }
+
+    if (!userId) {
+      return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'userId is required.');
+    }
+
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'email', 'firstName', 'dateOfBirth', 'ageVerificationRequired', 'ageVerificationStatus']
+    });
+
+    if (!user) {
+      return fail(res, 404, 'NOT_FOUND', 'User not found.');
+    }
+
+    // Mark user as requiring age verification
+    await user.update({
+      ageVerificationRequired: true,
+      ageVerificationStatus: 'pending',
+      ageVerificationRequestedAt: new Date()
+    });
+
+    // Notify user via email (fire-and-forget)
+    sendSecurityAlertEmail(
+      user.email,
+      'Age Verification Required',
+      `We require age verification for your account. Please update your profile with valid identification.`
+    ).catch(err => {
+      console.error('[AGE-VERIFICATION] Email notification error:', err);
+    });
+
+    return ok(res, {
+      message: 'Age verification requested.',
+      user: {
+        id: user.id,
+        email: user.email,
+        ageVerificationRequired: true,
+        ageVerificationStatus: 'pending',
+        ageVerificationRequestedAt: user.ageVerificationRequestedAt
+      }
+    });
+  } catch (error) {
+    console.error('[REQUEST-AGE-VERIFICATION] Error:', { message: error && error.message, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to request age verification.');
+  }
+});
+
+// ─── AGE GATING: SUBMIT VERIFICATION (USER) ───
+router.post('/verify-age', authenticate, requireCsrf, async (req, res) => {
+  try {
+    const { dateOfBirth } = req.body;
+
+    if (!dateOfBirth) {
+      return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'dateOfBirth is required.');
+    }
+
+    const dobDate = new Date(dateOfBirth);
+    if (isNaN(dobDate.getTime())) {
+      return fail(res, 400, 'VALIDATION', 'Invalid date format.');
+    }
+
+    // Verify age is 18+
+    const age = calculateAge(dobDate);
+    if (age === null || age < 18) {
+      return fail(res, 403, 'AGE_GATE_FAILED', 'You must be at least 18 years old to use this service.');
+    }
+
+    // Update user
+    await User.update(
+      {
+        dateOfBirth: dobDate,
+        ageVerificationRequired: false,
+        ageVerificationStatus: 'verified'
+      },
+      { where: { id: req.userId } }
+    );
+
+    return ok(res, {
+      message: 'Age verified successfully.',
+      ageVerificationStatus: 'verified'
+    });
+  } catch (error) {
+    console.error('[VERIFY-AGE] Error:', { message: error && error.message, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to verify age.');
   }
 });
 

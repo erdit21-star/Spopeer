@@ -9,6 +9,7 @@
  *   if (!result.success) return fail(res, 400, 'VALIDATION', result.error.issues[0].message);
  */
 const { z } = require('zod');
+const { isOldEnoughForService, validateDateOfBirth } = require('./validation');
 
 // ─── AUTH ───
 
@@ -17,6 +18,16 @@ const signupSchema = z.object({
   password: z.string().min(10, 'Password must be at least 10 characters.').max(128),
   firstName: z.string().min(1, 'First name is required.').max(100),
   lastName: z.string().min(1, 'Last name is required.').max(100),
+  dateOfBirth: z.string().refine(
+    (val) => validateDateOfBirth(val) !== null,
+    'Date of birth must be a valid date in YYYY-MM-DD format.'
+  ).refine(
+    (val) => {
+      const dob = validateDateOfBirth(val);
+      return dob && isOldEnoughForService(dob, 18);
+    },
+    'You must be at least 18 years old to sign up.'
+  ),
   role: z.string().max(50).optional(),
   sport: z.string().max(100).optional(),
   profession: z.string().max(200).optional(),

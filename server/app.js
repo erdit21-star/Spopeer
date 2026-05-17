@@ -63,6 +63,7 @@ const sponsorshipRoutes = require('./routes/sponsorships');
 const moderationRoutes = require('./routes/moderation');
 const storyRoutes = require('./routes/stories');
 const ogRoutes = require('./routes/og.routes');
+const securityRoutes = require('./routes/security');
 const { getProfileCardDataBySlug } = require('./services/og/profile-card-data');
 
 const errorHandler = require('./middleware/errorHandler');
@@ -276,6 +277,7 @@ app.use('/api/sponsorships', apiLimiter, sponsorshipRoutes);
 app.use('/api/moderation', apiLimiter, moderationRoutes);
 app.use('/api/stories', apiLimiter, storyRoutes);
 app.use('/api/og', apiLimiter, ogRoutes);
+app.use('/api/security', apiLimiter, securityRoutes);
 app.use('/api/contact',    apiLimiter, require('./routes/contact'));
 app.use('/api/reports',    apiLimiter, require('./routes/reports'));
 app.use('/api/careers',    apiLimiter, require('./routes/careers'));

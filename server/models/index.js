@@ -35,6 +35,7 @@ const SavedListing = require('./SavedListing')(sequelize);
 const Inquiry = require('./Inquiry')(sequelize);
 const Story = require('./Story')(sequelize);
 const MarketplaceAnalyticsEvent = require('./MarketplaceAnalyticsEvent')(sequelize);
+const BreachIncident = require('./BreachIncident')(sequelize);
 
 // ─── ASSOCIATIONS ───
 
@@ -208,6 +209,7 @@ module.exports = {
   SavedListing,
   Inquiry,
   Story,
-  MarketplaceAnalyticsEvent
+  MarketplaceAnalyticsEvent,
+  BreachIncident
 };
 

@@ -279,6 +279,22 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(128),
       allowNull: true,
       unique: true
+    },
+    ageVerificationRequired: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      comment: 'True if user is underage or age unverified'
+    },
+    ageVerificationStatus: {
+      type: DataTypes.ENUM('pending', 'verified', 'failed'),
+      allowNull: true,
+      comment: 'Age verification status (null = not required/skipped)'
+    },
+    ageVerificationRequestedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Timestamp when admin requested age verification'
     }
   }, {
     tableName: 'users',
