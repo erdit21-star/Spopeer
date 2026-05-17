@@ -25,18 +25,7 @@
     .spinner{width:32px;height:32px;border:3px solid #e8e8e4;border-top-color:#001f3f;border-radius:50%;animation:spin .7s linear infinite;margin:16px auto 0}
     @keyframes spin{to{transform:rotate(360deg)}}
   </style>
-  <script>
-    (function(){
-      var ud = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('spopeerUser') || localStorage.getItem('user') || 'null');
-      var li = localStorage.getItem('spopeer_loggedIn') === 'true' || !!ud || !!(localStorage.getItem('spopeer_token') || localStorage.getItem('spopeerToken') || localStorage.getItem('token'));
-      if (!ud || !li) { window.location.replace('../../pages/auth/login.html'); return; }
-      if (!ud.userType || ud.userType !== 'coach') {
-        ud.userType = 'coach';
-        localStorage.setItem('spopeer_user', JSON.stringify(ud));
-      }
-      window.location.replace('edit-profile.html?role=coach&onboarding=1');
-    })();
-  </script>
+  <script src="/js/inline/pages-profiles-coach-profile-inline-1.js"></script>
   <link rel="stylesheet" href="/css/fonts.css">
 
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
@@ -53,12 +42,7 @@
 <script src="/js/navigation.js"></script>
 <script src="/js/current-user-store.js"></script>
 <script src="/js/user-ui.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', async function () {
-    if (window.CurrentUserStore) await window.CurrentUserStore.refreshCurrentUser();
-    if (window.UserUI) window.UserUI.bindAllChips();
-  });
-</script>
+<script src="/js/inline/pages-profiles-coach-profile-inline-2.js"></script>
 </body>
 </html>
 

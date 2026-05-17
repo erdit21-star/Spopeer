@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Contact — Spopeer</title>
+  <title>Contact ï¿½ Spopeer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -306,7 +306,7 @@
         <div class="form-field">
           <label for="subject">Subject</label>
           <select id="subject" name="subject" required>
-            <option value="" disabled selected>Select a topic…</option>
+            <option value="" disabled selected>Select a topicï¿½</option>
             <option value="general">General enquiry</option>
             <option value="support">Account / technical support</option>
             <option value="partnership">Partnerships &amp; sponsorships</option>
@@ -319,7 +319,7 @@
 
         <div class="form-field">
           <label for="message">Message</label>
-          <textarea id="message" name="message" placeholder="Tell us how we can help…" required></textarea>
+          <textarea id="message" name="message" placeholder="Tell us how we can helpï¿½" required></textarea>
         </div>
 
         <button type="submit" class="btn-submit">
@@ -350,7 +350,7 @@
         <span class="logo-mark"><img src="/assets/images/logo-s.jpg" alt="Spopeer"></span>
         <span class="logo-text">Spopeer</span>
       </a>
-      <p>Connect. Share. Play. — The sports networking platform for athletes, coaches, clubs, and professionals.</p>
+      <p>Connect. Share. Play. ï¿½ The sports networking platform for athletes, coaches, clubs, and professionals.</p>
     </div>
 
     <div class="footer-links">
@@ -389,7 +389,7 @@
   </div>
 
   <div class="footer-bottom">
-    <p>© 2026 Sports For All. Spopeer — All rights reserved.</p>
+    <p>ï¿½ 2026 Sports For All. Spopeer ï¿½ All rights reserved.</p>
     <div class="footer-social">
       <a class="social-btn" href="../../pages/community/community.html" aria-label="Community"><i class="fa-solid fa-people-group"></i></a>
       <a class="social-btn" href="../../pages/community/reels.html" aria-label="Reels"><i class="fa-solid fa-circle-play"></i></a>
@@ -398,54 +398,7 @@
   </div>
 </footer>
 
-<script>
-function toggleMenu(){
-  const m=document.getElementById('mobileMenu');
-  const i=document.getElementById('menuIcon');
-  const open=m.classList.toggle('open');
-  i.className=open?'fa-solid fa-xmark':'fa-solid fa-bars';
-}
-
-document.getElementById('contactForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const f = this;
-  const firstName = f.firstName.value.trim();
-  const lastName  = f.lastName.value.trim();
-  const email     = f.email.value.trim();
-  const subject   = f.subject.value;
-  const message   = f.message.value.trim();
-
-  if(!firstName || !lastName || !email || !subject || !message){
-    if(window.SpopeerToast) SpopeerToast.warning('Please fill in all fields.');
-    return;
-  }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-    if(window.SpopeerToast) SpopeerToast.warning('Please enter a valid email address.');
-    return;
-  }
-
-  const submitBtn = f.querySelector('[type="submit"]');
-  const originalText = submitBtn ? submitBtn.textContent : '';
-  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
-
-  try {
-    const res = await fetch('/api/contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ firstName, lastName, email, subject, message })
-    });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.error || 'Failed to send message.');
-    f.style.display = 'none';
-    document.getElementById('formSuccess').style.display = 'flex';
-  } catch(err) {
-    if(window.SpopeerToast) SpopeerToast.error(err.message || 'Failed to send. Please try again.');
-    else alert(err.message || 'Failed to send. Please try again.');
-  } finally {
-    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = originalText; }
-  }
-});
-</script>
+<script src="/js/inline/pages-contact-index-inline-1.js"></script>
 <script src="/js/navigation.js"></script>
 </body>
 </html>
