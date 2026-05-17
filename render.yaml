@@ -21,9 +21,27 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: EMAIL_PREF_SECRET
+        generateValue: true
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: CONTACT_TO_EMAIL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RESEND_API_KEY
         sync: false
       - key: DB_POOL_MAX
         value: "10"
