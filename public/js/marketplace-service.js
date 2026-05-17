@@ -8,6 +8,20 @@ const MarketplaceService = {
   CACHE_KEY: 'marketplace_cache_',
   CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
 
+  getCookieConsent: function() {
+    try {
+      return JSON.parse(localStorage.getItem('spopeer_cookie_consent') || 'null');
+    } catch (_err) {
+      return null;
+    }
+  },
+
+  getAnalyticsConsentHeader: function() {
+    const consent = this.getCookieConsent();
+    const granted = !!(consent && consent.analytics === true);
+    return granted ? 'granted' : 'denied';
+  },
+
   unwrapResponse: function(response) {
     if (!response || typeof response !== 'object') return response;
     if (Array.isArray(response)) return response;
@@ -71,7 +85,11 @@ const MarketplaceService = {
       }
     }
 
-    const response = await fetch(`/api/marketplace/listings/${id}`);
+    const response = await fetch(`/api/marketplace/listings/${id}`, {
+      headers: {
+        'x-spopeer-analytics-consent': this.getAnalyticsConsentHeader()
+      }
+    });
     if (!response.ok) throw new Error('Listing not found');
     const data = await response.json();
 
@@ -177,7 +195,8 @@ const MarketplaceService = {
     const response = await fetch('/api/marketplace/inquiries', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-spopeer-analytics-consent': this.getAnalyticsConsentHeader()
       },
       credentials: 'include',
       body: JSON.stringify({

@@ -6,10 +6,12 @@
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isEmailConfigured = !!process.env.RESEND_API_KEY;
+const crypto = require('crypto');
 
 const APP_NAME = 'Spopeer';
 const BRAND_COLOR = '#001233';
 const FOOTER_TEXT = `&copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.`;
+const EMAIL_PREF_SECRET = process.env.EMAIL_PREF_SECRET || process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || 'dev-email-pref-secret';
 
 function assertEmailReady() {
   if (isProduction && !isEmailConfigured) {
@@ -185,12 +187,59 @@ async function sendSecurityAlertEmail(email, alertType, details) {
   });
 }
 
+function createEmailPreferenceToken(email, action = 'unsubscribe') {
+  const payload = {
+    email: String(email || '').trim().toLowerCase(),
+    action,
+    iat: Date.now()
+  };
+
+  const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto.createHmac('sha256', EMAIL_PREF_SECRET).update(encoded).digest('base64url');
+  return `${encoded}.${signature}`;
+}
+
+function verifyEmailPreferenceToken(token, expectedAction = 'unsubscribe', maxAgeMs = 365 * 24 * 60 * 60 * 1000) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) {
+    return null;
+  }
+
+  const [encoded, signature] = token.split('.');
+  const expectedSig = crypto.createHmac('sha256', EMAIL_PREF_SECRET).update(encoded).digest('base64url');
+
+  const provided = Buffer.from(signature || '', 'utf8');
+  const expected = Buffer.from(expectedSig, 'utf8');
+  if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'));
+    if (!payload || payload.action !== expectedAction || !payload.email || !payload.iat) {
+      return null;
+    }
+
+    if (Date.now() - Number(payload.iat) > maxAgeMs) {
+      return null;
+    }
+
+    return {
+      email: String(payload.email).trim().toLowerCase(),
+      action: payload.action
+    };
+  } catch (_err) {
+    return null;
+  }
+}
+
 module.exports = {
   sendEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendWelcomeEmail,
   sendSecurityAlertEmail,
+  createEmailPreferenceToken,
+  verifyEmailPreferenceToken,
   isEmailConfigured,
   assertEmailReady
 };

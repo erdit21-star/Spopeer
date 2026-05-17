@@ -70,6 +70,41 @@ const { authenticate } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
 
+const PAYMENT_SENSITIVE_KEYS = [
+  'cardnumber', 'card_number', 'ccnumber', 'creditcard', 'cvv', 'cvc',
+  'exp', 'expiry', 'expiration', 'iban', 'routingnumber', 'bankaccount', 'paymenttoken'
+];
+
+function normalizeKey(key) {
+  return String(key || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+}
+
+function hasRawPaymentData(value) {
+  if (!value || typeof value !== 'object') return false;
+  if (Array.isArray(value)) return value.some(hasRawPaymentData);
+
+  return Object.entries(value).some(([key, nested]) => {
+    const normalized = normalizeKey(key);
+    if (PAYMENT_SENSITIVE_KEYS.includes(normalized)) return true;
+    if (nested && typeof nested === 'object') return hasRawPaymentData(nested);
+    return false;
+  });
+}
+
+function hasAnalyticsConsent(req) {
+  const consentHeader = String(req.get('x-spopeer-analytics-consent') || req.query?.analytics_consent || '').toLowerCase();
+  return ['1', 'true', 'yes', 'granted'].includes(consentHeader);
+}
+
+function getReferrerHost(referrer) {
+  if (!referrer) return null;
+  try {
+    return new URL(referrer).host || null;
+  } catch (_err) {
+    return null;
+  }
+}
+
 // ─── SEARCH LISTINGS ───
 const { ok, created, fail } = require('../utils/response');
 router.get('/search', async (req, res) => {
@@ -186,6 +221,10 @@ router.post('/saved/:listingId', authenticate, async (req, res) => {
 // ─── CREATE INQUIRY ───
 router.post('/inquiries', authenticate, async (req, res) => {
   try {
+    if (hasRawPaymentData(req.body)) {
+      return fail(res, 400, 'PAYMENT_DATA_FORBIDDEN', 'Raw payment card data is not accepted. Use a PCI-compliant payment provider.');
+    }
+
     const { listing_id, message } = req.body;
     if (!listing_id) {
       return fail(res, 400, 'VALIDATION', 'listing_id is required.');
@@ -205,6 +244,10 @@ router.post('/inquiries', authenticate, async (req, res) => {
 
     // Track inquiry event
     try {
+      if (!hasAnalyticsConsent(req)) {
+        return created(res, inquiry);
+      }
+
       const today = new Date().toISOString().split('T')[0];
       await MarketplaceAnalyticsEvent.create({
         listingId: listing_id,
@@ -348,6 +391,10 @@ router.get('/listings', async (req, res) => {
 // ─── CREATE LISTING ───
 router.post('/listings', authenticate, async (req, res) => {
   try {
+    if (hasRawPaymentData(req.body)) {
+      return fail(res, 400, 'PAYMENT_DATA_FORBIDDEN', 'Raw payment card data is not accepted. Use a PCI-compliant payment provider.');
+    }
+
     const { title, description, price, currency, category, sport, listingType, imageUrls } = req.body;
     if (!title) return fail(res, 400, 'VALIDATION', 'Title is required.');
 
@@ -383,6 +430,10 @@ router.get('/listings/:id', async (req, res) => {
 
     // Track analytics event
     try {
+      if (!hasAnalyticsConsent(req)) {
+        return ok(res, listing);
+      }
+
       const today = new Date().toISOString().split('T')[0];
       await MarketplaceAnalyticsEvent.create({
         listingId: listing.id,
@@ -390,8 +441,7 @@ router.get('/listings/:id', async (req, res) => {
         eventType: 'view',
         eventDate: today,
         metadata: {
-          userAgent: req.get('user-agent'),
-          referer: req.get('referer')
+          referrerHost: getReferrerHost(req.get('referer'))
         }
       });
     } catch (analyticsErr) {
@@ -408,6 +458,10 @@ router.get('/listings/:id', async (req, res) => {
 // ─── UPDATE LISTING ───
 router.patch('/listings/:id', authenticate, async (req, res) => {
   try {
+    if (hasRawPaymentData(req.body)) {
+      return fail(res, 400, 'PAYMENT_DATA_FORBIDDEN', 'Raw payment card data is not accepted. Use a PCI-compliant payment provider.');
+    }
+
     const listing = await Listing.findByPk(req.params.id);
     if (!listing) return fail(res, 404, 'NOT_FOUND', 'Listing not found.');
     if (listing.sellerId !== req.userId) return fail(res, 403, 'FORBIDDEN', 'Not authorized.');

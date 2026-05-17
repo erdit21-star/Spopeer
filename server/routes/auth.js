@@ -29,7 +29,13 @@ const {
   validatePassword,
   ALLOWED_ROLES
 } = require('../utils/validation');
-const { sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail, sendSecurityAlertEmail } = require('../services/email');
+const {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+  sendWelcomeEmail,
+  sendSecurityAlertEmail,
+  verifyEmailPreferenceToken
+} = require('../services/email');
 const { Op } = require('sequelize');
 const { config: env } = require('../config/env');
 const { issueCsrfToken, csrfProtection } = require('../middleware/csrf');
@@ -571,6 +577,54 @@ router.post('/change-password', authenticate, requireCsrf, validate(changePasswo
   } catch (error) {
     console.error('[CHANGE-PASSWORD] Error:', { message: error && error.message, stack: error && error.stack, requestId: req.requestId });
     return fail(res, 500, 'SERVER_ERROR', 'Failed to change password.');
+  }
+});
+
+// ─── EMAIL MARKETING PREFERENCES ───
+router.post('/marketing-preferences', authenticate, requireCsrf, async (req, res) => {
+  try {
+    const marketingEmails = req.body?.marketingEmails;
+    if (typeof marketingEmails !== 'boolean') {
+      return fail(res, 400, 'VALIDATION', 'marketingEmails must be a boolean.');
+    }
+
+    const updates = {
+      marketingConsentAt: marketingEmails ? (req.user?.marketingConsentAt || new Date()) : null
+    };
+
+    await User.update(updates, { where: { id: req.userId } });
+    return ok(res, {
+      marketingEmails,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('[MARKETING-PREFERENCES] Error:', { message: error && error.message, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to update marketing preferences.');
+  }
+});
+
+// ─── ONE-CLICK UNSUBSCRIBE ───
+router.get('/unsubscribe', async (req, res) => {
+  try {
+    const token = String(req.query?.token || '');
+    const verified = verifyEmailPreferenceToken(token, 'unsubscribe');
+    if (!verified || !verified.email) {
+      return fail(res, 400, 'TOKEN_INVALID', 'Unsubscribe link is invalid or expired.');
+    }
+
+    const user = await User.findOne({ where: { email: verified.email }, attributes: ['id', 'email', 'marketingConsentAt'] });
+    if (!user) {
+      return ok(res, { message: 'You have been unsubscribed from marketing emails.' });
+    }
+
+    if (user.marketingConsentAt) {
+      await user.update({ marketingConsentAt: null });
+    }
+
+    return ok(res, { message: 'You have been unsubscribed from marketing emails.' });
+  } catch (error) {
+    console.error('[UNSUBSCRIBE] Error:', { message: error && error.message, requestId: req.requestId });
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to process unsubscribe request.');
   }
 });
 
