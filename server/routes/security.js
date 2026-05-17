@@ -15,11 +15,12 @@ const { BreachIncident, User } = require('../models');
 const { ok, created, fail } = require('../utils/response');
 const { csrfProtection } = require('../middleware/csrf');
 const { sendSecurityAlertEmail } = require('../services/email');
+const { handleError, handleValidationError, handleNotFoundError, handleForbiddenError } = require('../utils/errorHandler');
 
 // Middleware to require admin access
 const adminOnly = (req, res, next) => {
   if (!req.user || req.user.role !== 'admin') {
-    return fail(res, 403, 'FORBIDDEN', 'Admin access required.');
+    return handleForbiddenError(res, req, 'Admin access required.');
   }
   next();
 };
@@ -38,8 +39,7 @@ router.post('/report-breach', authenticate, csrfProtection(), adminOnly, async (
 
     // Validate required fields
     if (!incidentType || !severity || !description || !detectedAt) {
-      return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS',
-        'incidentType, severity, description, and detectedAt are required.');
+      return handleValidationError(res, req, 'incidentType, severity, description, and detectedAt are required.');
     }
 
     const validIncidentTypes = [
@@ -49,10 +49,10 @@ router.post('/report-breach', authenticate, csrfProtection(), adminOnly, async (
     const validSeverities = ['low', 'medium', 'high', 'critical'];
 
     if (!validIncidentTypes.includes(incidentType)) {
-      return fail(res, 400, 'VALIDATION', `Invalid incidentType: ${validIncidentTypes.join(', ')}`);
+      return handleValidationError(res, req, `Invalid incidentType: ${validIncidentTypes.join(', ')}`);
     }
     if (!validSeverities.includes(severity)) {
-      return fail(res, 400, 'VALIDATION', `Invalid severity: ${validSeverities.join(', ')}`);
+      return handleValidationError(res, req, `Invalid severity: ${validSeverities.join(', ')}`);
     }
 
     const breach = await BreachIncident.create({
@@ -70,8 +70,10 @@ router.post('/report-breach', authenticate, csrfProtection(), adminOnly, async (
       incident: breach
     });
   } catch (error) {
-    console.error('[REPORT-BREACH] Error:', { message: error && error.message, requestId: req.requestId });
-    return fail(res, 500, 'SERVER_ERROR', 'Failed to report breach.');
+    return handleError(res, req, error, 'report_breach_error', {
+      code: 'SERVER_ERROR',
+      message: 'Failed to report breach.'
+    });
   }
 });
 
@@ -95,8 +97,10 @@ router.get('/breaches', authenticate, adminOnly, async (req, res) => {
       total: incidents.length
     });
   } catch (error) {
-    console.error('[LIST-BREACHES] Error:', { message: error && error.message, requestId: req.requestId });
-    return fail(res, 500, 'SERVER_ERROR', 'Failed to retrieve breach incidents.');
+    return handleError(res, req, error, 'list_breaches_error', {
+      code: 'SERVER_ERROR',
+      message: 'Failed to retrieve breach incidents.'
+    });
   }
 });
 
@@ -108,7 +112,7 @@ router.put('/breaches/:id', authenticate, csrfProtection(), adminOnly, async (re
 
     const breach = await BreachIncident.findByPk(id);
     if (!breach) {
-      return fail(res, 404, 'NOT_FOUND', 'Breach incident not found.');
+      return handleNotFoundError(res, req, 'Breach incident');
     }
 
     const updates = {};
@@ -125,8 +129,10 @@ router.put('/breaches/:id', authenticate, csrfProtection(), adminOnly, async (re
       incident: breach
     });
   } catch (error) {
-    console.error('[UPDATE-BREACH] Error:', { message: error && error.message, requestId: req.requestId });
-    return fail(res, 500, 'SERVER_ERROR', 'Failed to update breach incident.');
+    return handleError(res, req, error, 'update_breach_error', {
+      code: 'SERVER_ERROR',
+      message: 'Failed to update breach incident.'
+    });
   }
 });
 
@@ -136,12 +142,12 @@ router.post('/notify-breach', authenticate, csrfProtection(), adminOnly, async (
     const { incidentId, userIds, customMessage } = req.body;
 
     if (!incidentId) {
-      return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'incidentId is required.');
+      return handleValidationError(res, req, 'incidentId is required.');
     }
 
     const breach = await BreachIncident.findByPk(incidentId);
     if (!breach) {
-      return fail(res, 404, 'NOT_FOUND', 'Breach incident not found.');
+      return handleNotFoundError(res, req, 'Breach incident');
     }
 
     // Determine which users to notify
@@ -162,7 +168,7 @@ router.post('/notify-breach', authenticate, csrfProtection(), adminOnly, async (
     }
 
     if (usersToNotify.length === 0) {
-      return fail(res, 400, 'NO_USERS', 'No users found to notify.');
+      return handleValidationError(res, req, 'No users found to notify.');
     }
 
     // Send breach notification emails (fire-and-forget)
@@ -207,8 +213,10 @@ router.post('/notify-breach', authenticate, csrfProtection(), adminOnly, async (
       incidentId: breach.id
     });
   } catch (error) {
-    console.error('[NOTIFY-BREACH] Error:', { message: error && error.message, requestId: req.requestId });
-    return fail(res, 500, 'SERVER_ERROR', 'Failed to send breach notifications.');
+    return handleError(res, req, error, 'notify_breach_error', {
+      code: 'SERVER_ERROR',
+      message: 'Failed to send breach notifications.'
+    });
   }
 });
 
