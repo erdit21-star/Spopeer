@@ -990,19 +990,10 @@ router.post('/google', googleLimiter, async (req, res) => {
       return fail(res, 403, 'ACCOUNT_INACTIVE', 'This account has been deactivated.');
     }
 
-    // Create refresh token immediately; persist session after response.
+    // Generate tokens.
     const refreshToken = generateRefreshToken(user);
     const refreshTokenHash = sha256(refreshToken);
-
-    // Generate access token
     const accessToken = generateAccessToken(user);
-
-    // Set cookies
-    res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
-    res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
-
-    // Issue CSRF token
-    issueCsrfToken(req, res);
 
     // Send curated user object (no passwords, tokens, or internal fields)
     const curatedUser = {
@@ -1015,13 +1006,15 @@ router.post('/google', googleLimiter, async (req, res) => {
       user: curatedUser
     };
 
-    // Persist refresh session before responding — mandatory for stable sessions
+    // Persist refresh session first. Do not set cookies unless this succeeds.
     try {
       await withRetries(
         () => withTimeout(
           RefreshSession.create({
             userId: user.id,
             tokenHash: refreshTokenHash,
+            userAgent: req.get('user-agent') || null,
+            ipAddress: req.ip,
             expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
           }),
           authDbTimeoutMs,
@@ -1034,6 +1027,11 @@ router.post('/google', googleLimiter, async (req, res) => {
       console.error('[GOOGLE_AUTH] RefreshSession.create failed — aborting login:', sessionErr && sessionErr.message ? sessionErr.message : sessionErr);
       return fail(res, 503, 'SESSION_UNAVAILABLE', 'Sign-in succeeded but session could not be stored. Please try again.');
     }
+
+    // Session is persisted: now set auth cookies and CSRF token.
+    res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
+    res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+    issueCsrfToken(req, res);
 
     ok(res, responsePayload);
     return;

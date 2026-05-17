@@ -113,8 +113,9 @@ function initSocket(httpServer) {
           return;
         }
 
-        // Validate inputs
-        if (!receiverId || typeof receiverId !== 'number') {
+        // Validate and normalize receiverId from socket payload (often arrives as string)
+        const parsedReceiverId = parseInt(receiverId, 10);
+        if (!Number.isFinite(parsedReceiverId) || parsedReceiverId <= 0) {
           socket.emit('error_message', { error: 'Invalid receiverId.' });
           return;
         }
@@ -129,18 +130,18 @@ function initSocket(httpServer) {
           return;
         }
 
-        if (receiverId === userId) {
+        if (parsedReceiverId === userId) {
           socket.emit('error_message', { error: 'Cannot message yourself.' });
           return;
         }
 
         const { Message, Notification, User } = require('../models');
         const { findOrCreateDirectConversation } = require('../utils/conversations');
-        const conversation = await findOrCreateDirectConversation(userId, receiverId);
+        const conversation = await findOrCreateDirectConversation(userId, parsedReceiverId);
         const msg = await Message.create({
           conversationId: conversation.id,
           senderId: userId,
-          receiverId,
+          receiverId: parsedReceiverId,
           body: trimmedContent,
           content: trimmedContent
         });
@@ -153,13 +154,13 @@ function initSocket(httpServer) {
             ? (sender.displayName || [sender.firstName, sender.lastName].filter(Boolean).join(' '))
             : 'Someone';
           const notification = await Notification.create({
-            recipientId: receiverId,
+            recipientId: parsedReceiverId,
             senderId: userId,
             type: 'message',
             text: `${senderName || 'Someone'} sent you a message.`,
             href: '/pages/messaging/inbox.html'
           });
-          io.to(`user:${receiverId}`).emit('notification:new', {
+          io.to(`user:${parsedReceiverId}`).emit('notification:new', {
             id: notification.id,
             recipientId: notification.recipientId,
             senderId: notification.senderId,
@@ -175,11 +176,11 @@ function initSocket(httpServer) {
         }
 
         // Deliver to receiver if online
-        io.to(`user:${receiverId}`).emit('new_message', {
+        io.to(`user:${parsedReceiverId}`).emit('new_message', {
           id: msg.id,
           conversationId: conversation.id,
           fromId: userId,
-          toId: receiverId,
+          toId: parsedReceiverId,
           senderId: userId,
           content: trimmedContent,
           timestamp: msg.createdAt
@@ -196,19 +197,17 @@ function initSocket(httpServer) {
     // Typing indicator
     socket.on('typing', ({ receiverId }) => {
       if (isRateLimited(userId)) return;
-      if (receiverId && typeof receiverId === 'number') {
-        io.to(`user:${receiverId}`).emit('user_typing', { userId });
+      const parsedReceiverId = parseInt(receiverId, 10);
+      if (Number.isFinite(parsedReceiverId) && parsedReceiverId > 0) {
+        io.to(`user:${parsedReceiverId}`).emit('user_typing', { userId });
       }
     });
 
     socket.on('stop_typing', ({ receiverId }) => {
-      if (receiverId && typeof receiverId === 'number') {
-        io.to(`user:${receiverId}`).emit('user_stop_typing', { userId });
+      const parsedReceiverId = parseInt(receiverId, 10);
+      if (Number.isFinite(parsedReceiverId) && parsedReceiverId > 0) {
+        io.to(`user:${parsedReceiverId}`).emit('user_stop_typing', { userId });
       }
-    });
-
-    socket.on('disconnect', () => {
-      console.log(`🔌 User ${userId} disconnected`);
     });
   });
 

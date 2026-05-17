@@ -26,7 +26,7 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: DB_POOL_MAX
-        value: "3"
+        value: "10"
       - key: DB_POOL_MIN
         value: "0"
       - key: DB_POOL_ACQUIRE
@@ -43,18 +43,3 @@ services:
         value: "1"
       - key: AUTH_DB_OP_RETRIES
         value: "1"
-
-  - type: cron
-    name: spopeer-migrate
-    runtime: node
-    rootDir: server
-    schedule: "0 3 * * *"
-    buildCommand: npm install --omit=dev
-    startCommand: npx sequelize-cli db:migrate --env production
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_DIRECT_URL
-        sync: false
-      - key: DATABASE_URL
-        sync: false

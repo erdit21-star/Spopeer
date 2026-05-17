@@ -35,7 +35,7 @@ const commonOpts = {
   dialect: 'postgres',
   logging: env.nodeEnv === 'development' ? console.log : false,
   pool: {
-    max: isProduction ? 3 : 10,
+    max: isProduction ? 10 : 10,
     min: 0,
     acquire: 10000,
     idle: 5000,
