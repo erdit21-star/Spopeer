@@ -32,6 +32,9 @@ function mockCreateFakeUser(data) {
     isActive: data.isActive !== undefined ? data.isActive : true,
     emailVerified: data.emailVerified || false,
     emailVerifyToken: data.emailVerifyToken || null,
+    privacyPolicyAcceptedAt: data.privacyPolicyAccepted ? new Date() : null,
+    termsOfServiceAcceptedAt: data.termsOfServiceAccepted ? new Date() : null,
+    marketingConsentAt: data.marketingConsent ? new Date() : null,
     avatarUrl: null,
     lastLogin: null,
     toJSON() {
@@ -162,7 +165,10 @@ describe('Auth Integration', () => {
           password: 'StrongPass123!',
           firstName: 'Test',
           lastName: 'User',
-          role: 'athlete'
+          role: 'athlete',
+          privacyPolicyAccepted: true,
+          termsOfServiceAccepted: true,
+          marketingConsent: false
         });
 
       expect([200, 201]).toContain(res.statusCode);
@@ -198,7 +204,10 @@ describe('Auth Integration', () => {
           email: 'test2@example.com',
           password: 'short',
           firstName: 'Test',
-          lastName: 'User'
+          lastName: 'User',
+          privacyPolicyAccepted: true,
+          termsOfServiceAccepted: true,
+          marketingConsent: false
         });
 
       expect(res.statusCode).toBe(400);
@@ -214,7 +223,10 @@ describe('Auth Integration', () => {
           email: 'dup@example.com',
           password: 'StrongPass123!',
           firstName: 'Test',
-          lastName: 'User'
+          lastName: 'User',
+          privacyPolicyAccepted: true,
+          termsOfServiceAccepted: true,
+          marketingConsent: false
         });
 
       expect(res.statusCode).toBe(409);
@@ -229,7 +241,10 @@ describe('Auth Integration', () => {
           password: 'StrongPass123!',
           firstName: 'Admin',
           lastName: 'User',
-          role: 'admin'
+          role: 'admin',
+          privacyPolicyAccepted: true,
+          termsOfServiceAccepted: true,
+          marketingConsent: false
         });
 
       expect(res.statusCode).toBe(403);

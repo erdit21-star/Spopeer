@@ -85,6 +85,9 @@ async function signupUser(overrides = {}) {
       firstName: 'DB',
       lastName: 'Tester',
       role: 'athlete',
+      privacyPolicyAccepted: true,
+      termsOfServiceAccepted: true,
+      marketingConsent: false,
       ...overrides
     });
   return { res, email };
