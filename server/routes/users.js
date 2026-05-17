@@ -11,7 +11,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { User, Post, Connection, Comment, Like, Message, SavedPost, Notification, Report, Block } = require('../models');
+const { User, Post, Connection, Comment, Like, Message, SavedPost, Notification, Report, Block, Thread, Reply, Reel, Story, Sponsorship, PasswordResetToken, Media, RefreshSession, MarketplaceAnalyticsEvent, GroupMember, ConversationParticipant, EventResponse, AdminAuditLog, Group, Event, SavedListing, Inquiry } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { csrfProtection } = require('../middleware/csrf');
 const { uploadAvatar, uploadCover, persistFile, validateUploadedFile } = require('../middleware/upload');
@@ -367,23 +367,44 @@ router.delete('/me', authenticate, async (req, res) => {
     const user = await User.findByPk(userId);
     if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
 
-    // Delete user-owned data in order (foreign key safety)
+    // Phase 1: Delete direct user references (non-cascade dependencies)
     await Promise.all([
       Notification.destroy({ where: { [Op.or]: [{ userId }, { actorId: userId }] } }),
       SavedPost.destroy({ where: { userId } }),
+      SavedListing.destroy({ where: { userId } }),
       Like.destroy({ where: { userId } }),
       Comment.destroy({ where: { userId } }),
       Report.destroy({ where: { reporterId: userId } }),
-      Block.destroy({ where: { [Op.or]: [{ blockerId: userId }, { blockedId: userId }] } })
+      Block.destroy({ where: { [Op.or]: [{ blockerId: userId }, { blockedId: userId }] } }),
+      Message.destroy({ where: { [Op.or]: [{ senderId: userId }, { receiverId: userId }] } }),
+      Connection.destroy({ where: { [Op.or]: [{ followerId: userId }, { followingId: userId }] } }),
+      PasswordResetToken.destroy({ where: { userId } }),
+      RefreshSession.destroy({ where: { userId } }),
+      MarketplaceAnalyticsEvent.destroy({ where: { userId } }),
+      GroupMember.destroy({ where: { userId } }),
+      ConversationParticipant.destroy({ where: { userId } }),
+      EventResponse.destroy({ where: { userId } }),
+      AdminAuditLog.destroy({ where: { [Op.or]: [{ userId }, { actorId: userId }] } })
     ]);
 
-    await Post.destroy({ where: { userId } });
-    await Message.destroy({ where: { [Op.or]: [{ senderId: userId }, { receiverId: userId }] } });
-    await Connection.destroy({ where: { [Op.or]: [{ followerId: userId }, { followingId: userId }] } });
+    // Phase 2: Delete user-created content
+    await Promise.all([
+      Post.destroy({ where: { userId } }),
+      Thread.destroy({ where: { userId } }),
+      Reply.destroy({ where: { userId } }),
+      Reel.destroy({ where: { userId } }),
+      Story.destroy({ where: { userId } }),
+      Sponsorship.destroy({ where: { userId } }),
+      Media.destroy({ where: { userId } }),
+      Group.destroy({ where: { createdBy: userId } }),
+      Event.destroy({ where: { createdBy: userId } }),
+      Inquiry.destroy({ where: { userId } })
+    ]);
 
+    // Phase 3: Delete user account
     await user.destroy();
 
-    ok(res, { message: 'Account and associated data deleted.' });
+    ok(res, { message: 'Account and all associated data permanently deleted per GDPR right to erasure.' });
   } catch (error) {
     console.error('Account deletion error:', error);
     fail(res, 500, 'SERVER_ERROR', 'Failed to delete account.');
