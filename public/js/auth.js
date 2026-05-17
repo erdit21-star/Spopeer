@@ -248,13 +248,10 @@ const Auth = {
 
       return null;
     } catch (err) {
-      if (err && err.code === 'UNAUTHORIZED') {
-        localStorage.removeItem(this.userKey);
-        localStorage.removeItem("user");
-        localStorage.removeItem("spopeer_loggedIn");
-      } else {
-        console.warn("[Spopeer] Backend user sync failed.", err);
-      }
+      // Never clear local auth state in a background sync — only requireAuth() should enforce
+      // authentication gates. Clearing here causes false logouts when the access token has
+      // just expired (401) but the refresh token is still valid or the network is momentarily slow.
+      console.debug("[Spopeer] Background user sync failed — keeping local session state.", err);
       return null;
     }
   }

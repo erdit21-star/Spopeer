@@ -32,10 +32,17 @@
       try {
         const user = await window.CurrentUserStore.refreshCurrentUser();
         if (user) return true;
+        // refreshCurrentUser returned null — the API call failed (expired token, network error, etc.).
+        // Fall back to local state before hard-redirecting: the auto-refresh in api.js may have
+        // already renewed the token, and local storage may still hold a valid user.
+        if (isLoggedIn()) return true;
       } catch (err) { console.debug('auth-guard: CurrentUserStore check failed', err); }
-      clearLocalAuth();
-      window.location.href = loginPath;
-      return false;
+      if (!isLoggedIn()) {
+        clearLocalAuth();
+        window.location.href = loginPath;
+        return false;
+      }
+      return true;
     }
     // Guard: api.js may not yet be loaded when requireAuth is called early in a page head.
     if (!window.SpopeerAPI) {
@@ -75,8 +82,12 @@
       // Also verify with the server in case the session expired server-side.
       if (window.SpopeerAPI && typeof window.SpopeerAPI.me === 'function') {
         window.SpopeerAPI.me().catch(function () {
-          clearLocalAuth();
-          window.location.replace('/pages/auth/login.html');
+          // api.js already attempted an auto-refresh before this error reached us.
+          // Only redirect if local state is also gone — avoid false logout on transient failures.
+          if (!isLoggedIn()) {
+            clearLocalAuth();
+            window.location.replace('/pages/auth/login.html');
+          }
         });
       }
     }

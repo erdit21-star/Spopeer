@@ -127,8 +127,15 @@
   }
 
   function logout() {
+    // Prefer SpopeerAPI.logout() so the server-side cookie is also cleared.
+    if (window.SpopeerAPI && typeof window.SpopeerAPI.logout === 'function') {
+      try {
+        window.SpopeerAPI.logout();
+        return; // SpopeerAPI.logout() handles clear + redirect
+      } catch (e) { /* fall through to manual clear */ }
+    }
     try {
-      // Clear local storage
+      // Fallback: clear local storage and redirect
       localStorage.removeItem('spopeer_user');
       localStorage.removeItem('spopeerUser');
       localStorage.removeItem('user');
@@ -137,12 +144,10 @@
       localStorage.removeItem('spopeer_session_id');
       localStorage.removeItem('_profileLastUpdated_');
 
-      // Clear session storage
       try {
         sessionStorage.clear();
       } catch (e) {}
 
-      // Redirect to login
       window.location.href = '/pages/auth/login.html?reason=session_expired';
     } catch (err) {
       console.error('Logout error:', err);
