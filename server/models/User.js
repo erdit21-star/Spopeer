@@ -260,6 +260,21 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: true
     },
+    privacyPolicyAcceptedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'GDPR: timestamp of privacy policy acceptance'
+    },
+    termsOfServiceAcceptedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'GDPR: timestamp of terms of service acceptance'
+    },
+    marketingConsentAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'GDPR: timestamp of marketing emails opt-in'
+    },
     googleId: {
       type: DataTypes.STRING(128),
       allowNull: true,

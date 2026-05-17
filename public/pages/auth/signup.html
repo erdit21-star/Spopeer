@@ -127,6 +127,37 @@
           <label>Secondary Sports</label>
           <input id="secondarySports" type="text" placeholder="Comma separated, for example Tennis, Swimming" />
         </div>
+        
+        <!-- GDPR Consent -->
+        <div style="margin: 20px 0; padding: 12px; background: #f8fafc; border-radius: 8px; font-size: 13px;">
+          <div style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-weight: 500;">
+              <input type="checkbox" id="privacyPolicyAccepted" required style="margin-top: 3px; cursor: pointer;">
+              <span>
+                I agree to the <a href="/pages/legal/privacy.html" target="_blank" style="color: #1d4ed8; text-decoration: none; font-weight: 600;">Privacy Policy</a> 
+                <span style="color: #ef4444;">*</span>
+              </span>
+            </label>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-weight: 500;">
+              <input type="checkbox" id="termsOfServiceAccepted" required style="margin-top: 3px; cursor: pointer;">
+              <span>
+                I agree to the <a href="/pages/legal/terms.html" target="_blank" style="color: #1d4ed8; text-decoration: none; font-weight: 600;">Terms of Service</a> 
+                <span style="color: #ef4444;">*</span>
+              </span>
+            </label>
+          </div>
+          <div>
+            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="marketingConsent" style="margin-top: 3px; cursor: pointer;">
+              <span style="color: #64748b;">
+                I'd like to receive marketing emails about sports opportunities and updates
+              </span>
+            </label>
+          </div>
+        </div>
+        
         <button type="submit" id="createAccountBtn" class="signup-btn">Create Account</button>
         <p class="card-footer">Already have an account? <a href="login.html">Log in</a></p>
       </form>

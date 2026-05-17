@@ -51,6 +51,11 @@
         const roleVal = role.value;
         let sport = sportSelect.value;
         if(sport === 'other') sport = customSportInput.value.trim();
+        
+        // GDPR Consent
+        const privacyAccepted = document.getElementById('privacyPolicyAccepted')?.checked || false;
+        const termsAccepted = document.getElementById('termsOfServiceAccepted')?.checked || false;
+        const marketingConsent = document.getElementById('marketingConsent')?.checked || false;
 
         if (errorBox) {
           errorBox.textContent = '';
@@ -64,6 +69,15 @@
           }
           return;
         }
+        
+        if(!privacyAccepted || !termsAccepted) {
+          if (errorBox) {
+            errorBox.textContent = 'You must accept the Privacy Policy and Terms of Service to sign up.';
+            errorBox.style.display = 'block';
+          }
+          return;
+        }
+        
         if(pass.length < 10) {
           if (errorBox) {
             errorBox.textContent = 'Password must be at least 10 characters.';
@@ -90,7 +104,10 @@
             lastName,
             role: roleVal,
             sport: sport || '',
-            profession: (document.getElementById('secondarySports')?.value || '').trim()
+            profession: (document.getElementById('secondarySports')?.value || '').trim(),
+            privacyPolicyAccepted: privacyAccepted,
+            termsOfServiceAccepted: termsAccepted,
+            marketingConsent: marketingConsent
           };
           const result = await window.SpopeerAPI.signup(payload);
           const user = (result.data && result.data.user) || result.user;

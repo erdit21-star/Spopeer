@@ -271,7 +271,11 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
       role: safeRole || 'athlete',
       sport: sport || null,
       profession: profession || null,
-      isActive: !requireEmailVerification
+      isActive: !requireEmailVerification,
+      // GDPR: Record consent timestamps
+      privacyPolicyAcceptedAt: new Date(),
+      termsOfServiceAcceptedAt: new Date(),
+      marketingConsentAt: req.body.marketingConsent ? new Date() : null
     });
 
     // Generate verification token and send email (optional — does not block signup)

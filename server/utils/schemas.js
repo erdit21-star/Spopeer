@@ -17,10 +17,12 @@ const signupSchema = z.object({
   password: z.string().min(10, 'Password must be at least 10 characters.').max(128),
   firstName: z.string().min(1, 'First name is required.').max(100),
   lastName: z.string().min(1, 'Last name is required.').max(100),
-  // Accept role as free-form string so route can normalize and enforce admin-blocking.
   role: z.string().max(50).optional(),
   sport: z.string().max(100).optional(),
-  profession: z.string().max(200).optional()
+  profession: z.string().max(200).optional(),
+  privacyPolicyAccepted: z.boolean().refine(val => val === true, 'You must accept the Privacy Policy to sign up.'),
+  termsOfServiceAccepted: z.boolean().refine(val => val === true, 'You must accept the Terms of Service to sign up.'),
+  marketingConsent: z.boolean().optional().default(false)
 });
 
 const loginSchema = z.object({
