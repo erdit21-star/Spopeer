@@ -37,6 +37,22 @@ async function applyExtendedMerge(user, updates) {
   return updates;
 }
 
+/**
+ * Unified profile update handler.
+ * Handles username uniqueness, extended profile merge, and normalization.
+ */
+async function updateProfileHandler(user, updates) {
+  if (updates.username) {
+    const existing = await User.findOne({ where: { username: updates.username } });
+    if (existing && existing.id !== user.id) {
+      throw new Error('Username is already taken.');
+    }
+  }
+  await applyExtendedMerge(user, updates);
+  await user.update(updates);
+  return normalizeUserUtil(user);
+}
+
 // ─── LIST USERS ───
 router.get('/', optionalAuth, async (req, res) => {
   try {
@@ -99,52 +115,34 @@ router.get('/me', authenticate, async (req, res) => {
 router.put('/me', authenticate, validate(profileUpdateSchema), async (req, res) => {
   try {
     const updates = pickAllowedUpdates(req.body.payload || req.body);
-
-    if (updates.username) {
-      const existing = await User.findOne({ where: { username: updates.username } });
-      if (existing && existing.id !== req.userId) {
-        return fail(res, 409, 'CONFLICT', 'Username is already taken.');
-      }
-    }
-
     const user = await User.findByPk(req.userId);
     if (!user) {
       return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
-
-    await applyExtendedMerge(user, updates);
-    await user.update(updates);
-    const normalized = normalizeUserUtil(user);
+    const normalized = await updateProfileHandler(user, updates);
     ok(res, { user: normalized, payload: normalized }, { message: 'Profile updated.' });
   } catch (error) {
     logger.error({ event: 'update_my_profile_error', message: error.message });
-    fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
+    const code = error.message.includes('already taken') ? 'CONFLICT' : 'SERVER_ERROR';
+    const status = code === 'CONFLICT' ? 409 : 500;
+    fail(res, status, code, error.message || 'Failed to update profile.');
   }
 });
 
 router.patch('/me', authenticate, validate(profileUpdateSchema), async (req, res) => {
   try {
     const updates = pickAllowedUpdates(req.body.payload || req.body);
-
-    if (updates.username) {
-      const existing = await User.findOne({ where: { username: updates.username } });
-      if (existing && existing.id !== req.userId) {
-        return fail(res, 409, 'CONFLICT', 'Username is already taken.');
-      }
-    }
-
     const user = await User.findByPk(req.userId);
     if (!user) {
       return fail(res, 404, 'NOT_FOUND', 'User not found.');
     }
-
-    await applyExtendedMerge(user, updates);
-    await user.update(updates);
-    const normalized = normalizeUserUtil(user);
+    const normalized = await updateProfileHandler(user, updates);
     ok(res, { user: normalized, payload: normalized }, { message: 'Profile updated.' });
   } catch (error) {
     logger.error({ event: 'patch_my_profile_error', message: error.message });
-    fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
+    const code = error.message.includes('already taken') ? 'CONFLICT' : 'SERVER_ERROR';
+    const status = code === 'CONFLICT' ? 409 : 500;
+    fail(res, status, code, error.message || 'Failed to update profile.');
   }
 });
 
@@ -210,25 +208,16 @@ router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res)
     }
 
     const updates = pickAllowedUpdates(req.body);
-
-    // Username uniqueness check
-    if (updates.username) {
-      const existing = await User.findOne({ where: { username: updates.username } });
-      if (existing && existing.id !== actingUserId) {
-        return fail(res, 409, 'CONFLICT', 'Username is already taken.');
-      }
-    }
-
     const user = await User.findByPk(req.params.id);
     if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
 
-    await applyExtendedMerge(user, updates);
-    await user.update(updates);
-
-    ok(res, { payload: normalizeUserUtil(user) }, { message: 'Profile updated.' });
+    const normalized = await updateProfileHandler(user, updates);
+    ok(res, { payload: normalized }, { message: 'Profile updated.' });
   } catch (error) {
     logger.error({ event: 'update_profile_error', message: error.message });
-    fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
+    const code = error.message.includes('already taken') ? 'CONFLICT' : 'SERVER_ERROR';
+    const status = code === 'CONFLICT' ? 409 : 500;
+    fail(res, status, code, error.message || 'Failed to update profile.');
   }
 });
 
@@ -281,22 +270,13 @@ async function saveProfileHandler(req, res) {
   try {
     const profileData = req.body.payload || req.body;
     const updates = pickAllowedUpdates(profileData);
-    const actingUserId = Number(req.userId || (req.user && req.user.id));
-
-    // Username uniqueness check
-    if (updates.username) {
-      const existing = await User.findOne({ where: { username: updates.username } });
-      if (existing && existing.id !== actingUserId) {
-        return fail(res, 409, 'CONFLICT', 'Username is already taken.');
-      }
-    }
-
-    await applyExtendedMerge(req.user, updates);
-    await req.user.update(updates);
-
-    ok(res, { payload: normalizeUserUtil(req.user) }, { message: 'Profile saved.' });
+    const normalized = await updateProfileHandler(req.user, updates);
+    ok(res, { payload: normalized }, { message: 'Profile saved.' });
   } catch (error) {
-    fail(res, 500, 'SERVER_ERROR', 'Failed to save profile.');
+    logger.error({ event: 'save_profile_error', message: error.message });
+    const code = error.message.includes('already taken') ? 'CONFLICT' : 'SERVER_ERROR';
+    const status = code === 'CONFLICT' ? 409 : 500;
+    fail(res, status, code, error.message || 'Failed to save profile.');
   }
 }
 
