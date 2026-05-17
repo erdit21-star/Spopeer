@@ -432,7 +432,6 @@
   const api = {
     API_BASE,
     buildUrl,
-    getToken,
     getUser,
     setUser,
     clearAuthStorage,

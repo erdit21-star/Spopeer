@@ -13,21 +13,15 @@ const express = require('express');
 const router = express.Router();
 const { User, Post, Connection, Comment, Like, Message, SavedPost, Notification, Report, Block, Thread, Reply, Reel, Story, Sponsorship, PasswordResetToken, Media, RefreshSession, MarketplaceAnalyticsEvent, GroupMember, ConversationParticipant, EventResponse, AdminAuditLog, Group, Event, SavedListing, Inquiry } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { csrfProtection } = require('../middleware/csrf');
 const { uploadAvatar, uploadCover, persistFile, validateUploadedFile } = require('../middleware/upload');
 const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
 const { profileUpdateSchema, validate } = require('../utils/schemas');
 const logger = require('../utils/logger');
-const { pickAllowedUpdates, normalizeUser: normalizeUserUtil, PROFILE_STRING_FIELDS, SYSTEM_FIELDS } = require('../utils/profileUtils');
-
-const PROFILE_JSON_FIELDS = ['stats', 'mediaLinks', 'sharingPreferences', 'visibility'];
-const PROFILE_DATE_FIELDS = ['dateOfBirth'];
-const PROFILE_BOOL_FIELDS = ['privacyPublic'];
+const { pickAllowedUpdates, normalizeUser: normalizeUserUtil } = require('../utils/profileUtils');
 
 const { ok, fail } = require('../utils/response');
 const { sanitizePublicProfile, sanitizeUserList } = require('../utils/privacy');
-const requireCsrf = csrfProtection();
 
 function handleUploadMiddleware(uploadMiddleware) {
   return uploadMiddleware;

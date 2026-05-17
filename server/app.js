@@ -72,6 +72,8 @@ const { authenticate } = require('./middleware/auth');
 const { requireAdmin } = require('./middleware/admin');
 const { createPerUserLimiter } = require('./middleware/perUserRateLimiter');
 const { csrfProtection } = require('./middleware/csrf');
+const { requestLoggerMiddleware } = require('./middleware/requestLogger');
+const { healthCheckMiddleware, readinessCheckMiddleware } = require('./middleware/healthCheck');
 
 const app = express();
 app.disable('x-powered-by');
@@ -253,6 +255,17 @@ app.use((req, res, next) => {
 // ─── STATIC FILES ───
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// ─── HEALTH & READINESS CHECKS ───
+app.get('/health', healthCheckMiddleware);
+app.get('/ready', readinessCheckMiddleware);
+app.get('/metrics', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    metrics
+  });
+});
 
 // ─── API ROUTES ───
 app.use('/api/auth', authRoutes);

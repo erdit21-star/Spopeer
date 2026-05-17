@@ -12,20 +12,6 @@ const multer = require('multer');
 const path = require('path');
 const { uploadToCloud, saveLocal, safeFilename, isCloudEnabled } = require('../services/cloudinary');
 
-// ── Magic-bytes signatures for content verification ──
-// Maps detected type to the set of accepted declared MIME types
-const MAGIC_SIGNATURES = [
-  { bytes: [0xFF, 0xD8, 0xFF],               mimes: ['image/jpeg', 'image/pjpeg'] },
-  { bytes: [0x89, 0x50, 0x4E, 0x47],         mimes: ['image/png'] },
-  { bytes: [0x47, 0x49, 0x46, 0x38],         mimes: ['image/gif'] },
-  { bytes: [0x52, 0x49, 0x46, 0x46],         mimes: ['image/webp'], extra: { offset: 8, value: [0x57, 0x45, 0x42, 0x50] } },
-  // MP4: ftyp box at offset 4
-  { bytes: null, mp4: true,                  mimes: ['video/mp4'] },
-  // WebM: EBML header
-  { bytes: [0x1A, 0x45, 0xDF, 0xA3],         mimes: ['video/webm'] },
-  // MOV: ftyp at offset 4 with 'qt  '
-  { bytes: null, mov: true,                  mimes: ['video/quicktime'] },
-];
 
 /**
  * Detect actual content type from buffer magic bytes.
