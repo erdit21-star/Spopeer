@@ -74,7 +74,7 @@ router.get('/', optionalAuth, async (req, res) => {
     const offset = (page - 1) * limit;
     const { rows: users, count } = await User.findAndCountAll({
       where,
-      attributes: { exclude: ['password', 'passwordHash'] },
+      attributes: { exclude: ['password'] },
       limit,
       offset,
       order: [['createdAt', 'DESC']]
@@ -171,13 +171,13 @@ router.get('/:id', optionalAuth, async (req, res) => {
     let user;
     if (/^\d+$/.test(param)) {
       user = await User.findByPk(param, {
-        attributes: { exclude: ['password', 'passwordHash'] }
+        attributes: { exclude: ['password'] }
       });
     } else {
       // Treat non-numeric param as email lookup
       user = await User.findOne({
         where: { email: param.toLowerCase(), isActive: true },
-        attributes: { exclude: ['password', 'passwordHash'] }
+        attributes: { exclude: ['password'] }
       });
     }
 
@@ -187,7 +187,6 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
     const payload = (typeof user.toJSON === 'function') ? user.toJSON() : { ...user };
     delete payload.password;
-    delete payload.passwordHash;
     if (payload.role && !payload.userType) payload.userType = payload.role;
 
     ok(res, payload);

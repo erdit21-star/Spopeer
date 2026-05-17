@@ -314,24 +314,12 @@ module.exports = (sequelize) => {
   });
 
   User.prototype.validatePassword = async function (password) {
-    const hash = this.password || this.getDataValue('passwordHash');
+    const hash = this.password;
     if (!hash) return false;
 
-    const isBcryptHash = typeof hash === 'string' && /^\$2[aby]\$\d{2}\$/.test(hash);
-
     try {
-      if (isBcryptHash) {
-        return await bcrypt.compare(password, hash);
-      }
-
-      // Legacy fallback for older rows that may still contain plain text
-      if (typeof hash === 'string' && password === hash) {
-        this.set('password', password);
-        await this.save({ hooks: true, silent: true });
-        return true;
-      }
-
-      return false;
+      // All modern passwords use bcrypt hashes
+      return await bcrypt.compare(password, hash);
     } catch (err) {
       console.error('[PASSWORD] Validation error:', err.message);
       return false;

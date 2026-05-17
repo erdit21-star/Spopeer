@@ -412,14 +412,6 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
       return fail(res, 403, 'ACCOUNT_DEACTIVATED', 'Account has been deactivated.');
     }
 
-    // Support legacy passwordHash column during migration transition
-    stage = 'password_prepare';
-    const storedHash = user.password || user.getDataValue('passwordHash');
-    if (!storedHash) {
-      console.error('[LOGIN] No password hash found for user:', user.email);
-      return fail(res, 500, 'ACCOUNT_MISCONFIGURED', 'Account password is misconfigured. Please reset your password.');
-    }
-
     stage = 'password_check';
     const validPassword = await user.validatePassword(password);
     if (!validPassword) {
