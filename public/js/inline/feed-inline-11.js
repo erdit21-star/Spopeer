@@ -227,15 +227,18 @@
     const bioInput = document.getElementById('onboardingBioInput');
     const avatarInput = document.getElementById('onboardingAvatarInput');
     const sportSelect = document.getElementById('onboardingPrimarySport');
-    if (modal) {
-      modal.classList.remove('visible');
-      modal.setAttribute('aria-hidden', 'true');
-      modal.style.display = 'none';
-      modal.style.pointerEvents = 'none';
+    const onboardingFlowEnabled = (window && window.SPOPEER_ENABLE_ONBOARDING_FLOW) === true;
+    if (!onboardingFlowEnabled) {
+      if (modal) {
+        modal.classList.remove('visible');
+        modal.setAttribute('aria-hidden', 'true');
+        modal.style.display = 'none';
+        modal.style.pointerEvents = 'none';
+      }
+      if (backdrop) backdrop.style.pointerEvents = 'none';
+      if (openBtn) openBtn.style.display = 'none';
+      return;
     }
-    if (backdrop) backdrop.style.pointerEvents = 'none';
-    if (openBtn) openBtn.style.display = 'none';
-    return;
 
     const user = getCurrentUser();
     if (bioInput) bioInput.value = user.bio || '';

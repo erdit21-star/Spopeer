@@ -936,7 +936,7 @@
     }
     localStorage.setItem('_profileLastUpdated_', String(normalized._profileUpdatedAt));
     if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
-      try { window.CurrentUserStore.setCurrentUser(normalized); } catch(e) {}
+      try { window.CurrentUserStore.setCurrentUser(normalized); } catch(e) { /* ignore store sync errors */ }
     }
   }
 

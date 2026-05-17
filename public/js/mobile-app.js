@@ -1,3 +1,4 @@
+/* eslint-disable no-empty */
 (function () {
   const $ = (selector) => document.querySelector(selector);
   const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, activeConversationTargetId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' }, notificationsState: { items: [], source: 'all', type: 'all', sort: 'newest', query: '' }, messageThreads: {} };

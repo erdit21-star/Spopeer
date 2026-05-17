@@ -133,6 +133,6 @@
           box.scrollTop=box.scrollHeight;
         }
       });
-    }catch(e){}
+    }catch(e){ /* ignore realtime socket init errors */ }
   }
 })();

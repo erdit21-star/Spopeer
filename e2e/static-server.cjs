@@ -2,8 +2,9 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const port = Number(process.argv[2] || process.env.PORT || 4173);
-const publicRoot = path.resolve(__dirname, '..', 'public');
+const proc = globalThis.process || { argv: [], env: {} };
+const port = Number(proc.argv[2] || proc.env.PORT || 4173);
+const publicRoot = path.resolve('public');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -60,5 +61,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(port, '127.0.0.1', () => {
-  console.log(`[playwright-static] Serving ${publicRoot} on http://127.0.0.1:${port}`);
+  if (globalThis.console && typeof globalThis.console.log === 'function') {
+    globalThis.console.log(`[playwright-static] Serving ${publicRoot} on http://127.0.0.1:${port}`);
+  }
 });

@@ -1,3 +1,4 @@
+/* eslint-disable no-empty */
 /* public/js/public-profile.js
  * Extracted from public-profile.html inline script.
  * Handles: tab switching, follow toggling, profile loading, card variants,

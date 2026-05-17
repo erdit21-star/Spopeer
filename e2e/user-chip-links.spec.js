@@ -43,8 +43,8 @@ const actionExpectations = {
 
 async function seedAuth(page) {
   await page.addInitScript((seedUser) => {
-    localStorage.setItem('spopeer_loggedIn', 'true');
-    localStorage.setItem('spopeer_user', JSON.stringify(seedUser));
+    globalThis.localStorage.setItem('spopeer_loggedIn', 'true');
+    globalThis.localStorage.setItem('spopeer_user', JSON.stringify(seedUser));
   }, viewer);
 }
 
@@ -112,7 +112,7 @@ test('user chip menu links stay valid from every page that renders the menu', as
       });
 
       const resolvedActions = await page.evaluate((actions) => {
-        const resolver = window.sharedUi && window.sharedUi.getProfileMenuActionUrl;
+        const resolver = globalThis.sharedUi && globalThis.sharedUi.getProfileMenuActionUrl;
         if (typeof resolver !== 'function') {
           return null;
         }

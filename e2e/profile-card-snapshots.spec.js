@@ -58,8 +58,8 @@ function makeProfile(role, overrides = {}) {
 
 async function seedAuth(page, user) {
   await page.addInitScript((seedUser) => {
-    localStorage.setItem('spopeer_loggedIn', 'true');
-    localStorage.setItem('spopeer_user', JSON.stringify(seedUser));
+    globalThis.localStorage.setItem('spopeer_loggedIn', 'true');
+    globalThis.localStorage.setItem('spopeer_user', JSON.stringify(seedUser));
   }, user);
 }
 
@@ -98,7 +98,6 @@ async function loadProfilePage(page, userId) {
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
 const roles = ['athlete', 'coach', 'club', 'supportive_professional'];
-const variants = ['card-stack', 'minimal-list', 'sports-card'];
 
 // Card-stack snapshots for each role
 for (const role of roles) {

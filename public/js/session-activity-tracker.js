@@ -146,7 +146,7 @@
 
       try {
         sessionStorage.clear();
-      } catch (e) {}
+      } catch (e) { /* ignore sessionStorage errors */ }
 
       window.location.href = '/pages/auth/login.html?reason=session_expired';
     } catch (err) {
@@ -188,7 +188,7 @@
       // On browser close, clear session
       try {
         localStorage.removeItem('spopeer_session_id');
-      } catch (e) {}
+      } catch (e) { /* ignore storage errors */ }
     });
   }
 

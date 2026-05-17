@@ -1,3 +1,4 @@
+/* eslint-disable no-empty */
 async function handleForgotPassword(event) {
       event.preventDefault();
 

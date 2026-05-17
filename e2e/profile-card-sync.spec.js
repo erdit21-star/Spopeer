@@ -13,8 +13,8 @@ function makeViewer(overrides = {}) {
 
 async function seedAuth(page, viewer) {
   await page.addInitScript((seedUser) => {
-    localStorage.setItem('spopeer_loggedIn', 'true');
-    localStorage.setItem('spopeer_user', JSON.stringify(seedUser));
+    globalThis.localStorage.setItem('spopeer_loggedIn', 'true');
+    globalThis.localStorage.setItem('spopeer_user', JSON.stringify(seedUser));
   }, viewer);
 }
 
@@ -224,7 +224,7 @@ test('viewing another profile ignores updates from current user', async ({ page 
   await expect(page.locator('#cardPosition')).toHaveText('Striker');
 
   await page.evaluate(() => {
-    window.dispatchEvent(new CustomEvent('profileSyncUpdated', {
+    globalThis.dispatchEvent(new CustomEvent('profileSyncUpdated', {
       detail: {
         profile: {
           id: 'viewer-1',
@@ -270,7 +270,7 @@ test('stale profile updates are ignored by timestamp guard', async ({ page }) =>
   const tsOld = tsNew - 500;
 
   await page.evaluate((ts) => {
-    window.dispatchEvent(new CustomEvent('profileSyncUpdated', {
+    globalThis.dispatchEvent(new CustomEvent('profileSyncUpdated', {
       detail: {
         profile: {
           id: 'stale-1',
@@ -289,7 +289,7 @@ test('stale profile updates are ignored by timestamp guard', async ({ page }) =>
   await expect(page.locator('#sport')).toHaveText('Tennis');
 
   await page.evaluate((ts) => {
-    window.dispatchEvent(new CustomEvent('profileSyncUpdated', {
+    globalThis.dispatchEvent(new CustomEvent('profileSyncUpdated', {
       detail: {
         profile: {
           id: 'stale-1',

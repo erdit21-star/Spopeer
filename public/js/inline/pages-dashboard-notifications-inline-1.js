@@ -127,7 +127,7 @@
             });
             renderNotifications(filter);
           }
-        } catch (_err) {}
+        } catch (_err) { /* ignore read-mark errors */ }
 
         if (n.href) window.location.href = n.href;
       });
@@ -153,7 +153,7 @@
         return Object.assign({}, item, { isRead: true, read: true });
       });
       renderNotifications(document.querySelector('.ftab.active')?.dataset.filter || 'all');
-    } catch (_err) {}
+    } catch (_err) { /* ignore mark-all failures */ }
   });
 
   (async function initNotificationsPage() {

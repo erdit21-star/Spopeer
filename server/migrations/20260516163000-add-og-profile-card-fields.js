@@ -25,7 +25,7 @@ module.exports = {
     for (const col of COLUMNS) {
       try {
         await queryInterface.sequelize.query(
-          `ALTER TABLE users ADD COLUMN IF NOT EXISTS \"${col.name}\" ${col.sql};`
+          `ALTER TABLE users ADD COLUMN IF NOT EXISTS "${col.name}" ${col.sql};`
         );
       } catch (err) {
         if (!(err.message && err.message.includes('already exists'))) {

@@ -41,7 +41,7 @@ function completeAuthNavigation(path) {
     : (String(requestedPath || '/mobile.html').charAt(0) === '/' ? String(requestedPath) : '/mobile.html');
   // Mobile browsers are unreliable with opener/popup close flows.
   // Always navigate the current tab to avoid ending on a blank white page.
-  try { localStorage.setItem('spopeer_google_auth_complete', String(Date.now())); } catch (_error) {}
+  try { localStorage.setItem('spopeer_google_auth_complete', String(Date.now())); } catch (_error) { /* ignore storage failures */ }
   window.location.assign(targetPath);
 }
 
@@ -120,7 +120,7 @@ function initGoogleLoginButton() {
           errBox.style.display = 'block';
         }
       });
-    } catch (_err) {}
+    } catch (_err) { /* ignore prompt observer errors */ }
 
     return true;
   }

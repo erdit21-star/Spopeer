@@ -114,7 +114,7 @@
       }
     }));
     if (window.CurrentUserStore) {
-      try { window.CurrentUserStore.setCurrentUser(savedUser); } catch(e) {}
+      try { window.CurrentUserStore.setCurrentUser(savedUser); } catch(e) { /* ignore store sync errors */ }
     }
     return savedUser;
   }
@@ -171,7 +171,7 @@
       const lastName = parts.slice(1).join(' ') || '';
       const savedUser = await persistProfile({ firstName, lastName, displayName: name }, 'settings-save');
       showToast('Account info saved!');
-      if (chipNm) chipNm.textContent = (savedUser.displayName || savedUser.firstName || 'User') || 'User';
+      if (chipNm) chipNm.textContent = (savedUser.displayName || savedUser.firstName || 'User');
       if (chipAv) {
         const initialsValue = (savedUser.displayName || name)
           .split(/\s+/)

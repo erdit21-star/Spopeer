@@ -1,6 +1,7 @@
 const { defineConfig } = require('@playwright/test');
 
-const PORT = process.env.PLAYWRIGHT_PORT || 4173;
+const proc = globalThis.process || { env: {} };
+const PORT = proc.env.PLAYWRIGHT_PORT || 4173;
 
 module.exports = defineConfig({
   testDir: './e2e',

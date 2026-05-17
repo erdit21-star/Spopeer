@@ -399,6 +399,11 @@ app.get('/api/ready', async (req, res) => {
   // Auth schema check (required for login to work in production)
   if (checks.database === 'ok') {
     try {
+      if (!sequelize || typeof sequelize.getQueryInterface !== 'function') {
+        checks.authSchema = process.env.NODE_ENV === 'production' ? 'fail' : 'warn';
+        if (process.env.NODE_ENV === 'production') ready = false;
+        throw new Error('query interface unavailable');
+      }
       const queryInterface = sequelize.getQueryInterface();
       const usersTable = await queryInterface.describeTable('users');
       const requiredUserColumns = ['id', 'email', 'password', 'role', 'isActive'];

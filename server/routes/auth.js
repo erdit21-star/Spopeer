@@ -45,6 +45,11 @@ function getRefreshSecret() {
   return process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
 }
 
+function isMissingEmailVerifyExpiryColumn(error) {
+  const msg = String((error && error.message) || '');
+  return /emailVerifyExpiresAt|email_verify_expires_at/i.test(msg);
+}
+
 // Do not enforce CSRF during unit tests to keep test requests simple
 const requireCsrf = isTest ? (req, res, next) => next() : csrfProtection();
 const {
@@ -270,11 +275,18 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
     let emailSent = null;
     try {
       const verifyToken = crypto.randomBytes(32).toString('hex');
-      await user.update({
-        emailVerifyToken: sha256(verifyToken),
-        emailVerifyExpiresAt: new Date(Date.now() + (Number.isFinite(emailVerifyTtlHours) ? emailVerifyTtlHours : 24) * 60 * 60 * 1000),
-        emailVerified: false
-      });
+      try {
+        await user.update({
+          emailVerifyToken: sha256(verifyToken),
+          emailVerifyExpiresAt: new Date(Date.now() + (Number.isFinite(emailVerifyTtlHours) ? emailVerifyTtlHours : 24) * 60 * 60 * 1000),
+          emailVerified: false
+        });
+      } catch (updateErr) {
+        if (!isMissingEmailVerifyExpiryColumn(updateErr)) {
+          throw updateErr;
+        }
+        await user.update({ emailVerifyToken: sha256(verifyToken), emailVerified: false });
+      }
       try {
         const emailRes = await sendVerificationEmail(user.email, verifyToken);
         emailSent = !!(emailRes && emailRes.success);
@@ -687,10 +699,17 @@ router.post('/resend-verification', forgotLimiter, async (req, res) => {
     }
 
     const verifyToken = crypto.randomBytes(32).toString('hex');
-    await user.update({
-      emailVerifyToken: sha256(verifyToken),
-      emailVerifyExpiresAt: new Date(Date.now() + (Number.isFinite(emailVerifyTtlHours) ? emailVerifyTtlHours : 24) * 60 * 60 * 1000)
-    });
+    try {
+      await user.update({
+        emailVerifyToken: sha256(verifyToken),
+        emailVerifyExpiresAt: new Date(Date.now() + (Number.isFinite(emailVerifyTtlHours) ? emailVerifyTtlHours : 24) * 60 * 60 * 1000)
+      });
+    } catch (updateErr) {
+      if (!isMissingEmailVerifyExpiryColumn(updateErr)) {
+        throw updateErr;
+      }
+      await user.update({ emailVerifyToken: sha256(verifyToken) });
+    }
 
     sendVerificationEmail(user.email, verifyToken).catch(err => {
       console.error('Failed to resend verification email:', err.message);
@@ -710,25 +729,40 @@ router.get('/verify', async (req, res) => {
     if (!token) return fail(res, 400, 'VALIDATION_REQUIRED_FIELDS', 'Token required.');
 
     const tokenHash = sha256(token);
-    const user = await User.findOne({
-      where: {
-        emailVerifyToken: tokenHash,
-        [Op.or]: [
-          { emailVerifyExpiresAt: null },
-          { emailVerifyExpiresAt: { [Op.gt]: new Date() } }
-        ]
+    let user;
+    try {
+      user = await User.findOne({
+        where: {
+          emailVerifyToken: tokenHash,
+          [Op.or]: [
+            { emailVerifyExpiresAt: null },
+            { emailVerifyExpiresAt: { [Op.gt]: new Date() } }
+          ]
+        }
+      });
+    } catch (lookupErr) {
+      if (!isMissingEmailVerifyExpiryColumn(lookupErr)) {
+        throw lookupErr;
       }
-    });
+      user = await User.findOne({ where: { emailVerifyToken: tokenHash } });
+    }
     if (!user) {
       return fail(res, 400, 'TOKEN_INVALID', 'Invalid or expired verification link.');
     }
 
-    await user.update({
-      isActive: true,
-      emailVerifyToken: null,
-      emailVerifyExpiresAt: null,
-      emailVerified: true
-    });
+    try {
+      await user.update({
+        isActive: true,
+        emailVerifyToken: null,
+        emailVerifyExpiresAt: null,
+        emailVerified: true
+      });
+    } catch (updateErr) {
+      if (!isMissingEmailVerifyExpiryColumn(updateErr)) {
+        throw updateErr;
+      }
+      await user.update({ isActive: true, emailVerifyToken: null, emailVerified: true });
+    }
 
     // Send welcome email and surface failures in production by appending a flag.
     let welcomeOk = null;
