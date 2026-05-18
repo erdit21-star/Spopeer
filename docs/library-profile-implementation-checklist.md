@@ -11,4 +11,4 @@
 - [x] Public profile About tab remains unchanged
 - [x] Public profile Media tab shows uploaded images/videos and supports filtering
 - [x] Public profile comments/reviews tab shows received comments and supports filtering
-- [ ] End-to-end smoke check completed for edited flows
+- [x] End-to-end smoke check completed for edited flows

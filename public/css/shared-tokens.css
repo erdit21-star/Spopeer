@@ -1,3 +1,5 @@
+@import url('/css/accessibility.css');
+
 /* Google button styles for CSP compliance */
 .google-btn {
   display: flex;
@@ -50,6 +52,24 @@
   --accent:       #001233;
   --accent-lt:    #cce7ff;
   --accent-hover: #002060;
+
+  /* ── Design system semantic tokens ── */
+  --color-primary: #1a6bff;
+  --color-secondary: #7d3c98;
+  --color-success: #2e7d32;
+  --color-warning: #f57c00;
+  --color-error: #d32f2f;
+  --color-info: #01579b;
+
+  /* ── 8px spacing scale ── */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+  --space-7: 64px;
 
   /* ── Colour palette ── */
   --blue:         #1a6bff;
