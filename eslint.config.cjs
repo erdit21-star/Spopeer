@@ -45,6 +45,23 @@ module.exports = [
     }
   },
   {
+    files: ["docs/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "commonjs",
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      "no-unused-vars": ["warn", {
+        varsIgnorePattern: "^_",
+        caughtErrorsIgnorePattern: "^_|^error$|^err$"
+      }],
+      "no-undef": "error"
+    }
+  },
+  {
     files: ["public/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,

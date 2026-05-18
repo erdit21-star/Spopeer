@@ -4,28 +4,45 @@
  */
 'use strict';
 
+async function hasColumn(queryInterface, tableName, columnName) {
+  const table = await queryInterface.describeTable(tableName);
+  return !!table[columnName];
+}
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('users', 'ageVerificationRequired', {
-      type: Sequelize.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    });
+    if (!(await hasColumn(queryInterface, 'users', 'ageVerificationRequired'))) {
+      await queryInterface.addColumn('users', 'ageVerificationRequired', {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+      });
+    }
 
-    await queryInterface.addColumn('users', 'ageVerificationStatus', {
-      type: Sequelize.ENUM('pending', 'verified', 'failed'),
-      allowNull: true
-    });
+    if (!(await hasColumn(queryInterface, 'users', 'ageVerificationStatus'))) {
+      await queryInterface.addColumn('users', 'ageVerificationStatus', {
+        type: Sequelize.ENUM('pending', 'verified', 'failed'),
+        allowNull: true
+      });
+    }
 
-    await queryInterface.addColumn('users', 'ageVerificationRequestedAt', {
-      type: Sequelize.DATE,
-      allowNull: true
-    });
+    if (!(await hasColumn(queryInterface, 'users', 'ageVerificationRequestedAt'))) {
+      await queryInterface.addColumn('users', 'ageVerificationRequestedAt', {
+        type: Sequelize.DATE,
+        allowNull: true
+      });
+    }
   },
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('users', 'ageVerificationRequired');
-    await queryInterface.removeColumn('users', 'ageVerificationStatus');
-    await queryInterface.removeColumn('users', 'ageVerificationRequestedAt');
+  down: async (queryInterface) => {
+    if (await hasColumn(queryInterface, 'users', 'ageVerificationRequired')) {
+      await queryInterface.removeColumn('users', 'ageVerificationRequired');
+    }
+    if (await hasColumn(queryInterface, 'users', 'ageVerificationStatus')) {
+      await queryInterface.removeColumn('users', 'ageVerificationStatus');
+    }
+    if (await hasColumn(queryInterface, 'users', 'ageVerificationRequestedAt')) {
+      await queryInterface.removeColumn('users', 'ageVerificationRequestedAt');
+    }
   }
 };
