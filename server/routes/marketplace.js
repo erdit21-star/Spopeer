@@ -195,8 +195,77 @@ router.get('/seller/:userId', async (req, res) => {
 
 // ─── TRENDING SEARCHES ───
 router.get('/trending-searches', async (_req, res) => {
-  // Placeholder — replace with real analytics later
-  ok(res, ['Football boots', 'Tennis racket', 'Gym equipment', 'Running shoes', 'Basketball']);
+  try {
+    const lookbackDays = 30;
+    const since = new Date();
+    since.setDate(since.getDate() - lookbackDays);
+
+    const [topListings, recentEvents] = await Promise.all([
+      Listing.findAll({
+        where: { status: 'active' },
+        attributes: ['id', 'title', 'category', 'sportTags', 'viewCount'],
+        order: [['viewCount', 'DESC'], ['createdAt', 'DESC']],
+        limit: 100
+      }),
+      MarketplaceAnalyticsEvent.findAll({
+        where: {
+          eventDate: { [Op.gte]: since.toISOString().slice(0, 10) }
+        },
+        attributes: ['listingId', 'eventType'],
+        limit: 2000
+      })
+    ]);
+
+    const listingById = new Map();
+    const listingScores = new Map();
+
+    topListings.forEach((listing) => {
+      const row = plainRecord(listing);
+      listingById.set(String(row.id), row);
+      listingScores.set(String(row.id), Number(row.viewCount || 0));
+    });
+
+    recentEvents.forEach((event) => {
+      const row = plainRecord(event);
+      const listingId = String(row.listingId || '');
+      if (!listingId) return;
+      const weight = row.eventType === 'inquiry' ? 5 : row.eventType === 'click' ? 2 : 1;
+      listingScores.set(listingId, Number(listingScores.get(listingId) || 0) + weight);
+    });
+
+    const termScores = new Map();
+    const pushTerm = (term, score) => {
+      const clean = sanitizeString(term || '', 80).trim();
+      if (!clean || clean.length < 3) return;
+      termScores.set(clean, Number(termScores.get(clean) || 0) + Number(score || 0));
+    };
+
+    for (const [listingId, score] of listingScores.entries()) {
+      const listing = listingById.get(String(listingId));
+      if (!listing) continue;
+
+      pushTerm(listing.category, score + 3);
+      pushTerm(listing.title, score + 1);
+
+      if (Array.isArray(listing.sportTags)) {
+        listing.sportTags.forEach((tag) => pushTerm(tag, score + 2));
+      }
+    }
+
+    const terms = Array.from(termScores.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([term]) => term);
+
+    if (terms.length === 0) {
+      return ok(res, ['Football boots', 'Tennis racket', 'Gym equipment', 'Running shoes', 'Basketball']);
+    }
+
+    ok(res, terms);
+  } catch (error) {
+    // Keep endpoint resilient even if analytics tables are unavailable.
+    ok(res, ['Football boots', 'Tennis racket', 'Gym equipment', 'Running shoes', 'Basketball']);
+  }
 });
 
 // ─── TOGGLE SAVE LISTING ───
