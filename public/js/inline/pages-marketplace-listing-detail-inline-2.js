@@ -1,5 +1,36 @@
 ProfileSyncService.init();
 
+    const api = window.SpopeerAPI || window.API || {
+      request: async (path, options) => {
+        const response = await fetch(path, {
+          credentials: 'include',
+          ...(options || {})
+        });
+        if (!response.ok) {
+          let message = 'Request failed';
+          try {
+            const payload = await response.json();
+            message = payload && (payload.message || payload.error?.message || payload.code) ? (payload.message || payload.error?.message || payload.code) : message;
+          } catch (_) {
+            // Keep generic fallback message.
+          }
+          throw new Error(message);
+        }
+        return response;
+      },
+      showNotification: (message, type) => {
+        if (window.SpopeerToast && typeof window.SpopeerToast[type] === 'function') {
+          window.SpopeerToast[type](message);
+          return;
+        }
+        if (window.SpopeerToast && type === 'error' && typeof window.SpopeerToast.error === 'function') {
+          window.SpopeerToast.error(message);
+          return;
+        }
+        console[type === 'error' ? 'error' : 'log'](message);
+      }
+    };
+
     // Update notification badges
     async function updateNotificationBadges() {
       try {
@@ -124,6 +155,13 @@ ProfileSyncService.init();
       // Pre-fill buyer info
       const _bu = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
       document.getElementById('buyerName').value = _bu.displayName || [_bu.firstName, _bu.lastName].filter(Boolean).join(' ') || 'You';
+
+      const followBtn = document.getElementById('followBtn');
+      if (followBtn && listing.seller?.id) {
+        followBtn.setAttribute('data-seller-id', String(listing.seller.id));
+        const sellerIsCurrentUser = _bu && (_bu.id === listing.seller.id || String(_bu.id) === String(listing.seller.id));
+        followBtn.style.display = sellerIsCurrentUser ? 'none' : 'inline-flex';
+      }
 
       // Price recommendation
       if (listing.price_type === 'contact') {
@@ -315,6 +353,7 @@ ProfileSyncService.init();
 
     async function toggleFollow() {
       const btn = document.getElementById('followBtn');
+      if (!btn) return;
       const sellerId = btn.getAttribute('data-seller-id');
       
       if (!sellerId) {
@@ -334,6 +373,10 @@ ProfileSyncService.init();
         const label = btn.querySelector('.btn-label');
         if (label) {
           label.textContent = isFollowing ? 'Follow' : 'Following';
+        } else {
+          btn.innerHTML = isFollowing
+            ? '<i class="fa-solid fa-user-plus"></i> Follow'
+            : '<i class="fa-solid fa-user-check"></i> Following';
         }
         
         api.showNotification(
@@ -356,5 +399,7 @@ ProfileSyncService.init();
         closeSellerModal();
       }
     });
+
+    window.toggleFollow = toggleFollow;
 
     loadListing();
