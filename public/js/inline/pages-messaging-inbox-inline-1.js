@@ -1,10 +1,31 @@
 (function(){
-  /* ── User hydration ── */
-  var ud = null;
-  if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
-    ud = window.CurrentUserStore.getCurrentUser();
+  function schema() {
+    return (window.Spopeer && window.Spopeer.schema) || window.SpopeerSchemaNormalizer || null;
   }
-  if (!ud) { try { ud = JSON.parse(localStorage.getItem('spopeer_user')||'null'); } catch(e) { ud = null; } }
+
+  function normalizeUser(user) {
+    var s = schema();
+    if (s && typeof s.normalizeUser === 'function') return s.normalizeUser(user || {});
+    return user || {};
+  }
+
+  function getCurrentUserFromStore() {
+    var s = schema();
+    if (s && typeof s.getCurrentUser === 'function') return s.getCurrentUser() || null;
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+      return normalizeUser(window.CurrentUserStore.getCurrentUser() || {});
+    }
+    return null;
+  }
+
+  function listFromResponse(data) {
+    var s = schema();
+    if (s && typeof s.listFromResponse === 'function') return s.listFromResponse(data);
+    return Array.isArray(data) ? data : [];
+  }
+
+  /* ── User hydration ── */
+  var ud = getCurrentUserFromStore();
   if(ud){
     const _dn = ud.displayName || [ud.firstName, ud.lastName].filter(Boolean).join(' ') || ud.name || '';
     const init=_dn.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
@@ -36,13 +57,7 @@
 
   /* get current user id from store/local cache */
   function getMe(){
-    var latest = null;
-    if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
-      latest = window.CurrentUserStore.getCurrentUser();
-    }
-    if (!latest) {
-      try { latest = JSON.parse(localStorage.getItem('spopeer_user')||'null'); } catch(e) { latest = null; }
-    }
+    var latest = getCurrentUserFromStore();
     if(!latest)return null;
     ud = latest;
     return String(latest.id||latest.userId||latest.email||'');
@@ -208,7 +223,7 @@
     try{
       // Prefer SpopeerAPI to ensure cookie + CSRF handling is consistent.
       const raw = await window.SpopeerAPI.listConversations();
-      allConvs=parsePayload(raw)||[];
+      allConvs=listFromResponse(raw);
       setMessagingAvailability(true);
       renderConvList(allConvs);
       return;
@@ -644,7 +659,7 @@
     
     try {
       const response = await window.SpopeerAPI.searchUsers({ query, limit: 5 });
-      searchResults = (response && response.data) || response || [];
+      searchResults = listFromResponse(response).map(function (u) { return normalizeUser(u); });
       
       if (!Array.isArray(searchResults)) searchResults = [];
       
@@ -655,9 +670,10 @@
       }
       
       resultsList.innerHTML = searchResults.map(u => {
-        const name = [u.firstName, u.lastName].filter(Boolean).join(' ') || u.displayName || 'User';
-        const displayId = u.email || u.id;
-        const safeId = escHtml(String(u.id));
+        const user = normalizeUser(u);
+        const name = user.displayName || 'User';
+        const displayId = user.email || user.id;
+        const safeId = escHtml(String(user.id || ''));
         const safeName = escHtml(name);
         const safeDisplayId = escHtml(String(displayId || ''));
         return '<div class="usr-result" data-userid="' + safeId + '" data-username="' + safeName + '" style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s;"><div style="font-weight:600;color:var(--ink);font-size:13px;">' + safeName + '</div><div style="font-size:11px;color:var(--muted);">' + safeDisplayId + '</div></div>';

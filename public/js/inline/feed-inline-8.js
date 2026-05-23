@@ -1,30 +1,9 @@
 // Normalize a server-format post to the display format used by generatePostHTML
 function normalizePost(p) {
-  if (p.author && typeof p.author === 'object') {
-    const authorInitials = ((p.author.firstName || '').charAt(0) + (p.author.lastName || '').charAt(0)).toUpperCase() || 'U';
-    return {
-      id: p.id,
-      authorId: p.author.id,
-      authorName: ((p.author.firstName || '') + ' ' + (p.author.lastName || '')).trim() || 'User',
-      authorEmail: p.author.email || '',
-      authorType: p.author.role || 'athlete',
-      authorAvatarUrl: p.author.avatarUrl || p.author.profilePicture || p.author.profileImage || '',
-      authorAvatar: authorInitials,
-      content: p.content || '',
-      image: p.image || null,
-      media: p.media || [],
-      timestamp: p.createdAt || p.timestamp || new Date().toISOString(),
-      likes: p.likesCount || 0,
-      comments: p.commentsCount || 0,
-      liked: !!p.liked,
-      sport: p.sport || 'General',
-      views: p.viewsCount || 0,
-      poll: p.poll || null,
-      event: p.event || null,
-      type: p.type || 'text'
-    };
+  if (window.Spopeer && window.Spopeer.schema && typeof window.Spopeer.schema.normalizePostForFeed === 'function') {
+    return window.Spopeer.schema.normalizePostForFeed(p);
   }
-  return p; // Already in display format
+  return p;
 }
 
 // Initialize on page load with real backend data only
@@ -41,15 +20,9 @@ async function loadAllPosts() {
     const timer = setTimeout(() => controller.abort(), 5000);
     const data = await window.SpopeerAPI.request('/api/posts', { signal: controller.signal });
     clearTimeout(timer);
-    const rows = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.data)
-        ? data.data
-        : Array.isArray(data?.payload)
-          ? data.payload
-          : Array.isArray(data?.results)
-            ? data.results
-            : [];
+    const rows = (window.Spopeer && window.Spopeer.schema && typeof window.Spopeer.schema.listFromResponse === 'function')
+      ? window.Spopeer.schema.listFromResponse(data)
+      : (Array.isArray(data) ? data : []);
     const posts = rows.map(normalizePost);
     if (posts.length > 0) {
       loadPostsFromArray(posts);
