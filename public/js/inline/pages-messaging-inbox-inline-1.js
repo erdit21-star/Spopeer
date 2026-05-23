@@ -5,6 +5,7 @@
   var messagingState = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.state) || {};
   var messagingUi = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.ui) || {};
   var messagingSocket = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.socket) || {};
+  var messagingCompose = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.compose) || {};
 
   function normalizeUser(user) {
     if (typeof messagingRuntime.normalizeUser === 'function') return messagingRuntime.normalizeUser(user || {});
@@ -31,7 +32,6 @@
   let allConvs=[];
   let messagingEnabled=true;
   let typingTimer=null;
-  let stopTypingTimer=null;
   let socket=null;
   let currentTypingUserId='';
   let openConversationSeq=0;
@@ -581,38 +581,48 @@
     }
   }
 
-  document.getElementById('sendBtn').addEventListener('click',function(){ sendMessage(); });
-  document.getElementById('messageText').addEventListener('keydown',function(e){
-    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
-  });
-  document.getElementById('messageText').addEventListener('input',function(){
-    document.getElementById('sendBtn').disabled=!messagingEnabled||!this.value.trim();
-    this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';
-    if(!socket || !currentConversation) return;
-    // PHASE 2 STEP 4: Fix typing indicator — validate numeric receiverId
-    var _receiverId=parseInt(currentConversation,10);
-    if(!isNaN(_receiverId)&&_receiverId>0){
-      socket.emit('typing',{receiverId:_receiverId});
-    }
-    clearTimeout(stopTypingTimer);
-    stopTypingTimer=setTimeout(function(){
-      if(socket && currentConversation){
-        var _r=parseInt(currentConversation,10);
-        if(!isNaN(_r)&&_r>0){
-          socket.emit('stop_typing',{receiverId:_r});
-        }
+  if (typeof messagingCompose.bindComposer === 'function') {
+    messagingCompose.bindComposer({
+      inputId: 'messageText',
+      sendBtnId: 'sendBtn',
+      onSend: function(){ sendMessage(); },
+      isMessagingEnabled: function(){ return messagingEnabled; },
+      getSocket: function(){ return socket; },
+      getCurrentConversation: function(){ return currentConversation; }
+    });
+  } else {
+    var fallbackStopTypingTimer = null;
+    document.getElementById('sendBtn').addEventListener('click',function(){ sendMessage(); });
+    document.getElementById('messageText').addEventListener('keydown',function(e){
+      if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+    });
+    document.getElementById('messageText').addEventListener('input',function(){
+      document.getElementById('sendBtn').disabled=!messagingEnabled||!this.value.trim();
+      this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';
+      if(!socket || !currentConversation) return;
+      var _receiverId=parseInt(currentConversation,10);
+      if(!isNaN(_receiverId)&&_receiverId>0){
+        socket.emit('typing',{receiverId:_receiverId});
       }
-    },800);
-  });
+      clearTimeout(fallbackStopTypingTimer);
+      fallbackStopTypingTimer=setTimeout(function(){
+        if(socket && currentConversation){
+          var _r=parseInt(currentConversation,10);
+          if(!isNaN(_r)&&_r>0){
+            socket.emit('stop_typing',{receiverId:_r});
+          }
+        }
+      },800);
+    });
 
-  // PHASE 2 STEP 4: Stop typing on blur
-  document.getElementById('messageText').addEventListener('blur',function(){
-    if(!socket||!currentConversation)return;
-    var _r=parseInt(currentConversation,10);
-    if(!isNaN(_r)&&_r>0){
-      socket.emit('stop_typing',{receiverId:_r});
-    }
-  });
+    document.getElementById('messageText').addEventListener('blur',function(){
+      if(!socket||!currentConversation)return;
+      var _r=parseInt(currentConversation,10);
+      if(!isNaN(_r)&&_r>0){
+        socket.emit('stop_typing',{receiverId:_r});
+      }
+    });
+  }
 
   document.getElementById('messages').addEventListener('click', function(e){
     var target = e.target;
