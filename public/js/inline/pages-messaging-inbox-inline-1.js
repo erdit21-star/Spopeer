@@ -8,6 +8,7 @@
   var messagingCompose = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.compose) || {};
   var messagingActions = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.actions) || {};
   var messagingModal = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.modal) || {};
+  var messagingNavigation = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.navigation) || {};
 
   function normalizeUser(user) {
     if (typeof messagingRuntime.normalizeUser === 'function') return messagingRuntime.normalizeUser(user || {});
@@ -727,17 +728,20 @@
   }
 
   /* ── Search filter ── */
-  document.getElementById('convSearch').addEventListener('input',function(){
-    const q=this.value.toLowerCase();
-    document.querySelectorAll('.conv-item').forEach(item=>{
-      const name=item.querySelector('.conv-name')?.textContent.toLowerCase()||'';
-      const preview=item.querySelector('.conv-preview')?.textContent.toLowerCase()||'';
-      item.style.display=(name.includes(q)||preview.includes(q))?'':'none';
+  if (typeof messagingNavigation.bindConversationSearch === 'function') {
+    messagingNavigation.bindConversationSearch({
+      searchInputId: 'convSearch',
+      itemSelector: '.conv-item'
     });
-  });
+  }
 
   /* ── View profile helper ── */
-  window.viewProfile=function(){if(currentConversation)window.location.href='../../pages/profiles/public-profile.html?userId='+encodeURIComponent(currentConversation);};
+  if (typeof messagingNavigation.bindViewProfile === 'function') {
+    messagingNavigation.bindViewProfile({
+      getCurrentConversation: function () { return currentConversation; },
+      profilePath: '../../pages/profiles/public-profile.html'
+    });
+  }
 
   /* ── PHASE 1 STEP 5: Polling fallback when socket is disconnected ── */
   var pollingController = (typeof messagingSocket.createPollingController === 'function')
@@ -896,76 +900,21 @@
     return d.innerHTML;
   };
 
-  async function resolveRecipientFromUrl(rawValue) {
-    var value = String(rawValue || '').trim();
-    if (!value) return '';
-
-    // If value is a plain numeric ID, use it directly — no search needed
-    if (/^\d+$/.test(value)) return value;
-
-    // Check existing conversations first
-    var exact = (allConvs || []).find(function (c) {
-      var candidates = [c.otherId, c.otherUserId, c.email, c.otherEmail, c.username, c.id];
-      return candidates.some(function (candidate) {
-        return String(candidate || '').toLowerCase() === value.toLowerCase();
-      });
-    });
-    if (exact && (exact.otherId || exact.otherUserId || exact.id)) {
-      return String(exact.otherId || exact.otherUserId || exact.id);
-    }
-
-    // Fall back to user search
-    try {
-      var searchResp = (typeof messagingApi.searchUsers === 'function')
-        ? await messagingApi.searchUsers({ query: value, limit: 6 })
-        : await window.SpopeerAPI.searchUsers({ query: value, limit: 6 });
-      var users = (searchResp && searchResp.data) || searchResp || [];
-      if (Array.isArray(users) && users.length) {
-        var match = users.find(function (u) {
-          var keys = [u.id, u.userId, u.email, u.username];
-          return keys.some(function (key) { return String(key || '').toLowerCase() === value.toLowerCase(); });
-        }) || users[0];
-        if (match && (match.id || match.userId)) {
-          return String(match.id || match.userId);
-        }
-      }
-    } catch (e) {
-      console.warn('Could not resolve URL recipient via search:', e);
-    }
-
-    return value;
-  }
-
   async function openConversationFromUrl() {
-    var params = new URLSearchParams(window.location.search);
-    var urlOther = params.get('userId') || params.get('otherId');
-    if (!urlOther) return;
+    if (typeof messagingNavigation.openConversationFromUrl !== 'function') return;
 
-    // Wait for user data to be available (handles auth refresh race condition)
-    var me = getMe();
-    if (!me) {
-      await new Promise(function(resolve) {
-        var timeout = setTimeout(resolve, 3000);
-        window.addEventListener('currentUserChanged', function handler() {
-          clearTimeout(timeout);
-          window.removeEventListener('currentUserChanged', handler);
-          resolve();
-        }, { once: true });
-      });
-    }
-
-    var resolvedOther = await resolveRecipientFromUrl(urlOther);
-    if (!resolvedOther) return;
-
-    // Retry a few times to absorb eventual consistency/user-store timing issues.
-    for (var attempt = 0; attempt < 3; attempt++) {
-      var beforeConversationId = currentConversationId;
-      await openConversation(resolvedOther);
-      if (currentConversationId || beforeConversationId !== currentConversationId) {
-        return;
-      }
-      await new Promise(function(resolve){ setTimeout(resolve, 250); });
-    }
+    await messagingNavigation.openConversationFromUrl({
+      getMe: function () { return getMe(); },
+      getConversations: function () { return allConvs || []; },
+      searchUsers: async function (value) {
+        var searchResp = (typeof messagingApi.searchUsers === 'function')
+          ? await messagingApi.searchUsers({ query: value, limit: 6 })
+          : await window.SpopeerAPI.searchUsers({ query: value, limit: 6 });
+        return (searchResp && searchResp.data) || searchResp || [];
+      },
+      openConversation: function (otherId) { return openConversation(otherId); },
+      getConversationId: function () { return currentConversationId; }
+    });
   }
 
   initChatTheme();
