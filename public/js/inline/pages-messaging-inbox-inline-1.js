@@ -1,36 +1,23 @@
 (function(){
-  function schema() {
-    return (window.Spopeer && window.Spopeer.schema) || window.SpopeerSchemaNormalizer || null;
-  }
+  var messagingRuntime = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.runtime) || {};
 
   function normalizeUser(user) {
-    var s = schema();
-    if (s && typeof s.normalizeUser === 'function') return s.normalizeUser(user || {});
+    if (typeof messagingRuntime.normalizeUser === 'function') return messagingRuntime.normalizeUser(user || {});
     return user || {};
   }
 
   function getCurrentUserFromStore() {
-    var s = schema();
-    if (s && typeof s.getCurrentUser === 'function') return s.getCurrentUser() || null;
-    if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
-      return normalizeUser(window.CurrentUserStore.getCurrentUser() || {});
-    }
+    if (typeof messagingRuntime.getCurrentUser === 'function') return messagingRuntime.getCurrentUser() || null;
     return null;
   }
 
   function listFromResponse(data) {
-    var s = schema();
-    if (s && typeof s.listFromResponse === 'function') return s.listFromResponse(data);
+    if (typeof messagingRuntime.listFromResponse === 'function') return messagingRuntime.listFromResponse(data);
     return Array.isArray(data) ? data : [];
   }
 
   /* ── User hydration ── */
   var ud = getCurrentUserFromStore();
-  if(ud){
-    const _dn = ud.displayName || [ud.firstName, ud.lastName].filter(Boolean).join(' ') || ud.name || '';
-    const init=_dn.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    myInitials=init;
-  }
 
   var _loggedIn = (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true');
   let currentConversation=null;
