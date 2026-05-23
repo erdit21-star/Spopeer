@@ -1,5 +1,7 @@
 (function(){
   var messagingRuntime = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.runtime) || {};
+  var messagingUtils = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.utils) || {};
+  var messagingApi = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.api) || {};
 
   function normalizeUser(user) {
     if (typeof messagingRuntime.normalizeUser === 'function') return messagingRuntime.normalizeUser(user || {});
@@ -40,7 +42,10 @@
   const BACKEND_DISABLED_MSG='Messaging will be available after backend activation.';
 
   /* ── Helper: Escape HTML ── */
-  function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+  function escHtml(t){
+    if (typeof messagingUtils.escHtml === 'function') return messagingUtils.escHtml(t);
+    const d=document.createElement('div');d.textContent=t;return d.innerHTML;
+  }
 
   /* get current user id from store/local cache */
   function getMe(){
@@ -57,7 +62,10 @@
   }
 
   /* ── Avatar initials helper ── */
-  function initFor(id){return String(id||'?').slice(0,2).toUpperCase();}
+  function initFor(id){
+    if (typeof messagingUtils.initFor === 'function') return messagingUtils.initFor(id);
+    return String(id||'?').slice(0,2).toUpperCase();
+  }
 
   function getAuthHeaders(extra){
     var headers = Object.assign({}, extra || {});
@@ -65,45 +73,39 @@
   }
 
   function parsePayload(data){
-    if (data && typeof data === 'object' && data.success === true && data.data !== undefined) {
-      return data.data;
-    }
+    if (typeof messagingUtils.parsePayload === 'function') return messagingUtils.parsePayload(data);
     return data;
   }
 
   function parseAttachmentPayload(content){
-    var text = String(content || '').trim();
-    if (!text.startsWith('ATTACHMENT::')) return null;
-    try {
-      return JSON.parse(text.slice('ATTACHMENT::'.length));
-    } catch (_e) {
-      return null;
+    if (typeof messagingUtils.parseAttachmentPayload === 'function') {
+      return messagingUtils.parseAttachmentPayload(content);
     }
+    return null;
   }
 
   function buildAttachmentMessage(payload){
+    if (typeof messagingUtils.buildAttachmentMessage === 'function') {
+      return messagingUtils.buildAttachmentMessage(payload);
+    }
     return 'ATTACHMENT::' + JSON.stringify(payload || {});
   }
 
   function renderBubbleContent(content){
-    var attachment = parseAttachmentPayload(content);
-    if (!attachment || !attachment.url) {
-      return escHtml(content || '');
+    if (typeof messagingUtils.renderBubbleContent === 'function') {
+      return messagingUtils.renderBubbleContent(content);
     }
-
-    var safeUrl = escHtml(String(attachment.url));
-    var safeName = escHtml(String(attachment.name || 'Attachment'));
-    var safeMime = String(attachment.mimeType || '').toLowerCase();
-    if (safeMime.indexOf('image/') === 0) {
-      return '<div><img src="' + safeUrl + '" alt="Attachment" style="max-width:220px;border-radius:10px;display:block;margin-bottom:6px"/><a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:inherit;text-decoration:underline">' + safeName + '</a></div>';
-    }
-    return '<a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer" style="font-size:13px;color:inherit;text-decoration:underline"><i class="fa-solid fa-paperclip" style="margin-right:6px"></i>' + safeName + '</a>';
+    return escHtml(content || '');
   }
 
   async function markCurrentConversationRead(){
     if(!currentConversationId) return;
     try {
-      await window.SpopeerAPI.markConversationRead(currentConversationId);
+      if (typeof messagingApi.markConversationRead === 'function') {
+        await messagingApi.markConversationRead(currentConversationId);
+      } else {
+        await window.SpopeerAPI.markConversationRead(currentConversationId);
+      }
     } catch (e) {
       console.warn('markConversationRead failed:', e && e.message ? e.message : e);
     }
@@ -163,6 +165,7 @@
 
   /* ── Format time ── */
   function fmtTime(iso){
+    if (typeof messagingUtils.fmtTime === 'function') return messagingUtils.fmtTime(iso);
     const d=new Date(iso);const now=new Date();
     const diff=(now-d)/1000;
     if(diff<60)return 'now';
@@ -209,8 +212,9 @@
     
     try{
       // Prefer SpopeerAPI to ensure cookie + CSRF handling is consistent.
-      const raw = await window.SpopeerAPI.listConversations();
-      allConvs=listFromResponse(raw);
+      allConvs = (typeof messagingApi.listConversations === 'function')
+        ? await messagingApi.listConversations()
+        : listFromResponse(await window.SpopeerAPI.listConversations());
       setMessagingAvailability(true);
       renderConvList(allConvs);
       return;
@@ -252,7 +256,9 @@
     /* load messages */
     try{
       if(!currentConversationId){
-        const createdData = parsePayload(await window.SpopeerAPI.createConversation(String(otherId)));
+        const createdData = (typeof messagingApi.createConversation === 'function')
+          ? await messagingApi.createConversation(String(otherId))
+          : parsePayload(await window.SpopeerAPI.createConversation(String(otherId)));
         currentConversationId = String(createdData && createdData.id ? createdData.id : '');
         if(!currentConversationId){
           throw new Error('Could not create conversation — no id returned.');
@@ -260,7 +266,9 @@
       }
 
       if(currentConversationId){
-        const data = parsePayload(await window.SpopeerAPI.getConversation(currentConversationId, { limit: 50 }));
+        const data = (typeof messagingApi.getConversation === 'function')
+          ? await messagingApi.getConversation(currentConversationId, { limit: 50 })
+          : parsePayload(await window.SpopeerAPI.getConversation(currentConversationId, { limit: 50 }));
         if (seq !== openConversationSeq) return;
         currentMessageList=(data&&data.messages)||[];
         conversationHasMore=!!(data&&data.hasMore);
@@ -294,10 +302,15 @@
       const box=document.getElementById('messages');
       const prevHeight=box.scrollHeight;
       const prevTop=box.scrollTop;
-      const data=parsePayload(await window.SpopeerAPI.getConversation(currentConversationId, {
-        limit: 50,
-        before: conversationOldestAt
-      }));
+      const data = (typeof messagingApi.getConversation === 'function')
+        ? await messagingApi.getConversation(currentConversationId, {
+            limit: 50,
+            before: conversationOldestAt
+          })
+        : parsePayload(await window.SpopeerAPI.getConversation(currentConversationId, {
+            limit: 50,
+            before: conversationOldestAt
+          }));
       var older=(data&&data.messages)||[];
       var seen=new Set(currentMessageList.map(function(m){ return String(m.id||''); }));
       older=older.filter(function(m){
@@ -477,7 +490,9 @@
         sendBtn.setAttribute('aria-busy','true');
       }
       if(!currentConversationId){
-        const createdData=parsePayload(await window.SpopeerAPI.createConversation(String(currentConversation)));
+        const createdData = (typeof messagingApi.createConversation === 'function')
+          ? await messagingApi.createConversation(String(currentConversation))
+          : parsePayload(await window.SpopeerAPI.createConversation(String(currentConversation)));
         currentConversationId=String(createdData&&createdData.id?createdData.id:'');
         if(!currentConversationId){
           throw new Error('Could not create conversation.');
@@ -485,7 +500,11 @@
       }
 
       if(currentConversationId){
-        await window.SpopeerAPI.sendConversationMessage(currentConversationId,text);
+        if (typeof messagingApi.sendConversationMessage === 'function') {
+          await messagingApi.sendConversationMessage(currentConversationId, text);
+        } else {
+          await window.SpopeerAPI.sendConversationMessage(currentConversationId, text);
+        }
         if(socket){
           var _r=parseInt(currentConversation,10);
           if(!isNaN(_r)&&_r>0){
@@ -576,7 +595,9 @@
     if(!messageId) return;
     if(!window.confirm('Delete this message?')) return;
     try {
-      var resp=parsePayload(await window.SpopeerAPI.deleteConversationMessage(messageId));
+      var resp = (typeof messagingApi.deleteConversationMessage === 'function')
+        ? await messagingApi.deleteConversationMessage(messageId)
+        : parsePayload(await window.SpopeerAPI.deleteConversationMessage(messageId));
       updateMessageDeletedState(messageId, resp && resp.deletedAt);
     } catch (e) {
       console.error('Failed to delete message:', e);
@@ -606,8 +627,9 @@
     var file = this.files && this.files[0];
     if(!file) return;
     try {
-      var uploadedRaw = await window.SpopeerAPI.uploadChatAttachment(file);
-      var uploaded = parsePayload(uploadedRaw) || uploadedRaw || {};
+      var uploaded = (typeof messagingApi.uploadChatAttachment === 'function')
+        ? await messagingApi.uploadChatAttachment(file)
+        : (parsePayload(await window.SpopeerAPI.uploadChatAttachment(file)) || {});
       var payload = {
         url: uploaded.url || (uploaded.payload && uploaded.payload.url),
         name: file.name,
@@ -645,7 +667,9 @@
     }
     
     try {
-      const response = await window.SpopeerAPI.searchUsers({ query, limit: 5 });
+      const response = (typeof messagingApi.searchUsers === 'function')
+        ? await messagingApi.searchUsers({ query, limit: 5 })
+        : listFromResponse(await window.SpopeerAPI.searchUsers({ query, limit: 5 }));
       searchResults = listFromResponse(response).map(function (u) { return normalizeUser(u); });
       
       if (!Array.isArray(searchResults)) searchResults = [];
@@ -708,7 +732,9 @@
     try {
       document.getElementById('startConvBtn').disabled = true;
       
-      const created = parsePayload(await window.SpopeerAPI.createConversation(String(otherId)));
+      const created = (typeof messagingApi.createConversation === 'function')
+        ? await messagingApi.createConversation(String(otherId))
+        : parsePayload(await window.SpopeerAPI.createConversation(String(otherId)));
       const createdId = created && created.id ? String(created.id) : '';
       
       if (!createdId) {
@@ -719,7 +745,11 @@
       }
       
       if(firstMsg){
-        await window.SpopeerAPI.sendConversationMessage(createdId, firstMsg);
+        if (typeof messagingApi.sendConversationMessage === 'function') {
+          await messagingApi.sendConversationMessage(createdId, firstMsg);
+        } else {
+          await window.SpopeerAPI.sendConversationMessage(createdId, firstMsg);
+        }
       }
       
       document.getElementById('newMsgModal').classList.remove('open');
@@ -761,7 +791,9 @@
     _pollInterval=setInterval(function(){
       if(currentConversationId){
         if(!socket||!socket.connected){
-          window.SpopeerAPI.getConversation(currentConversationId, { limit: 50 })
+          (typeof messagingApi.getConversation === 'function'
+            ? messagingApi.getConversation(currentConversationId, { limit: 50 })
+            : window.SpopeerAPI.getConversation(currentConversationId, { limit: 50 }))
             .then(function(data){
               var msgs=parsePayload(data);
               var me=getMe();
@@ -926,7 +958,9 @@
 
     // Fall back to user search
     try {
-      var searchResp = await window.SpopeerAPI.searchUsers({ query: value, limit: 6 });
+      var searchResp = (typeof messagingApi.searchUsers === 'function')
+        ? await messagingApi.searchUsers({ query: value, limit: 6 })
+        : await window.SpopeerAPI.searchUsers({ query: value, limit: 6 });
       var users = (searchResp && searchResp.data) || searchResp || [];
       if (Array.isArray(users) && users.length) {
         var match = users.find(function (u) {
