@@ -8,14 +8,43 @@ function filterChip(el) {
     el.classList.add('active');
   }
 
-  function toggleJoin(btn) {
-    if (btn.classList.contains('joined')) {
-      btn.classList.remove('joined');
-      btn.textContent = 'Join';
-    } else {
-      btn.classList.add('joined');
-      btn.textContent = 'Joined';
-    }
+    async function toggleJoin(btn) {
+      var groupId = btn && btn.dataset ? btn.dataset.groupId : '';
+      var isJoined = btn.classList.contains('joined');
+
+      if (!groupId) {
+        if (isJoined) {
+          btn.classList.remove('joined');
+          btn.textContent = 'Join';
+        } else {
+          btn.classList.add('joined');
+          btn.textContent = 'Joined';
+        }
+        return;
+      }
+
+      btn.disabled = true;
+      try {
+        if (window.Spopeer && window.Spopeer.api) {
+          if (isJoined) {
+            await window.Spopeer.api.delete('/api/groups/' + encodeURIComponent(groupId) + '/leave');
+            btn.classList.remove('joined');
+            btn.textContent = 'Join';
+          } else {
+            await window.Spopeer.api.post('/api/groups/' + encodeURIComponent(groupId) + '/join');
+            btn.classList.add('joined');
+            btn.textContent = 'Joined';
+          }
+        } else {
+          throw new Error('API layer unavailable');
+        }
+      } catch (err) {
+        if (window.SpopeerToast && window.SpopeerToast.error) {
+          window.SpopeerToast.error((err && err.message) || 'Community action failed.');
+        }
+      } finally {
+        btn.disabled = false;
+      }
   }
 
   var currentStep = 1;
@@ -97,9 +126,48 @@ function filterChip(el) {
       '<b>About:</b> ' + escHtml(desc.slice(0, 120)) + (desc.length > 120 ? '...' : '');
   }
 
-  function submitCommunity() {
-    closeCreateModal();
-    alert('Community created! It will appear in the feed once reviewed.');
+  async function submitCommunity() {
+    var name = (document.getElementById('commName').value || '').trim();
+    var description = (document.getElementById('commDesc').value || '').trim();
+    var sport = (document.getElementById('commSport').value || '').trim();
+    var visibility = (document.getElementById('commVisibility').value || 'open').trim();
+
+    if (!name) {
+      if (window.SpopeerToast && window.SpopeerToast.warning) {
+        window.SpopeerToast.warning('Community name is required.');
+      }
+      return;
+    }
+
+    var payload = {
+      name: name,
+      description: description,
+      sport: sport,
+      isPrivate: visibility === 'private'
+    };
+
+    var nextBtn = document.getElementById('modalNextBtn');
+    if (nextBtn) nextBtn.disabled = true;
+    try {
+      if (window.Spopeer && window.Spopeer.api && typeof window.Spopeer.api.post === 'function') {
+        await window.Spopeer.api.post('/api/groups', payload);
+      } else if (window.SpopeerAPI && typeof window.SpopeerAPI.request === 'function') {
+        await window.SpopeerAPI.request('/api/groups', { method: 'POST', body: JSON.stringify(payload) });
+      } else {
+        throw new Error('API client unavailable.');
+      }
+
+      closeCreateModal();
+      if (window.SpopeerToast && window.SpopeerToast.success) {
+        window.SpopeerToast.success('Community created successfully.');
+      }
+    } catch (err) {
+      if (window.SpopeerToast && window.SpopeerToast.error) {
+        window.SpopeerToast.error((err && err.message) || 'Failed to create community.');
+      }
+    } finally {
+      if (nextBtn) nextBtn.disabled = false;
+    }
   }
 
   document.addEventListener('keydown', function(e) {
@@ -118,4 +186,13 @@ function filterChip(el) {
     if (window.sharedUi && typeof window.sharedUi.setupSocialFeedRuntime === 'function') {
       window.sharedUi.setupSocialFeedRuntime({ basePath: '../../' });
     }
+
+    document.querySelectorAll('.trend-join, .comm-join-btn').forEach(function(btn) {
+      if (btn.dataset.boundJoin === '1') return;
+      btn.dataset.boundJoin = '1';
+      if (btn.hasAttribute('onclick')) return;
+      btn.addEventListener('click', function() {
+        toggleJoin(btn);
+      });
+    });
   });
