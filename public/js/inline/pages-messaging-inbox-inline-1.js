@@ -6,6 +6,7 @@
   var messagingUi = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.ui) || {};
   var messagingSocket = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.socket) || {};
   var messagingCompose = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.compose) || {};
+  var messagingActions = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.actions) || {};
 
   function normalizeUser(user) {
     if (typeof messagingRuntime.normalizeUser === 'function') return messagingRuntime.normalizeUser(user || {});
@@ -40,7 +41,6 @@
   let conversationHasMore=false;
   let conversationOldestAt='';
   let loadingOlder=false;
-  let deleteMenuMessageId='';
   const CHAT_THEME_STORAGE_KEY='spopeer_chat_theme';
   const BACKEND_DISABLED_MSG='Messaging will be available after backend activation.';
 
@@ -624,92 +624,53 @@
     });
   }
 
-  document.getElementById('messages').addEventListener('click', function(e){
-    var target = e.target;
-    if(target && target.id==='loadOlderBtn'){
-      e.preventDefault();
-      loadOlderMessages();
-      return;
-    }
-    var menu=document.getElementById('messageContextMenu');
-    if(menu) menu.style.display='none';
-  });
-
-  document.getElementById('messages').addEventListener('contextmenu', function(e){
-    var bubble=e.target.closest('.msg-row.mine[data-deletable="1"] .bubble');
-    if(!bubble) return;
-    e.preventDefault();
-    var row=bubble.closest('.msg-row');
-    var messageId=row && row.dataset ? row.dataset.messageId : '';
-    if(!messageId) return;
-    deleteMenuMessageId=String(messageId);
-    var menu=document.getElementById('messageContextMenu');
-    if(!menu) return;
-    menu.style.display='block';
-    menu.style.left=e.clientX+'px';
-    menu.style.top=e.clientY+'px';
-  });
-
-  document.getElementById('deleteMessageAction').addEventListener('click', async function(){
-    var messageId=deleteMenuMessageId;
-    var menu=document.getElementById('messageContextMenu');
-    if(menu) menu.style.display='none';
-    deleteMenuMessageId='';
-    if(!messageId) return;
-    if(!window.confirm('Delete this message?')) return;
-    try {
-      var resp = (typeof messagingApi.deleteConversationMessage === 'function')
-        ? await messagingApi.deleteConversationMessage(messageId)
-        : parsePayload(await window.SpopeerAPI.deleteConversationMessage(messageId));
-      updateMessageDeletedState(messageId, resp && resp.deletedAt);
-    } catch (e) {
-      console.error('Failed to delete message:', e);
-      if(window.SpopeerToast) window.SpopeerToast.error('Could not delete message.');
-    }
-  });
-
-  document.addEventListener('click', function(e){
-    var menu=document.getElementById('messageContextMenu');
-    if(!menu || menu.style.display==='none') return;
-    if(!menu.contains(e.target)){
-      menu.style.display='none';
-      deleteMenuMessageId='';
-    }
-  });
-
-  document.getElementById('attachFileBtn').addEventListener('click', function(e){
-    e.preventDefault();
-    if(!currentConversation){
-      if (window.SpopeerToast) window.SpopeerToast.info('Select a conversation first.');
-      return;
-    }
-    document.getElementById('chatAttachmentInput').click();
-  });
-
-  document.getElementById('chatAttachmentInput').addEventListener('change', async function(){
-    var file = this.files && this.files[0];
-    if(!file) return;
-    try {
-      var uploaded = (typeof messagingApi.uploadChatAttachment === 'function')
-        ? await messagingApi.uploadChatAttachment(file)
-        : (parsePayload(await window.SpopeerAPI.uploadChatAttachment(file)) || {});
-      var payload = {
-        url: uploaded.url || (uploaded.payload && uploaded.payload.url),
-        name: file.name,
-        mimeType: file.type || (uploaded.payload && uploaded.payload.mimeType) || ''
-      };
-      if(!payload.url){
-        throw new Error('Attachment upload failed.');
+  if (typeof messagingActions.bindMessageActions === 'function') {
+    messagingActions.bindMessageActions({
+      messagesId: 'messages',
+      menuId: 'messageContextMenu',
+      deleteActionId: 'deleteMessageAction',
+      attachBtnId: 'attachFileBtn',
+      attachmentInputId: 'chatAttachmentInput',
+      onLoadOlder: function () {
+        loadOlderMessages();
+      },
+      onDeleteMessage: async function (messageId) {
+        var resp = (typeof messagingApi.deleteConversationMessage === 'function')
+          ? await messagingApi.deleteConversationMessage(messageId)
+          : parsePayload(await window.SpopeerAPI.deleteConversationMessage(messageId));
+        updateMessageDeletedState(messageId, resp && resp.deletedAt);
+      },
+      onDeleteError: function (e) {
+        console.error('Failed to delete message:', e);
+        if(window.SpopeerToast) window.SpopeerToast.error('Could not delete message.');
+      },
+      hasConversation: function () {
+        return !!currentConversation;
+      },
+      onMissingConversation: function () {
+        if (window.SpopeerToast) window.SpopeerToast.info('Select a conversation first.');
+      },
+      onAttachmentSelected: async function (file) {
+        var uploaded = (typeof messagingApi.uploadChatAttachment === 'function')
+          ? await messagingApi.uploadChatAttachment(file)
+          : (parsePayload(await window.SpopeerAPI.uploadChatAttachment(file)) || {});
+        var payload = {
+          url: uploaded.url || (uploaded.payload && uploaded.payload.url),
+          name: file.name,
+          mimeType: file.type || (uploaded.payload && uploaded.payload.mimeType) || ''
+        };
+        if(!payload.url){
+          throw new Error('Attachment upload failed.');
+        }
+        await sendMessage(buildAttachmentMessage(payload));
+        if (window.SpopeerToast) window.SpopeerToast.success('Attachment sent.');
+      },
+      onAttachmentError: function (e) {
+        console.error('Attachment upload/send failed:', e);
+        if (window.SpopeerToast) window.SpopeerToast.error('Failed to send attachment.');
       }
-      await sendMessage(buildAttachmentMessage(payload));
-      if (window.SpopeerToast) window.SpopeerToast.success('Attachment sent.');
-    } catch (e) {
-      console.error('Attachment upload/send failed:', e);
-      if (window.SpopeerToast) window.SpopeerToast.error('Failed to send attachment.');
-    } finally {
-      this.value = '';
-    }
-  });
+    });
+  }
 
   /* ── New message modal ── */
   document.getElementById('newMsgBtn').addEventListener('click',()=>document.getElementById('newMsgModal').classList.add('open'));
