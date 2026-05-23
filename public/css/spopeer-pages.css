@@ -1,5 +1,21 @@
 @import url('/css/accessibility.css');
 
+html{
+	-webkit-text-size-adjust:100%;
+	text-size-adjust:100%;
+}
+
+img,video{
+	max-width:100%;
+	height:auto;
+}
+
+@supports (padding:max(0px)){
+	.page-wrap{
+		padding-bottom:env(safe-area-inset-bottom);
+	}
+}
+
 *{box-sizing:border-box}
 body{margin:0;background:#eef3fb;font-family:'Plus Jakarta Sans',sans-serif;color:#0f172a}
 .page-wrap{max-width:520px;min-height:100vh;margin:0 auto;background:#fff}
