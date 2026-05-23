@@ -25,7 +25,11 @@
       if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
         window.CurrentUserStore.setCurrentUser(user);
       } else {
-        window.dispatchEvent(new CustomEvent('currentUserChanged', { detail: { user: user } }));
+        if (window.Spopeer && window.Spopeer.events && typeof window.Spopeer.events.emit === 'function') {
+          window.Spopeer.events.emit('currentUserChanged', { user: user });
+        } else {
+          window.dispatchEvent(new CustomEvent('currentUserChanged', { detail: { user: user } }));
+        }
       }
 
       return user;
@@ -290,9 +294,13 @@
             localStorage.setItem('_profileLastUpdated_', String(merged._profileUpdatedAt));
           }
 
-          window.dispatchEvent(new CustomEvent('profileUpdated', {
-            detail: { profile: merged, source: 'feed-sidebar-avatar-upload' }
-          }));
+          if (window.Spopeer && window.Spopeer.events && typeof window.Spopeer.events.emit === 'function') {
+            window.Spopeer.events.emit('profileUpdated', { profile: merged, source: 'feed-sidebar-avatar-upload' });
+          } else {
+            window.dispatchEvent(new CustomEvent('profileUpdated', {
+              detail: { profile: merged, source: 'feed-sidebar-avatar-upload' }
+            }));
+          }
         }
 
         var freshUser = await refreshCurrentUserFromBackend();
@@ -345,7 +353,11 @@
             hydrateSidebarProfile(mergedProfile);
             
             // Update feed posts and other elements with fresh profile data
-            window.dispatchEvent(new CustomEvent('profileUpdated', { detail: mergedProfile }));
+            if (window.Spopeer && window.Spopeer.events && typeof window.Spopeer.events.emit === 'function') {
+              window.Spopeer.events.emit('profileUpdated', mergedProfile);
+            } else {
+              window.dispatchEvent(new CustomEvent('profileUpdated', { detail: mergedProfile }));
+            }
           }
         }
       } catch (error) {
@@ -837,7 +849,11 @@
         try { localStorage.setItem('spopeer_user', JSON.stringify(updated)); } catch (e) { /* ignore */ }
       }
       if (typeof window.CustomEvent === 'function') {
-        window.dispatchEvent(new CustomEvent('currentUserChanged', { detail: { user: updated } }));
+        if (window.Spopeer && window.Spopeer.events && typeof window.Spopeer.events.emit === 'function') {
+          window.Spopeer.events.emit('currentUserChanged', { user: updated });
+        } else {
+          window.dispatchEvent(new CustomEvent('currentUserChanged', { detail: { user: updated } }));
+        }
       }
     } catch (e) {
       console.warn('Failed to update current follow counts:', e);
