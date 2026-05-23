@@ -2,6 +2,7 @@
   var messagingRuntime = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.runtime) || {};
   var messagingUtils = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.utils) || {};
   var messagingApi = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.api) || {};
+  var messagingSocket = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.socket) || {};
 
   function normalizeUser(user) {
     if (typeof messagingRuntime.normalizeUser === 'function') return messagingRuntime.normalizeUser(user || {});
@@ -784,36 +785,41 @@
   window.viewProfile=function(){if(currentConversation)window.location.href='../../pages/profiles/public-profile.html?userId='+encodeURIComponent(currentConversation);};
 
   /* ── PHASE 1 STEP 5: Polling fallback when socket is disconnected ── */
-  var _pollInterval=null;
+  var pollingController = (typeof messagingSocket.createPollingController === 'function')
+    ? messagingSocket.createPollingController({
+      intervalMs: 5000,
+      shouldPoll: function(){
+        return !!currentConversationId && (!socket || !socket.connected);
+      },
+      poll: function(){
+        var requester = (typeof messagingApi.getConversation === 'function')
+          ? messagingApi.getConversation(currentConversationId, { limit: 50 })
+          : window.SpopeerAPI.getConversation(currentConversationId, { limit: 50 });
+        return requester.then(function(data){
+          var msgs=parsePayload(data);
+          var me=getMe();
+          if(msgs&&msgs.messages){
+            currentMessageList=msgs.messages;
+            conversationHasMore=!!msgs.hasMore;
+            conversationOldestAt=msgs.oldestAt?String(msgs.oldestAt):'';
+            renderMessages(currentMessageList,String(me));
+          }
+        });
+      }
+    })
+    : null;
 
   function startPolling(){
-    if(_pollInterval)return;
-    _pollInterval=setInterval(function(){
-      if(currentConversationId){
-        if(!socket||!socket.connected){
-          (typeof messagingApi.getConversation === 'function'
-            ? messagingApi.getConversation(currentConversationId, { limit: 50 })
-            : window.SpopeerAPI.getConversation(currentConversationId, { limit: 50 }))
-            .then(function(data){
-              var msgs=parsePayload(data);
-              var me=getMe();
-              if(msgs&&msgs.messages){
-                currentMessageList=msgs.messages;
-                conversationHasMore=!!msgs.hasMore;
-                conversationOldestAt=msgs.oldestAt?String(msgs.oldestAt):'';
-                renderMessages(currentMessageList,String(me));
-              }
-            })
-            .catch(function(){});
-        }
-      }
-    },5000);
+    if(pollingController && typeof pollingController.start === 'function'){
+      pollingController.start();
+      return;
+    }
   }
 
   function stopPolling(){
-    if(_pollInterval){
-      clearInterval(_pollInterval);
-      _pollInterval=null;
+    if(pollingController && typeof pollingController.stop === 'function'){
+      pollingController.stop();
+      return;
     }
   }
 
@@ -828,101 +834,90 @@
         reconnectionDelay: 2000,
         reconnectionDelayMax: 10000
       });
-      socket.on('connect_error', function(err){
-        console.warn('Socket connect error:', err && err.message ? err.message : err);
-      });
-      socket.on('new_message',function(msg){
-        // PHASE 1 STEP 2: Append message directly instead of full reload
-        var senderId=String(msg.fromId||msg.senderId||'');
-        var convId=String(msg.conversationId||'');
+      if(typeof messagingSocket.attachInboxSocketHandlers === 'function'){
+        messagingSocket.attachInboxSocketHandlers(socket, {
+          onNewMessage: function(msg){
+            var senderId=String(msg.fromId||msg.senderId||'');
+            var convId=String(msg.conversationId||'');
+            var isCurrentConv=currentConversationId&&convId===String(currentConversationId);
+            var isFromCurrentOther=currentConversation&&senderId===String(currentConversation);
 
-        var isCurrentConv=currentConversationId&&convId===String(currentConversationId);
-        var isFromCurrentOther=currentConversation&&senderId===String(currentConversation);
-
-        if(isCurrentConv||isFromCurrentOther){
-          appendMessage(msg);
-          markCurrentConversationRead();
-        }
-
-        // Update conversation list in background
-        loadConversations();
-      });
-      socket.on('user_typing', function(payload){
-        var senderId = String(payload && payload.userId || '');
-        if(!senderId || !currentConversation || senderId !== String(currentConversation)) return;
-        currentTypingUserId = senderId;
-        var indicator=document.getElementById('typingIndicator');
-        indicator.textContent='Typing…';
-        indicator.style.display='block';
-        clearTimeout(typingTimer);
-        typingTimer=setTimeout(function(){
-          if(currentTypingUserId===senderId){
-            indicator.style.display='none';
+            if(isCurrentConv||isFromCurrentOther){
+              appendMessage(msg);
+              markCurrentConversationRead();
+            }
+            loadConversations();
+          },
+          onUserTyping: function(payload){
+            var senderId = String(payload && payload.userId || '');
+            if(!senderId || !currentConversation || senderId !== String(currentConversation)) return;
+            currentTypingUserId = senderId;
+            var indicator=document.getElementById('typingIndicator');
+            indicator.textContent='Typing…';
+            indicator.style.display='block';
+            clearTimeout(typingTimer);
+            typingTimer=setTimeout(function(){
+              if(currentTypingUserId===senderId){
+                indicator.style.display='none';
+              }
+            }, 1200);
+          },
+          onUserStopTyping: function(payload){
+            var senderId = String(payload && payload.userId || '');
+            if(senderId && senderId===currentTypingUserId){
+              document.getElementById('typingIndicator').style.display='none';
+            }
+          },
+          onConversationRead: function(payload){
+            if(!payload || String(payload.conversationId||'') !== String(currentConversationId||'')) return;
+            openConversation(currentConversation, currentConversationId);
+          },
+          onMessagesRead: function(){
+            if(currentConversation){
+              openConversation(currentConversation, currentConversationId);
+            }
+          },
+          onMessageDeleted: function(payload){
+            var convId=String(payload&&payload.conversationId||'');
+            if(!convId || convId!==String(currentConversationId||'')) return;
+            updateMessageDeletedState(payload.id, payload.deletedAt);
+          },
+          onConnect: function(){
+            stopPolling();
+            console.log('Socket connected.');
+          },
+          onDisconnect: function(){
+            startPolling();
+            console.warn('Socket disconnected. Polling fallback active.');
+          },
+          onConnectError: function(err){
+            startPolling();
+            console.warn('Socket connect error:', err && err.message ? err.message : err);
+          },
+          onUserOnline: function(payload){
+            var uid=String(payload&&payload.userId||'');
+            if(!uid)return;
+            var item=document.querySelector('.conv-item[data-other="'+uid+'"]');
+            if(item){
+              var av=item.querySelector('.conv-av');
+              if(av&&!av.querySelector('.online-dot')){
+                var dot=document.createElement('div');
+                dot.className='online-dot';
+                av.appendChild(dot);
+              }
+            }
+          },
+          onUserOffline: function(payload){
+            var uid=String(payload&&payload.userId||'');
+            if(!uid)return;
+            var item=document.querySelector('.conv-item[data-other="'+uid+'"]');
+            if(item){
+              var dot=item.querySelector('.online-dot');
+              if(dot)dot.remove();
+            }
           }
-        }, 1200);
-      });
-      socket.on('user_stop_typing', function(payload){
-        var senderId = String(payload && payload.userId || '');
-        if(senderId && senderId===currentTypingUserId){
-          document.getElementById('typingIndicator').style.display='none';
-        }
-      });
-      socket.on('conversation_read', function(payload){
-        if(!payload || String(payload.conversationId||'') !== String(currentConversationId||'')) return;
-        openConversation(currentConversation, currentConversationId);
-      });
-      socket.on('messages_read', function(){
-        if(currentConversation){
-          openConversation(currentConversation, currentConversationId);
-        }
-      });
-
-      socket.on('message_deleted', function(payload){
-        var convId=String(payload&&payload.conversationId||'');
-        if(!convId || convId!==String(currentConversationId||'')) return;
-        updateMessageDeletedState(payload.id, payload.deletedAt);
-      });
-
-      // PHASE 1 STEP 5: Add reconnection and polling fallback
-      socket.on('connect', function(){
-        stopPolling();
-        console.log('Socket connected.');
-      });
-
-      socket.on('disconnect', function(){
-        startPolling();
-        console.warn('Socket disconnected. Polling fallback active.');
-      });
-
-      socket.on('connect_error', function(err){
-        startPolling();
-        console.warn('Socket connect error:', err && err.message ? err.message : err);
-      });
-
-      // PHASE 2 STEP 9: Online presence tracking
-      socket.on('user_online', function(payload){
-        var uid=String(payload&&payload.userId||'');
-        if(!uid)return;
-        var item=document.querySelector('.conv-item[data-other="'+uid+'"]');
-        if(item){
-          var av=item.querySelector('.conv-av');
-          if(av&&!av.querySelector('.online-dot')){
-            var dot=document.createElement('div');
-            dot.className='online-dot';
-            av.appendChild(dot);
-          }
-        }
-      });
-
-      socket.on('user_offline', function(payload){
-        var uid=String(payload&&payload.userId||'');
-        if(!uid)return;
-        var item=document.querySelector('.conv-item[data-other="'+uid+'"]');
-        if(item){
-          var dot=item.querySelector('.online-dot');
-          if(dot)dot.remove();
-        }
-      });
+        });
+      }
 
     }catch(e){
       console.warn('Socket init failed:', e && e.message ? e.message : e);
