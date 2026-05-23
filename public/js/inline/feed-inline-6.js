@@ -4,8 +4,14 @@
 
   function getCurrentUserData() {
     if (window.CurrentUserStore) return window.CurrentUserStore.getCurrentUser() || {};
-    try { return JSON.parse(localStorage.getItem('spopeer_user') || '{}') || {}; } catch { return {}; }
+    if (window.Spopeer && window.Spopeer.utils && typeof window.Spopeer.utils.getCurrentUser === 'function') {
+      return window.Spopeer.utils.getCurrentUser() || {};
+    }
+    return {};
   }
+  window.Spopeer = window.Spopeer || {};
+  window.Spopeer.feed = window.Spopeer.feed || {};
+  window.Spopeer.feed.getCurrentUserData = getCurrentUserData;
   window.getCurrentUserData = getCurrentUserData;
 
   async function refreshCurrentUserFromBackend() {
@@ -19,8 +25,7 @@
       if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
         window.CurrentUserStore.setCurrentUser(user);
       } else {
-        localStorage.setItem('spopeer_user', JSON.stringify(user));
-        localStorage.setItem('spopeer_loggedIn', 'true');
+        window.dispatchEvent(new CustomEvent('currentUserChanged', { detail: { user: user } }));
       }
 
       return user;

@@ -3,7 +3,10 @@
 
   function getCurrentUser() {
     if (window.getCurrentUserData) return window.getCurrentUserData() || {};
-    try { return JSON.parse(localStorage.getItem('spopeer_user') || '{}'); } catch (e) { return {}; }
+    if (window.Spopeer && window.Spopeer.utils && typeof window.Spopeer.utils.getCurrentUser === 'function') {
+      return window.Spopeer.utils.getCurrentUser() || {};
+    }
+    return {};
   }
 
   function getUserKey(user) {
