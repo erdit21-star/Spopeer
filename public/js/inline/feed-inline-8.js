@@ -18,7 +18,9 @@ async function loadAllPosts() {
     // Try to load from real API first (with 5-second timeout for cold starts)
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
-    const data = await window.SpopeerAPI.request('/api/posts', { signal: controller.signal });
+    const data = (window.Spopeer && window.Spopeer.api && typeof window.Spopeer.api.get === 'function')
+      ? await window.Spopeer.api.get('/api/posts', { signal: controller.signal })
+      : await window.SpopeerAPI.request('/api/posts', { signal: controller.signal });
     clearTimeout(timer);
     const rows = (window.Spopeer && window.Spopeer.schema && typeof window.Spopeer.schema.listFromResponse === 'function')
       ? window.Spopeer.schema.listFromResponse(data)
@@ -122,13 +124,21 @@ function attachPostMenuListeners() {
         if (nextContent === null) return;
 
         // Try real API first
-        await window.SpopeerAPI.request(`/api/posts/${postId}`, { method: 'PUT', body: JSON.stringify({ content: String(nextContent).trim() }) });
+        if (window.Spopeer && window.Spopeer.api && typeof window.Spopeer.api.put === 'function') {
+          await window.Spopeer.api.put(`/api/posts/${postId}`, { content: String(nextContent).trim() });
+        } else {
+          await window.SpopeerAPI.request(`/api/posts/${postId}`, { method: 'PUT', body: JSON.stringify({ content: String(nextContent).trim() }) });
+        }
         await loadAllPosts();
       } else if (action === 'delete') {
         const confirmed = window.confirm('Delete this post?');
         if (!confirmed) return;
 
-        await window.SpopeerAPI.request(`/api/posts/${postId}`, { method: 'DELETE' });
+        if (window.Spopeer && window.Spopeer.api && typeof window.Spopeer.api.delete === 'function') {
+          await window.Spopeer.api.delete(`/api/posts/${postId}`);
+        } else {
+          await window.SpopeerAPI.request(`/api/posts/${postId}`, { method: 'DELETE' });
+        }
         await loadAllPosts();
       }
     } catch (error) {
@@ -155,10 +165,14 @@ function attachPollVoteListeners() {
     try {
       // Try real API
       try {
-        await window.SpopeerAPI.request('/api/posts/' + postId + '/vote', {
-          method: 'POST',
-          body: JSON.stringify({ optionIndex })
-        });
+        if (window.Spopeer && window.Spopeer.api && typeof window.Spopeer.api.post === 'function') {
+          await window.Spopeer.api.post('/api/posts/' + postId + '/vote', { optionIndex });
+        } else {
+          await window.SpopeerAPI.request('/api/posts/' + postId + '/vote', {
+            method: 'POST',
+            body: JSON.stringify({ optionIndex })
+          });
+        }
         await loadAllPosts();
         return;
       } catch (apiErr) { /* fallback below */ }
@@ -182,7 +196,9 @@ function attachLikeListeners() {
       if (postId) {
         const wasLiked = this.classList.contains('liked');
         try {
-          const apiResRaw = await window.SpopeerAPI.request('/api/posts/' + postId + '/like', { method: 'POST' });
+          const apiResRaw = (window.Spopeer && window.Spopeer.api && typeof window.Spopeer.api.post === 'function')
+            ? await window.Spopeer.api.post('/api/posts/' + postId + '/like')
+            : await window.SpopeerAPI.request('/api/posts/' + postId + '/like', { method: 'POST' });
           const apiRes = (apiResRaw && apiResRaw.data) || apiResRaw || {};
           const nowLiked = (typeof apiRes.liked === 'boolean') ? apiRes.liked : !wasLiked;
           const safeLikes = Number.isFinite(apiRes.likesCount)
