@@ -115,6 +115,10 @@
   }
 
   function applyChatTheme(theme){
+    if (typeof messagingUi.applyChatTheme === 'function') {
+      messagingUi.applyChatTheme(theme, { toggleId: 'chatThemeToggle' });
+      return;
+    }
     var isDark = String(theme || '').toLowerCase() === 'dark';
     document.body.classList.toggle('pulsechat-dark', isDark);
     var btn = document.getElementById('chatThemeToggle');
@@ -126,6 +130,13 @@
   }
 
   function initChatTheme(){
+    if (typeof messagingUi.initChatTheme === 'function') {
+      messagingUi.initChatTheme({
+        storageKey: CHAT_THEME_STORAGE_KEY,
+        toggleId: 'chatThemeToggle'
+      });
+      return;
+    }
     var saved = localStorage.getItem(CHAT_THEME_STORAGE_KEY);
     if(!saved){
       saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
@@ -143,6 +154,15 @@
 
   function setMessagingAvailability(enabled){
     messagingEnabled = !!enabled;
+    if (typeof messagingUi.setMessagingAvailability === 'function') {
+      messagingUi.setMessagingAvailability({
+        enabled: messagingEnabled,
+        sendBtnId: 'sendBtn',
+        messageInputId: 'messageText',
+        disabledMessage: BACKEND_DISABLED_MSG
+      });
+      return;
+    }
     const sendBtn = document.getElementById('sendBtn');
     if (sendBtn) sendBtn.disabled = !messagingEnabled || !document.getElementById('messageText').value.trim();
     const messageText = document.getElementById('messageText');

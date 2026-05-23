@@ -73,9 +73,73 @@
     if (dot) dot.remove();
   }
 
+  function applyChatTheme(theme, options) {
+    var opts = options || {};
+    var toggleId = opts.toggleId || 'chatThemeToggle';
+    var isDark = String(theme || '').toLowerCase() === 'dark';
+    document.body.classList.toggle('pulsechat-dark', isDark);
+
+    var btn = document.getElementById(toggleId);
+    if (btn) {
+      btn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+      btn.title = isDark ? 'Use light theme' : 'Use dark theme';
+      btn.setAttribute('aria-label', btn.title);
+    }
+  }
+
+  function initChatTheme(options) {
+    var opts = options || {};
+    var key = opts.storageKey || 'spopeer_chat_theme';
+    var toggleId = opts.toggleId || 'chatThemeToggle';
+
+    var saved = localStorage.getItem(key);
+    if (!saved) {
+      saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+
+    applyChatTheme(saved, { toggleId: toggleId });
+
+    var toggle = document.getElementById(toggleId);
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var next = document.body.classList.contains('pulsechat-dark') ? 'light' : 'dark';
+        localStorage.setItem(key, next);
+        applyChatTheme(next, { toggleId: toggleId });
+      });
+    }
+  }
+
+  function setMessagingAvailability(options) {
+    var opts = options || {};
+    var enabled = !!opts.enabled;
+    var sendBtnId = opts.sendBtnId || 'sendBtn';
+    var messageInputId = opts.messageInputId || 'messageText';
+    var disabledMessage = opts.disabledMessage || 'Messaging will be available after backend activation.';
+
+    var sendBtn = document.getElementById(sendBtnId);
+    var messageText = document.getElementById(messageInputId);
+
+    if (sendBtn) {
+      var hasText = !!(messageText && String(messageText.value || '').trim());
+      sendBtn.disabled = !enabled || !hasText;
+    }
+
+    if (messageText) {
+      messageText.placeholder = enabled ? 'Write a message…' : disabledMessage;
+      messageText.disabled = !enabled;
+    }
+
+    if (!enabled && window.SpopeerToast) {
+      window.SpopeerToast.info(disabledMessage);
+    }
+  }
+
   messaging.ui = {
     renderConversationList: renderConversationList,
     markUserOnline: markUserOnline,
-    markUserOffline: markUserOffline
+    markUserOffline: markUserOffline,
+    applyChatTheme: applyChatTheme,
+    initChatTheme: initChatTheme,
+    setMessagingAvailability: setMessagingAvailability
   };
 })();
