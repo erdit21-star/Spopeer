@@ -7,6 +7,7 @@
   var messagingSocket = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.socket) || {};
   var messagingCompose = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.compose) || {};
   var messagingActions = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.actions) || {};
+  var messagingModal = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.modal) || {};
 
   function normalizeUser(user) {
     if (typeof messagingRuntime.normalizeUser === 'function') return messagingRuntime.normalizeUser(user || {});
@@ -673,126 +674,57 @@
   }
 
   /* ── New message modal ── */
-  document.getElementById('newMsgBtn').addEventListener('click',()=>document.getElementById('newMsgModal').classList.add('open'));
-  document.getElementById('newMsgModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
-  let searchResults = [];
-  document.getElementById('newMsgTo').addEventListener('input', async function(){
-    const query = this.value.trim();
-    const resultsList = document.getElementById('userSearchList');
-    const resultsContainer = document.getElementById('userSearchResults');
-    const errorDiv = document.getElementById('userSearchError');
-    
-    errorDiv.style.display = 'none';
-    
-    if (query.length < 2) {
-      resultsContainer.style.display = 'none';
-      searchResults = [];
-      return;
-    }
-    
-    try {
-      const response = (typeof messagingApi.searchUsers === 'function')
-        ? await messagingApi.searchUsers({ query, limit: 5 })
-        : listFromResponse(await window.SpopeerAPI.searchUsers({ query, limit: 5 }));
-      searchResults = listFromResponse(response).map(function (u) { return normalizeUser(u); });
-      
-      if (!Array.isArray(searchResults)) searchResults = [];
-      
-      if (searchResults.length === 0) {
-        resultsList.innerHTML = '<div style="padding:12px;color:var(--muted);text-align:center;font-size:13px;">No users found</div>';
-        resultsContainer.style.display = 'block';
-        return;
-      }
-      
-      resultsList.innerHTML = searchResults.map(u => {
-        const user = normalizeUser(u);
-        const name = user.displayName || 'User';
-        const displayId = user.email || user.id;
-        const safeId = escHtml(String(user.id || ''));
-        const safeName = escHtml(name);
-        const safeDisplayId = escHtml(String(displayId || ''));
-        return '<div class="usr-result" data-userid="' + safeId + '" data-username="' + safeName + '" style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s;"><div style="font-weight:600;color:var(--ink);font-size:13px;">' + safeName + '</div><div style="font-size:11px;color:var(--muted);">' + safeDisplayId + '</div></div>';
-      }).join('');
-      resultsContainer.style.display = 'block';
-      resultsList.querySelectorAll('.usr-result').forEach(function(item){
-        item.addEventListener('mouseover', function(){ this.style.background = 'var(--surface)'; });
-        item.addEventListener('mouseout', function(){ this.style.background = ''; });
-        item.addEventListener('click', function(){ setSelectedUser(this.dataset.userid, this.dataset.username); });
-      });
-    } catch (e) {
-      console.error('Search failed:', e);
-      errorDiv.textContent = 'Search failed. Try entering a user ID or email.';
-      errorDiv.style.display = 'block';
-      resultsContainer.style.display = 'none';
-    }
-  });
-  
-  window.setSelectedUser = function(userId, userName){
-    document.getElementById('newMsgTo').value = userId;
-    document.getElementById('userSearchResults').style.display = 'none';
-  };
-  
-  document.getElementById('startConvBtn').addEventListener('click',async function(){
-    const otherId=document.getElementById('newMsgTo').value.trim();
-    const firstMsg=document.getElementById('newMsgFirstMsg').value.trim();
-    const errorDiv = document.getElementById('userSearchError');
-    
-    errorDiv.style.display = 'none';
-    
-    if(!otherId){
-      errorDiv.textContent = 'Please enter or select a user to message';
-      errorDiv.style.display = 'block';
-      if (window.SpopeerToast) window.SpopeerToast.warning('Please select a recipient');
-      return;
-    }
+  if (typeof messagingModal.bindNewMessageModal === 'function') {
+    messagingModal.bindNewMessageModal({
+      openBtnId: 'newMsgBtn',
+      modalId: 'newMsgModal',
+      toInputId: 'newMsgTo',
+      firstMsgId: 'newMsgFirstMsg',
+      startBtnId: 'startConvBtn',
+      errorId: 'userSearchError',
+      resultsContainerId: 'userSearchResults',
+      resultsListId: 'userSearchList',
+      searchUsers: async function (query) {
+        const response = (typeof messagingApi.searchUsers === 'function')
+          ? await messagingApi.searchUsers({ query: query, limit: 5 })
+          : listFromResponse(await window.SpopeerAPI.searchUsers({ query: query, limit: 5 }));
+        return listFromResponse(response).map(function (u) { return normalizeUser(u); });
+      },
+      normalizeUser: normalizeUser,
+      escHtml: escHtml,
+      onWarning: function (msg) {
+        if (window.SpopeerToast) window.SpopeerToast.warning(msg);
+      },
+      onErrorToast: function (msg) {
+        if (window.SpopeerToast) window.SpopeerToast.error(msg);
+      },
+      onStartConversation: async function (payload) {
+        const created = (typeof messagingApi.createConversation === 'function')
+          ? await messagingApi.createConversation(String(payload.otherId))
+          : parsePayload(await window.SpopeerAPI.createConversation(String(payload.otherId)));
+        const createdId = created && created.id ? String(created.id) : '';
 
-    if(firstMsg && firstMsg.length>5000){
-      errorDiv.textContent = 'First message exceeds 5000 characters.';
-      errorDiv.style.display = 'block';
-      if (window.SpopeerToast) window.SpopeerToast.warning('Message is too long (max 5000 characters).');
-      return;
-    }
-    
-    try {
-      document.getElementById('startConvBtn').disabled = true;
-      
-      const created = (typeof messagingApi.createConversation === 'function')
-        ? await messagingApi.createConversation(String(otherId))
-        : parsePayload(await window.SpopeerAPI.createConversation(String(otherId)));
-      const createdId = created && created.id ? String(created.id) : '';
-      
-      if (!createdId) {
-        errorDiv.textContent = 'Could not create conversation. Please try again.';
-        errorDiv.style.display = 'block';
-        if (window.SpopeerToast) window.SpopeerToast.error('Failed to start conversation');
-        return;
-      }
-      
-      if(firstMsg){
-        if (typeof messagingApi.sendConversationMessage === 'function') {
-          await messagingApi.sendConversationMessage(createdId, firstMsg);
-        } else {
-          await window.SpopeerAPI.sendConversationMessage(createdId, firstMsg);
+        if (!createdId) {
+          return { success: false, message: 'Could not create conversation. Please try again.' };
         }
+
+        if(payload.firstMsg){
+          if (typeof messagingApi.sendConversationMessage === 'function') {
+            await messagingApi.sendConversationMessage(createdId, payload.firstMsg);
+          } else {
+            await window.SpopeerAPI.sendConversationMessage(createdId, payload.firstMsg);
+          }
+        }
+
+        if (window.SpopeerToast) window.SpopeerToast.success('Conversation started!');
+        return { success: true, conversationId: createdId };
+      },
+      onSuccess: function (result) {
+        loadConversations();
+        openConversation(result.otherId, result.conversationId || null);
       }
-      
-      document.getElementById('newMsgModal').classList.remove('open');
-      document.getElementById('newMsgTo').value='';
-      document.getElementById('newMsgFirstMsg').value='';
-      
-      if (window.SpopeerToast) window.SpopeerToast.success('Conversation started!');
-      loadConversations();
-      openConversation(otherId, createdId);
-    } catch (e) {
-      console.error('Failed to start conversation:', e);
-      const msg = e && e.message ? e.message : 'Could not create conversation';
-      errorDiv.textContent = msg;
-      errorDiv.style.display = 'block';
-      if (window.SpopeerToast) window.SpopeerToast.error(msg);
-    } finally {
-      document.getElementById('startConvBtn').disabled = false;
-    }
-  });
+    });
+  }
 
   /* ── Search filter ── */
   document.getElementById('convSearch').addEventListener('input',function(){
