@@ -2,6 +2,8 @@
   var messagingRuntime = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.runtime) || {};
   var messagingUtils = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.utils) || {};
   var messagingApi = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.api) || {};
+  var messagingState = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.state) || {};
+  var messagingUi = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.ui) || {};
   var messagingSocket = (window.Spopeer && window.Spopeer.messaging && window.Spopeer.messaging.socket) || {};
 
   function normalizeUser(user) {
@@ -178,6 +180,20 @@
   /* ── Render conversation list ── */
   function renderConvList(convs){
     const list=document.getElementById('conversationsList');
+    if (typeof messagingUi.renderConversationList === 'function') {
+      messagingUi.renderConversationList({
+        listEl: list,
+        conversations: convs,
+        currentConversation: currentConversation,
+        initFor: initFor,
+        fmtTime: fmtTime,
+        escHtml: escHtml,
+        onOpen: function (otherId, conversationId) {
+          openConversation(otherId, conversationId);
+        }
+      });
+      return;
+    }
     if(!convs||!convs.length){
       list.innerHTML='<div class="conv-empty"><i class="fa-regular fa-comment-slash"></i><div style="margin-top:8px">No conversations yet</div><div style="font-size:12px;margin-top:4px;color:var(--muted-2)">Start a new message to connect</div></div>';
       return;
@@ -313,13 +329,17 @@
             before: conversationOldestAt
           }));
       var older=(data&&data.messages)||[];
-      var seen=new Set(currentMessageList.map(function(m){ return String(m.id||''); }));
-      older=older.filter(function(m){
-        var id=String(m.id||'');
-        if(!id) return true;
-        return !seen.has(id);
-      });
-      currentMessageList=older.concat(currentMessageList);
+      if (typeof messagingState.mergeOlderMessages === 'function') {
+        currentMessageList = messagingState.mergeOlderMessages(currentMessageList, older);
+      } else {
+        var seen=new Set(currentMessageList.map(function(m){ return String(m.id||''); }));
+        older=older.filter(function(m){
+          var id=String(m.id||'');
+          if(!id) return true;
+          return !seen.has(id);
+        });
+        currentMessageList=older.concat(currentMessageList);
+      }
       conversationHasMore=!!(data&&data.hasMore);
       conversationOldestAt=(data&&data.oldestAt)?String(data.oldestAt):conversationOldestAt;
       renderMessages(currentMessageList, String(getMe() || ''), true);
@@ -334,6 +354,9 @@
   }
 
   function isDeletedMessage(msg){
+    if (typeof messagingState.isDeletedMessage === 'function') {
+      return messagingState.isDeletedMessage(msg);
+    }
     if (!msg) return false;
     if (msg.deletedAt) return true;
     var text = String(msg.body || msg.text || msg.content || '').trim();
@@ -423,6 +446,10 @@
   }
 
   function upsertMessageInState(msg){
+    if (typeof messagingState.upsertMessage === 'function') {
+      currentMessageList = messagingState.upsertMessage(currentMessageList, msg);
+      return;
+    }
     if (!msg) return;
     var id = msg.id ? String(msg.id) : '';
     if (id) {
@@ -438,6 +465,11 @@
   }
 
   function updateMessageDeletedState(messageId, deletedAt){
+    if (typeof messagingState.markMessageDeleted === 'function') {
+      currentMessageList = messagingState.markMessageDeleted(currentMessageList, messageId, deletedAt);
+      renderMessages(currentMessageList, String(getMe() || ''));
+      return;
+    }
     var id = String(messageId || '');
     if (!id) return;
     var idx = currentMessageList.findIndex(function (m) { return String(m.id || '') === id; });
@@ -897,6 +929,10 @@
           onUserOnline: function(payload){
             var uid=String(payload&&payload.userId||'');
             if(!uid)return;
+            if (typeof messagingUi.markUserOnline === 'function') {
+              messagingUi.markUserOnline(uid);
+              return;
+            }
             var item=document.querySelector('.conv-item[data-other="'+uid+'"]');
             if(item){
               var av=item.querySelector('.conv-av');
@@ -910,6 +946,10 @@
           onUserOffline: function(payload){
             var uid=String(payload&&payload.userId||'');
             if(!uid)return;
+            if (typeof messagingUi.markUserOffline === 'function') {
+              messagingUi.markUserOffline(uid);
+              return;
+            }
             var item=document.querySelector('.conv-item[data-other="'+uid+'"]');
             if(item){
               var dot=item.querySelector('.online-dot');
