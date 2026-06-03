@@ -8,8 +8,9 @@ require('./config/env');
 if (process.env.NODE_ENV === 'production') {
   const hasAccessSecret = !!process.env.JWT_ACCESS_SECRET;
   const hasRefreshSecret = !!process.env.JWT_REFRESH_SECRET;
-  if (!hasAccessSecret || !hasRefreshSecret) {
-    console.error('FATAL: JWT_ACCESS_SECRET and JWT_REFRESH_SECRET are required in production.');
+  const hasLegacySecret = !!process.env.JWT_SECRET;
+  if ((!hasAccessSecret || !hasRefreshSecret) && !hasLegacySecret) {
+    console.error('FATAL: JWT_ACCESS_SECRET and JWT_REFRESH_SECRET, or JWT_SECRET, are required in production.');
     process.exit(1);
   }
 

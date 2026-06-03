@@ -33,6 +33,7 @@ function validate() {
   if (isProduction) {
     const hasAccessSecret = !!process.env.JWT_ACCESS_SECRET;
     const hasRefreshSecret = !!process.env.JWT_REFRESH_SECRET;
+    const hasLegacySecret = !!process.env.JWT_SECRET;
 
     const missingProduction = REQUIRED_IN_PRODUCTION.filter(v => !process.env[v]);
     if (missingProduction.length) {
@@ -40,8 +41,8 @@ function validate() {
       process.exit(1);
     }
 
-    if (!hasAccessSecret || !hasRefreshSecret) {
-      console.error('Production requires JWT_ACCESS_SECRET and JWT_REFRESH_SECRET. Do not use JWT_SECRET fallback in production.');
+    if ((!hasAccessSecret || !hasRefreshSecret) && !hasLegacySecret) {
+      console.error('Production requires JWT_ACCESS_SECRET and JWT_REFRESH_SECRET, or a legacy JWT_SECRET fallback.');
       process.exit(1);
     }
 
@@ -79,8 +80,8 @@ const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProduction: process.env.NODE_ENV === 'production',
   jwtSecret: process.env.JWT_SECRET,
-  jwtAccessSecret: process.env.NODE_ENV === 'production' ? process.env.JWT_ACCESS_SECRET : (process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET),
-  jwtRefreshSecret: process.env.NODE_ENV === 'production' ? process.env.JWT_REFRESH_SECRET : (process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET),
+  jwtAccessSecret: process.env.NODE_ENV === 'production' ? (process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET) : (process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET),
+  jwtRefreshSecret: process.env.NODE_ENV === 'production' ? (process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET) : (process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   appUrl: process.env.APP_URL || `http://localhost:${process.env.PORT || 5000}`,
   frontendUrl: process.env.FRONTEND_URL || '',
