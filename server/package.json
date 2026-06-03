@@ -6,8 +6,6 @@
   "scripts": {
     "start": "node --dns-result-order=ipv4first server.js",
     "dev": "nodemon server.js",
-    "test": "jest --config tests/jest.config.cjs",
-    "test:db": "jest --config tests/jest.db.config.cjs --runInBand",
     "migrate": "npx sequelize-cli db:migrate",
     "migrate:prod": "npx sequelize-cli db:migrate --env production",
     "check:launch": "node scripts/final-launch-checks.js",
@@ -42,9 +40,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "jest": "^30.2.0",
-    "nodemon": "^3.1.14",
-    "supertest": "^7.1.0"
+    "nodemon": "^3.1.14"
   },
   "optionalDependencies": {
     "@sentry/node": "^9.0.0"

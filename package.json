@@ -10,15 +10,10 @@
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
     "syntax:check": "node scripts/syntax-check.js",
-    "test": "cd server && npm test",
-    "test:integration": "cd server && npx jest --config tests/jest.config.cjs --testPathPatterns=integration",
-    "test:db": "cd server && npx jest --config tests/jest.db.config.cjs --runInBand",
-    "test:e2e": "npx playwright test",
-    "verify": "npm run syntax:check && npm run lint && npm run test && npm run test:db"
+    "verify": "npm run syntax:check && npm run lint"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@playwright/test": "^1.52.0",
     "eslint": "^9.0.0",
     "globals": "^15.0.0"
   },

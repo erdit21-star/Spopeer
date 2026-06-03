@@ -247,7 +247,7 @@
   async function loadConversations(){
     if(!_loggedIn&&!ud){renderConvList([]);return;}
     
-    const userEmail = ud?.email || 'user@example.com';
+    const userEmail = ud?.email || '';
     
     try{
       // Prefer SpopeerAPI to ensure cookie + CSRF handling is consistent.
