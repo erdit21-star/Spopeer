@@ -359,11 +359,75 @@ function switchContentTab(tab, btn) {
 
 async function removePost(id) {
   try {
-    await window.SpopeerAPI.adminDeletePost(id);
+    if (window.SpopeerAPI && typeof window.SpopeerAPI.moderationRemovePost === 'function') {
+      await window.SpopeerAPI.moderationRemovePost(id, 'Removed by admin dashboard content moderation');
+    } else {
+      await window.SpopeerAPI.adminDeletePost(id);
+    }
     showToast('Post removed', 'success');
     loadPosts(currentPostsPage);
   } catch (err) {
     showToast('Failed to remove post', 'error');
+  }
+}
+
+function readModActionValues(type) {
+  if (type === 'post') {
+    return {
+      id: parseInt(document.getElementById('mod-post-id').value, 10),
+      reason: (document.getElementById('mod-post-reason').value || '').trim()
+    };
+  }
+  return {
+    id: parseInt(document.getElementById('mod-user-id').value, 10),
+    reason: (document.getElementById('mod-user-reason').value || '').trim()
+  };
+}
+
+async function adminHidePostAction() {
+  const vals = readModActionValues('post');
+  if (!vals.id) return showToast('Enter a valid post ID', 'warn');
+  try {
+    await window.SpopeerAPI.moderationHidePost(vals.id, vals.reason || 'Hidden by admin dashboard');
+    showToast('Post hidden', 'success');
+    loadPosts(currentPostsPage);
+  } catch (_err) {
+    showToast('Failed to hide post', 'error');
+  }
+}
+
+async function adminRemovePostAction() {
+  const vals = readModActionValues('post');
+  if (!vals.id) return showToast('Enter a valid post ID', 'warn');
+  try {
+    await window.SpopeerAPI.moderationRemovePost(vals.id, vals.reason || 'Removed by admin dashboard');
+    showToast('Post removed', 'success');
+    loadPosts(currentPostsPage);
+  } catch (_err) {
+    showToast('Failed to remove post', 'error');
+  }
+}
+
+async function adminWarnUserAction() {
+  const vals = readModActionValues('user');
+  if (!vals.id) return showToast('Enter a valid user ID', 'warn');
+  try {
+    await window.SpopeerAPI.moderationWarnUser(vals.id, vals.reason || 'Please review community guidelines.');
+    showToast('User warned', 'success');
+  } catch (_err) {
+    showToast('Failed to warn user', 'error');
+  }
+}
+
+async function adminSuspendUserAction() {
+  const vals = readModActionValues('user');
+  if (!vals.id) return showToast('Enter a valid user ID', 'warn');
+  try {
+    await window.SpopeerAPI.moderationSuspendUser(vals.id, vals.reason || 'Suspended by admin dashboard');
+    showToast('User suspended', 'success');
+    loadUsers(currentUsersPage);
+  } catch (_err) {
+    showToast('Failed to suspend user', 'error');
   }
 }
 

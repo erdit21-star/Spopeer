@@ -3637,7 +3637,7 @@
           </div>
 
           <!-- Visibility & Tools -->
-          <div class="composer-tools">
+            <div class="composer-tool-group" id="feature-visibility-selector" data-feature="visibility-selector">
             <div class="composer-tool-group">
               <label for="postVisibility">Visibility:</label>
               <select id="postVisibility" class="visibility-select">
@@ -3646,11 +3646,11 @@
                 <option value="private">Private</option>
                 <option value="group">Group</option>
               </select>
-            </div>
+            <div class="composer-tool-group" id="feature-hashtags-input" data-feature="hashtags-input">
             <div class="composer-tool-group">
               <label for="postHashtags">Hashtags:</label>
               <input type="text" id="postHashtags" class="visibility-select" placeholder="#football, #training" />
-            </div>
+            <div class="composer-tool-group" id="postGroupWrap" data-feature="group-selector" style="display:none;">
             <div class="composer-tool-group" id="postGroupWrap" style="display:none;">
               <label for="postGroupId">Group:</label>
               <input type="text" id="postGroupId" class="visibility-select" placeholder="Group ID" />
@@ -3663,7 +3663,7 @@
             </div>
           </div>
 
-          <div class="composer-media-preview" id="postLinkPreview" hidden></div>
+          <div class="composer-media-preview" id="postLinkPreview" data-feature="link-preview" hidden></div>
 
           <!-- Hidden File Input -->
           <input type="file" id="photoInput" accept="image/*" style="display: none;">

@@ -356,6 +356,34 @@
         </div>
         <div class="pagination"><span id="reports-pagination-info">Showing 0 reports</span><div class="page-btns" id="reports-page-btns"></div></div>
       </div>
+
+      <div class="panel" id="moderation-admin-tools">
+        <div class="panel-header">
+          <div class="panel-title">Moderation Admin Actions</div>
+          <span class="chip chip-red">Hide, Remove, Warn, Suspend</span>
+        </div>
+        <div class="panel-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="border:1.5px solid var(--border);border-radius:12px;padding:14px;">
+            <div style="font-weight:700;margin-bottom:8px;">Post Actions</div>
+            <div class="form-group"><label class="form-label" for="mod-post-id">Post ID</label><input class="form-control" id="mod-post-id" type="number" placeholder="e.g. 42"></div>
+            <div class="form-group"><label class="form-label" for="mod-post-reason">Reason</label><input class="form-control" id="mod-post-reason" type="text" placeholder="Policy violation"></div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-secondary" type="button" onclick="adminHidePostAction()"><i class="fa-solid fa-eye-slash"></i> Hide Post</button>
+              <button class="btn btn-danger" type="button" onclick="adminRemovePostAction()"><i class="fa-solid fa-trash"></i> Remove Post</button>
+            </div>
+          </div>
+
+          <div style="border:1.5px solid var(--border);border-radius:12px;padding:14px;">
+            <div style="font-weight:700;margin-bottom:8px;">User Actions</div>
+            <div class="form-group"><label class="form-label" for="mod-user-id">User ID</label><input class="form-control" id="mod-user-id" type="number" placeholder="e.g. 18"></div>
+            <div class="form-group"><label class="form-label" for="mod-user-reason">Reason</label><input class="form-control" id="mod-user-reason" type="text" placeholder="Harassment warning"></div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-secondary" type="button" onclick="adminWarnUserAction()"><i class="fa-solid fa-triangle-exclamation"></i> Warn User</button>
+              <button class="btn btn-danger" type="button" onclick="adminSuspendUserAction()"><i class="fa-solid fa-user-slash"></i> Suspend User</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="section-analytics" class="section">

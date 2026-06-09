@@ -732,6 +732,30 @@
         body: JSON.stringify(payload || {})
       });
     },
+    moderationHidePost: function (postId, reason) {
+      return request('/api/moderation/posts/' + encodeURIComponent(postId) + '/hide', {
+        method: 'PATCH',
+        body: JSON.stringify({ reason: reason || '' })
+      });
+    },
+    moderationRemovePost: function (postId, reason) {
+      return request('/api/moderation/posts/' + encodeURIComponent(postId) + '/remove', {
+        method: 'PATCH',
+        body: JSON.stringify({ reason: reason || '' })
+      });
+    },
+    moderationWarnUser: function (userId, reason) {
+      return request('/api/moderation/users/' + encodeURIComponent(userId) + '/warn', {
+        method: 'PATCH',
+        body: JSON.stringify({ reason: reason || '' })
+      });
+    },
+    moderationSuspendUser: function (userId, reason) {
+      return request('/api/moderation/users/' + encodeURIComponent(userId) + '/suspend', {
+        method: 'PATCH',
+        body: JSON.stringify({ reason: reason || '' })
+      });
+    },
     searchUsers: function (params) {
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request("/api/search/users" + qs);
