@@ -4,7 +4,9 @@
   function resolveSafeNext(rawValue, fallbackPath) {
     var fallback = fallbackPath || '/feed.html';
     if (window.SpopeerAPI && typeof window.SpopeerAPI.getSafeNextPath === 'function') {
-      return window.SpopeerAPI.getSafeNextPath(rawValue, fallback);
+      var viaApi = window.SpopeerAPI.getSafeNextPath(rawValue, fallback);
+      if (isUnsafePostLoginPath(viaApi)) return fallback;
+      return viaApi;
     }
 
     var raw = String(rawValue || '').trim();
@@ -12,7 +14,25 @@
     if (raw.indexOf('http://') === 0 || raw.indexOf('https://') === 0 || raw.indexOf('//') === 0) {
       return fallback;
     }
-    return raw.charAt(0) === '/' ? raw : '/' + raw;
+    var normalized = raw.charAt(0) === '/' ? raw : '/' + raw;
+    return isUnsafePostLoginPath(normalized) ? fallback : normalized;
+  }
+
+  function isUnsafePostLoginPath(pathname) {
+    var path = String(pathname || '').toLowerCase();
+    if (!path || path === '/') return false;
+    if (path.indexOf('/api/') === 0) return true;
+    if (path.indexOf('/socket.io/') === 0) return true;
+    if (path.indexOf('/pages/auth/login.html') === 0) return true;
+    if (path.indexOf('/pages/auth/signup.html') === 0) return true;
+    return false;
+  }
+
+  function navigateAfterLogin(targetPath) {
+    var target = String(targetPath || '/feed.html');
+    var sep = target.indexOf('?') === -1 ? '?' : '&';
+    var href = target + sep + 'loginAt=' + Date.now();
+    window.location.replace(href);
   }
 
   function readNextFromUrl() {
@@ -66,7 +86,7 @@
       }
 
       var nextTarget = resolveSafeNext(nextRaw, fallbackTarget);
-      window.location.href = nextTarget;
+      navigateAfterLogin(nextTarget);
       return { ok: true, target: nextTarget };
     } catch (err) {
       setError(errorEl, (err && err.message) || 'Login failed.');

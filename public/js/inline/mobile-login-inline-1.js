@@ -39,10 +39,15 @@ function completeAuthNavigation(path) {
   var targetPath = (window.SpopeerAPI && typeof window.SpopeerAPI.getSafeNextPath === 'function')
     ? window.SpopeerAPI.getSafeNextPath(requestedPath, '/mobile.html')
     : (String(requestedPath || '/mobile.html').charAt(0) === '/' ? String(requestedPath) : '/mobile.html');
+  var lower = String(targetPath || '').toLowerCase();
+  if (lower.indexOf('/api/') === 0 || lower.indexOf('/pages/auth/login.html') === 0 || lower.indexOf('/pages/auth/signup.html') === 0) {
+    targetPath = '/mobile.html';
+  }
   // Mobile browsers are unreliable with opener/popup close flows.
   // Always navigate the current tab to avoid ending on a blank white page.
   try { localStorage.setItem('spopeer_google_auth_complete', String(Date.now())); } catch (_error) { /* ignore storage failures */ }
-  window.location.assign(targetPath);
+  var sep = targetPath.indexOf('?') === -1 ? '?' : '&';
+  window.location.replace(targetPath + sep + 'loginAt=' + Date.now());
 }
 
 async function handleGoogleCredential(response) {
@@ -163,7 +168,12 @@ document.getElementById('loginBtn').onclick = async function() {
     const res = await window.SpopeerAPI.login({ email, password });
     const user = (res.data && res.data.user) || res.user || null;
     if (user && window.Auth) window.Auth.login(user);
-    window.location.assign(nextTarget);
+    const lower = String(nextTarget || '').toLowerCase();
+    const safeTarget = (lower.indexOf('/api/') === 0 || lower.indexOf('/pages/auth/login.html') === 0 || lower.indexOf('/pages/auth/signup.html') === 0)
+      ? '/mobile.html'
+      : nextTarget;
+    const sep = safeTarget.indexOf('?') === -1 ? '?' : '&';
+    window.location.replace(safeTarget + sep + 'loginAt=' + Date.now());
   } catch(e) {
     errBox.textContent = (e && e.message) || 'Login failed. Check your credentials.';
     errBox.style.display = 'block';
