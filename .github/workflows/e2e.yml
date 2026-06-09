@@ -25,14 +25,26 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
+      - name: Check for Playwright tests
+        id: playwright-tests
+        run: |
+          if [ -d e2e ] && find e2e -type f \( -name "*.spec.js" -o -name "*.spec.ts" -o -name "*.test.js" -o -name "*.test.ts" \) | grep -q .; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No Playwright tests found in e2e/. Skipping E2E run."
+          fi
+
       - name: Install Playwright browsers
+        if: steps.playwright-tests.outputs.found == 'true'
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
-        run: npx playwright test --config=playwright.config.cjs
+        if: steps.playwright-tests.outputs.found == 'true'
+        run: npx playwright test
 
       - name: Upload Playwright report
-        if: always()
+        if: always() && steps.playwright-tests.outputs.found == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
@@ -40,7 +52,7 @@ jobs:
           retention-days: 7
 
       - name: Upload test results
-        if: always()
+        if: always() && steps.playwright-tests.outputs.found == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results
