@@ -250,6 +250,9 @@
     <a href="#section-privacy" class="sidebar-nav-item" data-section="privacy">
       <i class="fa-regular fa-shield"></i> Privacy & Safety
     </a>
+    <a href="#section-safety-tools" class="sidebar-nav-item" data-section="safety-tools">
+      <i class="fa-regular fa-flag"></i> Safety Tools
+    </a>
     <a href="#section-appearance" class="sidebar-nav-item" data-section="appearance">
       <i class="fa-regular fa-palette"></i> Appearance
     </a>
@@ -454,6 +457,38 @@
           </div>
           <div id="privacy-save-msg" hidden style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
         </form>
+      </div>
+    </div>
+
+    <!-- SAFETY TOOLS -->
+    <div class="settings-card" id="section-safety-tools">
+      <div class="card-header">
+        <div class="card-icon red"><i class="fa-regular fa-flag"></i></div>
+        <div class="card-header-text">
+          <div class="card-title">Safety Tools</div>
+          <div class="card-desc">Report or block users from your settings area</div>
+        </div>
+      </div>
+      <div class="card-body" data-moderation-quick-actions>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+          Use this panel when you need to report spam, harassment, or other abuse. You can also visit the full
+          <a href="/pages/company/report-abuse.html">Report Abuse</a> page for more guidance.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <input data-mod-target type="number" placeholder="User ID" style="grid-column:1 / -1;padding:8px;border:1px solid #d9d9d9;border-radius:8px;" />
+          <select data-mod-reason style="padding:8px;border:1px solid #d9d9d9;border-radius:8px;">
+            <option value="spam">Spam</option>
+            <option value="harassment">Harassment</option>
+            <option value="hate_speech">Hate speech</option>
+            <option value="violence">Violence</option>
+            <option value="inappropriate">Inappropriate</option>
+            <option value="scam">Scam</option>
+            <option value="other">Other</option>
+          </select>
+          <input data-mod-note type="text" placeholder="Optional details" style="padding:8px;border:1px solid #d9d9d9;border-radius:8px;" />
+          <button data-mod-action="report" class="btn-outline" type="button" style="padding:8px 14px;">Report</button>
+          <button data-mod-action="block" class="btn-primary" type="button" style="padding:8px 14px;">Block</button>
+        </div>
       </div>
     </div>
 
@@ -675,6 +710,7 @@
 <script src="/js/inline/pages-dashboard-settings-inline-3.js"></script>
 <script src="/js/navigation.js"></script>
 <script src="/js/privacy-settings.js"></script>
+<script src="/js/moderation-ui.js"></script>
 </body>
 </html>
 

@@ -39,36 +39,7 @@
     }, 1200);
   }
 
-  function initOnboardingHint() {
-    const key = 'spopeer:onboarding:v1';
-    if (localStorage.getItem(key)) return;
-
-    const host = document.querySelector('main, .main-content, body');
-    if (!host) return;
-
-    const banner = document.createElement('div');
-    banner.className = 'ad-card';
-    banner.style.marginBottom = '12px';
-    banner.innerHTML = [
-      '<strong style="display:block;margin-bottom:6px;">New here?</strong>',
-      '<span>Set your visibility, add hashtags, and use Safety Tools to report or block quickly.</span>',
-      '<div style="margin-top:10px;">',
-      '<button type="button" data-ux-close class="composer-post-btn">Got it</button>',
-      '</div>'
-    ].join('');
-
-    host.prepend(banner);
-    const close = banner.querySelector('[data-ux-close]');
-    if (close) {
-      close.addEventListener('click', () => {
-        localStorage.setItem(key, '1');
-        banner.remove();
-      });
-    }
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
     initFeedStates();
-    initOnboardingHint();
   });
 })();
