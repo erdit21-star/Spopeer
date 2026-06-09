@@ -15,6 +15,7 @@ const { authenticate } = require('../middleware/auth');
 const { sanitizeString } = require('../utils/validation');
 const { createNotification } = require('../services/notifications');
 const { ok, created, fail } = require('../utils/response');
+const { checkMessage } = require('../services/contentFilter');
 
 function logApiError(scope, req, error) {
   console.error(`[MESSAGES_API] ${scope} failed`, {
@@ -254,6 +255,9 @@ router.post('/conversations/:id/messages', async (req, res) => {
       return fail(res, 400, 'VALIDATION', 'Message body is required.');
     }
 
+    const msgFilter = checkMessage(bodyInput);
+    if (msgFilter.blocked) return fail(res, 400, 'CONTENT_POLICY', msgFilter.reason);
+
     const participants = await ConversationParticipant.findAll({
       where: { conversationId },
       attributes: ['userId']
@@ -428,6 +432,12 @@ router.post('/send', async (req, res) => {
     if (!toId || !text) {
       await transaction.rollback();
       return fail(res, 400, 'VALIDATION', 'toId and text are required.');
+    }
+
+    const msgFilter = checkMessage(text);
+    if (msgFilter.blocked) {
+      await transaction.rollback();
+      return fail(res, 400, 'CONTENT_POLICY', msgFilter.reason);
     }
 
     const receiver = await findUserByIdentifier(toId, { transaction });

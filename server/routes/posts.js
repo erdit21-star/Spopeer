@@ -28,6 +28,7 @@ const { cache } = require('../services/cache');
 const { createNotification } = require('../services/notifications');
 const logger = require('../utils/logger');
 const { getBlockedUserIds } = require('../utils/blocks');
+const { checkPost, checkComment } = require('../services/contentFilter');
 const supportsPostViewCount = !!(
   Post &&
   Post.rawAttributes &&
@@ -172,29 +173,37 @@ router.get('/', optionalAuth, async (req, res) => {
   try {
     const { page, limit } = parsePagination(req.query);
     const { sport, authorId, following } = req.query;
-    const where = { isActive: true };
+    const where = { isActive: true, status: 'active' };
 
     if (sport) where.sport = sport;
-    if (authorId) where.userId = authorId;
+    if (authorId) where.userId = parseInt(authorId, 10);
 
-    // Following-only feed: filter posts by users the requester follows
-    if (following === 'true' && req.userId) {
+    // Visibility + following filter
+    if (req.userId) {
       const connections = await Connection.findAll({
         where: { followerId: req.userId, status: 'active' },
         attributes: ['followingId']
       });
       const followedIds = connections.map(c => c.followingId);
-      where.userId = { [Op.in]: followedIds };
-    }
-
-    // Filter out blocked users if authenticated
-    if (req.userId) {
+      if (following === 'true') {
+        where.userId = { [Op.in]: followedIds };
+      }
+      // Respect post visibility for authenticated users
+      if (!where[Op.or]) {
+        where[Op.or] = [
+          { visibility: 'public' },
+          { visibility: 'followers', userId: [...followedIds, req.userId] },
+          { visibility: 'private', userId: req.userId }
+        ];
+      }
       const blockedIds = await getBlockedUserIds(req.userId);
       if (blockedIds.length > 0) {
         where.userId = where.userId
           ? { [Op.and]: [where.userId, { [Op.notIn]: blockedIds }] }
           : { [Op.notIn]: blockedIds };
       }
+    } else {
+      where.visibility = 'public';
     }
 
     const offset = (page - 1) * limit;
@@ -229,42 +238,68 @@ router.get('/', optionalAuth, async (req, res) => {
 });
 
 // ─── CREATE POST ───
-router.post('/', authenticate, uploadPost.single('image'), validateUploadedFile, validate(createPostSchema), async (req, res) => {
+router.post('/', authenticate, uploadPost.array('media', 10), validateUploadedFile, validate(createPostSchema), async (req, res) => {
   try {
-    const { content, sport, type, pollOptions } = req.body;
+    const {
+      content, sport, type, pollOptions,
+      visibility, groupId,
+      linkUrl, linkTitle, linkDescription, linkImage,
+      hashtags
+    } = req.body;
 
     const sanitizedContent = sanitizeString(content || '', 5000);
-    if (!sanitizedContent && !req.file) {
+    if (!sanitizedContent && (!req.files || req.files.length === 0)) {
       return fail(res, 400, 'VALIDATION', 'Write text or add an image/video.');
+    }
+
+    // Content filter
+    const filterResult = checkPost(sanitizedContent);
+    if (filterResult.blocked) return fail(res, 400, 'CONTENT_POLICY', filterResult.reason);
+
+    // Validate visibility
+    const VALID_VIS = ['public', 'followers', 'private', 'group'];
+    const resolvedVisibility = VALID_VIS.includes(visibility) ? visibility : 'public';
+
+    // Parse hashtags: accept JSON array string or plain comma-separated
+    let parsedHashtags = null;
+    if (hashtags) {
+      try {
+        parsedHashtags = typeof hashtags === 'string' ? JSON.parse(hashtags) : hashtags;
+      } catch (_) {
+        parsedHashtags = String(hashtags).split(',').map(t => t.trim().replace(/^#/, '')).filter(Boolean);
+      }
+      if (!Array.isArray(parsedHashtags)) parsedHashtags = null;
+      if (parsedHashtags) parsedHashtags = parsedHashtags.slice(0, 20).map(t => String(t).toLowerCase().slice(0, 60));
     }
 
     const postData = {
       userId: req.userId,
       content: sanitizedContent || '',
-      sport: sanitizeString(sport, 100) || req.user.sport || 'General'
+      sport: sanitizeString(sport, 100) || req.user.sport || 'General',
+      visibility: resolvedVisibility,
+      groupId: groupId ? parseInt(groupId, 10) : null,
+      linkUrl:         linkUrl         ? sanitizeString(linkUrl,         2000) : null,
+      linkTitle:       linkTitle       ? sanitizeString(linkTitle,        255) : null,
+      linkDescription: linkDescription ? sanitizeString(linkDescription, 1000) : null,
+      linkImage:       linkImage       ? sanitizeString(linkImage,       2000) : null,
+      hashtags: parsedHashtags
     };
 
     const postType = type || 'post';
 
     if (postType === 'poll') {
       let parsedOptions = [];
-
       try {
         parsedOptions = typeof pollOptions === 'string'
           ? JSON.parse(pollOptions)
           : pollOptions;
-      } catch (error) {
+      } catch (_) {
         return fail(res, 400, 'VALIDATION', 'Invalid poll options.');
       }
-
       parsedOptions = Array.isArray(parsedOptions)
         ? parsedOptions.map(option => sanitizeString(option, 200)).filter(Boolean)
         : [];
-
-      if (parsedOptions.length < 2) {
-        return fail(res, 400, 'VALIDATION', 'Poll needs at least 2 options.');
-      }
-
+      if (parsedOptions.length < 2) return fail(res, 400, 'VALIDATION', 'Poll needs at least 2 options.');
       postData.type = 'poll';
       postData.pollOptions = parsedOptions;
       postData.pollVotes = parsedOptions.map(() => 0);
@@ -272,20 +307,38 @@ router.post('/', authenticate, uploadPost.single('image'), validateUploadedFile,
       postData.type = postType;
     }
 
-    if (req.file) {
-      const { url } = await persistFile(req.file, 'posts', req.userId);
+    // First file → legacy single-image field (backwards compat)
+    if (req.files && req.files.length > 0) {
+      const { url } = await persistFile(req.files[0], 'posts', req.userId);
       postData.image = url;
     }
 
     const post = await Post.create(postData);
+
+    // Additional files → PostMedia records
+    const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm'];
+    if (req.files && req.files.length > 1) {
+      for (const [idx, file] of req.files.slice(1).entries()) {
+        if (!ALLOWED_MIME.includes(file.mimetype)) continue;
+        const mediaType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+        const { url, publicId } = await persistFile(file, 'posts', req.userId);
+        await PostMedia.create({
+          postId: post.id, userId: req.userId,
+          url, publicId: publicId || null, mediaType,
+          mimeType: file.mimetype, sizeBytes: file.size, sortOrder: idx + 1
+        });
+      }
+    }
+
     await cache.delByPrefix('feed:');
 
-    // Update user's post count
     await req.user.increment('postsCount');
 
-    // Fetch with author info
     const fullPost = await Post.findByPk(post.id, {
-      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription'] }]
+      include: [
+        { model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription'] },
+        { model: PostMedia, as: 'postMedia', attributes: ['id', 'url', 'mediaType', 'sortOrder'], required: false }
+      ]
     });
 
     created(res, fullPost);
@@ -298,10 +351,22 @@ router.post('/', authenticate, uploadPost.single('image'), validateUploadedFile,
 // ─── GET SAVED POSTS FOR CURRENT USER ───
 router.get('/saved', authenticate, async (req, res) => {
   try {
+    const blockedIds = await getBlockedUserIds(req.userId);
     const saved = await SavedPost.findAll({
       where: { userId: req.userId },
-      include: [{ model: Post, as: 'post', include: [{ model: User, as: 'author', attributes: ['id','firstName','lastName','avatarUrl'] }] }],
-      order: [['createdAt','DESC']]
+      include: [{
+        model: Post, as: 'post',
+        where: { isActive: true, status: 'active' },
+        required: true,
+        include: [
+          { model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'],
+            where: blockedIds.length ? { id: { [Op.notIn]: blockedIds } } : {},
+            required: false
+          },
+          { model: PostMedia, as: 'postMedia', attributes: ['id', 'url', 'mediaType', 'sortOrder'], required: false }
+        ]
+      }],
+      order: [['createdAt', 'DESC']]
     });
 
     ok(res, saved);
@@ -366,11 +431,28 @@ router.post('/:id/poll/vote', authenticate, async (req, res) => {
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id, {
-      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription'] }]
+      include: [
+        { model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription'] },
+        { model: PostMedia, as: 'postMedia', attributes: ['id', 'url', 'mediaType', 'mimeType', 'width', 'height', 'duration', 'sortOrder'], required: false }
+      ]
     });
 
-    if (!post || !post.isActive) {
+    if (!post || !post.isActive || post.status === 'removed') {
       return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+    }
+
+    // Visibility check
+    if (post.visibility !== 'public') {
+      if (!req.userId) return fail(res, 403, 'FORBIDDEN', 'Post not available.');
+      if (post.visibility === 'private' && post.userId !== req.userId) {
+        return fail(res, 403, 'FORBIDDEN', 'Post not available.');
+      }
+      if (post.visibility === 'followers') {
+        const isFollowing = await Connection.findOne({
+          where: { followerId: req.userId, followingId: post.userId, status: 'active' }
+        });
+        if (!isFollowing && post.userId !== req.userId) return fail(res, 403, 'FORBIDDEN', 'Post not available.');
+      }
     }
 
     const result = post.toJSON();
@@ -481,6 +563,9 @@ router.post('/:id/comment', authenticate, async (req, res) => {
       return fail(res, 400, 'VALIDATION', 'Comment content is required.');
     }
 
+    const filterResult = checkComment(content.trim());
+    if (filterResult.blocked) return fail(res, 400, 'CONTENT_POLICY', filterResult.reason);
+
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) {
       return fail(res, 404, 'NOT_FOUND', 'Post not found.');
@@ -516,30 +601,32 @@ router.post('/:id/comment', authenticate, async (req, res) => {
 // ─── REPOST ───
 router.post('/:id/repost', authenticate, async (req, res) => {
   try {
-    const original = await Post.findByPk(req.params.id, {
-      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName'] }]
+    const original = await Post.findByPk(req.params.id);
+    if (!original || !original.isActive) return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+
+    const caption = sanitizeString(req.body.caption, 500) || null;
+
+    const [, wasCreated] = await PostShare.findOrCreate({
+      where: { postId: original.id, userId: req.userId, shareType: 'repost' },
+      defaults: { caption }
     });
-    if (!original || !original.isActive) {
-      return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+
+    if (wasCreated) {
+      await original.increment('repostsCount');
+      await original.increment('sharesCount');
+      await createNotification({
+        recipientId: original.userId,
+        senderId: req.userId,
+        type: 'repost',
+        text: `${req.user.displayName || req.user.firstName || 'Someone'} reposted your post.`,
+        href: '/feed.html'
+      });
     }
 
-    const repost = await Post.create({
-      userId: req.userId,
-      content: `🔁 Reposted from ${original.author.firstName} ${original.author.lastName}:\n\n${original.content}`,
-      sport: original.sport,
-      image: original.image
-    });
-
-    await original.increment('repostsCount');
-    await req.user.increment('postsCount');
-
-    const fullPost = await Post.findByPk(repost.id, {
-      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription'] }]
-    });
-
-    created(res, { payload: fullPost, repostsCount: original.repostsCount + 1 });
+    await original.reload();
+    ok(res, { reposted: wasCreated, repostsCount: original.repostsCount, sharesCount: original.sharesCount });
   } catch (error) {
-    console.error('Repost error:', error);
+    logger.error({ event: 'repost_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Failed to repost.');
   }
 });

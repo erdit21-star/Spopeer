@@ -23,6 +23,7 @@ const { authenticate, optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { sanitizeString } = require('../utils/validation');
 const { createNotification } = require('../services/notifications');
+const { checkPost } = require('../services/contentFilter');
 
 // All routes require auth
 const { ok, created, fail } = require('../utils/response');
@@ -432,6 +433,9 @@ router.post('/:id/posts', async (req, res) => {
 
     const content = sanitizeString(req.body.content, 5000);
     if (!content) return fail(res, 400, 'VALIDATION', 'Post content is required.');
+
+    const filterResult = checkPost(content);
+    if (filterResult.blocked) return fail(res, 400, 'CONTENT_POLICY', filterResult.reason);
 
     const post = await Post.create({
       userId: req.userId,
