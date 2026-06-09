@@ -762,7 +762,7 @@ router.post('/:id/share', authenticate, async (req, res) => {
 });
 
 // ─── ADD MEDIA TO POST ───
-router.post('/:id/media', authenticate, uploadPost.array('media', 10), async (req, res) => {
+router.post('/:id/media', authenticate, uploadPost.array('media', 10), validateUploadedFile, async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) return fail(res, 404, 'NOT_FOUND', 'Post not found.');

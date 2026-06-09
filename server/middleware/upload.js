@@ -92,38 +92,56 @@ const storyMaxSize = parseInt(process.env.MAX_STORY_FILE_SIZE, 10) || 100 * 1024
 
 const uploadAvatar = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize, files: 1 } });
 const uploadCover  = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize, files: 1 } });
-const uploadPost   = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize * 2, files: 1 } }); // 20 MB
+const uploadPost   = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize * 2, files: 10 } }); // 20 MB each, up to 10 files
 const uploadStory  = multer({ storage: memStorage, fileFilter, limits: { fileSize: storyMaxSize, files: 1 } }); // 100 MB
 
 /**
- * Express middleware: validate an uploaded file's magic bytes match its declared MIME type.
- * Must run after a multer middleware (req.file will be populated).
+ * Express middleware: validate uploaded file magic bytes match declared MIME type.
+ * Must run after a multer middleware (req.file or req.files will be populated).
  * Rejects with 415 if actual content doesn't match declared MIME.
  */
 function validateUploadedFile(req, res, next) {
-  if (!req.file || !req.file.buffer) return next();
-  const declared = req.file.mimetype;
-  const detected = detectMimeFromBuffer(req.file.buffer);
-  if (!detected) {
-    // Could not determine type from buffer — allow if MIME is in allow-list (already checked by fileFilter)
-    return next();
+  const files = [];
+  if (req.file) {
+    files.push(req.file);
   }
-  const declaredIsImage = MIME_IMAGE_GROUP.includes(declared);
-  const detectedIsImage = MIME_IMAGE_GROUP.includes(detected);
-  const declaredIsVideo = MIME_VIDEO_GROUP.includes(declared);
-  const detectedIsVideo = MIME_VIDEO_GROUP.includes(detected);
-
-  const groupMatch =
-    (declaredIsImage && detectedIsImage) ||
-    (declaredIsVideo && detectedIsVideo) ||
-    (declared === detected);
-
-  if (!groupMatch) {
-    const err = new Error(`File content does not match declared type (declared: ${declared}, detected: ${detected}).`);
-    err.code = 'UNSUPPORTED_FILE_TYPE';
-    err.status = 415;
-    return next(err);
+  if (Array.isArray(req.files)) {
+    files.push(...req.files);
+  } else if (req.files && typeof req.files === 'object') {
+    Object.values(req.files).forEach((value) => {
+      if (Array.isArray(value)) {
+        files.push(...value);
+      }
+    });
   }
+
+  for (const file of files) {
+    if (!file || !file.buffer) continue;
+
+    const declared = file.mimetype;
+    const detected = detectMimeFromBuffer(file.buffer);
+    if (!detected) {
+      continue;
+    }
+
+    const declaredIsImage = MIME_IMAGE_GROUP.includes(declared);
+    const detectedIsImage = MIME_IMAGE_GROUP.includes(detected);
+    const declaredIsVideo = MIME_VIDEO_GROUP.includes(declared);
+    const detectedIsVideo = MIME_VIDEO_GROUP.includes(detected);
+
+    const groupMatch =
+      (declaredIsImage && detectedIsImage) ||
+      (declaredIsVideo && detectedIsVideo) ||
+      (declared === detected);
+
+    if (!groupMatch) {
+      const err = new Error(`File content does not match declared type (declared: ${declared}, detected: ${detected}).`);
+      err.code = 'UNSUPPORTED_FILE_TYPE';
+      err.status = 415;
+      return next(err);
+    }
+  }
+
   next();
 }
 

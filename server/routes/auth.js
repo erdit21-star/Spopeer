@@ -47,6 +47,7 @@ const isTest = process.env.NODE_ENV === 'test';
 const isProd = process.env.NODE_ENV === 'production';
 const requireEmailVerification = isProd || String(process.env.REQUIRE_EMAIL_VERIFICATION || 'false').toLowerCase() === 'true';
 const emailVerifyTtlHours = parseInt(process.env.EMAIL_VERIFY_TOKEN_HOURS || '24', 10);
+const AUTH_SAFE_USER_ATTRIBUTES = ['id', 'email', 'password', 'role', 'isActive', 'emailVerified', 'firstName', 'lastName'];
 
 function getRefreshSecret() {
   if (process.env.NODE_ENV === 'production') {
@@ -1026,7 +1027,9 @@ router.post('/refresh', requireCsrf, async (req, res) => {
       return fail(res, 401, 'TOKEN_INVALID', 'Refresh session not found or expired.');
     }
 
-    const user = await User.findByPk(decoded.userId);
+    const user = await User.findByPk(decoded.userId, {
+      attributes: AUTH_SAFE_USER_ATTRIBUTES
+    });
     if (!user || !user.isActive) {
       clearAuthCookies(res);
       return fail(res, 401, 'AUTH_INVALID', 'User not found or deactivated.');

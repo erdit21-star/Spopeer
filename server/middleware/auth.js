@@ -7,6 +7,21 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { User } = require('../models');
 
+const AUTH_USER_ATTRIBUTES = [
+  'id',
+  'email',
+  'password',
+  'role',
+  'isActive',
+  'emailVerified',
+  'firstName',
+  'lastName',
+  'displayName',
+  'avatarUrl',
+  'sport',
+  'subscription'
+];
+
 function getAccessSecret() {
   if (process.env.NODE_ENV === 'production') {
     return process.env.JWT_ACCESS_SECRET;
@@ -54,7 +69,9 @@ async function authenticate(req, res, next) {
     }
 
     const decoded = jwt.verify(token, getAccessSecret(), { algorithms: ['HS256'] });
-    const user = await User.findByPk(decoded.userId);
+    const user = await User.findByPk(decoded.userId, {
+      attributes: AUTH_USER_ATTRIBUTES
+    });
 
     if (!user || !user.isActive) {
       return res.status(401).json({
@@ -95,7 +112,9 @@ async function optionalAuth(req, res, next) {
     const token = extractToken(req);
     if (token) {
       const decoded = jwt.verify(token, getAccessSecret(), { algorithms: ['HS256'] });
-      const user = await User.findByPk(decoded.userId);
+      const user = await User.findByPk(decoded.userId, {
+        attributes: AUTH_USER_ATTRIBUTES
+      });
       if (user && user.isActive) {
         req.user = user;
         req.userId = user.id;
