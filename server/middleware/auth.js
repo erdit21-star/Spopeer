@@ -23,17 +23,19 @@ const AUTH_USER_ATTRIBUTES = [
 ];
 
 function getAccessSecret() {
-  if (process.env.NODE_ENV === 'production') {
-    return process.env.JWT_ACCESS_SECRET;
+  const secret = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_ACCESS_SECRET or JWT_SECRET must be set in production');
   }
-  return process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+  return secret;
 }
 
 function getRefreshSecret() {
-  if (process.env.NODE_ENV === 'production') {
-    return process.env.JWT_REFRESH_SECRET;
+  const secret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_REFRESH_SECRET or JWT_SECRET must be set in production');
   }
-  return process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+  return secret;
 }
 
 /**
