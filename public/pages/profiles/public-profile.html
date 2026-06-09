@@ -536,6 +536,27 @@
       <div class="banner-title">Upgrade to Pro</div>
       <div class="banner-desc">Unlock premium features and get verified</div>
     </div>
+
+    <div class="side-card" data-moderation-quick-actions>
+      <div class="side-card-title"><i class="fa-regular fa-flag"></i> Safety Tools</div>
+      <div style="display:grid;gap:8px;">
+        <input data-mod-target type="number" style="padding:9px 10px;border:1px solid var(--border);border-radius:8px;" placeholder="User ID" />
+        <select data-mod-reason style="padding:9px 10px;border:1px solid var(--border);border-radius:8px;">
+          <option value="spam">Spam</option>
+          <option value="harassment">Harassment</option>
+          <option value="hate_speech">Hate speech</option>
+          <option value="violence">Violence</option>
+          <option value="inappropriate">Inappropriate</option>
+          <option value="scam">Scam</option>
+          <option value="other">Other</option>
+        </select>
+        <input data-mod-note type="text" style="padding:9px 10px;border:1px solid var(--border);border-radius:8px;" placeholder="Optional details" />
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button type="button" data-mod-action="report" class="follow-btn">Report</button>
+          <button type="button" data-mod-action="block" class="follow-btn">Block</button>
+        </div>
+      </div>
+    </div>
   </aside>
 </div>
 
@@ -556,6 +577,8 @@
 <script src="/js/inline/pages-profiles-public-profile-inline-2.js"></script>
 <script src="/js/inline/pages-profiles-public-profile-inline-3.js"></script>
 <script src="/js/navigation.js"></script>
+<script src="/js/moderation-ui.js"></script>
+<script src="/js/ux-polish.js"></script>
 </body>
 </html>
 

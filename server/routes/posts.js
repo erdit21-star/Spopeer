@@ -18,7 +18,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { Post, User, Like, Comment, Connection, SavedPost, PostMedia, PostShare } = require('../models');
+const { Post, User, Like, Comment, Connection, SavedPost, PostMedia, PostShare, Block } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { uploadPost, persistFile, validateUploadedFile } = require('../middleware/upload');
 const { Op } = require('sequelize');
@@ -156,6 +156,19 @@ router.post('/:id/view', optionalAuth, async (req, res) => {
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) {
       return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+    }
+
+    // Block enforcement: blocked users cannot comment on each other's posts.
+    const blockExists = await Block.findOne({
+      where: {
+        [Op.or]: [
+          { blockerId: req.userId, blockedId: post.userId },
+          { blockerId: post.userId, blockedId: req.userId }
+        ]
+      }
+    });
+    if (blockExists) {
+      return fail(res, 403, 'BLOCKED', 'You cannot comment on this post.');
     }
     if (!supportsPostViewCount) {
       return ok(res, { viewCount: 0 });

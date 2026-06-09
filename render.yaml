@@ -43,6 +43,14 @@ services:
         sync: false
       - key: RESEND_API_KEY
         sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: LOG_LEVEL
+        value: "info"
+      - key: BACKUP_CRON_SCHEDULE
+        sync: false
+      - key: BACKUP_TARGET
+        sync: false
       - key: DB_POOL_MAX
         value: "10"
       - key: DB_POOL_MIN

@@ -18,11 +18,13 @@ const BANNED_WORDS = [
   // Harassment / self-harm encouragement
   'kys', 'kill yourself', 'go die', 'end your life',
   // Abuse / threats
-  'i will kill you', 'i will hurt you', 'rape threat',
+  'i will kill you', 'i will hurt you', 'rape threat', 'bomb threat', 'school shooter',
   // Fraud / scam hooks
-  'guaranteed profit', 'double your money', 'send crypto now',
+  'guaranteed profit', 'double your money', 'send crypto now', 'investment secret', 'risk free returns',
   // Explicit spam patterns
-  'buy followers', 'cheap followers', 'dm for promo', 'click this to win'
+  'buy followers', 'cheap followers', 'dm for promo', 'click this to win',
+  // Exploitative / abusive terms
+  'doxxing', 'leaked nudes', 'revenge porn', 'child abuse material'
 ];
 
 // Domains commonly used for spam / phishing (lower-case, no protocol)
@@ -30,14 +32,22 @@ const SPAM_LINK_PATTERNS = [
   /bit\.ly\/[a-zA-Z0-9]{5,}/,
   /tinyurl\.com\//,
   /ow\.ly\//,
+  /rb\.gy\//,
+  /cutt\.ly\//,
   /t\.co\//, // Twitter shortener — only flag in non-tweet contexts
   /grabify\.link\//,
   /iplogger\./,
   /discord\.(gg|com\/invite)\//,
   /telegram\.(me|dog)\//,
   /wa\.me\//,
+  /onlyfans\.com\//,
+  /cashapp\./,
+  /venmo\./,
+  /paypal\.me\//,
   /free\s+money/i,
   /win\s+an\s+iphone/i,
+  /earn\s+\$?\d+\s+per\s+day/i,
+  /limited\s+time\s+offer/i,
   /http:\/\//i // force https-only links in restricted contexts
 ];
 

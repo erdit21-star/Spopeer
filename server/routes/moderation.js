@@ -15,6 +15,7 @@ const { requireAdmin } = require('../middleware/admin');
 const { Report, Block, User, Post, Comment, AdminAuditLog } = require('../models');
 const { validate, createReportSchema } = require('../utils/schemas');
 const { ok, created, fail } = require('../utils/response');
+const { createNotification } = require('../services/notifications');
 
 // ─── REPORT CONTENT / USER ───
 router.post('/report', authenticate, validate(createReportSchema), async (req, res) => {
@@ -285,6 +286,37 @@ router.patch('/users/:id/suspend', authenticate, requireAdmin, async (req, res) 
     return ok(res, { id: user.id, suspended: true });
   } catch (error) {
     return fail(res, 500, 'SERVER_ERROR', 'Failed to suspend user.');
+  }
+});
+
+// ─── ADMIN: WARN USER ───
+router.patch('/users/:id/warn', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
+
+    const reason = String(req.body.reason || 'Please review community guidelines and avoid policy violations.').slice(0, 500);
+
+    await createNotification({
+      recipientId: user.id,
+      senderId: req.userId,
+      type: 'moderation_warning',
+      text: `Admin warning: ${reason}`,
+      href: '/pages/legal/community-guidelines.html'
+    });
+
+    await AdminAuditLog.create({
+      adminId: req.userId,
+      action: 'user_warned',
+      targetType: 'user',
+      targetId: user.id,
+      details: reason,
+      ipAddress: req.ip
+    });
+
+    return ok(res, { id: user.id, warned: true, reason });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to warn user.');
   }
 });
 

@@ -10,9 +10,13 @@
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
     "syntax:check": "node scripts/syntax-check.js",
-    "verify": "npm run syntax:check && npm run lint"
+    "security:check": "node scripts/security-check.js",
+    "prod:check": "node scripts/production-readiness-check.js",
+    "test:e2e:smoke": "playwright test",
+    "verify": "npm run syntax:check && npm run lint && npm run security:check"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@eslint/js": "^9.0.0",
     "eslint": "^9.0.0",
     "globals": "^15.0.0"
