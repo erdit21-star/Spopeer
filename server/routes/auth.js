@@ -60,6 +60,11 @@ function isMissingEmailVerifyExpiryColumn(error) {
   return /emailVerifyExpiresAt|email_verify_expires_at/i.test(msg);
 }
 
+function isMissingGdprConsentColumn(error) {
+  const msg = String((error && error.message) || '');
+  return /privacyPolicyAcceptedAt|termsOfServiceAcceptedAt|marketingConsentAt|privacy_policy_accepted_at|terms_of_service_accepted_at|marketing_consent_at/i.test(msg);
+}
+
 // Do not enforce CSRF during unit tests to keep test requests simple
 const requireCsrf = isTest ? (req, res, next) => next() : csrfProtection();
 const {
@@ -270,7 +275,8 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
     }
 
     // Create user. In production (or when explicitly enabled), users must verify email first.
-    const user = await User.create({
+    // Use explicit fields so legacy DB schemas without newer optional columns can still sign up.
+    const createPayload = {
       email: email.toLowerCase(),
       password,
       firstName,
@@ -279,12 +285,37 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
       role: safeRole || 'athlete',
       sport: sport || null,
       profession: profession || null,
-      isActive: !requireEmailVerification,
-      // GDPR: Record consent timestamps
-      privacyPolicyAcceptedAt: new Date(),
-      termsOfServiceAcceptedAt: new Date(),
-      marketingConsentAt: req.body.marketingConsent ? new Date() : null
+      isActive: !requireEmailVerification
+    };
+
+    await User.create(createPayload, {
+      fields: Object.keys(createPayload)
+      ,
+      returning: false
     });
+
+    const user = await User.findOne({
+      where: { email: email.toLowerCase() },
+      attributes: ['id', 'email', 'firstName', 'lastName', 'role', 'isActive', 'emailVerified', 'password']
+    });
+
+    if (!user) {
+      return fail(res, 500, 'SERVER_ERROR', 'Account created but could not be loaded. Please try logging in.');
+    }
+
+    // GDPR consent timestamps are best-effort for legacy schemas.
+    try {
+      await user.update({
+        privacyPolicyAcceptedAt: new Date(),
+        termsOfServiceAcceptedAt: new Date(),
+        marketingConsentAt: req.body.marketingConsent ? new Date() : null
+      }, { returning: false });
+    } catch (consentErr) {
+      if (!isMissingGdprConsentColumn(consentErr)) {
+        throw consentErr;
+      }
+      console.warn('[SIGNUP] GDPR consent timestamp columns missing; continuing without persisted consent timestamps.');
+    }
 
     // Generate verification token and send email (optional — does not block signup)
     let emailSent = null;
