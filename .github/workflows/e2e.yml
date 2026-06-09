@@ -28,7 +28,7 @@ jobs:
       - name: Check for Playwright tests
         id: playwright-tests
         run: |
-          if [ -d e2e ] && find e2e -type f \( -name "*.spec.js" -o -name "*.spec.ts" -o -name "*.test.js" -o -name "*.test.ts" \) | grep -q .; then
+          if [ -d e2e ] && find e2e -type f \( -name "*.spec.js" -o -name "*.spec.jsx" -o -name "*.spec.ts" -o -name "*.spec.tsx" -o -name "*.spec.mjs" -o -name "*.spec.cjs" -o -name "*.test.js" -o -name "*.test.jsx" -o -name "*.test.ts" -o -name "*.test.tsx" -o -name "*.test.mjs" -o -name "*.test.cjs" \) | grep -q .; then
             echo "found=true" >> "$GITHUB_OUTPUT"
           else
             echo "found=false" >> "$GITHUB_OUTPUT"
