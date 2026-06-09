@@ -35,13 +35,13 @@ async function postGoogleCredential(credential) {
 
 function completeAuthNavigation(path) {
   var params = new URLSearchParams(window.location.search || '');
-  var requestedPath = params.get('next') || params.get('redirect') || path || '/mobile.html';
+  var requestedPath = params.get('next') || params.get('redirect') || path || '/feed.html';
   var targetPath = (window.SpopeerAPI && typeof window.SpopeerAPI.getSafeNextPath === 'function')
-    ? window.SpopeerAPI.getSafeNextPath(requestedPath, '/mobile.html')
-    : (String(requestedPath || '/mobile.html').charAt(0) === '/' ? String(requestedPath) : '/mobile.html');
+    ? window.SpopeerAPI.getSafeNextPath(requestedPath, '/feed.html')
+    : (String(requestedPath || '/feed.html').charAt(0) === '/' ? String(requestedPath) : '/feed.html');
   var lower = String(targetPath || '').toLowerCase();
   if (lower.indexOf('/api/') === 0 || lower.indexOf('/pages/auth/login.html') === 0 || lower.indexOf('/pages/auth/signup.html') === 0) {
-    targetPath = '/mobile.html';
+    targetPath = '/feed.html';
   }
   // Mobile browsers are unreliable with opener/popup close flows.
   // Always navigate the current tab to avoid ending on a blank white page.
@@ -78,7 +78,7 @@ async function handleGoogleCredential(response) {
     }
 
     if (window.Auth) window.Auth.login(userData);
-    completeAuthNavigation('/mobile.html');
+    completeAuthNavigation('/feed.html');
   } catch (err) {
     errBox.textContent = (err && err.message) || 'Google sign-in failed. Please try again.';
     errBox.style.display = 'block';
@@ -161,16 +161,16 @@ document.getElementById('loginBtn').onclick = async function() {
   if (!email || !password) { errBox.textContent = 'Please enter your email and password.'; errBox.style.display = 'block'; return; }
   try {
     const params = new URLSearchParams(window.location.search || '');
-    const requestedPath = params.get('next') || params.get('redirect') || '/mobile.html';
+    const requestedPath = params.get('next') || params.get('redirect') || '/feed.html';
     const nextTarget = (window.SpopeerAPI && typeof window.SpopeerAPI.getSafeNextPath === 'function')
-      ? window.SpopeerAPI.getSafeNextPath(requestedPath, '/mobile.html')
-      : (String(requestedPath || '/mobile.html').charAt(0) === '/' ? String(requestedPath) : '/mobile.html');
+      ? window.SpopeerAPI.getSafeNextPath(requestedPath, '/feed.html')
+      : (String(requestedPath || '/feed.html').charAt(0) === '/' ? String(requestedPath) : '/feed.html');
     const res = await window.SpopeerAPI.login({ email, password });
     const user = (res.data && res.data.user) || res.user || null;
     if (user && window.Auth) window.Auth.login(user);
     const lower = String(nextTarget || '').toLowerCase();
     const safeTarget = (lower.indexOf('/api/') === 0 || lower.indexOf('/pages/auth/login.html') === 0 || lower.indexOf('/pages/auth/signup.html') === 0)
-      ? '/mobile.html'
+      ? '/feed.html'
       : nextTarget;
     const sep = safeTarget.indexOf('?') === -1 ? '?' : '&';
     window.location.replace(safeTarget + sep + 'loginAt=' + Date.now());

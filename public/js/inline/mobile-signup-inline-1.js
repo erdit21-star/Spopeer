@@ -35,10 +35,10 @@ async function postGoogleCredential(credential) {
 
 function completeAuthNavigation(path) {
   var params = new URLSearchParams(window.location.search || '');
-  var requestedPath = params.get('next') || params.get('redirect') || path || '/mobile.html';
+  var requestedPath = params.get('next') || params.get('redirect') || path || '/feed.html';
   var targetPath = (window.SpopeerAPI && typeof window.SpopeerAPI.getSafeNextPath === 'function')
-    ? window.SpopeerAPI.getSafeNextPath(requestedPath, '/mobile.html')
-    : (String(requestedPath || '/mobile.html').charAt(0) === '/' ? String(requestedPath) : '/mobile.html');
+    ? window.SpopeerAPI.getSafeNextPath(requestedPath, '/feed.html')
+    : (String(requestedPath || '/feed.html').charAt(0) === '/' ? String(requestedPath) : '/feed.html');
   // Mobile browsers are unreliable with opener/popup close flows.
   // Always navigate the current tab to avoid ending on a blank white page.
   try { localStorage.setItem('spopeer_google_auth_complete', String(Date.now())); } catch (_error) { /* ignore storage failures */ }
@@ -77,7 +77,7 @@ async function handleGoogleCredential(response) {
 
     if (!userData) throw new Error('Google sign-up finished, but profile could not be loaded.');
     if (window.Auth) window.Auth.login(userData);
-    completeAuthNavigation('/mobile.html');
+    completeAuthNavigation('/feed.html');
   } catch (err) {
     setMessage('signupError', (err && err.message) || 'Google sign-up failed. Please try email signup.');
   }
@@ -166,7 +166,7 @@ document.getElementById('signupBtn').onclick = async function() {
     const user = (result.data && result.data.user) || result.user || null;
     if (user && window.Auth) {
       window.Auth.login(user);
-      window.location.assign('/mobile.html');
+      window.location.assign('/feed.html');
       return;
     }
     setMessage('msSuccess', 'Account created. Please check your email to verify, then log in.');
