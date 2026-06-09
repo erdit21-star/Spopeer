@@ -9,12 +9,17 @@ const { createNotification } = require('../services/notifications');
 
 const { ok, created, fail } = require('../utils/response');
 
+function isMissingStoryArchiveColumn(err) {
+  const msg = String((err && err.message) || '');
+  return /isArchived|is_archived/i.test(msg);
+}
+
 /**
  * GET stories feed
  */
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const stories = await Story.findAll({
+    const baseQuery = {
       where: {
         isActive: true,
         [Op.or]: [
@@ -22,13 +27,33 @@ router.get('/', optionalAuth, async (req, res) => {
           { expiresAt: { [Op.gt]: new Date() } }
         ]
       },
+      attributes: [
+        'id',
+        'userId',
+        'mediaUrl',
+        'thumbnailUrl',
+        'type',
+        'sport',
+        'caption',
+        'metrics',
+        'isLive',
+        'isActive',
+        'likesCount',
+        'commentsCount',
+        'viewsCount',
+        'expiresAt',
+        'createdAt',
+        'updatedAt'
+      ],
       include: [{
         model: User,
         as: 'author',
         attributes: ['id', 'firstName', 'lastName', 'avatarUrl', 'sport']
       }],
       order: [['createdAt', 'DESC']]
-    });
+    };
+
+    const stories = await Story.findAll(baseQuery);
 
     ok(res, stories);
   } catch (err) {
@@ -122,23 +147,42 @@ router.post('/:id/view', authenticate, async (req, res) => {
  */
 router.get('/user/:userId', optionalAuth, async (req, res) => {
   try {
-    const stories = await Story.findAll({
-      where: {
-        userId: req.params.userId,
-        isActive: true,
-        isArchived: false,
-        [Op.or]: [
-          { expiresAt: null },
-          { expiresAt: { [Op.gt]: new Date() } }
-        ]
-      },
-      include: [{
-        model: User,
-        as: 'author',
-        attributes: ['id', 'firstName', 'lastName', 'avatarUrl']
-      }],
-      order: [['createdAt', 'DESC']]
-    });
+    const where = {
+      userId: req.params.userId,
+      isActive: true,
+      isArchived: false,
+      [Op.or]: [
+        { expiresAt: null },
+        { expiresAt: { [Op.gt]: new Date() } }
+      ]
+    };
+
+    let stories;
+    try {
+      stories = await Story.findAll({
+        where,
+        include: [{
+          model: User,
+          as: 'author',
+          attributes: ['id', 'firstName', 'lastName', 'avatarUrl']
+        }],
+        order: [['createdAt', 'DESC']]
+      });
+    } catch (err) {
+      if (!isMissingStoryArchiveColumn(err)) {
+        throw err;
+      }
+      delete where.isArchived;
+      stories = await Story.findAll({
+        where,
+        include: [{
+          model: User,
+          as: 'author',
+          attributes: ['id', 'firstName', 'lastName', 'avatarUrl']
+        }],
+        order: [['createdAt', 'DESC']]
+      });
+    }
 
     ok(res, stories);
   } catch (err) {
@@ -152,18 +196,26 @@ router.get('/user/:userId', optionalAuth, async (req, res) => {
  */
 router.get('/archived/list', optionalAuth, async (req, res) => {
   try {
-    const stories = await Story.findAll({
-      where: {
-        isArchived: true
-      },
-      include: [{
-        model: User,
-        as: 'author',
-        attributes: ['id', 'firstName', 'lastName', 'avatarUrl']
-      }],
-      order: [['createdAt', 'DESC']],
-      limit: 50
-    });
+    let stories;
+    try {
+      stories = await Story.findAll({
+        where: {
+          isArchived: true
+        },
+        include: [{
+          model: User,
+          as: 'author',
+          attributes: ['id', 'firstName', 'lastName', 'avatarUrl']
+        }],
+        order: [['createdAt', 'DESC']],
+        limit: 50
+      });
+    } catch (err) {
+      if (!isMissingStoryArchiveColumn(err)) {
+        throw err;
+      }
+      stories = [];
+    }
 
     ok(res, stories);
   } catch (err) {
@@ -179,15 +231,23 @@ router.get('/archived/list', optionalAuth, async (req, res) => {
 router.post('/maintenance/archive-expired', async (req, res) => {
   try {
     const now = new Date();
-    const result = await Story.update(
-      { isArchived: true, isActive: false },
-      {
-        where: {
-          expiresAt: { [Op.lt]: now },
-          isArchived: false
+    let result;
+    try {
+      result = await Story.update(
+        { isArchived: true, isActive: false },
+        {
+          where: {
+            expiresAt: { [Op.lt]: now },
+            isArchived: false
+          }
         }
+      );
+    } catch (err) {
+      if (!isMissingStoryArchiveColumn(err)) {
+        throw err;
       }
-    );
+      result = [0];
+    }
 
     ok(res, { archivedCount: result[0] });
   } catch (err) {
