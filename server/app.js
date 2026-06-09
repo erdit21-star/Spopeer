@@ -444,8 +444,9 @@ app.get('/api/ready', async (req, res) => {
   }
 
   // Required secrets check
-  const hasAccessSecret = !!(process.env.NODE_ENV === 'production' ? process.env.JWT_ACCESS_SECRET : (process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET));
-  const hasRefreshSecret = !!(process.env.NODE_ENV === 'production' ? process.env.JWT_REFRESH_SECRET : (process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET));
+  const hasLegacySecret = !!process.env.JWT_SECRET;
+  const hasAccessSecret = !!(process.env.JWT_ACCESS_SECRET || hasLegacySecret);
+  const hasRefreshSecret = !!(process.env.JWT_REFRESH_SECRET || hasLegacySecret);
   checks.secrets = hasAccessSecret && hasRefreshSecret ? 'ok' : 'fail';
   if (!hasAccessSecret || !hasRefreshSecret) ready = false;
 

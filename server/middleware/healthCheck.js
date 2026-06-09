@@ -85,9 +85,12 @@ healthChecker.registerCheck('memory', async () => {
 });
 
 healthChecker.registerCheck('auth', async () => {
-  // Check if JWT secrets are configured
-  if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET not configured');
+  // Allow either split JWT secrets or a legacy JWT_SECRET fallback.
+  const hasAccessSecret = !!process.env.JWT_ACCESS_SECRET;
+  const hasRefreshSecret = !!process.env.JWT_REFRESH_SECRET;
+  const hasLegacySecret = !!process.env.JWT_SECRET;
+  if ((!hasAccessSecret || !hasRefreshSecret) && !hasLegacySecret) {
+    throw new Error('JWT secret configuration missing');
   }
   return 'JWT configured';
 });
@@ -102,8 +105,9 @@ healthChecker.registerCheck('email', async () => {
 
 module.exports = {
   healthChecker,
-  healthCheckMiddleware: (req, res) => {
-    return res.json(healthChecker.getHealthStatus());
+  healthCheckMiddleware: async (req, res) => {
+    const status = await healthChecker.getHealthStatus();
+    return res.json(status);
   },
   readinessCheckMiddleware: async (req, res) => {
     const status = await healthChecker.getReadinessStatus();

@@ -18,7 +18,7 @@ function validate() {
 
   const hasJwtSecret = !!(process.env.JWT_ACCESS_SECRET || process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
   if (!hasJwtSecret) {
-    console.error('Missing JWT secret configuration: set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET (JWT_SECRET allowed only outside production).');
+    console.error('Missing JWT secret configuration: set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET, or provide JWT_SECRET as fallback.');
     process.exit(1);
   }
 
