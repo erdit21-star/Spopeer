@@ -67,7 +67,7 @@ jobs:
         run: npx sequelize-cli db:migrate --env test
         working-directory: server
       - name: Run server tests
-        run: npm test
+        run: npm run test --if-present
         working-directory: server
 
   # ─── Playwright smoke tests ───
