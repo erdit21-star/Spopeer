@@ -9,12 +9,16 @@
   const WARNING_TIMEOUT_MS = 28 * 60 * 1000; // 28 minutes (warn 2 mins before logout)
   
   let inactivityTimer = null;
+  let warningTimer = null;
   let warningShown = false;
   let isMonitoring = false;
 
   function resetInactivityTimer() {
     if (inactivityTimer) {
       clearTimeout(inactivityTimer);
+    }
+    if (warningTimer) {
+      clearTimeout(warningTimer);
     }
     warningShown = false;
 
@@ -23,7 +27,7 @@
     }, INACTIVITY_TIMEOUT_MS);
 
     // Set warning timeout (2 mins before logout)
-    setTimeout(function () {
+    warningTimer = setTimeout(function () {
       if (!warningShown) {
         showInactivityWarning();
         warningShown = true;
@@ -41,10 +45,29 @@
         <div class="inactivity-warning-content">
           <h3>Session Expiring</h3>
           <p>You've been inactive for 28 minutes. Your session will expire in 2 minutes.</p>
-          <button class="inactivity-warning-btn" onclick="window.SessionActivityTracker.extendSession()">Stay Logged In</button>
-          <button class="inactivity-warning-btn secondary" onclick="window.SessionActivityTracker.logout()">Logout Now</button>
+          <button type="button" class="inactivity-warning-btn" data-action="extend-session">Stay Logged In</button>
+          <button type="button" class="inactivity-warning-btn secondary" data-action="logout-now">Logout Now</button>
         </div>
       `;
+
+      const extendButton = warning.querySelector('[data-action="extend-session"]');
+      const logoutButton = warning.querySelector('[data-action="logout-now"]');
+
+      if (extendButton) {
+        extendButton.addEventListener('click', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          extendSession();
+        });
+      }
+
+      if (logoutButton) {
+        logoutButton.addEventListener('click', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          logout();
+        });
+      }
       
       const style = document.createElement('style');
       style.textContent = `
@@ -159,6 +182,10 @@
     try {
       const warning = document.querySelector('.inactivity-warning');
       if (warning) warning.remove();
+      if (warningTimer) {
+        clearTimeout(warningTimer);
+        warningTimer = null;
+      }
       resetInactivityTimer();
     } catch (err) {
       console.warn('Failed to extend session:', err);
@@ -196,6 +223,10 @@
     if (inactivityTimer) {
       clearTimeout(inactivityTimer);
       inactivityTimer = null;
+    }
+    if (warningTimer) {
+      clearTimeout(warningTimer);
+      warningTimer = null;
     }
     isMonitoring = false;
   }
