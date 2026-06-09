@@ -36,7 +36,7 @@ ok = report('Post visibility checks on GET /:id', has('server/routes/posts.js', 
 ok = report('Blocked users cannot message', has('server/routes/messages.js', /BLOCKED/), 'block checks in messages routes') && ok;
 ok = report(
   'Blocked users cannot comment',
-  has('server/routes/posts.js', /router\.post\('\/:id\/comments'/)
+  has('server/routes/posts.js', /router\.post\('\/:id\/comment'/)
     && has('server/routes/posts.js', /BLOCKED/)
     && has('server/routes/posts.js', /comment on this post/i),
   'block check in comment route'

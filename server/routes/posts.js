@@ -158,18 +158,6 @@ router.post('/:id/view', optionalAuth, async (req, res) => {
       return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
 
-    // Block enforcement: blocked users cannot comment on each other's posts.
-    const blockExists = await Block.findOne({
-      where: {
-        [Op.or]: [
-          { blockerId: req.userId, blockedId: post.userId },
-          { blockerId: post.userId, blockedId: req.userId }
-        ]
-      }
-    });
-    if (blockExists) {
-      return fail(res, 403, 'BLOCKED', 'You cannot comment on this post.');
-    }
     if (!supportsPostViewCount) {
       return ok(res, { viewCount: 0 });
     }
@@ -428,6 +416,19 @@ router.post('/:id/poll/vote', authenticate, async (req, res) => {
       return fail(res, 404, 'NOT_FOUND', 'Post not found.');
     }
 
+    // Block enforcement: blocked users cannot comment on each other's posts.
+    const blockExists = await Block.findOne({
+      where: {
+        [Op.or]: [
+          { blockerId: req.userId, blockedId: post.userId },
+          { blockerId: post.userId, blockedId: req.userId }
+        ]
+      }
+    });
+    if (blockExists) {
+      return fail(res, 403, 'BLOCKED', 'You cannot comment on this post.');
+    }
+
     if (post.type !== 'poll') {
       return fail(res, 400, 'VALIDATION', 'This post is not a poll.');
     }
@@ -596,6 +597,19 @@ router.post('/:id/comment', authenticate, async (req, res) => {
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) {
       return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+    }
+
+    // Block enforcement: blocked users cannot comment on each other's posts.
+    const blockExists = await Block.findOne({
+      where: {
+        [Op.or]: [
+          { blockerId: req.userId, blockedId: post.userId },
+          { blockerId: post.userId, blockedId: req.userId }
+        ]
+      }
+    });
+    if (blockExists) {
+      return fail(res, 403, 'BLOCKED', 'You cannot comment on this post.');
     }
 
     const comment = await Comment.create({
