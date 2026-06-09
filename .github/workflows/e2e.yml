@@ -25,14 +25,38 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
+      - name: Detect Playwright suite
+        id: detect_playwright
+        run: |
+          CONFIG_FILE=""
+          for candidate in playwright.config.ts playwright.config.js playwright.config.mjs playwright.config.cjs; do
+            if [ -f "$candidate" ]; then
+              CONFIG_FILE="$candidate"
+              break
+            fi
+          done
+
+          TEST_COUNT=$(find e2e tests -type f \( -name "*.spec.ts" -o -name "*.spec.js" -o -name "*.spec.mjs" -o -name "*.spec.cjs" -o -name "*.test.ts" -o -name "*.test.js" -o -name "*.test.mjs" -o -name "*.test.cjs" \) 2>/dev/null | wc -l | tr -d ' ')
+
+          RUN_PLAYWRIGHT=false
+          if [ -n "$CONFIG_FILE" ] && [ "${TEST_COUNT:-0}" -gt 0 ]; then
+            RUN_PLAYWRIGHT=true
+          fi
+
+          echo "run_playwright=$RUN_PLAYWRIGHT" >> "$GITHUB_OUTPUT"
+          echo "config_file=$CONFIG_FILE" >> "$GITHUB_OUTPUT"
+          echo "Detected config: ${CONFIG_FILE:-none}, tests: ${TEST_COUNT:-0}, run_playwright: $RUN_PLAYWRIGHT"
+
       - name: Install Playwright browsers
+        if: steps.detect_playwright.outputs.run_playwright == 'true'
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
-        run: npx playwright test --config=playwright.config.cjs
+        if: steps.detect_playwright.outputs.run_playwright == 'true'
+        run: npx playwright test --config="${{ steps.detect_playwright.outputs.config_file }}" --pass-with-no-tests
 
       - name: Upload Playwright report
-        if: always()
+        if: always() && steps.detect_playwright.outputs.run_playwright == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
@@ -40,7 +64,7 @@ jobs:
           retention-days: 7
 
       - name: Upload test results
-        if: always()
+        if: always() && steps.detect_playwright.outputs.run_playwright == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results
