@@ -352,11 +352,25 @@ router.post('/', authenticate, uploadPost.array('media', 10), validateUploadedFi
 router.get('/saved', authenticate, async (req, res) => {
   try {
     const blockedIds = await getBlockedUserIds(req.userId);
+    const followedConnections = await Connection.findAll({
+      where: { followerId: req.userId, status: 'active' },
+      attributes: ['followingId']
+    });
+    const followedIds = followedConnections.map(c => c.followingId);
+
     const saved = await SavedPost.findAll({
       where: { userId: req.userId },
       include: [{
         model: Post, as: 'post',
-        where: { isActive: true, status: 'active' },
+        where: {
+          isActive: true,
+          status: 'active',
+          [Op.or]: [
+            { visibility: 'public' },
+            { visibility: 'followers', userId: [...followedIds, req.userId] },
+            { visibility: 'private', userId: req.userId }
+          ]
+        },
         required: true,
         include: [
           { model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'],

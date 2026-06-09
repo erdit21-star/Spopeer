@@ -388,6 +388,72 @@
             <span class="toggle-slider"></span>
           </label>
         </div>
+
+        <hr style="margin:18px 0;border:none;border-top:1px solid var(--border)">
+        <form id="privacy-settings-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="psProfileVisibility">Profile visibility</label>
+              <select class="form-input" id="psProfileVisibility" name="profileVisibility">
+                <option value="public">Public</option>
+                <option value="logged_in">Logged in users</option>
+                <option value="followers">Followers only</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="psFollowersVisibility">Followers list visibility</label>
+              <select class="form-input" id="psFollowersVisibility" name="followersVisibility">
+                <option value="public">Public</option>
+                <option value="followers">Followers only</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="psMessagePermission">Who can message me</label>
+              <select class="form-input" id="psMessagePermission" name="messagePermission">
+                <option value="everyone">Everyone</option>
+                <option value="followers">Followers only</option>
+                <option value="none">No one</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="psCommentPermission">Who can comment</label>
+              <select class="form-input" id="psCommentPermission" name="commentPermission">
+                <option value="everyone">Everyone</option>
+                <option value="followers">Followers only</option>
+                <option value="none">No one</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="psEmailVisibility">Email visibility</label>
+              <select class="form-input" id="psEmailVisibility" name="emailVisibility">
+                <option value="public">Public</option>
+                <option value="followers">Followers only</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="psPhoneVisibility">Phone visibility</label>
+              <select class="form-input" id="psPhoneVisibility" name="phoneVisibility">
+                <option value="public">Public</option>
+                <option value="followers">Followers only</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-primary" type="submit"><i class="fa-solid fa-shield-check" style="font-size:11px"></i> Save Privacy Settings</button>
+          </div>
+          <div id="privacy-save-msg" hidden style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
+        </form>
       </div>
     </div>
 
@@ -608,6 +674,7 @@
 <script src="/js/user-ui.js"></script>
 <script src="/js/inline/pages-dashboard-settings-inline-3.js"></script>
 <script src="/js/navigation.js"></script>
+<script src="/js/privacy-settings.js"></script>
 </body>
 </html>
 

@@ -15,9 +15,14 @@
 // ─── Configurable banned-word list ───────────────────────────────────────────
 // Keep as lower-case tokens; multi-word phrases are also supported.
 const BANNED_WORDS = [
-  // Hate / harassment
-  'kys', 'kill yourself',
-  // Extreme slurs – add more as needed; kept minimal here for legal clarity.
+  // Harassment / self-harm encouragement
+  'kys', 'kill yourself', 'go die', 'end your life',
+  // Abuse / threats
+  'i will kill you', 'i will hurt you', 'rape threat',
+  // Fraud / scam hooks
+  'guaranteed profit', 'double your money', 'send crypto now',
+  // Explicit spam patterns
+  'buy followers', 'cheap followers', 'dm for promo', 'click this to win'
 ];
 
 // Domains commonly used for spam / phishing (lower-case, no protocol)
@@ -26,6 +31,14 @@ const SPAM_LINK_PATTERNS = [
   /tinyurl\.com\//,
   /ow\.ly\//,
   /t\.co\//, // Twitter shortener — only flag in non-tweet contexts
+  /grabify\.link\//,
+  /iplogger\./,
+  /discord\.(gg|com\/invite)\//,
+  /telegram\.(me|dog)\//,
+  /wa\.me\//,
+  /free\s+money/i,
+  /win\s+an\s+iphone/i,
+  /http:\/\//i // force https-only links in restricted contexts
 ];
 
 // Max length guards (characters)

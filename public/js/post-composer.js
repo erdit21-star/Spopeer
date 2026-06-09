@@ -40,6 +40,13 @@
   const API = window.SpopeerAPI || {};
 
   function qs(sel, ctx) { return (ctx || document).querySelector(sel); }
+  function qf(selectors, ctx) {
+    for (const sel of selectors) {
+      const el = qs(sel, ctx);
+      if (el) return el;
+    }
+    return null;
+  }
 
   function escHtml(str) {
     return String(str || '')
@@ -146,18 +153,22 @@
   /* ── Form reset ───────────────────────────────────────────────────────── */
 
   function resetComposer(composer) {
-    const textarea = qs('#post-content', composer);
-    const hashtagsInput = qs('#post-hashtags', composer);
-    const mediaPreview = qs('#post-media-preview', composer);
-    const linkPreview  = qs('#post-link-preview',  composer);
-    const mediaInput   = qs('#post-media-input',   composer);
-    const visibility   = qs('#post-visibility',    composer);
+    const textarea = qf(['#post-content', '#postContent'], composer);
+    const hashtagsInput = qf(['#post-hashtags', '#postHashtags'], composer);
+    const mediaPreview = qf(['#post-media-preview', '#mediaPreview'], composer);
+    const linkPreview  = qf(['#post-link-preview', '#postLinkPreview'],  composer);
+    const mediaInput   = qf(['#post-media-input'],   composer);
+    const photoInput   = qf(['#photoInput'], composer);
+    const videoInput   = qf(['#videoInput'], composer);
+    const visibility   = qf(['#post-visibility', '#postVisibility'],    composer);
 
     if (textarea)     textarea.value = '';
     if (hashtagsInput) hashtagsInput.value = '';
     if (mediaPreview) mediaPreview.innerHTML = '';
     if (linkPreview)  { linkPreview.hidden = true; linkPreview.innerHTML = ''; }
     if (mediaInput)   mediaInput.value = '';
+    if (photoInput)   photoInput.value = '';
+    if (videoInput)   videoInput.value = '';
     if (visibility)   visibility.value = 'public';
     _selectedFiles.length = 0;
     _lastFetchedUrl = null;
@@ -166,12 +177,12 @@
   /* ── Submit handler ───────────────────────────────────────────────────── */
 
   async function handleSubmit(composer) {
-    const textarea      = qs('#post-content',    composer);
-    const hashtagsInput = qs('#post-hashtags',   composer);
-    const visSelect     = qs('#post-visibility', composer);
-    const linkPreview   = qs('#post-link-preview', composer);
-    const submitBtn     = qs('#btn-post-submit', composer);
-    const groupIdInput  = qs('#post-group-id',   composer); // optional
+    const textarea      = qf(['#post-content', '#postContent'],    composer);
+    const hashtagsInput = qf(['#post-hashtags', '#postHashtags'],   composer);
+    const visSelect     = qf(['#post-visibility', '#postVisibility'], composer);
+    const linkPreview   = qf(['#post-link-preview', '#postLinkPreview'], composer);
+    const submitBtn     = qf(['#btn-post-submit', '#submitComposer'], composer);
+    const groupIdInput  = qf(['#post-group-id', '#postGroupId'],   composer); // optional
 
     const content    = textarea    ? textarea.value.trim() : '';
     const visibility = visSelect   ? visSelect.value       : 'public';
@@ -233,22 +244,55 @@
   /* ── Init ─────────────────────────────────────────────────────────────── */
 
   function initComposer(composer) {
-    const textarea    = qs('#post-content',    composer);
-    const mediaInput  = qs('#post-media-input',  composer);
-    const mediaStrip  = qs('#post-media-preview', composer);
-    const linkPreview = qs('#post-link-preview',  composer);
-    const submitBtn   = qs('#btn-post-submit',   composer);
+    if (composer.dataset.postComposerEnhanced === 'true') return;
+    composer.dataset.postComposerEnhanced = 'true';
+
+    const textarea    = qf(['#post-content', '#postContent'],    composer);
+    const mediaInput  = qf(['#post-media-input'],  composer);
+    const photoInput  = qf(['#photoInput'], composer);
+    const videoInput  = qf(['#videoInput'], composer);
+    const mediaStrip  = qf(['#post-media-preview', '#mediaPreview'], composer);
+    const linkPreview = qf(['#post-link-preview', '#postLinkPreview'],  composer);
+    const submitBtn   = qf(['#btn-post-submit', '#submitComposer'],   composer);
+    const visibility  = qf(['#post-visibility', '#postVisibility'], composer);
+    const groupWrap   = qf(['#postGroupWrap'], composer);
+
+    function addFiles(files) {
+      const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm'];
+      Array.from(files || []).forEach(f => {
+        if (allowed.includes(f.type) && _selectedFiles.length < 10) _selectedFiles.push(f);
+      });
+      if (mediaStrip) renderMediaPreview(mediaStrip);
+    }
 
     // Media file picker
     if (mediaInput && mediaStrip) {
       mediaInput.addEventListener('change', () => {
-        const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm'];
-        Array.from(mediaInput.files).forEach(f => {
-          if (allowed.includes(f.type) && _selectedFiles.length < 10) _selectedFiles.push(f);
-        });
+        addFiles(mediaInput.files);
         mediaInput.value = '';
-        renderMediaPreview(mediaStrip);
       });
+    }
+    if (photoInput) {
+      photoInput.setAttribute('multiple', 'multiple');
+      photoInput.addEventListener('change', () => {
+        addFiles(photoInput.files);
+        photoInput.value = '';
+      });
+    }
+    if (videoInput) {
+      videoInput.setAttribute('multiple', 'multiple');
+      videoInput.addEventListener('change', () => {
+        addFiles(videoInput.files);
+        videoInput.value = '';
+      });
+    }
+
+    if (visibility && groupWrap) {
+      const syncGroupWrap = () => {
+        groupWrap.style.display = visibility.value === 'group' ? '' : 'none';
+      };
+      visibility.addEventListener('change', syncGroupWrap);
+      syncGroupWrap();
     }
 
     // Auto link-preview on content change
@@ -284,6 +328,9 @@
   // Auto-initialise all .post-composer elements on DOMContentLoaded
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.post-composer').forEach(initComposer);
+    // Backwards-compatible fallback for feed modal markup
+    const legacyModal = document.getElementById('postComposerModal');
+    if (legacyModal) initComposer(legacyModal);
   });
 
   // Also expose for manual init

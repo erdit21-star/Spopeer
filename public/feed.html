@@ -3575,7 +3575,7 @@
     <div id="feedPostsMount"></div>
 
     <!-- Post Composer Modal -->
-    <div class="post-composer-modal" id="postComposerModal">
+    <div class="post-composer-modal post-composer" id="postComposerModal">
       <div class="post-composer-backdrop"></div>
       <div class="post-composer-dialog">
         <div class="post-composer-header">
@@ -3625,7 +3625,16 @@
                 <option value="public">Public</option>
                 <option value="followers">Followers Only</option>
                 <option value="private">Private</option>
+                <option value="group">Group</option>
               </select>
+            </div>
+            <div class="composer-tool-group">
+              <label for="postHashtags">Hashtags:</label>
+              <input type="text" id="postHashtags" class="visibility-select" placeholder="#football, #training" />
+            </div>
+            <div class="composer-tool-group" id="postGroupWrap" style="display:none;">
+              <label for="postGroupId">Group:</label>
+              <input type="text" id="postGroupId" class="visibility-select" placeholder="Group ID" />
             </div>
             <div class="composer-tool-icons">
               <button class="composer-tool-icon" data-tool="photo" title="Add Photo"><i class="fa-solid fa-image"></i></button>
@@ -3635,9 +3644,12 @@
             </div>
           </div>
 
+          <div class="composer-media-preview" id="postLinkPreview" hidden></div>
+
           <!-- Hidden File Input -->
           <input type="file" id="photoInput" accept="image/*" style="display: none;">
           <input type="file" id="videoInput" accept="video/*" style="display: none;">
+          <input type="file" id="post-media-input" accept="image/*,video/mp4,video/webm" multiple style="display:none;">
         </div>
 
         <div class="post-composer-footer">
@@ -3927,6 +3939,7 @@
 <script src="/js/inline/feed-inline-12.js"></script>
 
 <script src="/js/inline/feed-inline-13.js"></script>
+<script src="/js/post-composer.js"></script>
 <script src="/js/mobile-redirect.js"></script>
 </body>
 </html>
