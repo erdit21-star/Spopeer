@@ -59,10 +59,66 @@ module.exports = (sequelize) => {
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
+    },
+    visibility: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      defaultValue: 'public'
+    },
+    groupId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    linkUrl: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    linkTitle: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    linkDescription: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    linkImage: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    hashtags: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: null
+    },
+    sharesCount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    status: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      defaultValue: 'active'
+    },
+    hiddenReason: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    moderatedBy: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    moderatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   }, {
     tableName: 'posts',
-    timestamps: true
+    timestamps: true,
+    paranoid: false
   });
 
   return Post;

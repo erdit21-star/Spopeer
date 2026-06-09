@@ -18,7 +18,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { Post, User, Like, Comment, Connection, SavedPost } = require('../models');
+const { Post, User, Like, Comment, Connection, SavedPost, PostMedia, PostShare } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { uploadPost, persistFile, validateUploadedFile } = require('../middleware/upload');
 const { Op } = require('sequelize');
@@ -39,8 +39,27 @@ const { ok, created, fail } = require('../utils/response');
 async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
   try {
     const { page, limit } = parsePagination(req.query);
-    const where = { isActive: true, ...whereExtra };
+    const where = { isActive: true, status: 'active', ...whereExtra };
     const offset = (page - 1) * limit;
+
+    // Visibility: public posts always show; followers-only posts only show to followers/owner
+    if (!whereExtra.userId) {
+      if (req.userId) {
+        // authenticated: show public + followers-only (from people the user follows) + own private
+        const followedConnections = await Connection.findAll({
+          where: { followerId: req.userId, status: 'active' },
+          attributes: ['followingId']
+        });
+        const followedIds = followedConnections.map(c => c.followingId);
+        where[require('sequelize').Op.or] = [
+          { visibility: 'public' },
+          { visibility: 'followers', userId: [...followedIds, req.userId] },
+          { visibility: 'private', userId: req.userId }
+        ];
+      } else {
+        where.visibility = 'public';
+      }
+    }
 
     // Filter out blocked users if authenticated
     if (req.userId) {
@@ -60,10 +79,17 @@ async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
 
     const { rows: posts, count } = await Post.findAndCountAll({
       where,
-      include: [{
-        model: User, as: 'author',
-        attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription']
-      }],
+      include: [
+        {
+          model: User, as: 'author',
+          attributes: ['id', 'firstName', 'lastName', 'displayName', 'role', 'avatarUrl', 'sport', 'subscription']
+        },
+        {
+          model: PostMedia, as: 'postMedia',
+          attributes: ['id', 'url', 'mediaType', 'mimeType', 'width', 'height', 'duration', 'sortOrder'],
+          required: false
+        }
+      ],
       limit,
       offset,
       order: orderBy || [['createdAt', 'DESC']]
@@ -472,6 +498,15 @@ router.post('/:id/comment', authenticate, async (req, res) => {
       include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }]
     });
 
+    // Notify the post owner
+    await createNotification({
+      recipientId: post.userId,
+      senderId: req.userId,
+      type: 'comment',
+      text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} commented on your post.`,
+      href: '/feed.html'
+    });
+
     created(res, fullComment);
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to add comment.');
@@ -543,6 +578,110 @@ router.get('/:id/comments', optionalAuth, async (req, res) => {
     ok(res, comments);
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch comments.');
+  }
+});
+
+// ─── PATCH VISIBILITY ───
+router.patch('/:id/visibility', authenticate, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id);
+    if (!post || !post.isActive) return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+    if (post.userId !== req.userId) return fail(res, 403, 'FORBIDDEN', 'You can only change visibility on your own posts.');
+
+    const allowed = ['public', 'followers', 'private', 'group'];
+    const { visibility } = req.body;
+    if (!allowed.includes(visibility)) return fail(res, 400, 'VALIDATION', `visibility must be one of: ${allowed.join(', ')}`);
+
+    await post.update({ visibility });
+    await cache.delByPrefix('feed:');
+    ok(res, { id: post.id, visibility: post.visibility });
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update visibility.');
+  }
+});
+
+// ─── SHARE / REPOST (formal record) ───
+router.post('/:id/share', authenticate, async (req, res) => {
+  try {
+    const original = await Post.findByPk(req.params.id);
+    if (!original || !original.isActive) return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+
+    const shareType = req.body.shareType || 'repost';
+    const allowed = ['repost', 'external_share'];
+    if (!allowed.includes(shareType)) return fail(res, 400, 'VALIDATION', 'Invalid shareType.');
+
+    const [share, wasCreated] = await PostShare.findOrCreate({
+      where: { postId: original.id, userId: req.userId, shareType },
+      defaults: { caption: sanitizeString(req.body.caption, 500) || null }
+    });
+
+    if (wasCreated) {
+      await original.increment('sharesCount');
+      await createNotification({
+        recipientId: original.userId,
+        senderId: req.userId,
+        type: 'share',
+        text: `${req.user.displayName || req.user.firstName || 'Someone'} shared your post.`,
+        href: `/feed.html`
+      });
+    }
+
+    await original.reload();
+    ok(res, { shared: wasCreated, sharesCount: original.sharesCount });
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to share post.');
+  }
+});
+
+// ─── ADD MEDIA TO POST ───
+router.post('/:id/media', authenticate, uploadPost.array('media', 10), async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id);
+    if (!post || !post.isActive) return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+    if (post.userId !== req.userId) return fail(res, 403, 'FORBIDDEN', 'Not your post.');
+    if (!req.files || req.files.length === 0) return fail(res, 400, 'VALIDATION', 'No files uploaded.');
+
+    const allowedMime = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm'];
+    const results = [];
+
+    for (const [idx, file] of req.files.entries()) {
+      if (!allowedMime.includes(file.mimetype)) continue;
+      const mediaType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+      const { url, publicId } = await persistFile(file, 'posts', req.userId);
+      const pm = await PostMedia.create({
+        postId: post.id,
+        userId: req.userId,
+        url,
+        publicId: publicId || null,
+        mediaType,
+        mimeType: file.mimetype,
+        sizeBytes: file.size,
+        sortOrder: idx
+      });
+      results.push(pm);
+    }
+
+    ok(res, results);
+  } catch (error) {
+    logger.error({ event: 'post_media_upload_error', message: error.message });
+    fail(res, 500, 'SERVER_ERROR', 'Failed to upload media.');
+  }
+});
+
+// ─── DELETE MEDIA FROM POST ───
+router.delete('/:id/media/:mediaId', authenticate, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id);
+    if (!post || !post.isActive) return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+    if (post.userId !== req.userId && req.user.role !== 'admin') return fail(res, 403, 'FORBIDDEN', 'Not your post.');
+
+    const media = await PostMedia.findOne({ where: { id: req.params.mediaId, postId: post.id } });
+    if (!media) return fail(res, 404, 'NOT_FOUND', 'Media not found.');
+
+    await media.destroy();
+    ok(res, { message: 'Media removed.' });
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to remove media.');
   }
 });
 

@@ -12,7 +12,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
-const { Report, Block, User, AdminAuditLog } = require('../models');
+const { Report, Block, User, Post, Comment, AdminAuditLog } = require('../models');
 const { validate, createReportSchema } = require('../utils/schemas');
 const { ok, created, fail } = require('../utils/response');
 
@@ -159,6 +159,155 @@ router.put('/reports/:id', authenticate, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Review report error:', error);
     return fail(res, 500, 'SERVER_ERROR', 'Failed to update report.');
+  }
+});
+
+// ─── ADMIN: MODERATION QUEUE ───
+router.get('/queue', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await Report.findAndCountAll({
+      where: { status: 'pending' },
+      include: [{ model: User, as: 'reporter', attributes: ['id', 'firstName', 'lastName', 'email'] }],
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset
+    });
+
+    return ok(res, rows, { pagination: { page, limit, total: count, totalPages: Math.ceil(count / limit) } });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch moderation queue.');
+  }
+});
+
+// ─── ADMIN: HIDE POST ───
+router.patch('/posts/:id/hide', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id);
+    if (!post) return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+
+    await post.update({
+      status: 'hidden',
+      hiddenReason: req.body.reason || 'Moderated by admin',
+      moderatedBy: req.userId,
+      moderatedAt: new Date()
+    });
+
+    await AdminAuditLog.create({
+      adminId: req.userId,
+      action: 'post_hidden',
+      targetType: 'post',
+      targetId: post.id,
+      details: req.body.reason || null,
+      ipAddress: req.ip
+    });
+
+    return ok(res, { id: post.id, status: 'hidden' });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to hide post.');
+  }
+});
+
+// ─── ADMIN: REMOVE POST ───
+router.patch('/posts/:id/remove', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id);
+    if (!post) return fail(res, 404, 'NOT_FOUND', 'Post not found.');
+
+    await post.update({
+      status: 'removed',
+      isActive: false,
+      hiddenReason: req.body.reason || 'Removed by admin',
+      moderatedBy: req.userId,
+      moderatedAt: new Date()
+    });
+
+    await AdminAuditLog.create({
+      adminId: req.userId,
+      action: 'post_removed',
+      targetType: 'post',
+      targetId: post.id,
+      details: req.body.reason || null,
+      ipAddress: req.ip
+    });
+
+    return ok(res, { id: post.id, status: 'removed' });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to remove post.');
+  }
+});
+
+// ─── ADMIN: HIDE COMMENT ───
+router.patch('/comments/:id/hide', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const comment = await Comment.findByPk(req.params.id);
+    if (!comment) return fail(res, 404, 'NOT_FOUND', 'Comment not found.');
+
+    // Use isActive as the hidden flag for comments
+    await comment.update({ isActive: false });
+
+    await AdminAuditLog.create({
+      adminId: req.userId,
+      action: 'comment_hidden',
+      targetType: 'comment',
+      targetId: comment.id,
+      details: req.body.reason || null,
+      ipAddress: req.ip
+    });
+
+    return ok(res, { id: comment.id, hidden: true });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to hide comment.');
+  }
+});
+
+// ─── ADMIN: SUSPEND USER ───
+router.patch('/users/:id/suspend', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
+    if (user.role === 'admin') return fail(res, 403, 'FORBIDDEN', 'Cannot suspend an admin account.');
+
+    await user.update({ isActive: false });
+
+    await AdminAuditLog.create({
+      adminId: req.userId,
+      action: 'user_suspended',
+      targetType: 'user',
+      targetId: user.id,
+      details: req.body.reason || null,
+      ipAddress: req.ip
+    });
+
+    return ok(res, { id: user.id, suspended: true });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to suspend user.');
+  }
+});
+
+// ─── ADMIN: RESTORE USER ───
+router.patch('/users/:id/restore', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
+
+    await user.update({ isActive: true });
+
+    await AdminAuditLog.create({
+      adminId: req.userId,
+      action: 'user_restored',
+      targetType: 'user',
+      targetId: user.id,
+      details: null,
+      ipAddress: req.ip
+    });
+
+    return ok(res, { id: user.id, suspended: false });
+  } catch (error) {
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to restore user.');
   }
 });
 

@@ -36,6 +36,9 @@ const Inquiry = require('./Inquiry')(sequelize);
 const Story = require('./Story')(sequelize);
 const MarketplaceAnalyticsEvent = require('./MarketplaceAnalyticsEvent')(sequelize);
 const BreachIncident = require('./BreachIncident')(sequelize);
+const PostMedia = require('./PostMedia')(sequelize);
+const PostShare = require('./PostShare')(sequelize);
+const UserPrivacySettings = require('./UserPrivacySettings')(sequelize);
 
 // ─── ASSOCIATIONS ───
 
@@ -161,6 +164,26 @@ PasswordResetToken.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 User.hasMany(Media, { foreignKey: 'userId', as: 'media' });
 Media.belongsTo(User, { foreignKey: 'userId', as: 'owner' });
 
+// Post <-> PostMedia
+Post.hasMany(PostMedia, { foreignKey: 'postId', as: 'postMedia' });
+PostMedia.belongsTo(Post, { foreignKey: 'postId', as: 'post' });
+User.hasMany(PostMedia, { foreignKey: 'userId', as: 'postMedia' });
+PostMedia.belongsTo(User, { foreignKey: 'userId', as: 'uploader' });
+
+// Post <-> PostShare
+Post.hasMany(PostShare, { foreignKey: 'postId', as: 'shares' });
+PostShare.belongsTo(Post, { foreignKey: 'postId', as: 'originalPost' });
+User.hasMany(PostShare, { foreignKey: 'userId', as: 'postShares' });
+PostShare.belongsTo(User, { foreignKey: 'userId', as: 'sharer' });
+
+// Post <-> Group
+Group.hasMany(Post, { foreignKey: 'groupId', as: 'posts' });
+Post.belongsTo(Group, { foreignKey: 'groupId', as: 'group' });
+
+// User <-> UserPrivacySettings (1:1)
+User.hasOne(UserPrivacySettings, { foreignKey: 'userId', as: 'privacySettings' });
+UserPrivacySettings.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // User <-> Report
 User.hasMany(Report, { foreignKey: 'reporterId', as: 'reports' });
 Report.belongsTo(User, { foreignKey: 'reporterId', as: 'reporter' });
@@ -210,6 +233,9 @@ module.exports = {
   Inquiry,
   Story,
   MarketplaceAnalyticsEvent,
-  BreachIncident
+  BreachIncident,
+  PostMedia,
+  PostShare,
+  UserPrivacySettings
 };
 

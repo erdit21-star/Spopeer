@@ -20,8 +20,20 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     role: {
-      type: DataTypes.ENUM('admin', 'moderator', 'member'),
+      type: DataTypes.ENUM('owner', 'admin', 'moderator', 'member'),
       defaultValue: 'member'
+    },
+    status: {
+      type: DataTypes.ENUM('active', 'pending', 'banned'),
+      defaultValue: 'active'
+    },
+    invitedBy: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    joinedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   }, {
     tableName: 'group_members',

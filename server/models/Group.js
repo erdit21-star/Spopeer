@@ -38,6 +38,28 @@ module.exports = (sequelize) => {
     isPrivate: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
+    },
+    privacy: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      defaultValue: 'public'
+    },
+    status: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      defaultValue: 'active'
+    },
+    ownerId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    avatarUrl: {
+      type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    rules: {
+      type: DataTypes.TEXT,
+      allowNull: true
     }
   }, {
     tableName: 'groups',
