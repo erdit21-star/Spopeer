@@ -37,8 +37,6 @@
 
   /* ── Helpers ──────────────────────────────────────────────────────────── */
 
-  const API = window.SpopeerAPI || {};
-
   function qs(sel, ctx) { return (ctx || document).querySelector(sel); }
   function qf(selectors, ctx) {
     for (const sel of selectors) {
@@ -221,15 +219,12 @@
     if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Posting…'; }
 
     try {
-      const res = await fetch('/api/posts', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error((json.error && json.error.message) || 'Post failed.');
+      const api = window.SpopeerAPI;
+      if (!api || typeof api.createPost !== 'function') {
+        throw new Error('Posting is temporarily unavailable. Please refresh and try again.');
       }
+
+      const json = await api.createPost(formData);
       resetComposer(composer);
       // Emit event so feed can prepend the new post without reload
       document.dispatchEvent(new CustomEvent('spopeer:post:created', { detail: json.data || json }));
