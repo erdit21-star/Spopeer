@@ -122,12 +122,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://apis.google.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://apis.google.com", "https://www.googletagmanager.com", "https://browser.sentry-cdn.com", "https://*.posthog.com", "https://*.i.posthog.com"],
       // scriptSrcAttr: unsafe-inline removed — disallows inline event handlers (onclick=, etc.)
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://accounts.google.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "blob:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:", "https://accounts.google.com", "https://www.googleapis.com", "https://oauth2.googleapis.com"],
+        connectSrc: ["'self'", "ws:", "wss:", "https://accounts.google.com", "https://www.googleapis.com", "https://oauth2.googleapis.com", "https://www.google-analytics.com", "https://region1.google-analytics.com", "https://browser.sentry-cdn.com", "https://*.sentry.io", "https://*.ingest.sentry.io", "https://*.posthog.com", "https://*.i.posthog.com"],
       frameSrc: ["'self'", "https://accounts.google.com"],
       mediaSrc: ["'self'", "blob:", "https://res.cloudinary.com", "https://*.cloudinary.com"],
       objectSrc: ["'none'"],
@@ -368,6 +368,20 @@ app.get('/api/health', (req, res) => {
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV
+    }
+  });
+});
+
+app.get('/api/config/public', (_req, res) => {
+  res.json({
+    success: true,
+    data: {
+      environment: process.env.NODE_ENV || 'development',
+      release: `spopeer@${process.env.npm_package_version || '1.0.0'}`,
+      sentryBrowserDsn: process.env.SENTRY_BROWSER_DSN || process.env.SENTRY_DSN || '',
+      gaMeasurementId: process.env.GA_MEASUREMENT_ID || '',
+      posthogKey: process.env.POSTHOG_KEY || '',
+      posthogHost: process.env.POSTHOG_HOST || 'https://us.i.posthog.com'
     }
   });
 });

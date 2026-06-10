@@ -23,49 +23,35 @@ function detectMimeFromBuffer(buf) {
   if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return 'image/jpeg';
   // PNG
   if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47) return 'image/png';
-  // GIF
-  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) return 'image/gif';
   // WEBP: RIFF....WEBP
   if (buf.length >= 12 && buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
       buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50) return 'image/webp';
-  // HEIC/HEIF: ftyp box at offset 4, brand heic/heif/mif1/msf1
+  // MP4/MOV: ftyp box at offset 4
   if (buf.length >= 12) {
     const ftyp = buf.slice(4, 8).toString('ascii');
     const brand = buf.slice(8, 12).toString('ascii');
     if (ftyp === 'ftyp') {
-      if (['heic', 'heix', 'heif', 'hevx', 'mif1', 'msf1'].includes(brand)) return 'image/heic';
       if (['mp42', 'mp41', 'isom', 'M4V ', 'M4A ', 'f4v ', 'avc1'].includes(brand)) return 'video/mp4';
       if (['qt  '].includes(brand)) return 'video/quicktime';
       // Generic ftyp mp4
       return 'video/mp4';
     }
   }
-  // WebM: EBML
-  if (buf[0] === 0x1A && buf[1] === 0x45 && buf[2] === 0xDF && buf[3] === 0xA3) return 'video/webm';
-  // AVI: RIFF....AVI
-  if (buf.length >= 12 && buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
-      buf[8] === 0x41 && buf[9] === 0x56 && buf[10] === 0x49 && buf[11] === 0x20) return 'video/x-msvideo';
   return null;
 }
 
 // MIME group: treat these as equivalent for signature matching
-const MIME_IMAGE_GROUP = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/heic', 'image/heif'];
-const MIME_VIDEO_GROUP = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
+const MIME_IMAGE_GROUP = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/webp'];
+const MIME_VIDEO_GROUP = ['video/mp4', 'video/quicktime'];
 
 // ── MIME → extension allow-list ──
 const ALLOWED_TYPES = {
   'image/jpeg':  ['.jpg', '.jpeg', '.jfif'],
   'image/pjpeg': ['.jpg', '.jpeg', '.jfif'],
   'image/png':   ['.png'],
-  'image/gif':   ['.gif'],
   'image/webp':  ['.webp'],
-  'image/avif':  ['.avif'],
-  'image/heic':  ['.heic'],
-  'image/heif':  ['.heif'],
   'video/mp4':      ['.mp4'],
-  'video/webm':     ['.webm'],
-  'video/quicktime':['.mov'],
-  'video/x-msvideo':['.avi']
+  'video/quicktime':['.mov']
 };
 
 const fileFilter = (_req, file, cb) => {

@@ -77,44 +77,9 @@
         }));
       }
 
-      // Load analytics if consent granted
-      if (this.isAllowed('analytics') && !window._gat) {
-        this.loadGoogleAnalytics();
+      if (window.SpopeerTelemetry && typeof window.SpopeerTelemetry.syncConsent === 'function') {
+        window.SpopeerTelemetry.syncConsent(this.preferences);
       }
-
-      // Load marketing pixels if consent granted
-      if (this.isAllowed('marketing')) {
-        this.loadMarketingPixels();
-      }
-    }
-
-    /**
-     * Load Google Analytics (if consent granted)
-     */
-    loadGoogleAnalytics() {
-      try {
-        const gaId = 'G-XXXXXXXXXX'; // Replace with actual GA4 ID from env
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-        document.head.appendChild(script);
-
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', gaId);
-        window.gtag = gtag;
-      } catch (e) {
-        console.error('Failed to load Google Analytics:', e);
-      }
-    }
-
-    /**
-     * Load marketing pixels (if consent granted)
-     */
-    loadMarketingPixels() {
-      // Pixel implementations would go here (Facebook, LinkedIn, etc.)
-      console.debug('Marketing consent granted - pixels can now load');
     }
 
     /**
@@ -409,10 +374,12 @@
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       window.spopeerCookieConsent = new CookieConsent();
+      window.spopeerCookieConsent.onConsentChange();
       window.spopeerCookieConsent.renderBanner();
     });
   } else {
     window.spopeerCookieConsent = new CookieConsent();
+    window.spopeerCookieConsent.onConsentChange();
     window.spopeerCookieConsent.renderBanner();
   }
 

@@ -5,9 +5,363 @@
     localStorage.getItem("spopeer_api_base") ||
     ""
   ).replace(/\/+$/, "");
+  const CONSENT_KEY = "spopeer_cookie_consent";
+  const TELEMETRY_DAY_KEY = "spopeer_last_tracked_active_day";
+  const PUBLIC_CONFIG_PATH = "/api/config/public";
+  const telemetryState = {
+    configPromise: null,
+    sentryReady: false,
+    gaReady: false,
+    posthogReady: false,
+    pageTracked: false,
+    listenersAttached: false,
+    sentryScriptPromise: null,
+    gaScriptPromise: null
+  };
 
   function buildUrl(path) {
     return API_BASE ? API_BASE + path : path;
+  }
+
+  function readConsentPreferences() {
+    try {
+      return JSON.parse(localStorage.getItem(CONSENT_KEY) || "null") || {};
+    } catch {
+      return {};
+    }
+  }
+
+  function isAnalyticsAllowed() {
+    return readConsentPreferences().analytics === true;
+  }
+
+  function getCurrentIsoDay() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function loadScriptOnce(src, attributeName) {
+    const selector = 'script[' + attributeName + '="true"]';
+    const existing = document.head.querySelector(selector);
+    if (existing) {
+      return Promise.resolve(existing);
+    }
+
+    return new Promise(function (resolve, reject) {
+      const script = document.createElement("script");
+      script.async = true;
+      script.src = src;
+      script.setAttribute(attributeName, "true");
+      script.onload = function () { resolve(script); };
+      script.onerror = function () { reject(new Error("Failed to load script: " + src)); };
+      document.head.appendChild(script);
+    });
+  }
+
+  async function getPublicConfig() {
+    if (!telemetryState.configPromise) {
+      telemetryState.configPromise = fetch(buildUrl(PUBLIC_CONFIG_PATH), {
+        credentials: "include"
+      }).then(function (response) {
+        if (!response.ok) {
+          throw new Error("Public config request failed.");
+        }
+        return response.json();
+      }).then(function (payload) {
+        return (payload && payload.data) || {};
+      }).catch(function (error) {
+        console.debug("Failed to load public telemetry config", error);
+        return {};
+      });
+    }
+    return telemetryState.configPromise;
+  }
+
+  async function ensureSentry() {
+    const config = await getPublicConfig();
+    if (!config.sentryBrowserDsn) return null;
+    if (window.Sentry) {
+      if (!telemetryState.sentryReady) {
+        window.Sentry.init({
+          dsn: config.sentryBrowserDsn,
+          environment: config.environment || "development",
+          release: config.release || "spopeer@1.0.0",
+          tracesSampleRate: config.environment === "production" ? 0.2 : 1
+        });
+        telemetryState.sentryReady = true;
+      }
+      return window.Sentry;
+    }
+    if (!telemetryState.sentryScriptPromise) {
+      telemetryState.sentryScriptPromise = loadScriptOnce(
+        "https://browser.sentry-cdn.com/8.33.1/bundle.tracing.min.js",
+        "data-spopeer-sentry"
+      ).then(function () {
+        if (window.Sentry && !telemetryState.sentryReady) {
+          window.Sentry.init({
+            dsn: config.sentryBrowserDsn,
+            environment: config.environment || "development",
+            release: config.release || "spopeer@1.0.0",
+            tracesSampleRate: config.environment === "production" ? 0.2 : 1
+          });
+          telemetryState.sentryReady = true;
+        }
+        return window.Sentry || null;
+      }).catch(function (error) {
+        console.debug("Sentry browser SDK failed to load", error);
+        return null;
+      });
+    }
+    return telemetryState.sentryScriptPromise;
+  }
+
+  async function ensureGoogleAnalytics() {
+    if (!isAnalyticsAllowed()) return false;
+    const config = await getPublicConfig();
+    if (!config.gaMeasurementId) return false;
+    if (!telemetryState.gaScriptPromise) {
+      telemetryState.gaScriptPromise = loadScriptOnce(
+        "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(config.gaMeasurementId),
+        "data-spopeer-ga"
+      ).then(function () {
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { window.dataLayer.push(arguments); }
+        window.gtag = window.gtag || gtag;
+        window.gtag("js", new Date());
+        window.gtag("config", config.gaMeasurementId, {
+          anonymize_ip: true,
+          send_page_view: false
+        });
+        telemetryState.gaReady = true;
+        return true;
+      }).catch(function (error) {
+        console.debug("Google Analytics failed to load", error);
+        return false;
+      });
+    }
+    return telemetryState.gaScriptPromise;
+  }
+
+  async function ensurePostHog() {
+    if (!isAnalyticsAllowed()) return false;
+    const config = await getPublicConfig();
+    if (!config.posthogKey || window.posthog) return !!window.posthog;
+
+    (function (documentRef) {
+      if (window.posthog) return;
+      const posthog = window.posthog = [];
+      if (posthog.init) return;
+      posthog._i = [];
+      posthog.init = function (token, options, name) {
+        function register(target, methodName) {
+          const parts = methodName.split('.');
+          if (parts.length === 2) {
+            target = target[parts[0]] = target[parts[0]] || [];
+            methodName = parts[1];
+          }
+          target[methodName] = function () {
+            target.push([methodName].concat(Array.prototype.slice.call(arguments, 0)));
+          };
+        }
+        const instance = posthog;
+        instance.people = instance.people || [];
+        const methods = ['capture', 'identify', 'alias', 'people.set', 'reset', 'register'];
+        for (let index = 0; index < methods.length; index += 1) {
+          register(instance, methods[index]);
+        }
+        posthog._i.push([token, options, name]);
+      };
+      const script = documentRef.createElement('script');
+      script.async = true;
+      script.src = String((config.posthogHost || 'https://us.i.posthog.com')).replace(/\/+$/, '') + '/static/array.js';
+      script.setAttribute('data-spopeer-posthog', 'true');
+      const firstScript = documentRef.getElementsByTagName('script')[0];
+      firstScript.parentNode.insertBefore(script, firstScript);
+    })(document);
+
+    window.posthog.init(config.posthogKey, {
+      api_host: config.posthogHost || 'https://us.i.posthog.com',
+      autocapture: false,
+      capture_pageview: false,
+      persistence: 'localStorage+cookie'
+    });
+    telemetryState.posthogReady = true;
+    return true;
+  }
+
+  async function syncTelemetryConsent(consent) {
+    const resolvedConsent = consent || readConsentPreferences();
+    if (resolvedConsent.analytics) {
+      await Promise.all([ensureGoogleAnalytics(), ensurePostHog()]);
+    }
+    return resolvedConsent;
+  }
+
+  function trackTelemetryEvent(eventName, properties) {
+    syncTelemetryConsent().then(function () {
+      const props = properties || {};
+      if (typeof window.gtag === "function") {
+        window.gtag("event", eventName, props);
+      }
+      if (window.posthog && typeof window.posthog.capture === "function") {
+        window.posthog.capture(eventName, props);
+      }
+    }).catch(function (error) {
+      console.debug("Telemetry event skipped", eventName, error);
+    });
+  }
+
+  function setTelemetryUser(user) {
+    if (!user || !user.id) return;
+    ensureSentry().then(function (sentry) {
+      if (sentry && typeof sentry.setUser === "function") {
+        sentry.setUser({
+          id: String(user.id),
+          email: user.email || undefined,
+          username: user.displayName || undefined,
+          role: user.role || undefined
+        });
+      }
+    });
+    syncTelemetryConsent().then(function () {
+      if (window.posthog && typeof window.posthog.identify === "function") {
+        window.posthog.identify(String(user.id), {
+          email: user.email || undefined,
+          role: user.role || undefined,
+          sport: user.sport || user.primarySport || undefined
+        });
+      }
+    });
+  }
+
+  function clearTelemetryUser() {
+    ensureSentry().then(function (sentry) {
+      if (sentry && typeof sentry.setUser === "function") {
+        sentry.setUser(null);
+      }
+    });
+    if (window.posthog && typeof window.posthog.reset === "function") {
+      window.posthog.reset();
+    }
+  }
+
+  function trackDailyActiveUser(user) {
+    if (!user || !user.id) return;
+    const today = getCurrentIsoDay();
+    const lastTracked = localStorage.getItem(TELEMETRY_DAY_KEY) || "";
+    if (lastTracked === today) return;
+
+    if (lastTracked) {
+      const previous = new Date(lastTracked + 'T00:00:00Z');
+      const current = new Date(today + 'T00:00:00Z');
+      const daysBetween = Math.max(0, Math.round((current.getTime() - previous.getTime()) / 86400000));
+      trackTelemetryEvent('user_retained', {
+        role: user.role || 'unknown',
+        days_since_last_seen: daysBetween
+      });
+    }
+
+    localStorage.setItem(TELEMETRY_DAY_KEY, today);
+    trackTelemetryEvent('daily_active_user', {
+      role: user.role || 'unknown',
+      path: window.location.pathname || '/'
+    });
+  }
+
+  function describeLifecycleEvent(path, method, status, ok) {
+    const normalizedPath = String(path || '').split('?')[0];
+    if (!ok) {
+      return {
+        name: 'api_request_failed',
+        properties: {
+          endpoint: normalizedPath,
+          method: method,
+          status: status
+        }
+      };
+    }
+    if (method === 'POST' && normalizedPath === '/api/auth/signup') {
+      return { name: 'registration_completed', properties: { endpoint: normalizedPath } };
+    }
+    if (method === 'POST' && normalizedPath === '/api/auth/login') {
+      return { name: 'login_completed', properties: { endpoint: normalizedPath } };
+    }
+    if (method === 'POST' && normalizedPath === '/api/posts') {
+      return { name: 'post_created', properties: { endpoint: normalizedPath } };
+    }
+    if (method === 'POST' && (/^\/api\/messages\/send$/.test(normalizedPath) || /^\/api\/messages\/conversations\/[^/]+\/messages$/.test(normalizedPath))) {
+      return { name: 'message_sent', properties: { endpoint: normalizedPath } };
+    }
+    if (method === 'GET' && normalizedPath.indexOf('/api/search') === 0) {
+      return { name: 'search_used', properties: { endpoint: normalizedPath } };
+    }
+    return null;
+  }
+
+  function recordRequestTelemetry(path, method, status, ok) {
+    const event = describeLifecycleEvent(path, method, status, ok);
+    if (event) {
+      trackTelemetryEvent(event.name, event.properties);
+    }
+  }
+
+  function captureTelemetryException(error, context) {
+    ensureSentry().then(function (sentry) {
+      if (!sentry || typeof sentry.captureException !== "function") return;
+      sentry.withScope(function (scope) {
+        const extras = context || {};
+        Object.keys(extras).forEach(function (key) {
+          scope.setExtra(key, extras[key]);
+        });
+        sentry.captureException(error);
+      });
+    });
+  }
+
+  function trackPageView() {
+    if (telemetryState.pageTracked) return;
+    telemetryState.pageTracked = true;
+    trackTelemetryEvent('page_view', {
+      path: window.location.pathname || '/',
+      title: document.title || '',
+      authenticated: !!getUser()
+    });
+    trackDailyActiveUser(getUser());
+  }
+
+  function attachTelemetryListeners() {
+    if (telemetryState.listenersAttached) return;
+    telemetryState.listenersAttached = true;
+
+    window.addEventListener('spopeer:consent-change', function (event) {
+      syncTelemetryConsent(event.detail || {});
+    });
+
+    window.addEventListener('profileUpdated', function (event) {
+      const profile = event && event.detail && event.detail.profile;
+      if (!profile) return;
+      setTelemetryUser(profile);
+      trackDailyActiveUser(profile);
+    });
+
+    window.addEventListener('error', function (event) {
+      captureTelemetryException(event.error || new Error(event.message || 'Browser error'), {
+        path: window.location.pathname || '/',
+        source: event.filename || ''
+      });
+    });
+
+    window.addEventListener('unhandledrejection', function (event) {
+      captureTelemetryException(event.reason instanceof Error ? event.reason : new Error(String(event.reason || 'Unhandled rejection')), {
+        path: window.location.pathname || '/',
+        source: 'unhandledrejection'
+      });
+    });
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', trackPageView, { once: true });
+    } else {
+      trackPageView();
+    }
   }
 
   function parseStoredJson(key) {
@@ -49,6 +403,8 @@
     } else {
       dispatchProfileUpdated(user, source || "api-set-user");
     }
+    setTelemetryUser(user);
+    trackDailyActiveUser(user);
     return user;
   }
 
@@ -63,6 +419,7 @@
       "spopeer_loggedIn",
       "_profileLastUpdated_"
     ].forEach((key) => localStorage.removeItem(key));
+    clearTelemetryUser();
   }
 
   function getCookieValue(name) {
@@ -279,13 +636,16 @@
         credentials: "include"
       });
     } catch (_networkError) {
+      recordRequestTelemetry(path, method, 0, false);
       const err = new Error("Cannot reach the server. Check your connection and try again.");
       err.code = "NETWORK_ERROR";
+      captureTelemetryException(err, { endpoint: path, method: method, status: 0 });
       throw err;
     }
 
     const data = await response.json().catch(function () { return {}; });
     if (response.status === 401) {
+      recordRequestTelemetry(path, method, response.status, false);
       const respCode = (data && (data.code || (data.error && data.error.code))) || '';
       // Silently refresh the access token once and retry the original request
       if (!config._isRetry && !isPublicAuthEndpoint(path)) {
@@ -303,6 +663,7 @@
       throw err;
     }
     if (!response.ok) {
+      recordRequestTelemetry(path, method, response.status, false);
       console.error("API request failed", {
         path,
         method,
@@ -315,8 +676,11 @@
       err.endpoint = path;
       err.method = method;
       err.validationField = data && data.error && data.error.field;
+      captureTelemetryException(err, { endpoint: path, method: method, status: response.status });
       throw err;
     }
+
+    recordRequestTelemetry(path, method, response.status, true);
 
     return data;
   }
@@ -766,6 +1130,19 @@
   const style = document.createElement("style");
   style.textContent = "@keyframes spopeer-slide-in{from{transform:translate3d(16px,0,0);opacity:0}to{transform:translate3d(0,0,0);opacity:1}}@keyframes spopeer-slide-out{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(16px,0,0);opacity:0}}";
   document.head.appendChild(style);
+
+  window.SpopeerTelemetry = {
+    syncConsent: syncTelemetryConsent,
+    track: trackTelemetryEvent,
+    identify: setTelemetryUser,
+    captureException: captureTelemetryException,
+    getPublicConfig: getPublicConfig
+  };
+
+  ensureSentry();
+  syncTelemetryConsent();
+  attachTelemetryListeners();
+  setTelemetryUser(getUser());
 
   window.SpopeerAPI = api;
   window.API = api;

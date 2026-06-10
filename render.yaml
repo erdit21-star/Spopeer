@@ -45,6 +45,14 @@ services:
         sync: false
       - key: SENTRY_DSN
         sync: false
+      - key: SENTRY_BROWSER_DSN
+        sync: false
+      - key: GA_MEASUREMENT_ID
+        sync: false
+      - key: POSTHOG_KEY
+        sync: false
+      - key: POSTHOG_HOST
+        value: "https://us.i.posthog.com"
       - key: LOG_LEVEL
         value: "info"
       - key: BACKUP_CRON_SCHEDULE

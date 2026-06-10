@@ -30,6 +30,10 @@ const requiredEnv = [
 
 const recommendedEnv = [
   'SENTRY_DSN',
+  'SENTRY_BROWSER_DSN',
+  'GA_MEASUREMENT_ID',
+  'POSTHOG_KEY',
+  'POSTHOG_HOST',
   'BACKUP_CRON_SCHEDULE',
   'BACKUP_TARGET',
   'LOG_LEVEL'
