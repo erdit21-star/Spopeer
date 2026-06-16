@@ -59,14 +59,33 @@ function validate() {
     }
 
     // Require email service when mandatory email verification is enabled
+    // In production email verification is always required
     const emailVerifyEnabled =
       String(process.env.REQUIRE_EMAIL_VERIFICATION || 'false').toLowerCase() === 'true';
-    if (emailVerifyEnabled && !process.env.RESEND_API_KEY) {
+    if ((isProduction || emailVerifyEnabled) && !process.env.RESEND_API_KEY) {
       console.error(
-        'FATAL: REQUIRE_EMAIL_VERIFICATION=true in production but RESEND_API_KEY is not set.' +
-        ' Users will not be able to verify their email. Set RESEND_API_KEY or disable REQUIRE_EMAIL_VERIFICATION.'
+        'FATAL: Email verification is required in production but RESEND_API_KEY is not set.' +
+        ' Users will not be able to verify their email. Set RESEND_API_KEY.'
       );
       process.exit(1);
+    }
+
+    // CAPTCHA: require secret key when CAPTCHA is enabled
+    const captchaEnabled =
+      String(process.env.CAPTCHA_ENABLED || 'false').toLowerCase() === 'true';
+    if (captchaEnabled && !process.env.CAPTCHA_SECRET_KEY) {
+      console.error(
+        'FATAL: CAPTCHA_ENABLED=true in production but CAPTCHA_SECRET_KEY is not set.'
+      );
+      process.exit(1);
+    }
+
+    // Metrics token: warn if not set (not hard-fail to allow monitoring setup)
+    if (!process.env.METRICS_TOKEN) {
+      console.warn(
+        'WARNING: METRICS_TOKEN is not set. The /metrics endpoint will be disabled in production.' +
+        ' Set METRICS_TOKEN to allow monitoring services to access metrics.'
+      );
     }
   }
 

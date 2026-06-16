@@ -1,6 +1,68 @@
 ﻿(function () {
   let currentUser = null;
   const listeners = new Set();
+  const EMAIL_BANNER_ID = 'spopeer-email-verify-banner';
+
+  function ensureEmailBannerStyles() {
+    if (document.getElementById(`${EMAIL_BANNER_ID}-style`)) return;
+    const style = document.createElement('style');
+    style.id = `${EMAIL_BANNER_ID}-style`;
+    style.textContent = `
+      #${EMAIL_BANNER_ID} {
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: #f59e0b;
+        color: #1f2937;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+      #${EMAIL_BANNER_ID} button {
+        border: none;
+        background: #111827;
+        color: #fff;
+        border-radius: 4px;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function renderEmailVerificationBanner(user) {
+    if (typeof document === 'undefined' || !document.body) return;
+
+    const existing = document.getElementById(EMAIL_BANNER_ID);
+    const mustShow = !!(user && user.emailVerified === false);
+
+    if (!mustShow) {
+      if (existing) existing.remove();
+      return;
+    }
+
+    if (existing) return;
+
+    ensureEmailBannerStyles();
+    const el = document.createElement('div');
+    el.id = EMAIL_BANNER_ID;
+    el.setAttribute('role', 'alert');
+    el.innerHTML = '<span>Verify your email to post, message, upload, and connect.</span>';
+    const action = document.createElement('button');
+    action.type = 'button';
+    action.textContent = 'Resend verification';
+    action.addEventListener('click', function () {
+      window.location.href = '/pages/auth/login.html';
+    });
+    el.appendChild(action);
+
+    document.body.insertBefore(el, document.body.firstChild);
+  }
 
   function normalizeUser(user) {
     if (!user) return null;
@@ -47,6 +109,12 @@
       );
     } catch (err) {
       console.debug("dispatch currentUserChanged failed", err);
+    }
+
+    try {
+      renderEmailVerificationBanner(currentUser);
+    } catch (err) {
+      console.debug('renderEmailVerificationBanner failed', err);
     }
   }
 

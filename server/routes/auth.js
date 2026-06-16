@@ -78,10 +78,10 @@ const {
 } = require('../utils/schemas');
 const { createLimiter } = require('../services/rateLimiter');
 
-// Signup abuse limiter
+// Signup abuse limiter — 10 per hour per IP to prevent account creation abuse
 const signupLimiter = createLimiter({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 50,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   skip: () => isTest,
@@ -1039,13 +1039,14 @@ router.post('/refresh', requireCsrf, async (req, res) => {
     const newAccessToken = generateAccessToken(user);
     const newRefreshToken = generateRefreshToken(user);
 
+    const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
     try {
       await RefreshSession.create({
         userId: user.id,
         tokenHash: sha256(newRefreshToken),
         userAgent: req.get('user-agent') || null,
         ipAddress: req.ip,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        expiresAt: new Date(Date.now() + REFRESH_TTL_MS)
       });
     } catch (sessionErr) {
       console.error('[REFRESH] RefreshSession.create failed:', sessionErr.message);
@@ -1066,7 +1067,7 @@ router.post('/refresh', requireCsrf, async (req, res) => {
     }
 
     res.cookie('access_token', newAccessToken, getCookieOptions(15 * 60 * 1000));
-    res.cookie('refresh_token', newRefreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+    res.cookie('refresh_token', newRefreshToken, getCookieOptions(REFRESH_TTL_MS));
 
     return ok(res, { message: 'Token refreshed.' });
   } catch (error) {
@@ -1232,6 +1233,23 @@ router.post('/google', googleLimiter, async (req, res) => {
       return fail(res, 401, 'INVALID_TOKEN', 'Google token is invalid or expired.');
     }
     return fail(res, 400, 'GOOGLE_AUTH_ERROR', 'Google sign-in failed.');
+  }
+});
+
+// ─── LOGOUT ALL DEVICES ───
+// Revokes ALL active refresh sessions for the authenticated user.
+router.post('/logout-all', authenticate, requireCsrf, async (req, res) => {
+  try {
+    await RefreshSession.update(
+      { revokedAt: new Date() },
+      { where: { userId: req.userId, revokedAt: null } }
+    );
+    clearAuthCookies(res);
+    return ok(res, { message: 'All sessions revoked. Logged out from all devices.' });
+  } catch (error) {
+    console.error('[LOGOUT_ALL] Error:', { message: error && error.message, requestId: req.requestId });
+    clearAuthCookies(res);
+    return fail(res, 500, 'SERVER_ERROR', 'Failed to revoke all sessions.');
   }
 });
 

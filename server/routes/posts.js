@@ -20,7 +20,7 @@ const express = require('express');
 const router = express.Router();
 const { Post, User, Like, Comment, Connection, SavedPost, PostMedia, PostShare, Block } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { uploadPost, persistFile, validateUploadedFile } = require('../middleware/upload');
+const { uploadPost, persistFile, validateUploadedFile, enforceFileSizeLimits } = require('../middleware/upload');
 const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
 const { createPostSchema, validate } = require('../utils/schemas');
@@ -239,7 +239,7 @@ router.get('/', optionalAuth, async (req, res) => {
 });
 
 // ─── CREATE POST ───
-router.post('/', authenticate, uploadPost.array('media', 10), validateUploadedFile, validate(createPostSchema), async (req, res) => {
+router.post('/', authenticate, uploadPost.array('media', 10), validateUploadedFile, enforceFileSizeLimits, validate(createPostSchema), async (req, res) => {
   try {
     const {
       content, sport, type, pollOptions,
@@ -762,7 +762,7 @@ router.post('/:id/share', authenticate, async (req, res) => {
 });
 
 // ─── ADD MEDIA TO POST ───
-router.post('/:id/media', authenticate, uploadPost.array('media', 10), validateUploadedFile, async (req, res) => {
+router.post('/:id/media', authenticate, uploadPost.array('media', 10), validateUploadedFile, enforceFileSizeLimits, async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id);
     if (!post || !post.isActive) return fail(res, 404, 'NOT_FOUND', 'Post not found.');

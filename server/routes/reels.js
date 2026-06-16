@@ -11,7 +11,7 @@ const express = require('express');
 const router = express.Router();
 const { Reel, User } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { uploadPost, persistFile, validateUploadedFile } = require('../middleware/upload');
+const { uploadPost, persistFile, validateUploadedFile, enforceFileSizeLimits } = require('../middleware/upload');
 
 // ─── LIST REELS ───
 const { ok, created, fail } = require('../utils/response');
@@ -40,7 +40,7 @@ router.get('/', optionalAuth, async (req, res) => {
 });
 
 // ─── CREATE REEL ───
-router.post('/', authenticate, uploadPost.single('video'), validateUploadedFile, async (req, res) => {
+router.post('/', authenticate, uploadPost.single('video'), validateUploadedFile, enforceFileSizeLimits, async (req, res) => {
   try {
     const { title, description, sport, duration } = req.body;
 

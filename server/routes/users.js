@@ -13,7 +13,7 @@ const express = require('express');
 const router = express.Router();
 const { User, Post, Connection, Comment, Like, Message, SavedPost, Notification, Report, Block, Thread, Reply, Reel, Story, Sponsorship, PasswordResetToken, Media, RefreshSession, MarketplaceAnalyticsEvent, GroupMember, ConversationParticipant, EventResponse, AdminAuditLog, Group, Event, SavedListing, Inquiry } = require('../models');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { uploadAvatar, uploadCover, persistFile, validateUploadedFile } = require('../middleware/upload');
+const { uploadAvatar, uploadCover, persistFile, validateUploadedFile, enforceFileSizeLimits } = require('../middleware/upload');
 const { Op } = require('sequelize');
 const { sanitizeString, parsePagination } = require('../utils/validation');
 const { profileUpdateSchema, validate } = require('../utils/schemas');
@@ -222,7 +222,7 @@ router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res)
 });
 
 // ─── UPLOAD AVATAR ───
-router.post('/avatar', authenticate, handleUploadMiddleware(uploadAvatar.single('avatar')), validateUploadedFile, async (req, res) => {
+router.post('/avatar', authenticate, handleUploadMiddleware(uploadAvatar.single('avatar')), validateUploadedFile, enforceFileSizeLimits, async (req, res) => {
   try {
     if (!req.file) {
       return fail(res, 400, 'VALIDATION', 'No file uploaded.');
@@ -247,7 +247,7 @@ router.post('/avatar', authenticate, handleUploadMiddleware(uploadAvatar.single(
 });
 
 // ─── UPLOAD COVER PHOTO ───
-router.post('/cover', authenticate, handleUploadMiddleware(uploadCover.single('cover')), validateUploadedFile, async (req, res) => {
+router.post('/cover', authenticate, handleUploadMiddleware(uploadCover.single('cover')), validateUploadedFile, enforceFileSizeLimits, async (req, res) => {
   try {
     if (!req.file) {
       return fail(res, 400, 'VALIDATION', 'No file uploaded.');

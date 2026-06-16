@@ -12,8 +12,13 @@
     "syntax:check": "node scripts/syntax-check.js",
     "security:check": "node scripts/security-check.js",
     "prod:check": "node scripts/production-readiness-check.js",
+    "schema:audit": "cd server && node scripts/schema-audit.js",
     "test:e2e:smoke": "playwright test",
-    "verify": "npm run syntax:check && npm run lint && npm run security:check"
+    "verify": "npm run syntax:check && npm run lint && npm run security:check",
+    "audit:prod": "npm audit --omit=dev && cd server && npm audit --omit=dev"
+  },
+  "engines": {
+    "node": ">=20 <23"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",

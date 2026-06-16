@@ -9,7 +9,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { uploadPost, persistFile, validateUploadedFile } = require('../middleware/upload');
+const { uploadPost, persistFile, validateUploadedFile, enforceFileSizeLimits } = require('../middleware/upload');
 const { Media, User } = require('../models');
 const path = require('path');
 const fs = require('fs/promises');
@@ -17,7 +17,7 @@ const { deleteFromCloud } = require('../services/cloudinary');
 
 // ─── UPLOAD ───
 const { ok, created, fail } = require('../utils/response');
-router.post('/upload', authenticate, uploadPost.single('file'), validateUploadedFile, async (req, res) => {
+router.post('/upload', authenticate, uploadPost.single('file'), validateUploadedFile, enforceFileSizeLimits, async (req, res) => {
   try {
     if (!req.file) {
       return fail(res, 400, 'VALIDATION', 'No file uploaded.');

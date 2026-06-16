@@ -72,6 +72,7 @@ const errorHandler = require('./middleware/errorHandler');
 const { sentryErrorHandler } = require('./services/sentry');
 const { authenticate } = require('./middleware/auth');
 const { requireAdmin } = require('./middleware/admin');
+const { requireVerifiedEmail } = require('./middleware/requireVerifiedEmail');
 const { createPerUserLimiter } = require('./middleware/perUserRateLimiter');
 const { csrfProtection } = require('./middleware/csrf');
 const { requestLoggerMiddleware } = require('./middleware/requestLogger');
@@ -207,6 +208,10 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const requireVerifiedForMutations = (req, res, next) => {
+  if (!MUTATING_METHODS.has(req.method)) return next();
+  return authenticate(req, res, () => requireVerifiedEmail(req, res, next));
+};
 const globalApiCsrf = csrfProtection({
   exemptPaths: [
     '/auth/csrf',
@@ -261,7 +266,20 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // ─── HEALTH & READINESS CHECKS ───
 app.get('/health', healthCheckMiddleware);
 app.get('/ready', readinessCheckMiddleware);
+
+// ─── PLAIN /metrics — requires METRICS_TOKEN in production ───
 app.get('/metrics', (req, res) => {
+  const metricsToken = process.env.METRICS_TOKEN;
+  if (metricsToken) {
+    const authHeader = req.headers.authorization || '';
+    const provided = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (!provided || provided !== metricsToken) {
+      return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Valid Authorization: Bearer <METRICS_TOKEN> required.' } });
+    }
+  } else if (process.env.NODE_ENV === 'production') {
+    // No token configured in production — refuse to expose metrics
+    return res.status(503).json({ success: false, error: { code: 'METRICS_DISABLED', message: 'Metrics not available. Set METRICS_TOKEN to enable.' } });
+  }
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -274,23 +292,24 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', apiLimiter, userRoutes);
 app.use('/api/profiles', apiLimiter, userRoutes);
 app.use('/api/profile', apiLimiter, profileRoutes);
-app.use('/api/posts', apiLimiter, perUserWriteLimiter, postRoutes);
-app.use('/api/connections', apiLimiter, connectionRoutes);
-app.use('/api/messages', apiLimiter, perUserWriteLimiter, messageRoutes);
+// Write routes — require authentication AND verified email before mutating
+app.use('/api/posts', apiLimiter, perUserWriteLimiter, requireVerifiedForMutations, postRoutes);
+app.use('/api/connections', apiLimiter, requireVerifiedForMutations, connectionRoutes);
+app.use('/api/messages', apiLimiter, perUserWriteLimiter, requireVerifiedForMutations, messageRoutes);
 app.use('/api/admin', apiLimiter, authenticate, requireAdmin, adminRoutes);
 app.use('/api/notifications', apiLimiter, notificationRoutes);
-app.use('/api/groups', apiLimiter, groupRoutes);
-app.use('/api/marketplace', apiLimiter, marketplaceRoutes);
-app.use('/api/forums', apiLimiter, forumRoutes);
-app.use('/api/reels', apiLimiter, reelRoutes);
-app.use('/api/follows', apiLimiter, perUserWriteLimiter, followRoutes);
-app.use('/api/bookmarks', apiLimiter, perUserWriteLimiter, bookmarkRoutes);
+app.use('/api/groups', apiLimiter, requireVerifiedForMutations, groupRoutes);
+app.use('/api/marketplace', apiLimiter, requireVerifiedForMutations, marketplaceRoutes);
+app.use('/api/forums', apiLimiter, requireVerifiedForMutations, forumRoutes);
+app.use('/api/reels', apiLimiter, requireVerifiedForMutations, reelRoutes);
+app.use('/api/follows', apiLimiter, perUserWriteLimiter, requireVerifiedForMutations, followRoutes);
+app.use('/api/bookmarks', apiLimiter, perUserWriteLimiter, requireVerifiedForMutations, bookmarkRoutes);
 app.use('/api/search', searchLimiter, searchRoutes);
-app.use('/api/events', apiLimiter, perUserWriteLimiter, eventRoutes);
-app.use('/api/media', uploadLimiter, mediaRoutes);
-app.use('/api/sponsorships', apiLimiter, sponsorshipRoutes);
+app.use('/api/events', apiLimiter, perUserWriteLimiter, requireVerifiedForMutations, eventRoutes);
+app.use('/api/media', uploadLimiter, requireVerifiedForMutations, mediaRoutes);
+app.use('/api/sponsorships', apiLimiter, requireVerifiedForMutations, sponsorshipRoutes);
 app.use('/api/moderation', apiLimiter, moderationRoutes);
-app.use('/api/stories', apiLimiter, storyRoutes);
+app.use('/api/stories', apiLimiter, requireVerifiedForMutations, storyRoutes);
 app.use('/api/og', apiLimiter, ogRoutes);
 app.use('/api/security', apiLimiter, securityRoutes);
 app.use('/api/privacy', apiLimiter, privacyRoutes);

@@ -9,7 +9,13 @@
     "migrate": "npx sequelize-cli db:migrate",
     "migrate:prod": "npx sequelize-cli db:migrate --env production",
     "check:launch": "node scripts/final-launch-checks.js",
-    "seed": "node seeders/seed.js"
+    "schema:audit": "node scripts/schema-audit.js",
+    "seed": "node seeders/seed.js",
+    "test": "echo \"No unit tests configured yet. Add Jest or Mocha.\"",
+    "audit:prod": "npm audit --omit=dev"
+  },
+  "engines": {
+    "node": ">=20 <23"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

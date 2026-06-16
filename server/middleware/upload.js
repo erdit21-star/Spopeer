@@ -42,7 +42,7 @@ function detectMimeFromBuffer(buf) {
 
 // MIME group: treat these as equivalent for signature matching
 const MIME_IMAGE_GROUP = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/webp'];
-const MIME_VIDEO_GROUP = ['video/mp4', 'video/quicktime'];
+const MIME_VIDEO_GROUP = ['video/mp4', 'video/quicktime', 'video/webm'];
 
 // ── MIME → extension allow-list ──
 const ALLOWED_TYPES = {
@@ -51,13 +51,28 @@ const ALLOWED_TYPES = {
   'image/png':   ['.png'],
   'image/webp':  ['.webp'],
   'video/mp4':      ['.mp4'],
-  'video/quicktime':['.mov']
+  'video/quicktime':['.mov'],
+  'video/webm':     ['.webm']
 };
 
+// Explicitly rejected types — never allow SVG (XSS risk)
+const REJECTED_TYPES = new Set(['image/svg+xml', 'text/html', 'application/javascript']);
+
+// Per-type size limits
+const IMAGE_MAX_BYTES = parseInt(process.env.MAX_IMAGE_SIZE, 10) || 8 * 1024 * 1024;   //  8 MB
+const VIDEO_MAX_BYTES = parseInt(process.env.MAX_VIDEO_SIZE, 10) || 100 * 1024 * 1024; // 100 MB
+
 const fileFilter = (_req, file, cb) => {
+  // Explicitly reject dangerous MIME types
+  if (REJECTED_TYPES.has(file.mimetype)) {
+    const err = new Error(`File type ${file.mimetype} is not allowed.`);
+    err.code = 'UNSUPPORTED_FILE_TYPE';
+    return cb(err, false);
+  }
+
   const allowedExts = ALLOWED_TYPES[file.mimetype];
   if (!allowedExts) {
-    const err = new Error('Only image and video files are allowed.');
+    const err = new Error('Only image (JPEG/PNG/WEBP) and video (MP4/MOV/WEBM) files are allowed.');
     err.code = 'UNSUPPORTED_FILE_TYPE';
     return cb(err, false);
   }
@@ -70,16 +85,40 @@ const fileFilter = (_req, file, cb) => {
   cb(null, true);
 };
 
+// Per-type size enforcement middleware (runs after multer collects the buffer)
+function enforceFileSizeLimits(req, res, next) {
+  const files = [];
+  if (req.file) files.push(req.file);
+  if (Array.isArray(req.files)) files.push(...req.files);
+  else if (req.files && typeof req.files === 'object') {
+    Object.values(req.files).forEach((v) => Array.isArray(v) ? files.push(...v) : null);
+  }
+
+  for (const file of files) {
+    const isVideo = MIME_VIDEO_GROUP.includes(file.mimetype);
+    const limit = isVideo ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
+    if (file.size > limit) {
+      const limitMB = Math.round(limit / (1024 * 1024));
+      const err = new Error(`File too large. Maximum size for ${isVideo ? 'videos' : 'images'} is ${limitMB}MB.`);
+      err.code = 'FILE_TOO_LARGE';
+      err.status = 413;
+      return next(err);
+    }
+  }
+  next();
+}
+
 // Always use memory storage so buffer is available for cloud upload
 const memStorage = multer.memoryStorage();
 
-const maxSize = parseInt(process.env.MAX_FILE_SIZE, 10) || 10 * 1024 * 1024; // 10 MB
-const storyMaxSize = parseInt(process.env.MAX_STORY_FILE_SIZE, 10) || 100 * 1024 * 1024; // 100 MB
+// Use video max as the multer hard cap; per-type enforcement done in enforceFileSizeLimits
+const maxSize = parseInt(process.env.MAX_FILE_SIZE, 10) || VIDEO_MAX_BYTES;
+const storyMaxSize = parseInt(process.env.MAX_STORY_FILE_SIZE, 10) || VIDEO_MAX_BYTES;
 
-const uploadAvatar = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize, files: 1 } });
-const uploadCover  = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize, files: 1 } });
-const uploadPost   = multer({ storage: memStorage, fileFilter, limits: { fileSize: maxSize * 2, files: 10 } }); // 20 MB each, up to 10 files
-const uploadStory  = multer({ storage: memStorage, fileFilter, limits: { fileSize: storyMaxSize, files: 1 } }); // 100 MB
+const uploadAvatar = multer({ storage: memStorage, fileFilter, limits: { fileSize: IMAGE_MAX_BYTES, files: 1 } });
+const uploadCover  = multer({ storage: memStorage, fileFilter, limits: { fileSize: IMAGE_MAX_BYTES, files: 1 } });
+const uploadPost   = multer({ storage: memStorage, fileFilter, limits: { fileSize: VIDEO_MAX_BYTES, files: 10 } });
+const uploadStory  = multer({ storage: memStorage, fileFilter, limits: { fileSize: VIDEO_MAX_BYTES, files: 1 } });
 
 /**
  * Express middleware: validate uploaded file magic bytes match declared MIME type.
@@ -143,10 +182,12 @@ async function persistFile(file, folder, userId) {
   const ext = path.extname(file.originalname).toLowerCase();
   const prefix = folder === 'avatars' ? 'avatar' : folder === 'covers' ? 'cover' : 'post';
   const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+  const envPrefix = process.env.NODE_ENV === 'production' ? 'production' : 'staging';
 
   if (isCloudEnabled()) {
+    const cloudFolder = `spopeer/${envPrefix}/users/${userId}/${folder}`;
     const publicId = safeFilename(prefix, userId, ''); // Cloudinary adds ext automatically
-    const result = await uploadToCloud(file.buffer, { folder, publicId, resourceType });
+    const result = await uploadToCloud(file.buffer, { folder: cloudFolder, publicId, resourceType });
     return { url: result.url, provider: 'cloudinary', publicId: result.publicId };
   }
 
@@ -163,6 +204,6 @@ async function persistFile(file, folder, userId) {
   return { url, provider: 'local' };
 }
 
-module.exports = { uploadAvatar, uploadCover, uploadPost, uploadStory, persistFile, validateUploadedFile };
+module.exports = { uploadAvatar, uploadCover, uploadPost, uploadStory, persistFile, validateUploadedFile, enforceFileSizeLimits };
 
 

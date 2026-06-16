@@ -3,7 +3,7 @@ const { Op } = require('sequelize');
 const router = express.Router();
 
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { uploadStory, persistFile, validateUploadedFile } = require('../middleware/upload');
+const { uploadStory, persistFile, validateUploadedFile, enforceFileSizeLimits } = require('../middleware/upload');
 const { Story, User } = require('../models');
 const { createNotification } = require('../services/notifications');
 
@@ -65,7 +65,7 @@ router.get('/', optionalAuth, async (req, res) => {
 /**
  * CREATE story
  */
-router.post('/', authenticate, uploadStory.single('media'), validateUploadedFile, async (req, res) => {
+router.post('/', authenticate, uploadStory.single('media'), validateUploadedFile, enforceFileSizeLimits, async (req, res) => {
   try {
     let mediaUrl;
 
