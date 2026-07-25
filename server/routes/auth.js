@@ -527,6 +527,21 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
       ip: req.ip,
       ua: req.get('user-agent')
     });
+
+    const dbConnectIssue =
+      error && (
+        error.name === 'SequelizeConnectionError' ||
+        error.name === 'SequelizeConnectionRefusedError' ||
+        error.name === 'SequelizeHostNotFoundError' ||
+        error.code === 'ENOTFOUND' ||
+        error.code === 'ECONNREFUSED' ||
+        error.code === 'ETIMEDOUT'
+      );
+
+    if (dbConnectIssue) {
+      return fail(res, 503, 'AUTH_DB_UNAVAILABLE', 'Login is temporarily unavailable. Please try again shortly.');
+    }
+
     return fail(res, 500, 'LOGIN_INTERNAL_ERROR', 'Login failed due to a server configuration issue. Please try again shortly.');
   }
 });

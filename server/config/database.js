@@ -12,10 +12,16 @@ const isProduction = env.nodeEnv === 'production';
 
 function sanitizeDatabaseUrl(rawUrl) {
   if (!rawUrl || typeof rawUrl !== 'string') return null;
-  if (!rawUrl.startsWith('postgres')) return null;
+
+  const trimmed = rawUrl.trim();
+  const marker = trimmed.search(/postgres(?:ql)?:\/\//i);
+  if (marker < 0) return null;
+
+  // Some providers/UI exports prepend labels (e.g. "tenant/user "), so extract URL part only.
+  const candidate = trimmed.slice(marker).split(/\s+/)[0];
 
   try {
-    const parsed = new URL(rawUrl);
+    const parsed = new URL(candidate);
     if (parsed.port === '6543') {
       console.warn('[DB] DATABASE_URL uses port 6543 (transaction pooler). Prefer direct 5432 URL for Sequelize.');
     }
@@ -28,6 +34,29 @@ function sanitizeDatabaseUrl(rawUrl) {
   } catch (error) {
     console.warn('[DB] Invalid database URL provided:', error && error.message ? error.message : error);
     return null;
+  }
+}
+
+function normalizeHost(rawHost) {
+  if (!rawHost || typeof rawHost !== 'string') return rawHost;
+  const trimmed = rawHost.trim();
+  if (!trimmed) return trimmed;
+
+  // Keep the final token if host was pasted with a label prefix.
+  const token = trimmed.split(/\s+/).pop();
+
+  // Accept plain hosts directly.
+  if (!token.includes('://') && !token.includes('/')) {
+    return token;
+  }
+
+  // If a URL-like string is supplied in DB_HOST, extract hostname.
+  try {
+    const maybeUrl = token.includes('://') ? token : `postgres://${token}`;
+    const parsed = new URL(maybeUrl);
+    return parsed.hostname || token;
+  } catch (_error) {
+    return token;
   }
 }
 
@@ -60,7 +89,7 @@ const sequelize = dbUrl
   ? new Sequelize(dbUrl, commonOpts)
   : new Sequelize(env.db.name, env.db.user, env.db.password, {
       ...commonOpts,
-      host: env.db.host,
+      host: normalizeHost(env.db.host),
       port: env.db.port
     });
 
