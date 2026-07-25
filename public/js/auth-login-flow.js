@@ -30,8 +30,17 @@
 
   function navigateAfterLogin(targetPath) {
     var target = String(targetPath || '/feed.html');
-    var sep = target.indexOf('?') === -1 ? '?' : '&';
-    var href = target + sep + 'loginAt=' + Date.now();
+    try {
+      localStorage.setItem('spopeer_force_desktop', '1');
+    } catch (_err) {}
+
+    var glue = target.indexOf('?') === -1 ? '?' : '&';
+    if (target.indexOf('desktop=1') === -1) {
+      target = target + glue + 'desktop=1';
+      glue = '&';
+    }
+
+    var href = target + glue + 'loginAt=' + Date.now();
     window.location.replace(href);
   }
 
