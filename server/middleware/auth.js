@@ -31,7 +31,9 @@ function getAccessSecret() {
 }
 
 function getRefreshSecret() {
-  const secret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+  // Prefer dedicated refresh secret, but gracefully fall back to access/general secret
+  // to avoid hard login failures in partially configured environments.
+  const secret = process.env.JWT_REFRESH_SECRET || process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
   if (!secret && process.env.NODE_ENV === 'production') {
     throw new Error('JWT_REFRESH_SECRET or JWT_SECRET must be set in production');
   }

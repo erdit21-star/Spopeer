@@ -527,7 +527,7 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
       ip: req.ip,
       ua: req.get('user-agent')
     });
-    return next(error);
+    return fail(res, 500, 'LOGIN_INTERNAL_ERROR', 'Login failed due to a server configuration issue. Please try again shortly.');
   }
 });
 
