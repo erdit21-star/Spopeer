@@ -4122,7 +4122,7 @@
     // Safety net: never leave users on a blank splash if init hangs.
     window.setTimeout(function () {
       var splash = $('#spmSplash');
-      var shell = $('#spmShell');
+      var shell = $('#spmShell') || $('#main-content');
       var auth = $('#spmAuth');
       if (!splash || !shell || !auth) return;
       var shellHidden = shell.classList.contains('spm-hidden');
@@ -4149,7 +4149,7 @@
         app.user = unwrapUser(result);
         initRealtimeSocket();
         updateDrawerAccessByRole();
-        revealTarget('#spmShell');
+        revealTarget('#spmShell, #main-content');
         render();
         refreshTopbarStats();
       } catch (_error) {
@@ -4159,7 +4159,7 @@
           app.user = getStoredSessionUser() || app.user || null;
           initRealtimeSocket();
           updateDrawerAccessByRole();
-          revealTarget('#spmShell');
+          revealTarget('#spmShell, #main-content');
           render();
           refreshTopbarStats();
           return;
