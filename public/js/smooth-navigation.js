@@ -105,14 +105,20 @@ const SmoothNavigation = {
     // Intercept form submissions if they navigate
     document.addEventListener('submit', function(e) {
       var form = e.target;
-      if (form.method && form.method.toUpperCase() === 'GET' && form.action) {
-        // GET forms navigate immediately
-        setTimeout(function() {
-          self.isNavigating = true;
-          document.body.style.opacity = '0';
-          document.body.style.transition = 'opacity ' + self.TRANSITION_DURATION + 'ms ease-out';
-        }, 100);
-      }
+      if (!form) return;
+      if (form.hasAttribute && form.hasAttribute('data-no-transition')) return;
+
+      var method = String(form.method || 'GET').toUpperCase();
+      if (method !== 'GET' || !form.action) return;
+
+      // Some forms (like login/signup) are JS-handled and call preventDefault.
+      // Re-check defaultPrevented just before applying fade so we don't hide the page.
+      setTimeout(function() {
+        if (e.defaultPrevented) return;
+        self.isNavigating = true;
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity ' + self.TRANSITION_DURATION + 'ms ease-out';
+      }, 100);
     }, true);
   }
 };
