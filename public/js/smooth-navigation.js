@@ -7,6 +7,11 @@ const SmoothNavigation = {
   TRANSITION_DURATION: 300, // milliseconds
   isNavigating: false,
 
+  ensureVisible: function() {
+    if (!document || !document.body) return;
+    document.body.style.opacity = '1';
+  },
+
   /**
    * Navigate to a new URL with smooth fade transition
    */
@@ -29,18 +34,16 @@ const SmoothNavigation = {
    * Initialize fade-in on page load
    */
   initPageLoad: function() {
-    // Set initial opacity to 0 and fade in
-    document.body.style.opacity = '0';
+    // Never hide page by default; interrupted transitions can otherwise leave a white screen.
     document.body.style.transition = 'opacity 400ms ease-in';
+    this.ensureVisible();
 
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function() {
-        document.body.style.opacity = '1';
-      });
+      document.addEventListener('DOMContentLoaded', this.ensureVisible.bind(this));
     } else {
       // DOM is already loaded
-      document.body.style.opacity = '1';
+      this.ensureVisible();
     }
 
     // Hide any loading or redirect messages
@@ -123,4 +126,12 @@ if (typeof window !== 'undefined') {
   } else {
     SmoothNavigation.initPageLoad();
   }
+
+  // Recovery hooks for BFCache/history edge-cases that can leave stale inline opacity.
+  window.addEventListener('pageshow', function () {
+    SmoothNavigation.ensureVisible();
+  });
+  window.addEventListener('load', function () {
+    SmoothNavigation.ensureVisible();
+  });
 }
