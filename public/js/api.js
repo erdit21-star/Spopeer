@@ -541,9 +541,16 @@
     var msSinceAuth = recentAuthAt > 0 ? (Date.now() - recentAuthAt) : Number.POSITIVE_INFINITY;
     var hasLocalSession = localStorage.getItem('spopeer_loggedIn') === 'true' && !!localStorage.getItem('spopeer_user');
 
-    // Avoid bouncing users back to login on transient /me race right after login.
-    if (endpoint.indexOf('/api/auth/me') === 0 && hasLocalSession && msSinceAuth <= 2 * 60 * 1000) {
-      console.debug('Suppressing immediate unauthorized redirect for /api/auth/me during post-login grace window');
+    // Avoid bouncing users back to login on transient auth/profile races right after login.
+    var isPostLoginBootstrapEndpoint = endpoint.indexOf('/api/auth/me') === 0
+      || endpoint.indexOf('/api/profile/me') === 0
+      || endpoint.indexOf('/api/users/me') === 0;
+
+    if (isPostLoginBootstrapEndpoint && hasLocalSession && msSinceAuth <= 2 * 60 * 1000) {
+      console.debug('Suppressing immediate unauthorized redirect during post-login grace window', {
+        endpoint: endpoint,
+        msSinceAuth: msSinceAuth
+      });
       return;
     }
 
