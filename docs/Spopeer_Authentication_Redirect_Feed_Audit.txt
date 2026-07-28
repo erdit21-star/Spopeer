@@ -1,0 +1,287 @@
+Spopeer Authentication, Redirect & Feed Loading Audit
+
+Objective:
+Fix the issue:
+User signs in successfully -> redirected -> white page instead of main Feed page.
+
+The goal:
+1. Successful authentication
+2. Correct redirect to application
+3. Router initialization
+4. User session persistence
+5. Feed loading
+6. Proper error handling
+
+
+1. LOGIN FLOW AUDIT
+
+Check Login Success Handler
+
+Find:
+- auth.js
+- login.js
+- signin.js
+- authentication modules
+
+Verify after successful login:
+
+localStorage.setItem("token", response.token);
+
+window.location.href = "app.html#/feed";
+
+Avoid redirecting to routes that do not exist:
+
+/feed
+/dashboard
+/profile
+
+unless they are real application routes.
+
+
+2. TOKEN STORAGE AUDIT
+
+Search project:
+
+localStorage.setItem
+localStorage.getItem
+
+The token key must be identical everywhere.
+
+Example:
+
+Login:
+localStorage.setItem("accessToken", token);
+
+Feed:
+localStorage.getItem("accessToken");
+
+
+3. REDIRECT AUDIT
+
+After login expected URL:
+
+app.html#/feed
+
+or:
+
+#/feed
+
+depending on SPA structure.
+
+Confirm that the destination exists.
+
+
+4. SPA ROUTER AUDIT
+
+Check:
+
+spa-router.js
+router.js
+app.js
+
+Verify router initialization:
+
+document.addEventListener("DOMContentLoaded", () => {
+    router.init();
+});
+
+
+Router must support:
+
+#/feed
+#/profile
+#/messages
+#/search
+
+
+5. FEED INITIALIZATION AUDIT
+
+Check:
+
+feed.js
+feed-page.js
+
+Feed must verify authentication before loading.
+
+Example:
+
+const token = localStorage.getItem("token");
+
+if (!token) {
+    window.location.href = "signin.html";
+    return;
+}
+
+Then:
+
+loadPosts();
+
+
+6. API AUTHENTICATION AUDIT
+
+Every protected request must send:
+
+Authorization: Bearer TOKEN
+
+Example:
+
+fetch("/api/posts", {
+ headers:{
+   Authorization:`Bearer ${token}`
+ }
+});
+
+
+7. BACKEND AUTH MIDDLEWARE AUDIT
+
+Check:
+
+middleware/auth.js
+
+Verify JWT token validation.
+
+Expected:
+
+Read authorization header.
+Extract Bearer token.
+Validate token.
+Attach user information.
+
+
+8. DATABASE USER SESSION AUDIT
+
+After login verify user data exists:
+
+users table:
+- id
+- email
+- role
+- profile_type
+
+
+Login response should include:
+
+{
+ id,
+ email,
+ role,
+ token
+}
+
+
+9. WHITE PAGE DEBUGGING
+
+Open Chrome:
+
+F12 -> Console
+
+Fix all red errors:
+
+- Uncaught TypeError
+- ReferenceError
+- Failed to fetch
+- Router errors
+
+
+Network tab:
+
+Check:
+
+POST /api/auth/login
+
+Expected:
+200 OK
+
+
+GET /api/posts
+
+Expected:
+200 OK
+
+
+Errors:
+
+401 Unauthorized
+403 Forbidden
+500 Server Error
+
+must be fixed.
+
+
+10. ERROR HANDLING
+
+Add global error logging:
+
+window.onerror = function(error){
+ console.error("Spopeer Error:", error);
+};
+
+
+Never allow silent white pages.
+
+
+11. FEED HTML CHECK
+
+Verify feed container exists:
+
+<div id="feed-container"></div>
+
+
+Javascript must target the same ID.
+
+Wrong IDs cause blank screens.
+
+
+12. PRODUCTION ENVIRONMENT CHECK
+
+Verify:
+
+DATABASE_URL
+JWT_SECRET
+API_URL
+NODE_ENV
+
+Frontend API URL must point to production backend.
+
+
+FINAL TEST
+
+1. Register new account
+2. Login
+3. Check redirect URL
+4. Check localStorage token
+5. Load Feed
+6. Create post
+7. Refresh browser
+8. Logout
+9. Login again
+
+
+Expected result:
+
+YES:
+- Login works
+- Redirect works
+- Feed loads
+- Session persists
+- No console errors
+- No white screen
+
+
+PRIORITY ORDER
+
+P0:
+1. Check redirect URL
+2. Check router initialization
+3. Check console errors
+4. Check token storage
+
+P1:
+5. Fix feed API authentication
+6. Fix feed rendering
+7. Add error handling
+
+P2:
+8. Add loading states
+9. Improve session recovery
+10. Production testing
