@@ -12,11 +12,11 @@ services:
       - key: NODE_ENV
         value: production
       - key: APP_URL
-        sync: false
+        value: https://spopeer.onrender.com
       - key: FRONTEND_URL
-        sync: false
+        value: https://spopeer.onrender.com
       - key: FRONTEND_URL_ALT
-        sync: false
+        value: https://spopeer.onrender.com
       - key: DATABASE_DIRECT_URL
         sync: false
       - key: DATABASE_URL

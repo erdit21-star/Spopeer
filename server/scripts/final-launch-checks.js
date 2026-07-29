@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const fetch = global.fetch || require('node-fetch');
 const { exec } = require('child_process');
-const base = process.env.APP_URL || 'http://localhost:5000';
+const base = process.env.APP_URL || (process.env.NODE_ENV === 'production' ? 'https://spopeer.onrender.com' : 'http://localhost:5000');
 
 async function check(path, method = 'GET', body) {
   try {

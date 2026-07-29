@@ -83,8 +83,8 @@ const config = {
   jwtAccessSecret: process.env.NODE_ENV === 'production' ? (process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET) : (process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET),
   jwtRefreshSecret: process.env.NODE_ENV === 'production' ? (process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET) : (process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  appUrl: process.env.APP_URL || `http://localhost:${process.env.PORT || 5000}`,
-  frontendUrl: process.env.FRONTEND_URL || '',
+  appUrl: process.env.APP_URL || (process.env.NODE_ENV === 'production' ? 'https://spopeer.onrender.com' : `http://localhost:${process.env.PORT || 5000}`),
+  frontendUrl: process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://spopeer.onrender.com' : ''),
   frontendUrlAlt: process.env.FRONTEND_URL_ALT || '',
   googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   db: {
