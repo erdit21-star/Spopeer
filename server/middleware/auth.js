@@ -165,15 +165,22 @@ function generateToken(user) {
  */
 function getCookieOptions(maxAgeMs) {
   const isProd = process.env.NODE_ENV === 'production';
-  const sameSite = process.env.COOKIE_SAME_SITE || 'lax';
-  const secure = sameSite === 'none' ? true : isProd;
-  return {
+  const configuredSameSite = String(process.env.COOKIE_SAME_SITE || 'lax').toLowerCase();
+  const sameSite = configuredSameSite === 'none' || configuredSameSite === 'lax' || configuredSameSite === 'strict'
+    ? configuredSameSite
+    : 'lax';
+  const secure = isProd || configuredSameSite === 'none';
+  const options = {
     httpOnly: true,
     secure,
     sameSite,
     path: '/',
     maxAge: maxAgeMs
   };
+  if (isProd && process.env.COOKIE_DOMAIN) {
+    options.domain = process.env.COOKIE_DOMAIN;
+  }
+  return options;
 }
 
 /**
@@ -192,14 +199,20 @@ function setAuthCookies(res, user) {
  */
 function clearAuthCookies(res) {
   const isProd = process.env.NODE_ENV === 'production';
-  const sameSite = process.env.COOKIE_SAME_SITE || 'lax';
-  const secure = sameSite === 'none' ? true : isProd;
+  const configuredSameSite = String(process.env.COOKIE_SAME_SITE || 'lax').toLowerCase();
+  const sameSite = configuredSameSite === 'none' || configuredSameSite === 'lax' || configuredSameSite === 'strict'
+    ? configuredSameSite
+    : 'lax';
+  const secure = isProd || configuredSameSite === 'none';
   const options = {
     httpOnly: true,
     secure,
     sameSite,
     path: '/'
   };
+  if (isProd && process.env.COOKIE_DOMAIN) {
+    options.domain = process.env.COOKIE_DOMAIN;
+  }
   res.clearCookie('access_token', options);
   res.clearCookie('refresh_token', options);
   res.clearCookie('csrf_token', {
