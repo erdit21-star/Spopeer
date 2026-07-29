@@ -102,7 +102,7 @@ async function sendEmail({ to, subject, html, replyTo }) {
 }
 
 async function sendVerificationEmail(email, token) {
-  const verifyUrl = `${process.env.APP_URL || 'http://localhost:5000'}/api/auth/verify?token=${token}`;
+  const verifyUrl = `${process.env.APP_URL || (isProduction ? 'https://spopeer.onrender.com' : 'http://localhost:5000')}/api/auth/verify?token=${token}`;
 
   const html = wrapTemplate(`
     <h2 style="margin:0 0 16px;color:#333;">Welcome to ${APP_NAME}!</h2>
@@ -119,7 +119,7 @@ async function sendVerificationEmail(email, token) {
 }
 
 async function sendPasswordResetEmail(email, token) {
-  const resetUrl = `${process.env.APP_URL || 'http://localhost:5000'}/pages/auth/reset-password.html?token=${token}`;
+  const resetUrl = `${process.env.APP_URL || (isProduction ? 'https://spopeer.onrender.com' : 'http://localhost:5000')}/pages/auth/reset-password.html?token=${token}`;
 
   const html = wrapTemplate(`
     <h2 style="margin:0 0 12px;color:#001233;font-size:26px;">Reset your Spopeer password</h2>
@@ -157,7 +157,7 @@ async function sendPasswordResetEmail(email, token) {
 }
 
 async function sendWelcomeEmail(email, firstName) {
-  const loginUrl = `${process.env.APP_URL || 'http://localhost:5000'}/index.html`;
+  const loginUrl = `${process.env.APP_URL || (isProduction ? 'https://spopeer.onrender.com' : 'http://localhost:5000')}/index.html`;
 
   const html = wrapTemplate(`
     <h2 style="margin:0 0 16px;color:#333;">Welcome${firstName ? `, ${firstName}` : ''}!</h2>
