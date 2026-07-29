@@ -18,9 +18,13 @@ services:
       - key: FRONTEND_URL_ALT
         value: https://spopeer.onrender.com
       - key: DATABASE_DIRECT_URL
-        sync: false
+        fromDatabase:
+          name: spopeer-db
+          property: connectionString
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: spopeer-db
+          property: connectionString
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -61,3 +65,9 @@ services:
         value: "1"
       - key: AUTH_DB_OP_RETRIES
         value: "1"
+
+databases:
+  - name: spopeer-db
+    databaseName: spopeer
+    user: spopeer
+    plan: starter
