@@ -66,6 +66,11 @@ function isMissingGdprConsentColumn(error) {
   return /privacyPolicyAcceptedAt|termsOfServiceAcceptedAt|marketingConsentAt|privacy_policy_accepted_at|terms_of_service_accepted_at|marketing_consent_at/i.test(msg);
 }
 
+function isMissingUserColumnError(error) {
+  const msg = String((error && error.message) || '');
+  return /column .* does not exist|undefined column|does not have a column|unknown column|missing column/i.test(msg);
+}
+
 // Do not enforce CSRF during unit tests to keep test requests simple
 const requireCsrf = isTest ? (req, res, next) => next() : csrfProtection();
 const {
@@ -276,24 +281,38 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
     }
 
     // Create user. In production (or when explicitly enabled), users must verify email first.
-    // Use explicit fields so legacy DB schemas without newer optional columns can still sign up.
+    // Keep the initial insert minimal and resilient to legacy DB schemas that may be missing
+    // optional profile columns introduced later in the app lifecycle.
     const createPayload = {
       email: email.toLowerCase(),
       password,
       firstName,
       lastName,
-      dateOfBirth: req.validated.dateOfBirth || null,
       role: safeRole || 'athlete',
-      sport: sport || null,
-      profession: profession || null,
       isActive: !requireEmailVerification
     };
 
-    await User.create(createPayload, {
-      fields: Object.keys(createPayload)
-      ,
-      returning: false
-    });
+    try {
+      await User.create(createPayload, {
+        fields: Object.keys(createPayload),
+        returning: false
+      });
+    } catch (createErr) {
+      if (!isMissingUserColumnError(createErr)) {
+        throw createErr;
+      }
+      const legacyPayload = {
+        email: email.toLowerCase(),
+        password,
+        firstName,
+        lastName,
+        role: safeRole || 'athlete'
+      };
+      await User.create(legacyPayload, {
+        fields: Object.keys(legacyPayload),
+        returning: false
+      });
+    }
 
     const user = await User.findOne({
       where: { email: email.toLowerCase() },
@@ -304,6 +323,28 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
       return fail(res, 500, 'SERVER_ERROR', 'Account created but could not be loaded. Please try logging in.');
     }
 
+    // Optional profile fields are best-effort for legacy schemas.
+    try {
+      const optionalUpdates = {};
+      if (req.validated && req.validated.dateOfBirth) {
+        optionalUpdates.dateOfBirth = req.validated.dateOfBirth;
+      }
+      if (sport) {
+        optionalUpdates.sport = sport;
+      }
+      if (profession) {
+        optionalUpdates.profession = profession;
+      }
+      if (Object.keys(optionalUpdates).length > 0) {
+        await user.update(optionalUpdates, { returning: false });
+      }
+    } catch (profileErr) {
+      if (!isMissingUserColumnError(profileErr)) {
+        throw profileErr;
+      }
+      console.warn('[SIGNUP] optional profile columns missing; continuing without persisted profile metadata.');
+    }
+
     // GDPR consent timestamps are best-effort for legacy schemas.
     try {
       await user.update({
@@ -312,7 +353,7 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
         marketingConsentAt: req.body.marketingConsent ? new Date() : null
       }, { returning: false });
     } catch (consentErr) {
-      if (!isMissingGdprConsentColumn(consentErr)) {
+      if (!isMissingGdprConsentColumn(consentErr) && !isMissingUserColumnError(consentErr)) {
         throw consentErr;
       }
       console.warn('[SIGNUP] GDPR consent timestamp columns missing; continuing without persisted consent timestamps.');
