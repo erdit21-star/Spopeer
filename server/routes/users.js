@@ -19,6 +19,7 @@ const { sanitizeString, parsePagination } = require('../utils/validation');
 const { profileUpdateSchema, validate } = require('../utils/schemas');
 const logger = require('../utils/logger');
 const { pickAllowedUpdates, normalizeUser: normalizeUserUtil } = require('../utils/profileUtils');
+const { mapPrivacySettingsToUserUpdates } = require('../utils/privacySettings');
 
 const { ok, fail } = require('../utils/response');
 const { sanitizePublicProfile, sanitizeUserList } = require('../utils/privacy');
@@ -48,8 +49,31 @@ async function updateProfileHandler(user, updates) {
       throw new Error('Username is already taken.');
     }
   }
-  await applyExtendedMerge(user, updates);
-  await user.update(updates);
+
+  const privacyUpdates = mapPrivacySettingsToUserUpdates(updates);
+  const mergedUpdates = { ...updates, ...privacyUpdates };
+
+  await applyExtendedMerge(user, mergedUpdates);
+  await user.update(mergedUpdates);
+
+  if (mergedUpdates.profileVisibility || mergedUpdates.messagePermission || mergedUpdates.commentPermission || mergedUpdates.followersVisibility || mergedUpdates.followingVisibility || mergedUpdates.emailVisibility || mergedUpdates.phoneVisibility || mergedUpdates.dobVisibility) {
+    const { UserPrivacySettings } = require('../models');
+    const [settings] = await UserPrivacySettings.findOrCreate({
+      where: { userId: user.id },
+      defaults: { userId: user.id }
+    });
+    await settings.update({
+      profileVisibility: mergedUpdates.profileVisibility || settings.profileVisibility || 'public',
+      messagePermission: mergedUpdates.messagePermission || settings.messagePermission || 'everyone',
+      commentPermission: mergedUpdates.commentPermission || settings.commentPermission || 'everyone',
+      followersVisibility: mergedUpdates.followersVisibility || settings.followersVisibility || 'public',
+      followingVisibility: mergedUpdates.followingVisibility || settings.followingVisibility || 'public',
+      emailVisibility: mergedUpdates.emailVisibility || settings.emailVisibility || 'private',
+      phoneVisibility: mergedUpdates.phoneVisibility || settings.phoneVisibility || 'private',
+      dobVisibility: mergedUpdates.dobVisibility || settings.dobVisibility || 'private'
+    });
+  }
+
   return normalizeUserUtil(user);
 }
 
