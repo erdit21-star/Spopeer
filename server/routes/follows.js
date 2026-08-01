@@ -13,6 +13,7 @@
 const express = require('express');
 const router = express.Router();
 const { Connection, User } = require('../models');
+const { buildSuggestedConnections } = require('../utils/connectionsSuggestions');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const { getBlockedUserIds } = require('../utils/blocks');
@@ -363,6 +364,40 @@ router.get('/following/:userId', optionalAuth, async (req, res) => {
     ok(res, sanitizeUserList(req.user || null, following));
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to fetch following.');
+  }
+});
+
+// ─── GET SUGGESTED CONNECTIONS ───
+router.get('/suggestions', authenticate, async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(12, Number(req.query.limit) || 8));
+    const [existingConnections, users] = await Promise.all([
+      Connection.findAll({
+        where: {
+          [Op.or]: [
+            { followerId: req.userId },
+            { followingId: req.userId }
+          ]
+        },
+        attributes: ['followerId', 'followingId']
+      }),
+      User.findAll({
+        where: { id: { [Op.ne]: req.userId }, isActive: true },
+        attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'role', 'sport', 'primarySport', 'location', 'followersCount', 'followingCount']
+      })
+    ]);
+
+    const existingConnectionIds = new Set(existingConnections.flatMap((row) => [Number(row.followerId), Number(row.followingId)]));
+    const suggestions = buildSuggestedConnections({
+      viewer: req.user,
+      users,
+      existingConnectionIds,
+      limit
+    });
+
+    ok(res, suggestions);
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to fetch suggested connections.');
   }
 });
 
