@@ -104,6 +104,15 @@
     return {athlete:'',coach:'av-coach',club:'av-club','supportive_professional':'av-pro'}[role]||'av-mixed';
   }
   function initials(name){ return (name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2); }
+  function escapeHtml(value){
+    if (window.SpopeerSanitize && typeof window.SpopeerSanitize.escapeHtml === 'function') {
+      return window.SpopeerSanitize.escapeHtml(value);
+    }
+    if (typeof value !== 'string') return '';
+    return value.replace(/[&<>"']/g, function (c) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'}[c];
+    });
+  }
 
   /* ── role tag html ── */
   function roleTagHTML(type){
@@ -119,7 +128,7 @@
 
   /* ── show/hide UI states ── */
   function showState(which){
-    ['heroState','skeletonList','resultsList','marketplaceResultsList','emptyState','errorState'].forEach(id=>{
+    ['heroState','skeletonList','resultsList','eventResultsList','groupResultsList','marketplaceResultsList','emptyState','errorState'].forEach(id=>{
       const el = document.getElementById(id); if(el) el.style.display='none';
     });
     document.getElementById('resultsHeader').style.display='none';
@@ -129,7 +138,7 @@
     if(!which) return;
     const target = document.getElementById(which);
     if(!target) return;
-    target.style.display = (which==='resultsList'||which==='marketplaceResultsList'||which==='skeletonList') ? 'flex' : 'block';
+    target.style.display = (which==='resultsList'||which==='eventResultsList'||which==='groupResultsList'||which==='skeletonList') ? 'flex' : 'block';
     if(which==='skeletonList') target.style.flexDirection='column';
     if(which==='marketplaceResultsList') target.style.display='grid';
   }
@@ -143,25 +152,28 @@
     const term     = document.getElementById('sidebarTerm').value.trim();
     const sport    = document.getElementById('sport').value;
     const userType = selectedRole;
+    const location = document.getElementById('location') ? document.getElementById('location').value.trim() : '';
+    const level    = document.getElementById('level') ? document.getElementById('level').value : '';
 
     showState('skeletonList');
     isLoading = true;
     document.getElementById('searchBtn').disabled = true;
 
-    let peopleResults = null;
+    let searchResults = null;
     let marketplaceResults = null;
 
     try {
-      // Use the general search API so term, sport, and role filters all apply.
       const searchParams = {};
       if(term) searchParams.term = term;
       if(sport) searchParams.sport = sport;
       if(userType) searchParams.userType = userType;
+      if(location) searchParams.location = location;
+      if(level) searchParams.level = level;
       searchParams.page = currentPage;
       searchParams.pageSize = PAGE_SIZE;
-      peopleResults = await window.SpopeerAPI.searchPeople(searchParams);
+      searchResults = await window.SpopeerAPI.searchAll(searchParams);
     } catch(err){
-      console.error('API search failed:', err);
+      console.error('Unified search failed:', err);
     }
 
     // Fetch marketplace listings via SpopeerAPI (includes credentials)
@@ -174,9 +186,8 @@
       console.log('Marketplace search failed:', err && err.message);
     }
 
-    // Pass both results to handler
-    if(peopleResults || marketplaceResults) {
-      handleSearchResults(peopleResults, marketplaceResults, currentPage, PAGE_SIZE);
+    if(searchResults || marketplaceResults) {
+      handleSearchResults(searchResults, marketplaceResults, currentPage, PAGE_SIZE);
       return;
     }
 
@@ -193,43 +204,55 @@
   }
 
   // Helper function to handle search results (API + Marketplace)
-  function handleSearchResults(peopleJson, marketplaceJson, currentPage, PAGE_SIZE){
-    const peopleResults = Array.isArray(peopleJson?.results)
-      ? peopleJson.results
-      : (Array.isArray(peopleJson?.data) ? peopleJson.data : []);
-    const peopleTotal = peopleJson?.pagination?.total || 0;
-    const peoplePages = peopleJson?.pagination?.pages || 1;
-    const peoplePg = peopleJson?.pagination?.page || currentPage;
+  function handleSearchResults(searchJson, marketplaceJson, currentPage, PAGE_SIZE){
+    const peopleResults = Array.isArray(searchJson?.data?.users)
+      ? searchJson.data.users
+      : Array.isArray(searchJson?.users) ? searchJson.users : [];
+    const eventResults = Array.isArray(searchJson?.data?.events)
+      ? searchJson.data.events
+      : Array.isArray(searchJson?.events) ? searchJson.events : [];
+    const groupResults = Array.isArray(searchJson?.data?.groups)
+      ? searchJson.data.groups
+      : Array.isArray(searchJson?.groups) ? searchJson.groups : [];
+
+    const peoplePagination = searchJson?.pagination?.users || searchJson?.pagination || {};
+    const eventPagination = searchJson?.pagination?.events || { total: eventResults.length, page: currentPage, pages: 1 };
+    const groupPagination = searchJson?.pagination?.groups || { total: groupResults.length, page: currentPage, pages: 1 };
+    const peoplePg = peoplePagination.page || currentPage;
+    const peoplePages = peoplePagination.pages || 1;
 
     const mpResults = Array.isArray(marketplaceJson?.data) ? marketplaceJson.data : [];
     const mpTotal = marketplaceJson?.pagination?.total || 0;
     const mpPages = marketplaceJson?.pagination?.pages || 1;
     const mpPg = marketplaceJson?.pagination?.page || currentPage;
 
-    // Check if at least one result type exists
-    if(peopleResults.length === 0 && mpResults.length === 0){
+    if(peopleResults.length === 0 && eventResults.length === 0 && groupResults.length === 0 && mpResults.length === 0){
       showState('emptyState');
       isLoading = false;
       document.getElementById('searchBtn').disabled = false;
       return;
     }
 
-    // Show tab bar if both result types exist
     const tabBar = document.getElementById('resultsTabBar');
+    const visibleSections = [peopleResults.length, eventResults.length, groupResults.length, mpResults.length].filter(count=>count>0).length;
     if(tabBar){
-      if(peopleResults.length > 0 && mpResults.length > 0){
-        tabBar.style.display = 'flex';
-      } else {
-        tabBar.style.display = 'none';
-      }
+      tabBar.style.display = visibleSections > 1 ? 'flex' : 'none';
     }
 
-    // Build people results
+    let defaultTab = 'people';
+    if(peopleResults.length > 0) {
+      defaultTab = 'people';
+    } else if(eventResults.length > 0) {
+      defaultTab = 'events';
+    } else if(groupResults.length > 0) {
+      defaultTab = 'groups';
+    } else if(mpResults.length > 0) {
+      defaultTab = 'marketplace';
+    }
+
     if(peopleResults.length > 0){
       const list = document.getElementById('resultsList');
-      list.innerHTML = '';
-      currentResultsTab = peopleResults.length > 0 ? 'people' : 'marketplace';
-      
+      list.innerHTML = '';      
       peopleResults.forEach(r=>{
         const card = document.createElement('div');
         card.className = 'result-card';
@@ -311,7 +334,60 @@
       });
     }
 
-    // Build marketplace results
+    if(eventResults.length > 0){
+      const list = document.getElementById('eventResultsList');
+      list.innerHTML = '';
+      eventResults.forEach(event => {
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        const eventTitle = event.title || 'Untitled Event';
+        const sportTag = event.sport ? `<span class="rc-tag tag-sport"><i class="fa-solid fa-dumbbell" style="font-size:10px"></i> ${escapeHtml(event.sport)}</span>` : '';
+        const locationTag = event.location ? `<span class="rc-tag tag-location"><i class="fa-solid fa-location-dot" style="font-size:10px"></i> ${escapeHtml(event.location)}</span>` : '';
+        const dateText = event.startDate ? `<div class="rc-handle">${new Date(event.startDate).toLocaleDateString()}</div>` : '';
+        const descriptionText = event.description ? `<div class="rc-handle" style="margin-top:7px;max-width:560px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(event.description)}</div>` : '';
+        card.innerHTML = `
+          <div class="rc-av av-mixed">${initials(eventTitle)}</div>
+          <div class="rc-body">
+            <div class="rc-name">${escapeHtml(eventTitle)}</div>
+            <div class="rc-handle">Event · ${escapeHtml(event.sport || 'Sports')}</div>
+            <div class="rc-tags">${sportTag}${locationTag}</div>
+            ${dateText}
+            ${descriptionText}
+          </div>
+          <div class="rc-right">
+            <button class="btn-view" data-search-action="view-event" data-event-id="${encodeURIComponent(String(event.id))}">View Event</button>
+          </div>`;
+        list.appendChild(card);
+      });
+    }
+
+    if(groupResults.length > 0){
+      const list = document.getElementById('groupResultsList');
+      list.innerHTML = '';
+      groupResults.forEach(group => {
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        const groupName = group.name || 'Group';
+        const sportTag = group.sport ? `<span class="rc-tag tag-sport"><i class="fa-solid fa-dumbbell" style="font-size:10px"></i> ${escapeHtml(group.sport)}</span>` : '';
+        const memberCount = group.memberCount != null ? `${group.memberCount} members` : '';
+        const creator = group.creator ? `${escapeHtml(group.creator.firstName || '')} ${escapeHtml(group.creator.lastName || '')}`.trim() : '';
+        const descriptionText = group.description ? `<div class="rc-handle" style="margin-top:7px;max-width:560px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(group.description)}</div>` : '';
+        card.innerHTML = `
+          <div class="rc-av av-club">${initials(groupName)}</div>
+          <div class="rc-body">
+            <div class="rc-name">${escapeHtml(groupName)}</div>
+            <div class="rc-handle">Team / Club ${memberCount ? '· ' + memberCount : ''}</div>
+            <div class="rc-tags">${sportTag}</div>
+            ${descriptionText}
+            ${creator ? `<div class="rc-handle">Created by ${creator}</div>` : ''}
+          </div>
+          <div class="rc-right">
+            <button class="btn-view" data-search-action="view-group" data-group-id="${encodeURIComponent(String(group.id))}">View Team</button>
+          </div>`;
+        list.appendChild(card);
+      });
+    }
+
     if(mpResults.length > 0){
       const mpList = document.getElementById('marketplaceResultsList');
       mpList.innerHTML = '';
@@ -333,9 +409,15 @@
       });
     }
 
-    showState('resultsList');
-    if(peopleResults.length > 0) document.getElementById('resultsList').style.display = 'flex';
-    if(mpResults.length > 0) document.getElementById('marketplaceResultsList').style.display = 'grid';
+    const activeTab = defaultTab;
+    const stateMap = {
+      people: 'resultsList',
+      events: 'eventResultsList',
+      groups: 'groupResultsList',
+      marketplace: 'marketplaceResultsList'
+    };
+    showState(stateMap[activeTab] || 'resultsList');
+    switchResultsTab(activeTab);
 
     /* header */
     const totalResults = peopleResults.length + mpResults.length;
@@ -349,10 +431,14 @@
     document.getElementById('resultsMeta').innerHTML =
       `Found <strong>${totalResults}</strong> results${parts.length ? ` for ${parts.join(' · ')}` : ''}`;
 
-    /* pagination - use people pagination if people results exist, else marketplace */
-    if(peopleResults.length > 0){
+    /* pagination by active tab */
+    if(currentResultsTab === 'people'){
       buildPagination(peoplePg, peoplePages);
-    } else if(mpResults.length > 0){
+    } else if(currentResultsTab === 'events'){
+      buildPagination(eventPagination.page, eventPagination.pages);
+    } else if(currentResultsTab === 'groups'){
+      buildPagination(groupPagination.page, groupPagination.pages);
+    } else if(currentResultsTab === 'marketplace'){
       buildPagination(mpPg, mpPages);
     }
     
@@ -360,24 +446,23 @@
     document.getElementById('searchBtn').disabled = false;
   }
 
-  // Switch between people and marketplace results tabs
+  // Switch between search tabs
   let currentResultsTab = 'people';
   function switchResultsTab(tab){
     currentResultsTab = tab;
     document.querySelectorAll('.result-tab').forEach(b => b.classList.remove('active'));
-    const activeBtn = tab === 'people' ? document.getElementById('peopleTab') : document.getElementById('marketplaceTab');
+    const activeBtn = document.getElementById(`${tab}Tab`);
     if(activeBtn) activeBtn.classList.add('active');
-    
+
     const peopleList = document.getElementById('resultsList');
+    const eventList = document.getElementById('eventResultsList');
+    const groupList = document.getElementById('groupResultsList');
     const mpList = document.getElementById('marketplaceResultsList');
-    
-    if(tab === 'people'){
-      if(peopleList) peopleList.style.display = 'flex';
-      if(mpList) mpList.style.display = 'none';
-    } else {
-      if(peopleList) peopleList.style.display = 'none';
-      if(mpList) mpList.style.display = 'grid';
-    }
+
+    if(peopleList) peopleList.style.display = tab === 'people' ? 'flex' : 'none';
+    if(eventList) eventList.style.display = tab === 'events' ? 'flex' : 'none';
+    if(groupList) groupList.style.display = tab === 'groups' ? 'flex' : 'none';
+    if(mpList) mpList.style.display = tab === 'marketplace' ? 'grid' : 'none';
   }
 
   /* ── pagination ── */
@@ -465,6 +550,22 @@
       const userId = actionNode.getAttribute('data-user-id') || '';
       if (userId) {
         window.location.href = '../profiles/public-profile.html?userId=' + userId;
+      }
+      return;
+    }
+
+    if (action === 'view-event') {
+      const eventId = actionNode.getAttribute('data-event-id') || '';
+      if (eventId) {
+        window.location.href = '../events/event.html?id=' + eventId;
+      }
+      return;
+    }
+
+    if (action === 'view-group') {
+      const groupId = actionNode.getAttribute('data-group-id') || '';
+      if (groupId) {
+        window.location.href = '../community/community.html?groupId=' + groupId;
       }
       return;
     }

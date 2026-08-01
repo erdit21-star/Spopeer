@@ -731,6 +731,27 @@
       </select>
     </div>
 
+    <!-- location -->
+    <div class="filter-card">
+      <div class="filter-card-title">Location</div>
+      <div class="sb-search" style="margin-bottom:0">
+        <i class="fa-solid fa-location-dot"></i>
+        <input id="location" type="text" placeholder="City or country" autocomplete="off" style="padding-left:34px;"/>
+      </div>
+    </div>
+
+    <!-- level -->
+    <div class="filter-card">
+      <div class="filter-card-title">Level</div>
+      <select class="sport-select" id="level">
+        <option value="">Any level</option>
+        <option value="beginner">Beginner</option>
+        <option value="intermediate">Intermediate</option>
+        <option value="advanced">Advanced</option>
+        <option value="elite">Elite</option>
+      </select>
+    </div>
+
     <!-- quick searches -->
     <div class="filter-card">
       <div class="filter-card-title">Quick Search</div>
@@ -767,6 +788,12 @@
     <div id="resultsTabBar" style="display:none; border-bottom: 1px solid var(--border); margin-bottom: 20px; display: flex; gap: 0;">
       <button id="peopleTab" class="result-tab active" data-search-action="switch-tab" data-search-tab="people" style="padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; margin-bottom: -1px;">
         <i class="fa-solid fa-users" style="margin-right: 6px;"></i> People
+      </button>
+      <button id="eventsTab" class="result-tab" data-search-action="switch-tab" data-search-tab="events" style="padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; margin-bottom: -1px;">
+        <i class="fa-solid fa-calendar-days" style="margin-right: 6px;"></i> Events
+      </button>
+      <button id="groupsTab" class="result-tab" data-search-action="switch-tab" data-search-tab="groups" style="padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; margin-bottom: -1px;">
+        <i class="fa-solid fa-people-group" style="margin-right: 6px;"></i> Teams & Clubs
       </button>
       <button id="marketplaceTab" class="result-tab" data-search-action="switch-tab" data-search-tab="marketplace" style="padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; margin-bottom: -1px;">
         <i class="fa-solid fa-store" style="margin-right: 6px;"></i> Marketplace
@@ -929,6 +956,12 @@
     <!-- results -->
     <div class="results-list" id="resultsList" style="display:none"></div>
     
+    <!-- event results -->
+    <div class="results-list" id="eventResultsList" style="display:none"></div>
+
+    <!-- group results -->
+    <div class="results-list" id="groupResultsList" style="display:none"></div>
+
     <!-- marketplace results -->
     <div class="marketplace-results-grid" id="marketplaceResultsList" style="display:none"></div>
 

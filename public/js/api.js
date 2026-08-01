@@ -970,6 +970,18 @@
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request('/api/search' + qs);
     },
+    searchAll: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request('/api/search/all' + qs);
+    },
+    searchPosts: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request('/api/search/posts' + qs);
+    },
+    searchGroups: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request('/api/search/groups' + qs);
+    },
     createConversation: function (participantIdOrPayload) {
       var payload = participantIdOrPayload;
       if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {

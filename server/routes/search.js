@@ -10,7 +10,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { User, Post, Group, GroupMember, PostMedia } = require('../models');
+const { User, Post, Group, GroupMember, PostMedia, Event } = require('../models');
 const { optionalAuth, authenticate } = require('../middleware/auth');
 const { Op, fn, col, literal } = require('sequelize');
 const { cache } = require('../services/cache');
@@ -71,13 +71,20 @@ router.get('/users', authenticate, async (req, res) => {
 const { sanitizeUserList } = require('../utils/privacy');
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { term, sport, userType, location, page = 1, pageSize = 20 } = req.query;
+    const { term, sport, userType, location, level, page = 1, pageSize = 20 } = req.query;
     const where = { isActive: true };
 
     if (term) {
       where[Op.or] = [
         { firstName: { [Op.iLike]: `%${term}%` } },
         { lastName: { [Op.iLike]: `%${term}%` } },
+        { displayName: { [Op.iLike]: `%${term}%` } },
+        { username: { [Op.iLike]: `%${term}%` } },
+        { clubName: { [Op.iLike]: `%${term}%` } },
+        { profession: { [Op.iLike]: `%${term}%` } },
+        { currentTeam: { [Op.iLike]: `%${term}%` } },
+        { position: { [Op.iLike]: `%${term}%` } },
+        { headline: { [Op.iLike]: `%${term}%` } },
         { bio: { [Op.iLike]: `%${term}%` } },
         { sport: { [Op.iLike]: `%${term}%` } }
       ];
@@ -86,6 +93,7 @@ router.get('/', optionalAuth, async (req, res) => {
     if (sport) where.sport = { [Op.iLike]: `%${sport}%` };
     if (userType) where.role = userType;
     if (location) where.location = { [Op.iLike]: `%${location}%` };
+    if (level) where.playingLevel = { [Op.iLike]: `%${level}%` };
 
     // Filter out blocked users if authenticated
     if (req.userId) {
@@ -271,11 +279,13 @@ router.get('/hashtags', optionalAuth, async (req, res) => {
   }
 });
 
-// ─── UNIFIED SEARCH (returns users + posts + groups) ───
+// ─── UNIFIED SEARCH (returns users + posts + groups + events) ───
 router.get('/all', optionalAuth, async (req, res) => {
   try {
-    const { term, sport, page = 1, pageSize = 10 } = req.query;
-    if (!term || term.trim().length < 2) return ok(res, { users: [], posts: [], groups: [] });
+    const { term, sport, userType, location, level, page = 1, pageSize = 10 } = req.query;
+    if ((!term || term.trim().length < 2) && !sport && !userType && !location && !level) {
+      return ok(res, { users: [], posts: [], groups: [], events: [] });
+    }
 
     const limit = Math.min(parseInt(pageSize) || 10, 50);
     const offset = (Math.max(parseInt(page) || 1, 1) - 1) * limit;
@@ -283,39 +293,71 @@ router.get('/all', optionalAuth, async (req, res) => {
     let blockedIds = [];
     if (req.userId) blockedIds = await getBlockedUserIds(req.userId);
 
-    const userWhere = {
-      isActive: true,
-      [Op.or]: [
+    const userWhere = { isActive: true };
+    const userConditions = [];
+    if (term && term.trim().length >= 2) {
+      userConditions.push(
         { firstName: { [Op.iLike]: `%${term}%` } },
         { lastName: { [Op.iLike]: `%${term}%` } },
-        { bio: { [Op.iLike]: `%${term}%` } }
-      ]
-    };
+        { displayName: { [Op.iLike]: `%${term}%` } },
+        { username: { [Op.iLike]: `%${term}%` } },
+        { clubName: { [Op.iLike]: `%${term}%` } },
+        { profession: { [Op.iLike]: `%${term}%` } },
+        { currentTeam: { [Op.iLike]: `%${term}%` } },
+        { position: { [Op.iLike]: `%${term}%` } },
+        { headline: { [Op.iLike]: `%${term}%` } },
+        { bio: { [Op.iLike]: `%${term}%` } },
+        { sport: { [Op.iLike]: `%${term}%` } }
+      );
+    }
+    if (userConditions.length) userWhere[Op.or] = userConditions;
     if (sport) userWhere.sport = { [Op.iLike]: `%${sport}%` };
+    if (userType) userWhere.role = userType;
+    if (location) userWhere.location = { [Op.iLike]: `%${location}%` };
+    if (level) userWhere.playingLevel = { [Op.iLike]: `%${level}%` };
     if (blockedIds.length) userWhere.id = { [Op.notIn]: blockedIds };
 
-    const postWhere = {
-      isActive: true,
-      status: 'active',
-      visibility: 'public',
-      content: { [Op.iLike]: `%${term}%` }
-    };
+    const postWhere = { isActive: true, status: 'active', visibility: 'public' };
+    if (term && term.trim().length >= 2) {
+      postWhere[Op.or] = [
+        { content: { [Op.iLike]: `%${term}%` } },
+        { sport: { [Op.iLike]: `%${term}%` } },
+        { linkTitle: { [Op.iLike]: `%${term}%` } },
+        { linkDescription: { [Op.iLike]: `%${term}%` } }
+      ];
+    }
     if (sport) postWhere.sport = { [Op.iLike]: `%${sport}%` };
     if (blockedIds.length) postWhere.userId = { [Op.notIn]: blockedIds };
 
-    const groupWhere = {
-      status: 'active',
-      privacy: 'public',
-      [Op.or]: [
+    const groupWhere = { status: 'active', privacy: 'public' };
+    const groupConditions = [];
+    if (term && term.trim().length >= 2) {
+      groupConditions.push(
         { name: { [Op.iLike]: `%${term}%` } },
-        { description: { [Op.iLike]: `%${term}%` } }
-      ]
-    };
+        { description: { [Op.iLike]: `%${term}%` } },
+        { clubName: { [Op.iLike]: `%${term}%` } }
+      );
+    }
+    if (groupConditions.length) groupWhere[Op.or] = groupConditions;
     if (sport) groupWhere.sport = { [Op.iLike]: `%${sport}%` };
 
-    const [users, posts, groups] = await Promise.all([
-      User.findAll({ where: userWhere, attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'role', 'sport'], limit, offset }),
-      Post.findAll({
+    const eventWhere = { status: { [Op.in]: ['upcoming', 'active'] } };
+    const eventConditions = [];
+    if (term && term.trim().length >= 2) {
+      eventConditions.push(
+        { title: { [Op.iLike]: `%${term}%` } },
+        { description: { [Op.iLike]: `%${term}%` } },
+        { sport: { [Op.iLike]: `%${term}%` } },
+        { location: { [Op.iLike]: `%${term}%` } }
+      );
+    }
+    if (eventConditions.length) eventWhere[Op.or] = eventConditions;
+    if (sport) eventWhere.sport = { [Op.iLike]: `%${sport}%` };
+    if (location) eventWhere.location = { [Op.iLike]: `%${location}%` };
+
+    const [usersResult, postsResult, groupsResult, eventsResult] = await Promise.all([
+      User.findAndCountAll({ where: userWhere, attributes: ['id', 'firstName', 'lastName', 'displayName', 'avatarUrl', 'role', 'sport', 'location', 'playingLevel'], limit, offset }),
+      Post.findAndCountAll({
         where: postWhere,
         include: [
           { model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] },
@@ -323,10 +365,23 @@ router.get('/all', optionalAuth, async (req, res) => {
         ],
         limit, offset, order: [['createdAt', 'DESC']]
       }),
-      Group.findAll({ where: groupWhere, include: [{ model: User, as: 'creator', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }], limit, offset })
+      Group.findAndCountAll({ where: groupWhere, include: [{ model: User, as: 'creator', attributes: ['id', 'firstName', 'lastName', 'avatarUrl'] }], limit, offset }),
+      Event.findAndCountAll({ where: eventWhere, limit, offset, order: [['startDate', 'ASC']] })
     ]);
 
-    ok(res, { users, posts, groups });
+    ok(res, {
+      users: usersResult.rows,
+      posts: postsResult.rows,
+      groups: groupsResult.rows,
+      events: eventsResult.rows
+    }, {
+      pagination: {
+        users: { total: usersResult.count, page: parseInt(page), pages: Math.ceil(usersResult.count / limit) },
+        posts: { total: postsResult.count, page: parseInt(page), pages: Math.ceil(postsResult.count / limit) },
+        groups: { total: groupsResult.count, page: parseInt(page), pages: Math.ceil(groupsResult.count / limit) },
+        events: { total: eventsResult.count, page: parseInt(page), pages: Math.ceil(eventsResult.count / limit) }
+      }
+    });
   } catch (error) {
     logger.error({ event: 'unified_search_error', message: error.message });
     fail(res, 500, 'SERVER_ERROR', 'Search failed.');
