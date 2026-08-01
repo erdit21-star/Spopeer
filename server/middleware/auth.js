@@ -19,6 +19,9 @@ const AUTH_USER_ATTRIBUTES = [
   'displayName',
   'avatarUrl',
   'sport',
+  'primarySport',
+  'profession',
+  'bio',
   'subscription'
 ];
 

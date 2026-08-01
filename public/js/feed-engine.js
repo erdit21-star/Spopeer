@@ -133,7 +133,7 @@
 
   async function getForYouFeed() {
     try {
-      const result = await window.SpopeerAPI.listPosts({ limit: 50, page: 1, _: Date.now() });
+      const result = await window.SpopeerAPI.getForYouFeed();
       return mergeLocalPosts(unwrapPosts(result));
     } catch (err) {
       console.error("[Spopeer] For-you feed failed:", err);

@@ -29,6 +29,7 @@ const { createNotification } = require('../services/notifications');
 const logger = require('../utils/logger');
 const { getBlockedUserIds } = require('../utils/blocks');
 const { checkPost, checkComment } = require('../services/contentFilter');
+const { rankPostsForUser } = require('../utils/feedRecommendations');
 const supportsPostViewCount = !!(
   Post &&
   Post.rawAttributes &&
@@ -37,7 +38,7 @@ const supportsPostViewCount = !!(
 
 // ─── FEED HELPER ───
 const { ok, created, fail } = require('../utils/response');
-async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
+async function buildFeed(req, res, { whereExtra = {}, orderBy, recommendationMode = false } = {}) {
   try {
     const { page, limit } = parsePagination(req.query);
     const where = { isActive: true, status: 'active', ...whereExtra };
@@ -97,6 +98,19 @@ async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
     });
 
     let enrichedPosts = posts.map(p => p.toJSON());
+    if (req.userId && recommendationMode) {
+      const followedConnections = await Connection.findAll({
+        where: { followerId: req.userId, status: 'active' },
+        attributes: ['followingId']
+      });
+      const followedIds = followedConnections.map(c => c.followingId);
+      enrichedPosts = rankPostsForUser({
+        user: req.user,
+        posts: enrichedPosts,
+        followedIds
+      });
+    }
+
     if (req.userId) {
       const likedPostIds = await Like.findAll({
         where: { userId: req.userId, postId: posts.map(p => p.id) },
@@ -116,7 +130,7 @@ async function buildFeed(req, res, { whereExtra = {}, orderBy } = {}) {
 }
 
 // ─── FOR-YOU FEED ───
-router.get('/feed/for-you', optionalAuth, (req, res) => buildFeed(req, res));
+router.get('/feed/for-you', optionalAuth, (req, res) => buildFeed(req, res, { recommendationMode: true }));
 
 // ─── FOLLOWING FEED ───
 router.get('/feed/following', authenticate, async (req, res) => {
@@ -220,8 +234,21 @@ router.get('/', optionalAuth, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    // If user is authenticated, mark which posts they've liked
+    // If user is authenticated, rank the feed and mark which posts they've liked
     let enrichedPosts = posts.map(p => p.toJSON());
+    if (req.userId && following !== 'true') {
+      const connections = await Connection.findAll({
+        where: { followerId: req.userId, status: 'active' },
+        attributes: ['followingId']
+      });
+      const followedIds = connections.map(c => c.followingId);
+      enrichedPosts = rankPostsForUser({
+        user: req.user,
+        posts: enrichedPosts,
+        followedIds
+      });
+    }
+
     if (req.userId) {
       const likedPostIds = await Like.findAll({
         where: { userId: req.userId, postId: posts.map(p => p.id) },

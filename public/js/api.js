@@ -835,7 +835,7 @@
       return request("/api/profile/" + encodeURIComponent(email));
     },
     getForYouFeed: function () {
-      return request("/api/posts?limit=50&page=1&_=" + Date.now());
+      return request("/api/posts/feed/for-you?limit=50&page=1&_=" + Date.now());
     },
     getFollowingFeed: function () {
       return request("/api/posts/feed/following?_=" + Date.now());
