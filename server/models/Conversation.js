@@ -6,6 +6,15 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    title: {
+      type: DataTypes.STRING(160),
+      allowNull: true
+    },
+    isGroup: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   }, {
     tableName: 'conversations',

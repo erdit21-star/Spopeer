@@ -23,8 +23,12 @@
     return listFromResponse(raw);
   }
 
-  async function createConversation(otherId) {
-    var created = parsePayload(await window.SpopeerAPI.createConversation(String(otherId)));
+  async function createConversation(otherIdOrPayload) {
+    var payload = otherIdOrPayload;
+    if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
+      payload = String(otherIdOrPayload);
+    }
+    var created = parsePayload(await window.SpopeerAPI.createConversation(payload));
     return created || null;
   }
 
@@ -33,8 +37,8 @@
     return parsePayload(raw) || {};
   }
 
-  async function sendConversationMessage(conversationId, text) {
-    return window.SpopeerAPI.sendConversationMessage(conversationId, text);
+  async function sendConversationMessage(conversationId, textOrPayload) {
+    return window.SpopeerAPI.sendConversationMessage(conversationId, textOrPayload);
   }
 
   async function markConversationRead(conversationId) {

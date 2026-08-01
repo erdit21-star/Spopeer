@@ -227,12 +227,13 @@
       div.dataset.other=c.otherId||c.id;
       const unread=c.unread&&c.unread>0;
       const fallbackName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim();
-      const name = c.otherName || fallbackName || ('User ' + (c.otherId || c.id));
+      const name = c.isGroup ? (c.title || 'Group chat') : (c.otherName || fallbackName || ('User ' + (c.otherId || c.id)));
+      const preview = c.lastMessage ? escHtml(c.lastMessage.slice(0,60)) : (c.isGroup ? 'Group conversation' : 'Start a conversation');
       div.innerHTML=`
-        <div class="conv-av">${initFor(c.otherId||c.id)}${(c.online||Math.random()>0.7)?'<span class="online-dot"></span>':''}</div>
+        <div class="conv-av">${c.isGroup ? '<i class="fa-solid fa-users"></i>' : initFor(c.otherId||c.id)}${(c.online||Math.random()>0.7)?'<span class="online-dot"></span>':''}</div>
         <div class="conv-info">
           <div class="conv-name">${name}</div>
-          <div class="conv-preview ${unread?'unread-preview':''}">${c.lastMessage?escHtml(c.lastMessage.slice(0,60)):''}</div>
+          <div class="conv-preview ${unread?'unread-preview':''}">${preview}</div>
         </div>
         <div class="conv-right">
           <div class="conv-time">${c.lastAt?fmtTime(c.lastAt):''}</div>

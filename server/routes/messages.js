@@ -10,6 +10,7 @@ const {
   sequelize
 } = require('../models');
 const { findOrCreateDirectConversation } = require('../utils/conversations');
+const { createGroupConversation, addParticipantsToConversation } = require('../utils/messageGroups');
 const { notifyUser } = require('../services/socket');
 const { authenticate } = require('../middleware/auth');
 const { sanitizeString } = require('../utils/validation');
@@ -41,7 +42,10 @@ function formatMessage(message) {
     readAt: message.readAt,
     deletedAt: message.deletedAt,
     createdAt: message.createdAt,
-    updatedAt: message.updatedAt
+    updatedAt: message.updatedAt,
+    attachmentUrl: message.attachmentUrl || null,
+    attachmentName: message.attachmentName || null,
+    attachmentMimeType: message.attachmentMimeType || null
   };
 }
 
@@ -49,6 +53,40 @@ function parsePageLimit(raw) {
   const value = Number(raw);
   if (!Number.isFinite(value)) return 50;
   return Math.max(1, Math.min(100, Math.trunc(value)));
+}
+
+function parseAttachmentPayload(body, attachmentUrl, attachmentName, attachmentMimeType) {
+  const attachmentCandidate = attachmentUrl || attachmentName || attachmentMimeType;
+  if (!attachmentCandidate && !body) {
+    return { body: '', attachmentUrl: null, attachmentName: null, attachmentMimeType: null };
+  }
+
+  const text = String(body || '').trim();
+  if (!text.startsWith('ATTACHMENT::')) {
+    return {
+      body: text || '',
+      attachmentUrl: attachmentUrl || null,
+      attachmentName: attachmentName || null,
+      attachmentMimeType: attachmentMimeType || null
+    };
+  }
+
+  try {
+    const payload = JSON.parse(text.slice('ATTACHMENT::'.length));
+    return {
+      body: payload.text || payload.content || '',
+      attachmentUrl: payload.url || attachmentUrl || null,
+      attachmentName: payload.name || attachmentName || null,
+      attachmentMimeType: payload.mimeType || attachmentMimeType || null
+    };
+  } catch (_error) {
+    return {
+      body: text || '',
+      attachmentUrl: attachmentUrl || null,
+      attachmentName: attachmentName || null,
+      attachmentMimeType: attachmentMimeType || null
+    };
+  }
 }
 
 function parseBeforeCursor(raw) {
@@ -84,9 +122,24 @@ router.post('/conversations', async (req, res) => {
   });
   try {
     const targetIdentifier = req.body.participantId || req.body.otherUserId || req.body.toId || req.body.userId;
-    if (!targetIdentifier) {
+    const participantIds = Array.isArray(req.body.participantIds) ? req.body.participantIds : [];
+    const isGroup = Boolean(req.body.isGroup || participantIds.length > 1);
+    const title = req.body.title || null;
+
+    if (!targetIdentifier && !participantIds.length) {
       await transaction.rollback();
       return fail(res, 400, 'VALIDATION', 'participantId is required.');
+    }
+
+    if (isGroup) {
+      const normalizedParticipants = Array.from(new Set([Number(req.userId), ...participantIds.filter(Boolean).map(Number)]));
+      if (normalizedParticipants.length < 2) {
+        await transaction.rollback();
+        return fail(res, 400, 'VALIDATION', 'A group conversation requires at least 2 participants.');
+      }
+      const conversation = await createGroupConversation({ ownerId: req.userId, participantIds: normalizedParticipants, title, transaction });
+      await transaction.commit();
+      return created(res, { id: conversation.id, isGroup: true, title: conversation.title });
     }
 
     const target = await findUserByIdentifier(targetIdentifier, { transaction });
@@ -102,7 +155,7 @@ router.post('/conversations', async (req, res) => {
 
     const conversation = await findOrCreateDirectConversation(req.userId, target.id, transaction);
     await transaction.commit();
-    return created(res, { id: conversation.id });
+    return created(res, { id: conversation.id, isGroup: false });
   } catch (error) {
     await transaction.rollback();
     logApiError('create_conversation', req, error);
@@ -145,7 +198,8 @@ router.get('/conversations', async (req, res) => {
     });
 
     const payload = await Promise.all(conversations.map(async (conversation) => {
-      const otherParticipant = (conversation.participants || []).find((p) => p.userId !== req.userId);
+      const participants = (conversation.participants || []).filter((p) => Number(p.userId) !== Number(req.userId));
+      const otherParticipant = participants[0] || null;
       const otherUser = otherParticipant ? otherParticipant.user : null;
       const latest = (conversation.messages || [])[0] || null;
 
@@ -167,6 +221,9 @@ router.get('/conversations', async (req, res) => {
         otherId: otherUser ? otherUser.id : null,
         otherName,
         unread,
+        isGroup: Boolean(conversation.isGroup),
+        title: conversation.title || null,
+        participantCount: (conversation.participants || []).length,
         lastMessage: latest ? (latest.body || latest.content || '') : '',
         lastAt: latest ? latest.createdAt : conversation.updatedAt
       };
@@ -226,6 +283,8 @@ router.get('/conversations/:id', async (req, res) => {
 
     return ok(res, {
       id: conversation.id,
+      title: conversation.title || null,
+      isGroup: Boolean(conversation.isGroup),
       participants: (conversation.participants || []).map((p) => p.user),
       messages: messages.map(formatMessage),
       hasMore,
@@ -251,28 +310,33 @@ router.post('/conversations/:id/messages', async (req, res) => {
     }
 
     const bodyInput = sanitizeString(req.body.body || req.body.text || req.body.content, 5000);
-    if (!bodyInput) {
+    const attachmentUrl = req.body.attachmentUrl || req.body.url || null;
+    const attachmentName = req.body.attachmentName || req.body.name || null;
+    const attachmentMimeType = req.body.attachmentMimeType || req.body.mimeType || null;
+    const parsedAttachment = parseAttachmentPayload(bodyInput, attachmentUrl, attachmentName, attachmentMimeType);
+
+    if (!parsedAttachment.body && !parsedAttachment.attachmentUrl) {
       return fail(res, 400, 'VALIDATION', 'Message body is required.');
     }
 
-    const msgFilter = checkMessage(bodyInput);
+    const msgFilter = checkMessage(parsedAttachment.body || '');
     if (msgFilter.blocked) return fail(res, 400, 'CONTENT_POLICY', msgFilter.reason);
 
     const participants = await ConversationParticipant.findAll({
       where: { conversationId },
       attributes: ['userId']
     });
-    const receiver = participants.find((p) => p.userId !== req.userId);
+    const receivers = participants.filter((p) => Number(p.userId) !== Number(req.userId));
 
-    if (!receiver || !receiver.userId) {
+    if (!receivers.length) {
       return fail(res, 400, 'VALIDATION', 'Conversation receiver not found.');
     }
 
     const blockExists = await Block.findOne({
       where: {
         [Op.or]: [
-          { blockerId: req.userId, blockedId: receiver.userId },
-          { blockerId: receiver.userId, blockedId: req.userId }
+          { blockerId: req.userId, blockedId: { [Op.in]: receivers.map((p) => p.userId) } },
+          { blockedId: req.userId, blockerId: { [Op.in]: receivers.map((p) => p.userId) } }
         ]
       }
     });
@@ -284,29 +348,38 @@ router.post('/conversations/:id/messages', async (req, res) => {
     const message = await Message.create({
       conversationId,
       senderId: req.userId,
-      receiverId: receiver.userId,
-      body: bodyInput,
-      content: bodyInput,
+      receiverId: receivers[0].userId,
+      body: parsedAttachment.body || parsedAttachment.attachmentUrl || '',
+      content: parsedAttachment.body || parsedAttachment.attachmentUrl || '',
       read: false,
-      readAt: null
+      readAt: null,
+      attachmentUrl: parsedAttachment.attachmentUrl || null,
+      attachmentName: parsedAttachment.attachmentName || null,
+      attachmentMimeType: parsedAttachment.attachmentMimeType || null
     });
 
-    notifyUser(receiver.userId, 'new_message', {
-      id: message.id,
-      conversationId,
-      fromId: req.userId,
-      toId: receiver.userId,
-      content: message.content,
-      timestamp: message.createdAt
-    });
+    for (const receiver of receivers) {
+      if (Number(receiver.userId) === Number(req.userId)) continue;
+      notifyUser(receiver.userId, 'new_message', {
+        id: message.id,
+        conversationId,
+        fromId: req.userId,
+        toId: receiver.userId,
+        content: message.content,
+        timestamp: message.createdAt,
+        attachmentUrl: message.attachmentUrl,
+        attachmentName: message.attachmentName,
+        attachmentMimeType: message.attachmentMimeType
+      });
 
-    await createNotification({
-      recipientId: receiver.userId,
-      senderId: req.userId,
-      type: 'message',
-      text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} sent you a message.`,
-      href: '/pages/messaging/inbox.html'
-    });
+      await createNotification({
+        recipientId: receiver.userId,
+        senderId: req.userId,
+        type: 'message',
+        text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} sent you a message.`,
+        href: '/pages/messaging/inbox.html'
+      });
+    }
 
     return created(res, formatMessage(message));
   } catch (error) {

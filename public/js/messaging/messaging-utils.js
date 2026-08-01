@@ -55,6 +55,9 @@
     if (safeMime.indexOf("image/") === 0) {
       return '<div><img src="' + safeUrl + '" alt="Attachment" style="max-width:220px;border-radius:10px;display:block;margin-bottom:6px"/><a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:inherit;text-decoration:underline">' + safeName + "</a></div>";
     }
+    if (safeMime.indexOf("video/") === 0) {
+      return '<div><video controls preload="metadata" src="' + safeUrl + '" style="max-width:220px;border-radius:10px;display:block;margin-bottom:6px"></video><a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:inherit;text-decoration:underline">' + safeName + "</a></div>";
+    }
     return '<a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer" style="font-size:13px;color:inherit;text-decoration:underline"><i class="fa-solid fa-paperclip" style="margin-right:6px"></i>' + safeName + "</a>";
   }
 

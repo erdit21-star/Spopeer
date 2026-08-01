@@ -46,6 +46,18 @@ module.exports = (sequelize) => {
     deletedAt: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    attachmentUrl: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    attachmentName: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    attachmentMimeType: {
+      type: DataTypes.STRING(255),
+      allowNull: true
     }
   }, {
     tableName: 'messages',

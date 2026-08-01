@@ -970,10 +970,14 @@
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request('/api/search' + qs);
     },
-    createConversation: function (participantId) {
+    createConversation: function (participantIdOrPayload) {
+      var payload = participantIdOrPayload;
+      if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
+        payload = { participantId: payload };
+      }
       return request('/api/messages/conversations', {
         method: 'POST',
-        body: JSON.stringify({ participantId: participantId })
+        body: JSON.stringify(payload)
       });
     },
     listConversations: function () {
@@ -983,10 +987,14 @@
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request('/api/messages/conversations/' + encodeURIComponent(conversationId) + qs);
     },
-    sendConversationMessage: function (conversationId, text) {
+    sendConversationMessage: function (conversationId, textOrPayload) {
+      var payload = textOrPayload;
+      if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
+        payload = { text: payload };
+      }
       return request('/api/messages/conversations/' + encodeURIComponent(conversationId) + '/messages', {
         method: 'POST',
-        body: JSON.stringify({ text: text })
+        body: JSON.stringify(payload)
       });
     },
     deleteConversationMessage: function (messageId) {
