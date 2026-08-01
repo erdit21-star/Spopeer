@@ -36,6 +36,32 @@ const supportsPostViewCount = !!(
   Object.prototype.hasOwnProperty.call(Post.rawAttributes, 'viewCount')
 );
 
+function extractMentionsFromText(text) {
+  const matches = Array.from(String(text || '').matchAll(/@([a-zA-Z0-9_.]+)/g));
+  return [...new Set(matches.map((m) => String(m[1]).toLowerCase()))];
+}
+
+async function notifyMentionedUsers(content, authorId, sourceHref) {
+  const usernames = extractMentionsFromText(content);
+  if (usernames.length === 0) return;
+
+  const mentionedUsers = await User.findAll({
+    where: { username: usernames }
+  });
+
+  for (const mentionedUser of mentionedUsers) {
+    if (!mentionedUser || mentionedUser.id === authorId) continue;
+
+    await createNotification({
+      recipientId: mentionedUser.id,
+      senderId: authorId,
+      type: 'mention',
+      text: 'You were mentioned in a post.',
+      href: sourceHref || '/feed.html'
+    });
+  }
+}
+
 // ─── FEED HELPER ───
 const { ok, created, fail } = require('../utils/response');
 async function buildFeed(req, res, { whereExtra = {}, orderBy, recommendationMode = false } = {}) {
@@ -192,6 +218,7 @@ router.get('/', optionalAuth, async (req, res) => {
 
     if (sport) where.sport = sport;
     if (authorId) where.userId = parseInt(authorId, 10);
+    if (req.query.type) where.type = req.query.type;
 
     // Visibility + following filter
     if (req.userId) {
@@ -369,6 +396,7 @@ router.post('/', authenticate, uploadPost.array('media', 10), validateUploadedFi
       ]
     });
 
+    await notifyMentionedUsers(fullPost.content, req.userId, '/feed.html');
     created(res, fullPost);
   } catch (error) {
     logger.error({ event: 'create_post_error', message: error.message });
@@ -659,6 +687,9 @@ router.post('/:id/comment', authenticate, async (req, res) => {
       text: `${req.user.displayName || [req.user.firstName, req.user.lastName].filter(Boolean).join(' ') || 'Someone'} commented on your post.`,
       href: '/feed.html'
     });
+
+    // Notify mentioned users in the comment
+    await notifyMentionedUsers(content.trim(), req.userId, '/feed.html');
 
     created(res, fullComment);
   } catch (error) {
