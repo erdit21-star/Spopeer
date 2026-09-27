@@ -391,15 +391,19 @@
 
   var removeBtn = document.getElementById('removePhotoBtn');
   if (removeBtn) {
-    removeBtn.addEventListener('click', function() {
+    removeBtn.addEventListener('click', async function() {
       if (!confirm('Remove your profile photo?')) return;
-      ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-      delete ud.avatarUrl;
-      safeSave(ud);
-      var av = document.getElementById('avatarPreviewEl');
-      if (av) av.innerHTML = '<i class="fa-solid fa-user" style="font-size:34px;opacity:.6"></i>';
-      showToast('Photo removed', 'info');
-      recalcCompletion();
+      try {
+        var saved = await safeSave({ avatarUrl: '' });
+        ud = saved;
+        var av = document.getElementById('avatarPreviewEl');
+        if (av) av.innerHTML = '<i class="fa-solid fa-user" style="font-size:34px;opacity:.6"></i>';
+        showToast('Photo removed', 'info');
+        recalcCompletion();
+      } catch (err) {
+        console.error('Avatar removal failed', err);
+        showToast(err.message || 'Could not remove photo.', 'error');
+      }
     });
   }
 
@@ -430,13 +434,17 @@
         var coverUrl = (uploadResult.data && uploadResult.data.coverPhotoUrl) || uploadResult.coverPhotoUrl;
         if (!coverUrl) throw new Error('Cover upload returned no URL.');
 
-        var savedUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) || JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-        var mergedUser = Object.assign({}, savedUser, { coverPhotoUrl: coverUrl, coverUrl: coverUrl });
-        ud = mergedUser;
-        if (window.SpopeerAPI.setUser) {
-          window.SpopeerAPI.setUser(mergedUser, 'EditProfileCoverUpload');
+        var savedResult = await window.SpopeerAPI.updateProfile({
+          payload: { coverPhotoUrl: coverUrl, coverUrl: coverUrl }
+        });
+        var savedUser = normalizeSavedUserFromResponse(savedResult);
+        if (!savedUser || !Object.keys(savedUser).length) {
+          throw new Error('Cover save returned no updated user.');
         }
-        safeSave(mergedUser);
+        ud = savedUser;
+        if (window.SpopeerAPI.setUser) {
+          window.SpopeerAPI.setUser(savedUser, 'EditProfileCoverUpload');
+        }
 
         if (cs) {
           cs.style.background = 'url('+coverUrl+') center/cover no-repeat';
@@ -919,25 +927,32 @@
     return merged;
   }
 
-  function safeSave(data) {
+  async function safeSave(data) {
     var normalized = normalizeProfileForSave(data, Date.now());
-    try {
-      if (window.ProfileSyncService && typeof ProfileSyncService.saveProfile === 'function') {
-        ProfileSyncService.saveProfile(normalized);
-      } else if (window.SpopeerAPI && typeof window.SpopeerAPI.setUser === 'function') {
-        window.SpopeerAPI.setUser(normalized, 'EditProfileSafeSave');
-      } else {
-        localStorage.setItem('spopeer_user', JSON.stringify(normalized));
-        localStorage.setItem('spopeerUser', JSON.stringify(normalized));
-      }
-    } catch(e) {
-      localStorage.setItem('spopeer_user', JSON.stringify(normalized));
-      localStorage.setItem('spopeerUser', JSON.stringify(normalized));
+    if (!window.SpopeerAPI || typeof window.SpopeerAPI.updateProfile !== 'function') {
+      throw new Error('Profile save unavailable: backend API is not ready.');
     }
-    localStorage.setItem('_profileLastUpdated_', String(normalized._profileUpdatedAt));
-    if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
-      try { window.CurrentUserStore.setCurrentUser(normalized); } catch(e) { /* ignore store sync errors */ }
+
+    var result = await window.SpopeerAPI.updateProfile(normalized);
+    var savedUser = normalizeSavedUserFromResponse(result);
+    if (!savedUser || !Object.keys(savedUser).length) {
+      throw new Error('Profile save failed: backend returned no saved user.');
     }
+
+    // Cache only the canonical response after the database save succeeds.
+    var saved = normalizeProfileForSave(savedUser, Date.now());
+    localStorage.setItem('spopeer_user', JSON.stringify(saved));
+    localStorage.setItem('spopeerUser', JSON.stringify(saved));
+    localStorage.setItem('spopeer_loggedIn', 'true');
+    localStorage.setItem('_profileLastUpdated_', String(saved._profileUpdatedAt || Date.now()));
+
+    if (window.SpopeerAPI && typeof window.SpopeerAPI.setUser === 'function') {
+      window.SpopeerAPI.setUser(saved, 'EditProfileSafeSave');
+    } else if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+      window.CurrentUserStore.setCurrentUser(saved);
+    }
+
+    return saved;
   }
 
   function readStoredUserSafe() {
