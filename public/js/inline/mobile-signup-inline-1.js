@@ -153,7 +153,10 @@ document.getElementById('signupBtn').onclick = async function() {
     firstName: document.getElementById('firstName').value.trim(),
     lastName: document.getElementById('lastName').value.trim(),
     email: document.getElementById('email').value.trim(),
-    password: document.getElementById('password').value
+    password: document.getElementById('password').value,
+    privacyPolicyAccepted: true,
+    termsOfServiceAccepted: true,
+    marketingConsent: false
   };
 
   if (!payload.firstName || !payload.lastName || !payload.email || !payload.password) {
@@ -161,15 +164,31 @@ document.getElementById('signupBtn').onclick = async function() {
     return;
   }
 
+  if (payload.password.length < 10) {
+    setMessage('signupError', 'Password must be at least 10 characters.');
+    return;
+  }
+
   try {
     const result = await window.SpopeerAPI.signup(payload);
     const user = (result.data && result.data.user) || result.user || null;
+    const message = (result.data && result.data.message) || result.message || '';
+    const verificationRequired =
+      /verify your email/i.test(String(message)) ||
+      (user && user.isActive === false);
+
+    if (verificationRequired) {
+      setMessage('msSuccess', 'Account created successfully. Please check your email and verify your account before logging in.');
+      document.getElementById('signupBtn').disabled = true;
+      return;
+    }
+
     if (user && window.Auth) {
       window.Auth.login(user);
       window.location.assign('/feed.html');
       return;
     }
-    setMessage('msSuccess', 'Account created. Please check your email to verify, then log in.');
+    setMessage('msSuccess', 'Account created successfully. Please log in to continue.');
   } catch (e) {
     setMessage('signupError', (e && e.message) || 'Signup failed.');
   }
