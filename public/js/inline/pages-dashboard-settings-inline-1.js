@@ -101,7 +101,10 @@
 
   async function persistProfile(payload, sourceLabel) {
     const result = await window.SpopeerAPI.updateProfile(payload);
-    const savedUser = result.user || payload;
+    const savedUser =
+      (result && result.data && (result.data.user || result.data.payload)) ||
+      (result && (result.user || result.payload)) ||
+      payload;
     localStorage.setItem('spopeer_user', JSON.stringify(savedUser));
     localStorage.setItem('user', JSON.stringify(savedUser));
     localStorage.setItem('spopeer_loggedIn', 'true');
