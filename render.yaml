@@ -5,7 +5,7 @@ services:
     rootDir: server
     buildCommand: npm install --omit=dev
     preDeployCommand: npx sequelize-cli db:migrate --env production
-    startCommand: node server.js
+    startCommand: npx sequelize-cli db:migrate --env production && node server.js
     plan: starter
     numInstances: 1
     envVars:
