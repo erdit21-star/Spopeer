@@ -194,57 +194,145 @@
     if (nameInput) nameInput.value = fullName;
   });
 
-  /* ── Privacy & notification toggle persistence ── */
+  /* ── Privacy & notification settings: database is the source of truth ── */
   const SETTINGS_KEY = 'spopeer_settings';
   const toggleIds = ['emailNotif','pushNotif','trainingNotif','followerNotif','digestNotif','profileVisibility','onlineStatus','dataSharing','allowDMs'];
+  const selectIds = ['language','feedDefault','avatarStyle','avatarColor','avatarAccent'];
+  let settingsState = {};
 
-  function loadSettings() {
-    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch { return {}; }
+  function extractSavedUser(result) {
+    return (result && result.data && (result.data.user || result.data.payload)) ||
+      (result && (result.user || result.payload)) || null;
   }
-  function saveSettings(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
 
-  // Hydrate toggles from saved state on load
-  const saved = loadSettings();
-  toggleIds.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (id in saved) el.checked = !!saved[id];
-    el.addEventListener('change', () => {
-      const s = loadSettings();
-      s[id] = el.checked;
-      saveSettings(s);
-      showToast('Setting updated');
-    });
-  });
+  function cacheSettings(settings) {
+    // Cache only. Never call this before a successful backend save.
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings || {})); } catch (_) {}
+  }
 
-  // Hydrate selects
-  ['language','feedDefault','avatarStyle','avatarColor','avatarAccent'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (saved[id]) el.value = saved[id];
-    el.addEventListener('change', () => {
-      const s = loadSettings();
-      s[id] = el.value;
-      saveSettings(s);
+  async function loadSettingsFromDatabase() {
+    if (!window.SpopeerAPI || typeof window.SpopeerAPI.getProfile !== 'function') {
+      throw new Error('Settings unavailable: backend API is not ready.');
+    }
+
+    const result = await window.SpopeerAPI.getProfile();
+    const user = extractSavedUser(result);
+    if (!user) throw new Error('Settings unavailable: backend returned no user.');
+
+    settingsState = Object.assign(
+      {},
+      (user && user.settings) || {},
+      (user && user.extendedProfile && user.extendedProfile.settings) || {}
+    );
+    cacheSettings(settingsState);
+    return settingsState;
+  }
+
+  async function persistSettings(patch) {
+    const next = Object.assign({}, settingsState, patch || {});
+    if (!window.SpopeerAPI || typeof window.SpopeerAPI.updateProfile !== 'function') {
+      throw new Error('Settings save unavailable: backend API is not ready.');
+    }
+
+    const result = await window.SpopeerAPI.updateProfile({ settings: next });
+    const savedUser = extractSavedUser(result);
+    if (!savedUser) throw new Error('Settings save failed: backend returned no saved user.');
+
+    settingsState = Object.assign(
+      {},
+      (savedUser && savedUser.settings) || {},
+      (savedUser && savedUser.extendedProfile && savedUser.extendedProfile.settings) || {},
+      next
+    );
+    cacheSettings(settingsState);
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+      try { window.CurrentUserStore.setCurrentUser(savedUser); } catch (_) {}
+    }
+    return settingsState;
+  }
+
+  function applySettingsToControls(settings) {
+    toggleIds.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (Object.prototype.hasOwnProperty.call(settings, id)) el.checked = !!settings[id];
     });
-  });
+
+    selectIds.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (settings[id] !== undefined && settings[id] !== null && settings[id] !== '') {
+        el.value = settings[id];
+      }
+    });
+  }
+
+  async function initializeSettings() {
+    // Local cache may be used for immediate rendering, but it is never
+    // considered the persisted source of truth.
+    try {
+      settingsState = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    } catch (_) {
+      settingsState = {};
+    }
+    applySettingsToControls(settingsState);
+
+    try {
+      const dbSettings = await loadSettingsFromDatabase();
+      applySettingsToControls(dbSettings);
+    } catch (err) {
+      console.error('Failed to load settings from database:', err);
+      showToast('Could not load saved settings from the database', 'fa-triangle-exclamation');
+    }
+
+    toggleIds.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (!el || el.dataset.dbSettingsBound) return;
+      el.dataset.dbSettingsBound = '1';
+      el.addEventListener('change', async function() {
+        const previous = !!settingsState[id];
+        const nextValue = el.checked;
+        try {
+          await persistSettings({ [id]: nextValue });
+          showToast('Setting saved');
+        } catch (err) {
+          el.checked = previous;
+          showToast(err.message || 'Failed to save setting', 'fa-triangle-exclamation');
+        }
+      });
+    });
+
+    selectIds.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (!el || el.dataset.dbSettingsBound) return;
+      el.dataset.dbSettingsBound = '1';
+      el.addEventListener('change', async function() {
+        const previous = settingsState[id];
+        try {
+          await persistSettings({ [id]: el.value });
+          showToast('Setting saved');
+        } catch (err) {
+          if (previous !== undefined) el.value = previous;
+          showToast(err.message || 'Failed to save setting', 'fa-triangle-exclamation');
+        }
+      });
+    });
+  }
+
+  initializeSettings();
 
   /* ── Save appearance ── */
   document.getElementById('saveAppearance')?.addEventListener('click', async () => {
-    const s = loadSettings();
-    s.language = document.getElementById('language')?.value || 'en';
-    s.feedDefault = document.getElementById('feedDefault')?.value || 'all';
-    s.avatarStyle = document.getElementById('avatarStyle')?.value || 'gradient';
-    s.avatarColor = document.getElementById('avatarColor')?.value || '#001f3f';
-    s.avatarAccent = document.getElementById('avatarAccent')?.value || '#1a6bff';
-    saveSettings(s);
+    const s = {
+      language: document.getElementById('language')?.value || 'en',
+      feedDefault: document.getElementById('feedDefault')?.value || 'all',
+      avatarStyle: document.getElementById('avatarStyle')?.value || 'gradient',
+      avatarColor: document.getElementById('avatarColor')?.value || '#001f3f',
+      avatarAccent: document.getElementById('avatarAccent')?.value || '#1a6bff'
+    };
 
     try {
-      await persistProfile({
-        avatarStyle: s.avatarStyle,
-        avatarColor: s.avatarColor,
-        avatarAccent: s.avatarAccent
-      }, 'settings-appearance');
+      await persistSettings(s);
       showToast('Preferences saved!');
     } catch (err) {
       showToast(err.message || 'Failed to save preferences', 'fa-triangle-exclamation');
