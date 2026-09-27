@@ -767,11 +767,13 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   // ── Enforce profile privacy ──
   if (!isOwnProfile) {
     try {
-      var targetSettings = {};
-      var settingsRaw = localStorage.getItem('spopeer_settings');
-      if (settingsRaw) targetSettings = JSON.parse(settingsRaw);
-      var profilePrivacy = payload.privacy_public;
-      if (targetSettings.profileVisibility === false || profilePrivacy === false) {
+      // Privacy is authoritative on the target user's database profile.
+      // Never use the viewer's local settings to decide another user's visibility.
+      var profilePrivacy = payload.privacyPublic;
+      var isPrivateProfile =
+        payload.profileVisibility === 'private' ||
+        profilePrivacy === false;
+      if (isPrivateProfile) {
         var wrap = document.querySelector('.page-wrap');
         if (wrap) {
           wrap.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:80px 20px;">' +
