@@ -1760,7 +1760,10 @@
   const primarySport = _feedUser.primarySport || _feedUser.sport || "Running";
   const secondarySports = Array.isArray(_feedUser.secondarySports) ? _feedUser.secondarySports : [];
 
-  const savedSettings = JSON.parse(localStorage.getItem("spopeer_settings") || "{}");
+  const savedSettings =
+    (_feedUser && _feedUser.settings) ||
+    (_feedUser && _feedUser.extendedProfile && _feedUser.extendedProfile.settings) ||
+    {};
   let currentTab = "for-you";
   if (savedSettings.feedDefault === "following") {
     currentTab = "following";
