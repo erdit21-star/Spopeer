@@ -110,16 +110,33 @@
             marketingConsent: marketingConsent
           };
           const result = await window.SpopeerAPI.signup(payload);
-          const user = (result.data && result.data.user) || result.user;
+          const user = (result.data && result.data.user) || result.user || null;
+          const message = (result.data && result.data.message) || result.message || '';
+          const verificationRequired =
+            /verify your email/i.test(String(message)) ||
+            (user && user.isActive === false);
+
+          if (verificationRequired) {
+            if (errorBox) {
+              errorBox.style.background = '#dcfce7';
+              errorBox.style.borderColor = '#86efac';
+              errorBox.style.color = '#166534';
+              errorBox.textContent = 'Account created successfully. Please check your email and verify your account before logging in.';
+              errorBox.style.display = 'block';
+            }
+            document.getElementById('signupForm').reset();
+            return;
+          }
+
           if (user) {
             window.Auth.login(user);
             window.location.href = '/feed.html';
           } else {
-            // Account created � user object missing from response (edge case)
             if (errorBox) {
               errorBox.style.background = '#dcfce7';
+              errorBox.style.borderColor = '#86efac';
               errorBox.style.color = '#166534';
-              errorBox.textContent = 'Account created! Please verify your email to secure your account, then log in.';
+              errorBox.textContent = 'Account created successfully. Please log in to continue.';
               errorBox.style.display = 'block';
             }
             document.getElementById('signupForm').reset();
