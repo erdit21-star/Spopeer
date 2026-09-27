@@ -1034,11 +1034,33 @@
       var result = await window.SpopeerAPI.updateProfile({ payload: sanitizedOutgoing });
       console.log('Save profile response', result);
       var returnedUser = normalizeSavedUserFromResponse(result);
+      if (!returnedUser || !Object.keys(returnedUser).length) {
+        throw new Error('Profile save returned no updated user.');
+      }
+
+      // The PATCH response is the canonical saved profile. Do not call
+      // ProfileSyncService.saveProfile() here: that method performs another
+      // PATCH and can overwrite the freshly saved data with stale local data.
       var saved = normalizeProfileForSave(returnedUser, Date.now());
-      var existing = readStoredUserSafe();
-      var merged = normalizeProfileForSave(Object.assign({}, existing, saved), saved._profileUpdatedAt || Date.now());
-      safeSave(merged);
-      return merged;
+
+      localStorage.setItem('spopeer_user', JSON.stringify(saved));
+      localStorage.setItem('spopeerUser', JSON.stringify(saved));
+      localStorage.setItem('spopeer_loggedIn', 'true');
+      localStorage.setItem('_profileLastUpdated_', String(saved._profileUpdatedAt));
+
+      ud = saved;
+
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.setUser === 'function') {
+        window.SpopeerAPI.setUser(saved, 'EditProfileSave');
+      } else if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+        window.CurrentUserStore.setCurrentUser(saved);
+      } else {
+        window.dispatchEvent(new CustomEvent('profileUpdated', {
+          detail: { profile: saved, timestamp: Date.now(), source: 'EditProfileSave' }
+        }));
+      }
+
+      return saved;
     } catch (saveErr) {
       console.log('Edit profile save failure details', {
         endpoint: (saveErr && saveErr.endpoint) || '/api/users/me',
