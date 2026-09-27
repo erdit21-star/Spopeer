@@ -134,26 +134,36 @@ const ProfileSyncService = {
    * Save profile to localStorage and broadcast update
    */
   async saveProfile(profileData) {
-    // ...existing code...
-
-    const currentProfile = this.getProfile() || {};
-    let mergedProfile = this.normalizeProfile({ ...currentProfile, ...(profileData || {}) }, Date.now());
-
-    if (window.SpopeerAPI && typeof window.SpopeerAPI.updateProfile === 'function') {
-      const result = await window.SpopeerAPI.updateProfile(profileData);
-      const apiUser = (result && result.data && (result.data.user || result.data.payload)) || (result && result.payload) || (result && result.user) || {};
-      mergedProfile = this.normalizeProfile({ ...mergedProfile, ...apiUser }, Date.now());
+    // Persistent profile data must always be saved through the backend.
+    // localStorage is only a post-save cache for UI hydration and cross-tab
+    // notifications. It is never a persistence fallback.
+    if (!window.SpopeerAPI || typeof window.SpopeerAPI.updateProfile !== 'function') {
+      throw new Error('Profile save unavailable: backend API is not ready.');
     }
 
-    localStorage.setItem(this.PROFILE_STORAGE_KEY, JSON.stringify(mergedProfile));
+    const result = await window.SpopeerAPI.updateProfile(profileData || {});
+    const apiUser =
+      (result && result.data && (result.data.user || result.data.payload)) ||
+      (result && result.payload) ||
+      (result && result.user) ||
+      null;
 
-    const updateToken = String(this.getProfileTimestamp(mergedProfile) || Date.now());
+    if (!apiUser || !Object.keys(apiUser).length) {
+      throw new Error('Profile save failed: backend returned no saved user.');
+    }
+
+    const savedProfile = this.normalizeProfile(apiUser, Date.now());
+
+    // Cache only after the database-backed API call succeeds.
+    localStorage.setItem(this.PROFILE_STORAGE_KEY, JSON.stringify(savedProfile));
+
+    const updateToken = String(this.getProfileTimestamp(savedProfile) || Date.now());
     this.lastUpdateToken = updateToken;
     localStorage.setItem(this.PROFILE_UPDATE_KEY, updateToken);
 
     this.broadcastProfileUpdate();
 
-    return mergedProfile;
+    return savedProfile;
   },
   
   /**
