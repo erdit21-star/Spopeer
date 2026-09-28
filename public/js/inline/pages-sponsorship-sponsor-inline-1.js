@@ -49,7 +49,7 @@
           return window.CurrentUserStore.getCurrentUser() || {};
         }
         try {
-          return JSON.parse(localStorage.getItem('spopeer_user') || '{}') || {};
+          return {};
         } catch (e) {
           return {};
         }
