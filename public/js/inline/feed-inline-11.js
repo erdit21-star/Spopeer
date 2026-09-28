@@ -122,7 +122,7 @@
         '<div class="suggest-av av-blue">' + initialsFor(u) + '</div>' +
         '<div class="suggest-info">' +
         '<div class="suggest-name">' + name + '</div>' +
-        '<div class="suggest-role">' + roleLabel(u.role) + ' � ' + sportText + '</div>' +
+        '<div class="suggest-role">' + roleLabel(u.role) + ' — ' + sportText + '</div>' +
         '</div>' +
         '<button class="follow-btn" type="button">Follow</button>' +
       '</div>';
