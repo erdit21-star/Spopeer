@@ -544,14 +544,18 @@
     var safePath = String(path || '').toLowerCase();
     return safePath.indexOf('/api/auth/me') === 0
       || safePath.indexOf('/api/auth/profile') === 0
-      || safePath.indexOf('/api/auth/refresh') === 0
-;  }
+      || safePath.indexOf('/api/auth/refresh') === 0;
+  }
 
   function handleUnauthorized(path) {
     var endpoint = String(path || '').toLowerCase();
     var recentAuthAt = parseInt(localStorage.getItem('spopeer_last_auth_at') || '0', 10) || 0;
     var msSinceAuth = recentAuthAt > 0 ? (Date.now() - recentAuthAt) : Number.POSITIVE_INFINITY;
-    var hasLocalSession = localStorage.getItem('spopeer_loggedIn') === 'true' && !!localStorage.getItem('spopeer_user');
+    var hasLocalSession = !!(
+      window.CurrentUserStore &&
+      typeof window.CurrentUserStore.isLoggedIn === 'function' &&
+      window.CurrentUserStore.isLoggedIn()
+    );
 
     // Avoid bouncing users back to login on transient auth/profile races right after login.
     var isPostLoginBootstrapEndpoint = endpoint.indexOf('/api/auth/me') === 0
