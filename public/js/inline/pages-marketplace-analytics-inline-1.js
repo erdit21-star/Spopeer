@@ -4,9 +4,9 @@
         stored = window.CurrentUserStore.getCurrentUser();
       }
       if (!stored) {
-        try { stored = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('spopeerUser') || localStorage.getItem('user') || 'null'); } catch(e) { stored = null; }
+        try { stored = null; } catch(e) { stored = null; }
       }
       var _ud = stored;
-      var _li = !!_ud || localStorage.getItem('spopeer_loggedIn') === 'true';
+      var _li = !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
       if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
     })();
