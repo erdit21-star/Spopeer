@@ -244,11 +244,22 @@
 
   function watchTopNav() {
     var observer = new MutationObserver(function () {
+      var topNav = document.querySelector('.topnav, .navbar');
+      if (!topNav) return;
+
+      var navRight = topNav.querySelector('.nav-right');
+      if (!navRight) return;
+
+      var hasPageStyle = !!topNav.querySelector('.nav-inner[style],.logo[style],.logo-mark[style],.logo-text[style],.nav-search[style],.nav-search input[style],.nav-right[style],.user-chip[style],#userChip[style]');
+      var actionCount = navRight.querySelectorAll('[data-topnav-action]').length;
+
+      if (!hasPageStyle && actionCount === NAV_ITEMS.length) return;
+
       if (window.__spTopNavNormalizing) return;
       window.__spTopNavNormalizing = true;
       try { normalizeTopNav(); } finally { window.__spTopNavNormalizing = false; }
     });
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   if (document.readyState === 'loading') {
