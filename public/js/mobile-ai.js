@@ -70,15 +70,12 @@
     try {
       await window.SpopeerAPI.me();
     } catch (_error) {
-      var hasLocalSessionSignal = !!(
-        localStorage.getItem('spopeer_user')
-        || localStorage.getItem('spopeer_loggedIn') === 'true'
-      );
-      if (!hasLocalSessionSignal) {
+      var hasSession = !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
+      if (!hasSession) {
         window.location.href = '/mobile-login.html';
         return;
       }
-      console.debug('mobile-ai: me() failed but local session exists, continuing', _error);
+      console.debug('mobile-ai: me() failed but CurrentUserStore reports an active session, continuing', _error);
     }
 
     var responses = await Promise.allSettled([
