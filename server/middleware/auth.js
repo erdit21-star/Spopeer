@@ -146,7 +146,7 @@ function generateAccessToken(user) {
 }
 
 /**
- * Generate longer-lived refresh token (7 days)
+ * Generate longer-lived refresh token (30 days)
  */
 function generateRefreshToken(user) {
   return jwt.sign(
@@ -193,7 +193,7 @@ function setAuthCookies(res, user) {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
   res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
-  res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+  res.cookie('refresh_token', refreshToken, getCookieOptions(30 * 24 * 60 * 60 * 1000));
   return { accessToken, refreshToken };
 }
 
