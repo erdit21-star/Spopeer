@@ -50,10 +50,13 @@ const emailVerifyTtlHours = parseInt(process.env.EMAIL_VERIFY_TOKEN_HOURS || '24
 const AUTH_SAFE_USER_ATTRIBUTES = ['id', 'email', 'password', 'role', 'isActive', 'emailVerified', 'firstName', 'lastName'];
 
 function getRefreshSecret() {
-  if (process.env.NODE_ENV === 'production') {
-    return process.env.JWT_REFRESH_SECRET;
+  // Keep refresh-token signing and verification on the exact same secret
+  // across production and development. This must match middleware/auth.js.
+  const secret = process.env.JWT_REFRESH_SECRET || process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_REFRESH_SECRET or JWT_ACCESS_SECRET or JWT_SECRET must be set in production');
   }
-  return process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+  return secret;
 }
 
 function isMissingEmailVerifyExpiryColumn(error) {
