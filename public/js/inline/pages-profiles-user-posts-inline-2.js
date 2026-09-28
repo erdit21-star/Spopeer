@@ -1,6 +1,8 @@
 (async function () {
-  const _ud = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('spopeerUser') || localStorage.getItem('user') || 'null');
-  const _li = localStorage.getItem('spopeer_loggedIn') === 'true' || !!_ud;
+  const _ud = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function')
+    ? window.CurrentUserStore.getCurrentUser()
+    : null;
+  const _li = !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
   if (!_ud || !_li) { window.location.href = '../../pages/auth/login.html'; return; }
 
   /* ── IIFE-scope vars shared with renderPost ── */
