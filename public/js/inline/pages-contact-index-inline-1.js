@@ -25,7 +25,7 @@ document.getElementById('contactForm').addEventListener('submit', async function
 
   const submitBtn = f.querySelector('[type="submit"]');
   const originalText = submitBtn ? submitBtn.textContent : '';
-  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Sending�'; }
+  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
 
   try {
     const res = await fetch('/api/contact', {
