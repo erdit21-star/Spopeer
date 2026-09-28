@@ -1,8 +1,12 @@
 // Updated
 (function () {
   function getCurrentUser() {
-    try {
-      return JSON.parse(localStorage.getItem("spopeer_user") || "{}");
+      try {
+        if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+          return window.CurrentUserStore.getCurrentUser() || {};
+        }
+      } catch (e) {}
+      return {};
     } catch {
       return {};
     }
