@@ -6,13 +6,24 @@
     if (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') {
       return window.CurrentUserStore.isLoggedIn();
     }
-    var hasUser = !!localStorage.getItem('spopeer_user');
-    return localStorage.getItem('spopeer_loggedIn') === 'true' && hasUser;
+    try {
+      if (window.Auth && typeof window.Auth.isLoggedIn === 'function') {
+        return window.Auth.isLoggedIn();
+      }
+    } catch (err) {
+      console.debug('auth-guard: Auth.isLoggedIn failed', err);
+    }
+    return false;
   }
 
   function clearLocalAuth() {
-    localStorage.removeItem('spopeer_user');
-    localStorage.removeItem('spopeer_loggedIn');
+    try {
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
+        window.CurrentUserStore.clearCurrentUser();
+      }
+    } catch (err) {
+      console.debug('auth-guard: CurrentUserStore.clearCurrentUser failed', err);
+    }
   }
 
   async function requireAuth(loginPath) {
