@@ -17,41 +17,17 @@
       var ver = parseInt(localStorage.getItem(MIGRATION_VERSION_KEY) || '0', 10) || 0;
       if (ver >= CURRENT_VERSION) return; // already migrated
 
-      // ── v1: rename old user-data key if present ──────────────────────────
-      if (ver < 1) {
-        var oldKey = 'currentUser'; // legacy key used before v0.9
-        var raw = localStorage.getItem(oldKey);
-        if (raw && !localStorage.getItem('spopeer_user')) {
-          try {
-            var parsed = JSON.parse(raw);
-            if (parsed && typeof parsed === 'object') {
-              localStorage.setItem('spopeer_user', raw);
-              localStorage.removeItem(oldKey);
-              console.info('[Spopeer][Migration] Migrated "currentUser" → "spopeer_user"');
-            }
-          } catch (e) { /* ignore parse errors */ }
-        }
-
-        // Also rename 'user' legacy key
-        var oldUser = localStorage.getItem('user');
-        if (oldUser && !localStorage.getItem('spopeer_user')) {
-          try {
-            var parsedUser = JSON.parse(oldUser);
-            if (parsedUser && typeof parsedUser === 'object' && parsedUser.email) {
-              localStorage.setItem('spopeer_user', oldUser);
-              localStorage.removeItem('user');
-              console.info('[Spopeer][Migration] Migrated "user" → "spopeer_user"');
-            }
-          } catch (e) { /* ignore */ }
-        }
-      }
+      // CurrentUserStore owns legacy user-key migration. This file only
+      // normalises legacy field aliases after the canonical user is available.
 
       // ── v2: normalise field aliases inside spopeer_user ──────────────────
       if (ver < 2) {
-        var userRaw = localStorage.getItem('spopeer_user');
-        if (userRaw) {
+        var userData = null;
+        if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+          userData = window.CurrentUserStore.getCurrentUser() || null;
+        }
+        if (userData) {
           try {
-            var userData = JSON.parse(userRaw);
             if (userData && typeof userData === 'object') {
               var changed = false;
 
@@ -105,8 +81,10 @@
               });
 
               if (changed) {
-                localStorage.setItem('spopeer_user', JSON.stringify(userData));
-                console.info('[Spopeer][Migration] Normalised field aliases in spopeer_user');
+                if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+                  window.CurrentUserStore.setCurrentUser(userData);
+                  console.info('[Spopeer][Migration] Normalised legacy profile field aliases');
+                }
               }
             }
           } catch (e) { /* ignore */ }
