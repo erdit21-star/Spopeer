@@ -290,8 +290,7 @@
           if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
             window.CurrentUserStore.setCurrentUser(merged);
           } else {
-            localStorage.setItem('spopeer_user', JSON.stringify(merged));
-            localStorage.setItem('_profileLastUpdated_', String(merged._profileUpdatedAt));
+            console.warn('CurrentUserStore is unavailable; profile cache was not updated locally.');
           }
 
           if (window.Spopeer && window.Spopeer.events && typeof window.Spopeer.events.emit === 'function') {
