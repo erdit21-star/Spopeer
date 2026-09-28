@@ -227,23 +227,18 @@ function attachLikeListeners() {
 }
 
 function attachCommentListeners() {
-  const feedCol = document.querySelector('.feed-col');
+  var feedCol = document.querySelector('.feed-col');
   if (!feedCol || feedCol.dataset.commentBound === '1') return;
   feedCol.dataset.commentBound = '1';
-
-  const COMMENTS_KEY = 'spopeer_comments';
-
-  function getComments() {
-    try { return JSON.parse(localStorage.getItem(COMMENTS_KEY) || '[]'); } catch { return []; }
-  }
-  function saveComments(c) { localStorage.setItem(COMMENTS_KEY, JSON.stringify(c)); }
 
   function getInitials(name) {
     return (name || '').split(' ').map(function(w) { return (w[0] || ''); }).join('').toUpperCase().slice(0, 2) || 'U';
   }
 
   function formatTime(iso) {
-    var d = new Date(iso), diff = Date.now() - d.getTime(), m = Math.floor(diff / 60000);
+    var d = new Date(iso);
+    var diff = Date.now() - d.getTime();
+    var m = Math.floor(diff / 60000);
     if (m < 1) return 'now';
     if (m < 60) return m + 'm ago';
     var h = Math.floor(m / 60);
@@ -255,51 +250,51 @@ function attachCommentListeners() {
     var list = section.querySelector('.comment-list');
     if (!list) return;
 
-    var all = [];
+    list.innerHTML = '<div class="comment-empty">Loading comments...</div>';
+
     try {
       var apiResult = await window.SpopeerAPI.getPostComments(postId);
-      all = Array.isArray(apiResult)
+      var all = Array.isArray(apiResult)
         ? apiResult
-        : (Array.isArray(apiResult?.data) ? apiResult.data : []);
-      all = all.map(function(c) {
+        : (Array.isArray(apiResult && apiResult.data) ? apiResult.data : []);
+
+      list.innerHTML = '';
+      all.forEach(function(c) {
         var authorName = c.author
           ? [c.author.firstName, c.author.lastName].filter(Boolean).join(' ').trim()
           : (c.authorName || 'User');
-        return {
-          text: c.content || c.text || '',
-          authorName: authorName || 'User',
-          timestamp: c.createdAt || c.timestamp || new Date().toISOString()
-        };
-      });
-    } catch (_apiErr) {
-      all = getComments().filter(function(c) { return String(c.postId) === String(postId); });
-    }
 
-    list.innerHTML = '';
-    all.forEach(function(c) {
-      var bubble = document.createElement('div');
-      bubble.className = 'comment-bubble';
-      bubble.innerHTML = '<div class="comment-av">' + getInitials(c.authorName) + '</div>' +
-        '<div class="comment-body"><div class="comment-author">' + escapeHtml(c.authorName) + '</div>' +
-        '<div class="comment-text">' + escapeHtml(c.text) + '</div>' +
-        '<div class="comment-time">' + formatTime(c.timestamp) + '</div></div>';
-      list.appendChild(bubble);
-    });
-    list.scrollTop = list.scrollHeight;
-
-    var card = section.closest('.post-card');
-    if (card) {
-      var statSpans = card.querySelectorAll('.post-stats span');
-      statSpans.forEach(function(sp) {
-        if (sp.textContent.indexOf('comments') !== -1) {
-          sp.innerHTML = '<i class="fa-regular fa-message"></i> ' + all.length + ' comments';
-        }
+        var bubble = document.createElement('div');
+        bubble.className = 'comment-bubble';
+        bubble.innerHTML =
+          '<div class="comment-av">' + getInitials(authorName) + '</div>' +
+          '<div class="comment-body"><div class="comment-author">' + escapeHtml(authorName || 'User') + '</div>' +
+          '<div class="comment-text">' + escapeHtml(c.content || '') + '</div>' +
+          '<div class="comment-time">' + formatTime(c.createdAt || new Date().toISOString()) + '</div></div>';
+        list.appendChild(bubble);
       });
+
+      if (!all.length) {
+        list.innerHTML = '<div class="comment-empty">No comments yet. Be the first to comment.</div>';
+      }
+
+      var card = section.closest('.post-card');
+      if (card) {
+        card.querySelectorAll('.post-stats span').forEach(function(sp) {
+          if (sp.textContent.indexOf('comments') !== -1) {
+            sp.innerHTML = '<i class="fa-regular fa-message"></i> ' + all.length + ' comments';
+          }
+        });
+      }
+    } catch (error) {
+      list.innerHTML = '<div class="comment-empty">Could not load comments. Please try again.</div>';
+      if (window.SpopeerAPI && typeof window.SpopeerAPI.showNotification === 'function') {
+        window.SpopeerAPI.showNotification(error.message || 'Could not load comments.', 'error');
+      }
     }
   }
 
   feedCol.addEventListener('click', function(e) {
-    // Toggle comment section
     var commentBtn = e.target.closest('.comment-btn');
     if (commentBtn) {
       var card = commentBtn.closest('.post-card');
@@ -316,59 +311,40 @@ function attachCommentListeners() {
       return;
     }
 
-    // Submit comment
     var submitBtn = e.target.closest('.comment-submit-btn');
-    if (submitBtn) {
-      var section = submitBtn.closest('.comment-section');
-      var card = submitBtn.closest('.post-card');
-      var input = section ? section.querySelector('.comment-input') : null;
-      if (!section || !card || !input) return;
-      var text = input.value.trim();
-      if (!text) return;
-      var postId = card.getAttribute('data-post-id');
-      if (!postId) return;
-      var currentUser = getCurrentUserData();
+    if (!submitBtn) return;
 
-      // Try real API first
-      (async function() {
-        try {
-          await window.SpopeerAPI.request('/api/posts/' + postId + '/comment', {
-            method: 'POST',
-            body: JSON.stringify({ content: text })
-          });
-          input.value = '';
-          renderComments(section, postId);
-          return;
-        } catch (apiErr) {
-          // API unavailable, save locally only.
-        }
+    var section = submitBtn.closest('.comment-section');
+    var card = submitBtn.closest('.post-card');
+    var input = section ? section.querySelector('.comment-input') : null;
+    if (!section || !card || !input) return;
 
-        // Always save to local storage for immediate rendering
-        var comment = {
-          id: Date.now().toString(),
-          postId: postId,
-          authorEmail: currentUser.email || currentUser.userEmail || '',
-          authorName: currentUser.displayName || ((currentUser.firstName || '') + ' ' + (currentUser.lastName || '')).trim() || currentUser.email || 'User',
-          text: text,
-          timestamp: new Date().toISOString()
-        };
-        var all = getComments();
-        all.push(comment);
-        saveComments(all);
+    var content = input.value.trim();
+    var postId = card.getAttribute('data-post-id');
+    if (!content || !postId || submitBtn.disabled) return;
+
+    submitBtn.disabled = true;
+
+    (async function() {
+      try {
+        await window.SpopeerAPI.addPostComment(postId, content);
         input.value = '';
-        renderComments(section, postId);
-
-      })();
-    }
+        await renderComments(section, postId);
+      } catch (error) {
+        if (window.SpopeerAPI && typeof window.SpopeerAPI.showNotification === 'function') {
+          window.SpopeerAPI.showNotification(error.message || 'Could not add comment.', 'error');
+        }
+      } finally {
+        submitBtn.disabled = false;
+      }
+    })();
   });
 
-  // Also handle Enter key in comment inputs
   feedCol.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && e.target.classList.contains('comment-input')) {
-      e.preventDefault();
-      var submitBtn = e.target.closest('.comment-input-row')?.querySelector('.comment-submit-btn');
-      if (submitBtn) submitBtn.click();
-    }
+    if (e.key !== 'Enter' || !e.target.classList.contains('comment-input')) return;
+    e.preventDefault();
+    var submitBtn = e.target.closest('.comment-input-row') && e.target.closest('.comment-input-row').querySelector('.comment-submit-btn');
+    if (submitBtn) submitBtn.click();
   });
 }
 
