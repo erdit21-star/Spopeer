@@ -7,9 +7,9 @@
       }
     } catch (err) {
       var hasLocalSessionSignal = !!(
-        localStorage.getItem('spopeer_user')
-        || localStorage.getItem('spopeerUser')
-        || localStorage.getItem('user')
+        window.CurrentUserStore &&
+        typeof window.CurrentUserStore.getCurrentUser === 'function' &&
+        window.CurrentUserStore.getCurrentUser()
       );
       if (!hasLocalSessionSignal) {
         window.location.href = '../auth/login.html';
