@@ -888,6 +888,19 @@
    * Normalize all Sponsor/Sponsorship links to use the canonical absolute path.
    * Handles: <a> href, <button> onclick, sidebar .nav-item links.
    */
+  function normalizeHomeLinks() {
+    var loggedIn = !!(
+      window.CurrentUserStore &&
+      typeof window.CurrentUserStore.isLoggedIn === 'function' &&
+      window.CurrentUserStore.isLoggedIn()
+    );
+    var homeHref = loggedIn ? '/feed.html' : '/index.html';
+
+    document.querySelectorAll('[data-home-link]').forEach(function (link) {
+      link.setAttribute('href', homeHref);
+    });
+  }
+
   function normalizeSponsorLinks() {
     // Fix <a> tags whose text contains "sponsor" (case-insensitive)
     document.querySelectorAll('a.nav-item, a[href*="sponsor"]').forEach(function(a) {
@@ -970,6 +983,7 @@
     }
 
     // User chip/menu rendering is now handled by UserUI/CurrentUserStore only.
+    normalizeHomeLinks();
     normalizeSponsorLinks();
     ensureSponsorNavItem();
     ensureAdsNavItem();
@@ -993,6 +1007,7 @@
   // Export new functions
   window.sharedUi = window.sharedUi || {};
   // window.sharedUi.ensureUserChipAndMenu = ensureUserChipAndMenu;
+  window.sharedUi.normalizeHomeLinks = normalizeHomeLinks;
   window.sharedUi.normalizeSponsorLinks = normalizeSponsorLinks;
   window.sharedUi.ensureSponsorNavItem = ensureSponsorNavItem;
   window.sharedUi.ensureAdsNavItem = ensureAdsNavItem;
@@ -1000,6 +1015,18 @@
   window.sharedUi.ensureMobileDrawerPlanBlock = ensureMobileDrawerPlanBlock;
   window.sharedUi.SPONSOR_ROUTE = SPONSOR_ROUTE;
   window.sharedUi.getDisplayName = getDisplayName;
+
+  document.addEventListener('click', function (event) {
+    var link = event.target && event.target.closest('[data-home-link]');
+    if (!link) return;
+
+    var loggedIn = !!(
+      window.CurrentUserStore &&
+      typeof window.CurrentUserStore.isLoggedIn === 'function' &&
+      window.CurrentUserStore.isLoggedIn()
+    );
+    link.setAttribute('href', loggedIn ? '/feed.html' : '/index.html');
+  }, true);
 
   window.addEventListener('currentUserChanged', function () {
     ensureDesktopSubscriptionPanel();
