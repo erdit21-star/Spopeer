@@ -24,6 +24,28 @@ const { mapPrivacySettingsToUserUpdates } = require('../utils/privacySettings');
 const { ok, fail } = require('../utils/response');
 const { sanitizePublicProfile, sanitizeUserList } = require('../utils/privacy');
 
+// Profile validation accepts both the canonical flat body and the legacy
+// { payload: { ...profileFields } } envelope used by older clients.
+const validateProfileUpdate = (req, res, next) => {
+  const source = req.body && typeof req.body === 'object'
+    ? (req.body.payload || req.body)
+    : {};
+  const result = profileUpdateSchema.safeParse(source);
+  if (!result.success) {
+    const firstIssue = result.error.issues[0];
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: firstIssue.message || 'Invalid profile data.',
+        field: firstIssue.path.join('.')
+      }
+    });
+  }
+  req.validatedProfile = result.data;
+  next();
+};
+
 function handleUploadMiddleware(uploadMiddleware) {
   return uploadMiddleware;
 }
@@ -136,9 +158,9 @@ router.get('/me', authenticate, async (req, res) => {
 });
 
 // ─── UPDATE MY PROFILE (authenticated) ───
-router.put('/me', authenticate, validate(profileUpdateSchema), async (req, res) => {
+router.put('/me', authenticate, validateProfileUpdate, async (req, res) => {
   try {
-    const updates = pickAllowedUpdates(req.body.payload || req.body);
+    const updates = pickAllowedUpdates(req.validatedProfile || req.body.payload || req.body);
     const user = await User.findByPk(req.userId);
     if (!user) {
       return fail(res, 404, 'NOT_FOUND', 'User not found.');
@@ -153,7 +175,7 @@ router.put('/me', authenticate, validate(profileUpdateSchema), async (req, res) 
   }
 });
 
-router.patch('/me', authenticate, validate(profileUpdateSchema), async (req, res) => {
+router.patch('/me', authenticate, validateProfileUpdate, async (req, res) => {
   try {
     const updates = pickAllowedUpdates(req.body.payload || req.body);
     const user = await User.findByPk(req.userId);
@@ -221,7 +243,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 });
 
 // ─── UPDATE PROFILE ───
-router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res) => {
+router.put('/:id', authenticate, validateProfileUpdate, async (req, res) => {
   try {
     const actingUserId = Number(req.userId || (req.user && req.user.id));
     const actingRole = (req.user && req.user.role) || '';
@@ -231,7 +253,7 @@ router.put('/:id', authenticate, validate(profileUpdateSchema), async (req, res)
       return fail(res, 403, 'FORBIDDEN', 'You can only update your own profile.');
     }
 
-    const updates = pickAllowedUpdates(req.body);
+    const updates = pickAllowedUpdates(req.validatedProfile || req.body);
     const user = await User.findByPk(req.params.id);
     if (!user) return fail(res, 404, 'NOT_FOUND', 'User not found.');
 
@@ -292,7 +314,7 @@ router.post('/cover', authenticate, handleUploadMiddleware(uploadCover.single('c
 // ─── SAVE/UPDATE PROFILE (frontend compatibility endpoint) ───
 async function saveProfileHandler(req, res) {
   try {
-    const profileData = req.body.payload || req.body;
+    const profileData = req.validatedProfile || req.body.payload || req.body;
     const updates = pickAllowedUpdates(profileData);
     const normalized = await updateProfileHandler(req.user, updates);
     ok(res, { payload: normalized }, { message: 'Profile saved.' });
@@ -304,8 +326,8 @@ async function saveProfileHandler(req, res) {
   }
 }
 
-router.post('/', authenticate, validate(profileUpdateSchema), saveProfileHandler);
-router.post('/profile', authenticate, validate(profileUpdateSchema), saveProfileHandler);
+router.post('/', authenticate, validateProfileUpdate, saveProfileHandler);
+router.post('/profile', authenticate, validateProfileUpdate, saveProfileHandler);
 
 // ─── DATA EXPORT (GDPR / privacy) ───
 router.post('/me/export', authenticate, async (req, res) => {
