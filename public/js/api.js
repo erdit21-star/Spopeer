@@ -375,12 +375,12 @@
   function getUser() {
     try {
       if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
-        return window.CurrentUserStore.getCurrentUser() || parseStoredJson("spopeer_user") || null;
+        return window.CurrentUserStore.getCurrentUser() || null;
       }
     } catch (err) {
       console.debug("CurrentUserStore.getCurrentUser failed in api.js", err);
     }
-    return parseStoredJson("spopeer_user") || null;
+    return null;
   }
 
   function dispatchProfileUpdated(profile, source) {
@@ -394,14 +394,19 @@
   }
 
   function setUser(user, source) {
-    localStorage.setItem("spopeer_user", JSON.stringify(user));
-    localStorage.setItem("spopeer_loggedIn", "true");
-    localStorage.setItem('spopeer_last_auth_at', Date.now().toString());
-    localStorage.setItem("_profileLastUpdated_", Date.now().toString());
+    // CurrentUserStore is the single owner of current-user state and its cache.
+    // api.js only delivers the backend user to the store.
     if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
       window.CurrentUserStore.setCurrentUser(user);
     } else {
+      // Keep the event fallback for pages that load api.js before the store.
+      // Do not create a second localStorage user source here.
       dispatchProfileUpdated(user, source || "api-set-user");
+    }
+    try {
+      localStorage.setItem('spopeer_last_auth_at', Date.now().toString());
+    } catch (err) {
+      console.debug('Failed to record auth timestamp', err);
     }
     setTelemetryUser(user);
     trackDailyActiveUser(user);
@@ -413,12 +418,20 @@
   }
 
   function clearAuthStorage() {
-    [
-      'spopeer_last_auth_at',
-      "spopeer_user",
-      "spopeer_loggedIn",
-      "_profileLastUpdated_"
-    ].forEach((key) => localStorage.removeItem(key));
+    try {
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
+        window.CurrentUserStore.clearCurrentUser();
+      }
+    } catch (err) {
+      console.debug('CurrentUserStore.clearCurrentUser failed in api.js', err);
+    }
+
+    try {
+      localStorage.removeItem('spopeer_last_auth_at');
+    } catch (err) {
+      console.debug('Failed to clear auth timestamp', err);
+    }
+
     clearTelemetryUser();
   }
 
