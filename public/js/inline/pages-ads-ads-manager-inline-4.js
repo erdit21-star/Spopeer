@@ -25,9 +25,9 @@
 
 /* -- CAMPAIGN TABLE -- */
 var campaigns = [
-  { name: 'Tryouts 2025 � Athens',    type: 'Sport Club � Event Sign-ups', status: 'live',   format: 'feed',      impressions: 14200, clicks: 682, ctr: 4.8,  spend: 120, budget: 200 },
-  { name: 'Coaching Clinic � June',   type: 'Coach Promo � Profile Visits', status: 'live',   format: 'search',    impressions: 9800,  clicks: 391, ctr: 3.99, spend: 88,  budget: 150 },
-  { name: 'Kit Sponsor Outreach',     type: 'Sponsor � Awareness',          status: 'paused', format: 'community', impressions: 6100,  clicks: 198, ctr: 3.25, spend: 54,  budget: 100 },
+  { name: 'Tryouts 2025 — Athens',    type: 'Sport Club — Event Sign-ups', status: 'live',   format: 'feed',      impressions: 14200, clicks: 682, ctr: 4.8,  spend: 120, budget: 200 },
+  { name: 'Coaching Clinic — June',   type: 'Coach Promo — Profile Visits', status: 'live',   format: 'search',    impressions: 9800,  clicks: 391, ctr: 3.99, spend: 88,  budget: 150 },
+  { name: 'Kit Sponsor Outreach',     type: 'Sponsor — Awareness',          status: 'paused', format: 'community', impressions: 6100,  clicks: 198, ctr: 3.25, spend: 54,  budget: 100 },
   { name: 'Spring Membership Drive',  type: 'Sport Club � Reach',           status: 'ended',  format: 'feed',      impressions: 18100, clicks: 569, ctr: 3.14, spend: 80,  budget: 80  },
   { name: 'Youth Rugby Academy',      type: 'Club � Youth Dev',             status: 'review', format: 'sidebar',   impressions: 0,     clicks: 0,   ctr: 0,    spend: 0,   budget: 60  }
 ];
