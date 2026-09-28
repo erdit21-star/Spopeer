@@ -763,7 +763,10 @@
   }
 
   function buildCombinedProfileFromForm() {
-    var draft = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function' ? (window.CurrentUserStore.getCurrentUser() || {}) : {});
+    // Build Save All from editable form fields only.
+    // Never pass the complete CurrentUserStore object through ProfileSchema:
+    // it contains system fields such as id, timestamps and counters.
+    var draft = {};
 
     var fullName = v('fullNameInput');
     if (fullName) {
@@ -848,8 +851,16 @@
     draft.profileVisibility = v('profileVisibilityInput') || draft.profileVisibility || 'public';
     draft.privacyPublic = draft.profileVisibility !== 'private';
 
-    var selectedCard = document.querySelector('.card-style-option.selected');
-    draft.profileCardStyle = selectedCard ? selectedCard.dataset.value : (draft.profileCardStyle || 'card-stack');
+    // Card style has its own canonical endpoint. Keep the selected
+    // value in the Save All payload as profileCardStyle so it can be
+    // persisted separately after the main profile save.
+    var selectedCard = document.querySelector('.card-style-option.selected, .card-style-option-og.is-selected');
+    if (selectedCard) {
+      draft.profileCardStyle =
+        selectedCard.dataset.value ||
+        selectedCard.dataset.cardStyle ||
+        '';
+    }
 
     return draft;
   }
@@ -868,12 +879,40 @@
       console.log('Save All payload', combined);
       var merged = await saveSection(combined);
       ud = merged;
+
+      // Social preview card style uses a dedicated backend route.
+      // Save it after the main profile succeeds so Save All remains atomic
+      // from the user's point of view and never reports success prematurely.
+      if (combined.profileCardStyle) {
+        var cardResponse = await fetch('/api/profile/me/card-style', {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cardStyle: combined.profileCardStyle })
+        });
+        if (!cardResponse.ok) {
+          var cardError = {};
+          try { cardError = await cardResponse.json(); } catch (_) {}
+          throw new Error(
+            (cardError && cardError.error && cardError.error.message) ||
+            'Profile card style could not be saved.'
+          );
+        }
+        merged.cardStyle = combined.profileCardStyle;
+        merged.profileCardStyle = combined.profileCardStyle;
+        ud = merged;
+        if (window.SpopeerAPI && typeof window.SpopeerAPI.setUser === 'function') {
+          window.SpopeerAPI.setUser(merged, 'EditProfileSaveAllCardStyle');
+        }
+      }
+
       recalcCompletion();
       showToast('All sections saved!', 'success');
       if(window.clearProfileDirty) window.clearProfileDirty();
     } catch (_error) {
       console.error('Save All failed:', _error);
-      showToast('Could not save all sections. Please review the highlighted section.', 'error');
+      var saveMessage = (_error && _error.message) || 'Could not save all sections.';
+      showToast(saveMessage, 'error');
     } finally {
       saveAllInFlight = false;
       saveAllBtn.disabled = false;
@@ -991,6 +1030,12 @@
     if (!payload.firstName) delete payload.firstName;
     if (!payload.lastName) delete payload.lastName;
     if (!payload.contactEmail) delete payload.contactEmail;
+
+    // Empty date fields must be omitted rather than sent as an empty
+    // string to PostgreSQL DATE/TIMESTAMP columns.
+    ['dateOfBirth'].forEach(function(field) {
+      if (payload[field] === '') delete payload[field];
+    });
 
     // Normalize booleans.
     boolFields.forEach(function(field) {
