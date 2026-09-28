@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       list.innerHTML = events.map((event) => `
         <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface);">
           <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">
-            ${event.sport} � ${event.type}
+            ${event.sport} — ${event.type}
           </div>
           <div style="font-size:15px;font-weight:800;color:var(--ink);margin-bottom:4px;">
             ${event.title}
