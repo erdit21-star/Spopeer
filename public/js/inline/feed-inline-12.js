@@ -11,7 +11,7 @@
       ]
     },
     manager: {
-      greeting: "Hi! I'm your Manager Agent. I help you grow your sports career � visibility, connections, and opportunities.",
+      greeting: "Hi! I'm your Manager Agent. I help you grow your sports career — visibility, connections, and opportunities.",
       actions: [
         { label: 'Find coaches', url: '/pages/search/search.html', icon: 'fa-whistle' },
         { label: 'Find athletes', url: '/pages/search/search.html', icon: 'fa-person-running' },
