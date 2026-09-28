@@ -1,6 +1,6 @@
 ProfileSyncService.init();
 
-    let currentUserId = JSON.parse(localStorage.getItem('spopeer_user') || '{}').id;
+    let currentUserId = (window.CurrentUserStore && window.CurrentUserStore.getCurrentUser && window.CurrentUserStore.getCurrentUser() || {}).id;
     let allNotifications = [];
     let currentFilter = 'all';
 
