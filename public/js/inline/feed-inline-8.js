@@ -475,7 +475,7 @@ function generatePostHTML(post) {
                 <div class="author-name">${escapeHtml(post.authorName || 'Unknown user')}</div>
                 <div class="author-meta">
                   <span class="role-tag ${role.tagCls}">${role.tag}</span>
-                  @${escapeHtml((post.authorEmail || '').split('@')[0] || 'user')} � ${timeAgo}
+                  @${escapeHtml((post.authorEmail || '').split('@')[0] || 'user')} — ${timeAgo}
                 </div>
               </div>
             ${authorProfileHref ? '</a>' : '</div>'}
