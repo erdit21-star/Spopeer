@@ -257,7 +257,9 @@
         window.SessionActivityTracker.stop();
       } else {
         try {
-          const user = localStorage.getItem('spopeer_user') || localStorage.getItem('user');
+          const user = window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function'
+          ? window.CurrentUserStore.getCurrentUser()
+          : null;
           if (user) {
             window.SessionActivityTracker.start();
           }
