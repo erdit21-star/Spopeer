@@ -3,7 +3,7 @@
       if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
         user = window.CurrentUserStore.getCurrentUser() || {};
       } else {
-        try { user = JSON.parse(localStorage.getItem('spopeer_user') || '{}'); } catch(e) { user = {}; }
+        user = {};
       }
       var sports = [user.primarySport].concat(Array.isArray(user.secondarySports) ? user.secondarySports : []).filter(Boolean);
       var sel = document.getElementById('filterSport');
