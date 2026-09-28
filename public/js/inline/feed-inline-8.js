@@ -391,7 +391,7 @@ function attachRepostListeners() {
 
     try {
       // Try real API first
-      var isLoggedIn = localStorage.getItem('spopeer_loggedIn') === 'true';
+      var isLoggedIn = !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
       if (isLoggedIn) {
         var res = await fetch('/api/posts/' + postId + '/repost', {
           method: 'POST',
