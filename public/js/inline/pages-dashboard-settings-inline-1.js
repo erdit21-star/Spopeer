@@ -1,5 +1,7 @@
 (function() {
-  const ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+  const ud = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function')
+    ? (window.CurrentUserStore.getCurrentUser() || {})
+    : {};
 
   function roleLabel(role) {
     return {
@@ -105,10 +107,10 @@
       (result && result.data && (result.data.user || result.data.payload)) ||
       (result && (result.user || result.payload)) ||
       payload;
-    localStorage.setItem('spopeer_user', JSON.stringify(savedUser));
-    localStorage.setItem('user', JSON.stringify(savedUser));
-    localStorage.setItem('spopeer_loggedIn', 'true');
-    localStorage.setItem('_profileLastUpdated_', Date.now().toString());
+    if (!window.CurrentUserStore || typeof window.CurrentUserStore.setCurrentUser !== 'function') {
+      throw new Error('CurrentUserStore is not ready; profile save cannot be completed.');
+    }
+    window.CurrentUserStore.setCurrentUser(savedUser);
     window.dispatchEvent(new CustomEvent('profileUpdated', {
       detail: {
         profile: savedUser,
@@ -116,9 +118,6 @@
         source: sourceLabel
       }
     }));
-    if (window.CurrentUserStore) {
-      try { window.CurrentUserStore.setCurrentUser(savedUser); } catch(e) { /* ignore store sync errors */ }
-    }
     return savedUser;
   }
 
@@ -349,12 +348,10 @@
     try {
       var result = await window.SpopeerAPI.updateSubscriptionPlan(select.value);
       var savedUser = (result && result.data && result.data.user) || result.user || ud;
-      localStorage.setItem('spopeer_user', JSON.stringify(savedUser));
-      localStorage.setItem('user', JSON.stringify(savedUser));
-      localStorage.setItem('spopeer_loggedIn', 'true');
-      if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
-        window.CurrentUserStore.setCurrentUser(savedUser);
+      if (!window.CurrentUserStore || typeof window.CurrentUserStore.setCurrentUser !== 'function') {
+        throw new Error('CurrentUserStore is not ready; subscription update cannot be completed.');
       }
+      window.CurrentUserStore.setCurrentUser(savedUser);
       refreshSubscriptionPreview(savedUser, select.value);
       if (window.sharedUi && window.sharedUi.ensureDesktopSubscriptionPanel) {
         window.sharedUi.ensureDesktopSubscriptionPanel();
@@ -419,7 +416,9 @@
   /* ── Delete account ── */
   document.getElementById('deleteAccount')?.addEventListener('click', () => {
     if (confirm('Are you sure you want to permanently delete your account? This action cannot be undone.')) {
-      ['spopeer_token','spopeer_user','spopeer_loggedIn','authToken','token','user','userToken','userData'].forEach(k => localStorage.removeItem(k));
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
+        window.CurrentUserStore.clearCurrentUser();
+      }
       window.location.href = '/feed.html';
     }
   });
