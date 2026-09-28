@@ -118,14 +118,36 @@
     }
   }
 
+  const USER_CACHE_KEY = 'spopeer_user';
+  const LEGACY_USER_KEYS = ['spopeerUser', 'user'];
+
   function getStoredUser() {
     try {
-      const raw =
-        localStorage.getItem('spopeer_user') ||
-        localStorage.getItem('spopeerUser') ||
-        localStorage.getItem('user') ||
-        'null';
-      return normalizeUser(JSON.parse(raw));
+      const canonicalRaw = localStorage.getItem(USER_CACHE_KEY);
+      if (canonicalRaw) {
+        return normalizeUser(JSON.parse(canonicalRaw));
+      }
+
+      // One-time compatibility migration for users who still have an older
+      // cache key. The migrated value becomes the only supported cache.
+      for (const legacyKey of LEGACY_USER_KEYS) {
+        const legacyRaw = localStorage.getItem(legacyKey);
+        if (!legacyRaw) continue;
+
+        try {
+          const migrated = normalizeUser(JSON.parse(legacyRaw));
+          if (migrated) {
+            localStorage.setItem(USER_CACHE_KEY, JSON.stringify(migrated));
+            LEGACY_USER_KEYS.forEach(key => localStorage.removeItem(key));
+            return migrated;
+          }
+        } catch (err) {
+          console.debug('CurrentUserStore: legacy user cache parse failed', err);
+          localStorage.removeItem(legacyKey);
+        }
+      }
+
+      return null;
     } catch (err) {
       console.debug('CurrentUserStore: getStoredUser parse failed', err);
       return null;
@@ -134,20 +156,20 @@
 
   function persistUser(user) {
     if (user) {
-      localStorage.setItem('spopeer_user', JSON.stringify(user));
-      localStorage.setItem('spopeerUser', JSON.stringify(user));
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+      LEGACY_USER_KEYS.forEach(key => localStorage.removeItem(key));
       localStorage.setItem('spopeer_loggedIn', 'true');
       localStorage.setItem('_profileLastUpdated_', Date.now().toString());
     } else {
-      localStorage.removeItem('spopeer_user');
-      localStorage.removeItem('spopeerUser');
-      localStorage.removeItem('user');
+      localStorage.removeItem(USER_CACHE_KEY);
+      LEGACY_USER_KEYS.forEach(key => localStorage.removeItem(key));
       localStorage.removeItem('spopeer_loggedIn');
       localStorage.removeItem('_profileLastUpdated_');
     }
   }
 
+  // The backend session is the source of truth.
+  // localStorage is only a hydration/cache layer for the current user.
   function setCurrentUser(user) {
     currentUser = normalizeUser(user);
     try {
@@ -260,7 +282,7 @@
   if (typeof window !== 'undefined') {
     window.addEventListener('storage', function (event) {
       if (!event) return;
-      if (event.key === 'spopeer_user' || event.key === 'user' || event.key === '_profileLastUpdated_') {
+      if (event.key === USER_CACHE_KEY || event.key === '_profileLastUpdated_') {
         syncFromStorage();
       }
     });
