@@ -884,10 +884,8 @@
       // Save it after the main profile succeeds so Save All remains atomic
       // from the user's point of view and never reports success prematurely.
       if (combined.profileCardStyle) {
-        var cardResponse = await fetch('/api/profile/me/card-style', {
+        var cardResponse = await window.SpopeerAPI.request('/api/profile/me/card-style', {
           method: 'PATCH',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cardStyle: combined.profileCardStyle })
         });
         if (!cardResponse.ok) {
