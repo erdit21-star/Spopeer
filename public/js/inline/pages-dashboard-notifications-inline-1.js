@@ -1,5 +1,5 @@
 (function () {
-  const user = JSON.parse(localStorage.getItem('spopeer_user') || 'null');
+  const user = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') ? window.CurrentUserStore.getCurrentUser() : null;
   if (user && user.name) {
     const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     document.getElementById('sidebarAvatar').textContent = initials;
