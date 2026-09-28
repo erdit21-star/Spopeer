@@ -1,8 +1,5 @@
 // Updated
 const Auth = {
-  tokenKey: "spopeer_loggedIn",
-  userKey: "spopeer_user",
-
   hasAnyAuthToken() {
     return false;
   },
@@ -19,14 +16,12 @@ const Auth = {
   },
 
   hasLocalSessionSignal() {
-    return this.hasAnyStoredUser()
-      || localStorage.getItem('spopeer_loggedIn') === 'true';
+    return this.hasAnyStoredUser();
   },
 
   isLoggedIn() {
-    const hasUser = this.hasAnyStoredUser();
-    const hasFlag = localStorage.getItem("spopeer_loggedIn") === "true";
-    return hasFlag && hasUser;
+    return !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function'
+      && window.CurrentUserStore.isLoggedIn());
   },
 
   getToken() {
