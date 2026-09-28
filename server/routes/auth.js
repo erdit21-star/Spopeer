@@ -397,7 +397,7 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
           tokenHash: sha256(refreshToken),
           userAgent: req.get('user-agent') || null,
           ipAddress: req.ip,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         });
       } else {
         try {
@@ -406,7 +406,7 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
             tokenHash: sha256(refreshToken),
             userAgent: req.get('user-agent') || null,
             ipAddress: req.ip,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           });
         } catch (sessionErr) {
           console.error('[SIGNUP] RefreshSession.create failed (table may not exist):', sessionErr.message);
@@ -414,7 +414,7 @@ router.post('/signup', signupLimiter, requireCsrf, verifyCaptchaMiddleware, vali
       }
 
       res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
-      res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+      res.cookie('refresh_token', refreshToken, getCookieOptions(30 * 24 * 60 * 60 * 1000));
 
       try {
         issueCsrfToken(req, res);
@@ -524,7 +524,7 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
         tokenHash: sha256(refreshToken),
         userAgent: req.get('user-agent') || null,
         ipAddress: req.ip,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       });
     } catch (err) {
       console.error('[LOGIN] RefreshSession.create failed — cannot complete login safely:', err.message);
@@ -532,7 +532,7 @@ router.post('/login', loginLimiter, requireCsrf, validate(loginSchema), async (r
     }
 
     res.cookie('access_token', token, getCookieOptions(15 * 60 * 1000));
-    res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+    res.cookie('refresh_token', refreshToken, getCookieOptions(30 * 24 * 60 * 60 * 1000));
 
     // Ensure client receives a CSRF cookie immediately after login.
     try {
@@ -1255,7 +1255,7 @@ router.post('/google', googleLimiter, async (req, res) => {
             tokenHash: refreshTokenHash,
             userAgent: req.get('user-agent') || null,
             ipAddress: req.ip,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           }),
           authDbTimeoutMs,
           'auth.google.createRefreshSession'
@@ -1270,7 +1270,7 @@ router.post('/google', googleLimiter, async (req, res) => {
 
     // Session is persisted: now set auth cookies and CSRF token.
     res.cookie('access_token', accessToken, getCookieOptions(15 * 60 * 1000));
-    res.cookie('refresh_token', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+    res.cookie('refresh_token', refreshToken, getCookieOptions(30 * 24 * 60 * 60 * 1000));
     issueCsrfToken(req, res);
 
     ok(res, responsePayload);
