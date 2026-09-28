@@ -825,7 +825,7 @@
     logout,
     showNotification,
     request,
-    isAuthenticated: function () { return (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem("spopeer_loggedIn") === "true")) && !!getUser(); },
+    isAuthenticated: function () { return !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn() && getUser()); },
     requireAuth: function () {
       if (!getUser()) {
         window.location.href = "/pages/auth/login.html";
