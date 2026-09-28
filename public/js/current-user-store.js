@@ -232,10 +232,12 @@
       return setCurrentUser(merged);
     } catch (err) {
       console.warn('Failed to refresh current user:', err);
-      // Keep the last known user to avoid chip/card flicker across pages.
-      currentUser = getStoredUser();
+      // /api/auth/me is authoritative. Never turn a failed server
+      // authentication check into a successful session from stale cache.
+      currentUser = null;
+      persistUser(null);
       emit();
-      return currentUser;
+      return null;
     }
   }
 
