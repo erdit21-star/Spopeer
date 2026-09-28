@@ -14,54 +14,6 @@ const allowedCardStylesByType = {
   supportive_professional: ['professional_premium']
 };
 
-// GET /api/profile/me
-router.get('/me', authenticate, async (req, res) => {
-  try {
-    const user = await User.findByPk(req.userId, { attributes: { exclude: ['password'] } });
-    if (!user || !user.isActive) {
-      return fail(res, 404, 'NOT_FOUND', 'User not found.');
-    }
-    return ok(res, { user: normalizeUser(user) });
-  } catch (error) {
-    console.error('[PROFILE] get_me failed:', error);
-    return fail(res, 500, 'SERVER_ERROR', 'Failed to fetch profile.');
-  }
-});
-
-// PATCH /api/profile/me
-router.patch('/me', authenticate, async (req, res) => {
-  try {
-    const updates = pickAllowedUpdates(req.body);
-    if (!Object.keys(updates).length) {
-      return fail(res, 400, 'VALIDATION', 'No valid profile fields were provided.');
-    }
-
-    if (updates.username) {
-      const existing = await User.findOne({ where: { username: updates.username } });
-      if (existing && existing.id !== req.userId) {
-        return fail(res, 409, 'CONFLICT', 'Username is already taken.');
-      }
-    }
-
-    const user = await User.findByPk(req.userId);
-    if (!user || !user.isActive) {
-      return fail(res, 404, 'NOT_FOUND', 'User not found.');
-    }
-
-    await user.update(updates);
-    return ok(res, { user: normalizeUser(user) });
-  } catch (error) {
-    console.error('[PROFILE] patch_me failed:', {
-      userId: req.userId,
-      path: req.originalUrl,
-      method: req.method,
-      message: error && error.message,
-      stack: error && error.stack
-    });
-    return fail(res, 500, 'SERVER_ERROR', 'Failed to update profile.');
-  }
-});
-
 // GET /api/profile/subscription-plans
 router.get('/subscription-plans', authenticate, async (req, res) => {
   try {
