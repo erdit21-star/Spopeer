@@ -63,16 +63,16 @@
     body.pulsechat-dark .btn-back,
     body.pulsechat-dark .btn-cancel{border-color:#2a4156;color:#d7e8ff;}
 
-    .pulse-theme-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;}
-    .pulse-theme-btn:hover{border-color:var(--accent);}
+    .pulse-theme-btn{width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;padding:0;flex:0 0 auto;}
+    .pulse-theme-btn:hover{background:var(--surface);color:var(--ink);}
     body.pulsechat-dark .pulse-theme-btn{background:#102233;border-color:#2b4258;color:#9ed7ff;}
 
     /* Inbox nav overrides – full-width, non-sticky */
     .topnav{position:static;background:var(--white);backdrop-filter:none;flex-shrink:0;z-index:200;}
     .nav-inner{max-width:100%;gap:14px;}
     .nav-title{font-family:var(--fD);font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.01em;}
-    .btn-back{padding:7px 15px;border:1.5px solid var(--border);border-radius:var(--pill);background:transparent;color:var(--muted);font-size:13px;font-weight:600;font-family:var(--fB);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;}
-    .btn-back:hover{border-color:var(--accent);color:var(--accent);}
+    
+    
 
     /* ── MESSAGING LAYOUT ── */
     .messaging-layout{flex:1;display:grid;grid-template-columns:var(--sidebar-w) 1fr;overflow:hidden;}
@@ -243,11 +243,13 @@
     <span class="nav-title"><i class="fa-regular fa-paper-plane" style="font-size:14px;margin-right:6px;color:var(--accent)"></i>Messages</span>
     <div class="nav-right">
       <a href="/feed.html" class="nav-icon" title="Home"><i class="fa-solid fa-house"></i></a>
-      <button class="pulse-theme-btn" id="chatThemeToggle" title="Toggle theme" aria-label="Toggle chat theme"><i class="fa-solid fa-moon"></i></button>
       <button class="nav-icon" title="Notifications"><i class="fa-regular fa-bell"></i></button>
       <div class="user-chip" id="userChip" data-user-chip>
         <span class="chip-avatar" id="chipAvatar" data-user-chip-avatar>?</span>
         <span class="chip-name" id="chipName" data-user-chip-name>Loading…</span>
+        <button class="pulse-theme-btn chip-theme-toggle" id="chatThemeToggle" type="button" title="Toggle theme" aria-label="Toggle chat theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
         <i class="fa-solid fa-chevron-down chip-caret"></i>
       </div>
       <div class="profile-menu" id="profileMenu" data-user-menu aria-hidden="true">
@@ -308,7 +310,6 @@
           </div>
         </div>
       </div>
-      <a href="/feed.html" class="btn-back"><i class="fa-solid fa-arrow-left" style="font-size:11px"></i> Back</a>
     </div>
   </div>
 </nav>
