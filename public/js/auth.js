@@ -8,7 +8,14 @@ const Auth = {
   },
 
   hasAnyStoredUser() {
-    return !!localStorage.getItem('spopeer_user');
+    try {
+      return !!(window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function'
+        ? window.CurrentUserStore.getCurrentUser()
+        : null);
+    } catch (err) {
+      console.debug('CurrentUserStore.getCurrentUser failed in auth.js', err);
+      return false;
+    }
   },
 
   hasLocalSessionSignal() {
@@ -28,11 +35,13 @@ const Auth = {
 
   getUser() {
     try {
-      const raw = localStorage.getItem(this.userKey) || "{}";
-      return JSON.parse(raw);
-    } catch {
-      return {};
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
+        return window.CurrentUserStore.getCurrentUser() || {};
+      }
+    } catch (err) {
+      console.debug('CurrentUserStore.getCurrentUser failed in auth.js', err);
     }
+    return {};
   },
 
   clearSessionCacheData() {
@@ -75,25 +84,17 @@ const Auth = {
 
     const normalizedUser = this.normalizeUserForSession({ ...this.getUser(), ...user });
 
-    localStorage.setItem(this.userKey, JSON.stringify(normalizedUser));
-    localStorage.setItem("spopeer_loggedIn", "true");
-    localStorage.setItem('spopeer_last_auth_at', Date.now().toString());
-    localStorage.setItem("_profileLastUpdated_", Date.now().toString());
-
-    window.dispatchEvent(new CustomEvent("profileUpdated", {
-      detail: {
-        profile: normalizedUser,
-        timestamp: Date.now(),
-        source: "auth-login"
-      }
-    }));
-
+    // CurrentUserStore owns the canonical current-user state and its cache.
     if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
-      try {
-        window.CurrentUserStore.setCurrentUser(normalizedUser);
-      } catch (err) {
-        console.debug("CurrentUserStore.setCurrentUser failed in auth login", err);
-      }
+      window.CurrentUserStore.setCurrentUser(normalizedUser);
+    } else {
+      throw new Error('CurrentUserStore is not ready; cannot establish authenticated user state.');
+    }
+
+    try {
+      localStorage.setItem('spopeer_last_auth_at', Date.now().toString());
+    } catch (err) {
+      console.debug('Failed to record auth timestamp', err);
     }
   },
 
@@ -107,12 +108,11 @@ const Auth = {
       console.error('Logout failed:', err);
     }
 
-    [
-      "spopeer_last_auth_at",
-      "spopeer_user",
-      "spopeer_loggedIn",
-      "_profileLastUpdated_"
-    ].forEach((key) => localStorage.removeItem(key));
+    try {
+      localStorage.removeItem('spopeer_last_auth_at');
+    } catch (err) {
+      console.debug('Failed to clear auth timestamp', err);
+    }
 
     if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
       try {
@@ -182,13 +182,18 @@ const Auth = {
       }
     } catch (err) {
       console.debug("Auth.requireAuth background check failed — session expired", err);
-      const hasUser = !!(localStorage.getItem('spopeer_user') || localStorage.getItem('user'));
+      const hasUser = this.hasAnyStoredUser();
       if (hasUser) {
         // Keep the user on-page; downstream API calls can retry/refresh without login bounce.
         return;
       }
-      localStorage.removeItem('spopeer_user');
-      localStorage.removeItem('spopeer_loggedIn');
+      try {
+        if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
+          window.CurrentUserStore.clearCurrentUser();
+        }
+      } catch (clearErr) {
+        console.debug('CurrentUserStore.clearCurrentUser failed in auth guard', clearErr);
+      }
       window.location.href = "/pages/auth/login.html";
     }
   },
@@ -219,10 +224,11 @@ const Auth = {
     try {
       const data = await window.SpopeerAPI.me();
       if (data.user) {
-        localStorage.setItem(this.userKey, JSON.stringify(data.user));
-        localStorage.setItem("user", JSON.stringify(data.user));
-        localStorage.setItem("spopeer_loggedIn", "true");
-        return data.user;
+        if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+          window.CurrentUserStore.setCurrentUser(data.user);
+          return data.user;
+        }
+        return null;
       }
 
       return null;
