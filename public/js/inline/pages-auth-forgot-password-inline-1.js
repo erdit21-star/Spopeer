@@ -26,7 +26,7 @@ async function handleForgotPassword(event) {
         });
         const data = await res.json();
 
-        // Non-200 means a real error (CAPTCHA, server crash, etc.) � show it
+        // Non-200 means a real error (CAPTCHA, server crash, etc.) — show it
         if (!res.ok) {
           const msg = (data.error && data.error.message) || 'Something went wrong. Please try again.';
           emailError.textContent = msg;
