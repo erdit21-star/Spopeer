@@ -77,7 +77,7 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
   });
 
   // Cache invalidation when owner views their own profile
-  var currentUser = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+  var currentUser = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') ? (window.CurrentUserStore.getCurrentUser() || {}) : {};
   var isOwnProfile = false;
   if (window.SpopeerProfileIdentity) {
     isOwnProfile = !!(userId && window.SpopeerProfileIdentity.matchesCurrentUser(userId));
