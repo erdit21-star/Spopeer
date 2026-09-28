@@ -20,9 +20,6 @@ ProfileSyncService.init();
       } catch (err) {
         console.debug('CurrentUserStore.getCurrentUser failed in analytics page', err);
       }
-      if (!user) {
-        try { user = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('user') || 'null'); } catch (e) { user = null; }
-      }
       return user || null;
     }
 
