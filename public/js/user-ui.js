@@ -23,58 +23,52 @@
   function ensureFeedChipStructure(root) {
     if (!root) return;
 
+    // Canonical structure for every page:
+    // avatar -> text(name + handle) -> online dot -> caret.
     root.setAttribute('data-user-chip', '');
 
     var avatar = root.querySelector('[data-user-chip-avatar]') || root.querySelector('.chip-avatar');
     if (!avatar) {
       avatar = document.createElement('span');
       avatar.className = 'chip-avatar';
-      avatar.setAttribute('data-user-chip-avatar', '');
       avatar.textContent = 'U';
-      root.insertBefore(avatar, root.firstChild);
     }
-    if (!avatar.classList.contains('chip-avatar')) avatar.classList.add('chip-avatar');
+    avatar.classList.add('chip-avatar');
     avatar.setAttribute('data-user-chip-avatar', '');
 
     var textWrap = root.querySelector('.chip-text');
     if (!textWrap) {
       textWrap = document.createElement('div');
       textWrap.className = 'chip-text';
-      var afterAvatar = avatar.nextSibling;
-      if (afterAvatar) root.insertBefore(textWrap, afterAvatar);
-      else root.appendChild(textWrap);
     }
 
     var nameEl = root.querySelector('[data-user-chip-name]') || root.querySelector('.chip-name');
     if (!nameEl) {
       nameEl = document.createElement('span');
       nameEl.className = 'chip-name';
-      nameEl.setAttribute('data-user-chip-name', '');
       nameEl.textContent = 'User';
     }
-    if (!nameEl.classList.contains('chip-name')) nameEl.classList.add('chip-name');
+    nameEl.classList.add('chip-name');
     nameEl.setAttribute('data-user-chip-name', '');
-    if (nameEl.parentElement !== textWrap) textWrap.appendChild(nameEl);
 
-    var handleEl = root.querySelector('[data-user-chip-handle]') || root.querySelector('[data-user-handle]') || root.querySelector('.chip-handle');
+    var handleEl = root.querySelector('[data-user-chip-handle]') ||
+      root.querySelector('[data-user-handle]') ||
+      root.querySelector('.chip-handle');
     if (!handleEl) {
       handleEl = document.createElement('span');
       handleEl.className = 'chip-handle';
       handleEl.textContent = '@user';
-      textWrap.appendChild(handleEl);
     }
-    if (!handleEl.classList.contains('chip-handle')) handleEl.classList.add('chip-handle');
+    handleEl.classList.add('chip-handle');
     handleEl.setAttribute('data-user-chip-handle', '');
-    if (handleEl.parentElement !== textWrap) textWrap.appendChild(handleEl);
 
-    var onlineDot = root.querySelector('[data-chip-online-dot]') || root.querySelector('.chip-online-dot');
+    var onlineDot = root.querySelector('[data-chip-online-dot]') ||
+      root.querySelector('.chip-online-dot');
     if (!onlineDot) {
       onlineDot = document.createElement('span');
       onlineDot.className = 'chip-online-dot';
-      onlineDot.setAttribute('data-chip-online-dot', '');
-      root.appendChild(onlineDot);
     }
-    if (!onlineDot.classList.contains('chip-online-dot')) onlineDot.classList.add('chip-online-dot');
+    onlineDot.classList.add('chip-online-dot');
     onlineDot.setAttribute('data-chip-online-dot', '');
 
     var caret = root.querySelector('.chip-caret');
@@ -86,6 +80,7 @@
       caret.setAttribute('viewBox', '0 0 10 6');
       caret.setAttribute('fill', 'none');
       caret.setAttribute('aria-hidden', 'true');
+
       var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', 'M1 1l4 4 4-4');
       path.setAttribute('stroke', 'currentColor');
@@ -93,8 +88,36 @@
       path.setAttribute('stroke-linecap', 'round');
       path.setAttribute('stroke-linejoin', 'round');
       caret.appendChild(path);
-      root.appendChild(caret);
     }
+
+    textWrap.appendChild(nameEl);
+    textWrap.appendChild(handleEl);
+
+    // Remove legacy chip-only elements so old pages cannot produce duplicates.
+    Array.prototype.slice.call(root.children).forEach(function (child) {
+      if (child === avatar || child === textWrap || child === onlineDot || child === caret) return;
+      if (
+        child.matches &&
+        (child.matches('.chip-avatar') ||
+          child.matches('.chip-text') ||
+          child.matches('.chip-name') ||
+          child.matches('.chip-handle') ||
+          child.matches('.chip-online-dot') ||
+          child.matches('.chip-caret') ||
+          child.hasAttribute('data-user-chip-avatar') ||
+          child.hasAttribute('data-user-chip-name') ||
+          child.hasAttribute('data-user-chip-handle') ||
+          child.hasAttribute('data-chip-online-dot'))
+      ) {
+        child.remove();
+      }
+    });
+
+    // Always append in exactly the same order on every page.
+    root.appendChild(avatar);
+    root.appendChild(textWrap);
+    root.appendChild(onlineDot);
+    root.appendChild(caret);
   }
 
   function renderAvatar(el, user) {
