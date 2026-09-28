@@ -360,9 +360,10 @@
         var avatarUrl = (uploadResult.data && uploadResult.data.avatarUrl) || uploadResult.avatarUrl;
         if (!avatarUrl) throw new Error('Avatar upload returned no URL.');
 
-        var savedUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) || JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+        var savedUser = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function')
+          ? (window.CurrentUserStore.getCurrentUser() || {})
+          : ((window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) || {});
         var mergedUser = Object.assign({}, savedUser, { avatarUrl: avatarUrl });
-        localStorage.setItem('spopeer_user', JSON.stringify(mergedUser));
         if (window.SpopeerAPI.setUser) {
           window.SpopeerAPI.setUser(mergedUser, 'EditProfileAvatarUpload');
         }
@@ -941,11 +942,6 @@
 
     // Cache only the canonical response after the database save succeeds.
     var saved = normalizeProfileForSave(savedUser, Date.now());
-    localStorage.setItem('spopeer_user', JSON.stringify(saved));
-    localStorage.setItem('spopeerUser', JSON.stringify(saved));
-    localStorage.setItem('spopeer_loggedIn', 'true');
-    localStorage.setItem('_profileLastUpdated_', String(saved._profileUpdatedAt || Date.now()));
-
     if (window.SpopeerAPI && typeof window.SpopeerAPI.setUser === 'function') {
       window.SpopeerAPI.setUser(saved, 'EditProfileSafeSave');
     } else if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
@@ -1057,11 +1053,6 @@
       // ProfileSyncService.saveProfile() here: that method performs another
       // PATCH and can overwrite the freshly saved data with stale local data.
       var saved = normalizeProfileForSave(returnedUser, Date.now());
-
-      localStorage.setItem('spopeer_user', JSON.stringify(saved));
-      localStorage.setItem('spopeerUser', JSON.stringify(saved));
-      localStorage.setItem('spopeer_loggedIn', 'true');
-      localStorage.setItem('_profileLastUpdated_', String(saved._profileUpdatedAt));
 
       ud = saved;
 
