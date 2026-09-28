@@ -93,7 +93,7 @@
   border-radius: var(--pill); cursor: pointer; transition: .2s;
   margin-left: 4px;
 }
-.user-chip:hover { border-color: var(--accent); }
+.user-chip:hover { border-color: var(--border); }
 .chip-avatar {
   width: 28px; height: 28px; border-radius: 50%;
   background: linear-gradient(135deg,#001233,#1a5cff);
@@ -111,7 +111,7 @@
   font-family: var(--fB); cursor: pointer; text-decoration: none;
   display: inline-flex; align-items: center; transition: .2s;
 }
-.btn-logout:hover { border-color: var(--accent); color: var(--accent); }
+.btn-logout:hover { border-color: var(--border); color: var(--muted); }
 
 /* ── PROFILE MENU ── */
 .profile-menu {
