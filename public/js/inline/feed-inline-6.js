@@ -335,7 +335,7 @@
         
         if (userEmail) {
           // Fetch fresh profile data from API in background
-          const response = await fetch(`/api/profiles/${encodeURIComponent(userEmail)}`, {
+          const response = await fetch(`/api/users/profile/${encodeURIComponent(userEmail)}`, {
             credentials: 'include'
           });
           
