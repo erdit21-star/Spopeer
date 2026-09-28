@@ -46,29 +46,17 @@
   }
 
   function getStoredSessionUser() {
-    var raw = localStorage.getItem('spopeer_user')
-      || localStorage.getItem('spopeerUser')
-      || localStorage.getItem('user')
-      || '';
-    if (!raw) {
-      if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
-        return window.CurrentUserStore.getCurrentUser() || null;
-      }
-      return null;
-    }
-
     try {
-      return JSON.parse(raw);
+      return (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function')
+        ? (window.CurrentUserStore.getCurrentUser() || null)
+        : null;
     } catch (_err) {
       return null;
     }
   }
 
   function hasLocalSessionSignal() {
-    return !!(
-      getStoredSessionUser()
-      || localStorage.getItem('spopeer_loggedIn') === 'true'
-    );
+    return !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
   }
 
   function unwrapSearchUsers(result) {
