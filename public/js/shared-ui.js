@@ -889,16 +889,34 @@
    * Handles: <a> href, <button> onclick, sidebar .nav-item links.
    */
   function normalizeHomeLinks() {
-    var loggedIn = !!(
-      window.CurrentUserStore &&
-      typeof window.CurrentUserStore.isLoggedIn === 'function' &&
-      window.CurrentUserStore.isLoggedIn()
-    );
-    var homeHref = loggedIn ? '/feed.html' : '/index.html';
+    function getHomeHref() {
+      var loggedIn = !!(
+        window.CurrentUserStore &&
+        typeof window.CurrentUserStore.isLoggedIn === 'function' &&
+        window.CurrentUserStore.isLoggedIn()
+      );
+      return loggedIn ? '/feed.html' : '/index.html';
+    }
 
     document.querySelectorAll('[data-home-link]').forEach(function (link) {
-      link.setAttribute('href', homeHref);
+      link.setAttribute('href', getHomeHref());
+      if (link.dataset.homeLinkBound === '1') return;
+      link.dataset.homeLinkBound = '1';
+
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        window.location.assign(getHomeHref());
+      });
     });
+
+    if (window.CurrentUserStore && typeof window.CurrentUserStore.refreshCurrentUser === 'function') {
+      window.CurrentUserStore.refreshCurrentUser().then(function () {
+        var href = getHomeHref();
+        document.querySelectorAll('[data-home-link]').forEach(function (link) {
+          link.setAttribute('href', href);
+        });
+      }).catch(function () {});
+    }
   }
 
   function normalizeSponsorLinks() {
