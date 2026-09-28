@@ -10,8 +10,7 @@
   // Check if user is authenticated
   function isAuthenticated() {
     try {
-      const user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
-      return !!(user && user.id);
+      return !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
     } catch {
       return false;
     }
@@ -20,7 +19,7 @@
   // Get current user info
   function getCurrentUser() {
     try {
-      return JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      return (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') ? (window.CurrentUserStore.getCurrentUser() || {}) : {};
     } catch {
       return {};
     }
