@@ -40,6 +40,59 @@ const validateProfileUpdate = (req, res, next) => {
   });
 };
 
+function handleUploadMiddleware(uploadMiddleware) {
+  return uploadMiddleware;
+}
+
+// Apply extended-profile merge before saving
+async function applyExtendedMerge(user, updates) {
+  if (updates._extendedProfilePatch) {
+    const existing = user.extendedProfile || {};
+    updates.extendedProfile = { ...existing, ...updates._extendedProfilePatch };
+    delete updates._extendedProfilePatch;
+  }
+  return updates;
+}
+
+/**
+ * Unified profile update handler.
+ * Handles username uniqueness, extended profile merge, and normalization.
+ */
+async function updateProfileHandler(user, updates) {
+  if (updates.username) {
+    const existing = await User.findOne({ where: { username: updates.username } });
+    if (existing && existing.id !== user.id) {
+      throw new Error('Username is already taken.');
+    }
+  }
+
+  const privacyUpdates = mapPrivacySettingsToUserUpdates(updates);
+  const mergedUpdates = { ...updates, ...privacyUpdates };
+
+  await applyExtendedMerge(user, mergedUpdates);
+  await user.update(mergedUpdates);
+
+  if (mergedUpdates.profileVisibility || mergedUpdates.messagePermission || mergedUpdates.commentPermission || mergedUpdates.followersVisibility || mergedUpdates.followingVisibility || mergedUpdates.emailVisibility || mergedUpdates.phoneVisibility || mergedUpdates.dobVisibility) {
+    const { UserPrivacySettings } = require('../models');
+    const [settings] = await UserPrivacySettings.findOrCreate({
+      where: { userId: user.id },
+      defaults: { userId: user.id }
+    });
+    await settings.update({
+      profileVisibility: mergedUpdates.profileVisibility || settings.profileVisibility || 'public',
+      messagePermission: mergedUpdates.messagePermission || settings.messagePermission || 'everyone',
+      commentPermission: mergedUpdates.commentPermission || settings.commentPermission || 'everyone',
+      followersVisibility: mergedUpdates.followersVisibility || settings.followersVisibility || 'public',
+      followingVisibility: mergedUpdates.followingVisibility || settings.followingVisibility || 'public',
+      emailVisibility: mergedUpdates.emailVisibility || settings.emailVisibility || 'private',
+      phoneVisibility: mergedUpdates.phoneVisibility || settings.phoneVisibility || 'private',
+      dobVisibility: mergedUpdates.dobVisibility || settings.dobVisibility || 'private'
+    });
+  }
+
+  return normalizeUserUtil(user);
+}
+
 // ─── LIST USERS ───
 router.get('/', optionalAuth, async (req, res) => {
   try {
