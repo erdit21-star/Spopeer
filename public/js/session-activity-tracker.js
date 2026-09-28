@@ -158,19 +158,16 @@
       } catch (e) { /* fall through to manual clear */ }
     }
     try {
-      // Fallback: clear local storage and redirect
-      localStorage.removeItem('spopeer_user');
-      localStorage.removeItem('spopeerUser');
-      localStorage.removeItem('user');
-      localStorage.removeItem('spopeer_loggedIn');
-      localStorage.removeItem('spopeer_token');
-      localStorage.removeItem('spopeer_session_id');
-      localStorage.removeItem('_profileLastUpdated_');
-
+      // Fallback: clear non-user session state and redirect.
       try {
+        if (window.CurrentUserStore && typeof window.CurrentUserStore.clearCurrentUser === 'function') {
+          window.CurrentUserStore.clearCurrentUser();
+        }
+        localStorage.removeItem('spopeer_token');
+        localStorage.removeItem('spopeer_session_id');
+        localStorage.removeItem('_profileLastUpdated_');
         sessionStorage.clear();
-      } catch (e) { /* ignore sessionStorage errors */ }
-
+      } catch (e) { /* ignore storage errors */ }
       window.location.href = '/pages/auth/login.html?reason=session_expired';
     } catch (err) {
       console.error('Logout error:', err);
@@ -243,7 +240,9 @@
   if (typeof window !== 'undefined') {
     document.addEventListener('DOMContentLoaded', function () {
       try {
-        const user = localStorage.getItem('spopeer_user') || localStorage.getItem('user');
+        const user = window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function'
+          ? window.CurrentUserStore.getCurrentUser()
+          : null;
         if (user) {
           window.SessionActivityTracker.start();
         }
