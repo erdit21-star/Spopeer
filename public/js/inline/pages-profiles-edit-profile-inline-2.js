@@ -6,7 +6,7 @@
 
   var ud = (function() {
     try {
-      return JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      return (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function' ? (window.CurrentUserStore.getCurrentUser() || {}) : {});
     } catch (e) {
       console.warn('Invalid profile JSON in storage, using empty profile.', e);
       return {};
@@ -281,7 +281,7 @@
 
   // ── Completion score ──
   function recalcCompletion() {
-    var fresh = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+    var fresh = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function' ? (window.CurrentUserStore.getCurrentUser() || {}) : {});
     var fields = ['name','bio','avatarUrl','location','primarySport','playingLevel','position','currentTeam','achievements'];
     var done = fields.filter(function(f){ return fresh[f] && String(fresh[f]).trim(); }).length;
     var pct = Math.round((done / fields.length) * 100);
@@ -495,7 +495,7 @@
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size:11px"></i> Saving...';
     if (statusEl) { statusEl.className = 'save-status saving'; statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size:10px"></i> Saving...'; }
 
-    ud = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+    ud = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function' ? (window.CurrentUserStore.getCurrentUser() || {}) : {});
 
     try {
 
@@ -763,7 +763,7 @@
   }
 
   function buildCombinedProfileFromForm() {
-    var draft = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+    var draft = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function' ? (window.CurrentUserStore.getCurrentUser() || {}) : {});
 
     var fullName = v('fullNameInput');
     if (fullName) {
@@ -953,7 +953,7 @@
 
   function readStoredUserSafe() {
     try {
-      return JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      return (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function' ? (window.CurrentUserStore.getCurrentUser() || {}) : {});
     } catch (e) {
       console.warn('Invalid profile JSON in storage during save. Falling back to empty object.', e);
       return {};
@@ -1105,7 +1105,7 @@
 
   // ── Visibility toggle logic ──
   function loadVisibilitySettings() {
-    var user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+    var user = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function' ? (window.CurrentUserStore.getCurrentUser() || {}) : {});
     var vis = user.visibility || {};
     document.querySelectorAll('.visibility-toggle').forEach(function(btn) {
       var field = btn.dataset.field;
