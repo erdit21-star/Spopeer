@@ -290,7 +290,6 @@ app.get('/metrics', (req, res) => {
 // ─── API ROUTES ───
 app.use('/api/auth', authRoutes);
 app.use('/api/users', apiLimiter, userRoutes);
-app.use('/api/profiles', apiLimiter, userRoutes);
 app.use('/api/profile', apiLimiter, profileRoutes);
 // Write routes — require authentication AND verified email before mutating
 app.use('/api/posts', apiLimiter, perUserWriteLimiter, requireVerifiedForMutations, postRoutes);
