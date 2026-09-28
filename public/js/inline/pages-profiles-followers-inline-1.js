@@ -2,7 +2,7 @@
   'use strict';
 
   /* ── Data ── */
-  var user = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+  var user = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') ? (window.CurrentUserStore.getCurrentUser() || {}) : {};
   var followersData = [];
   var followingData = [];
   var pendingRequestsData = [];
