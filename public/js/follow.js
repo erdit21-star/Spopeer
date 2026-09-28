@@ -15,8 +15,7 @@ class FollowManager {
       if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
         return window.CurrentUserStore.getCurrentUser() || null;
       }
-      const userStr = localStorage.getItem('spopeer_user');
-      return userStr ? JSON.parse(userStr) : null;
+      return null;
     } catch (e) { return null; }
   }
 
@@ -26,7 +25,9 @@ class FollowManager {
       const currentFollowing = Number(user.following || 0);
       const nextFollowing = Math.max(0, currentFollowing + delta);
       const updated = { ...user, following: nextFollowing };
-      localStorage.setItem('spopeer_user', JSON.stringify(updated));
+      if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+        window.CurrentUserStore.setCurrentUser(updated);
+      }
       this.currentUser = updated;
       window.dispatchEvent(new CustomEvent('profileUpdated', {
         detail: {
@@ -63,7 +64,7 @@ class FollowManager {
   }
 
   async getFollowStatus(userId) {
-    if ((window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
+    if (this.isLoggedIn()) {
       try {
         const raw = await window.SpopeerAPI.getFollowStatus(userId);
         // API returns { success, data: { isFollowing, isPending, connectionStatus, relation } }
@@ -88,7 +89,7 @@ class FollowManager {
         }
 
     // Require login for following
-    if (!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
+    if (!this.isLoggedIn()) {
       if (window.SpopeerToast) window.SpopeerToast.warning('Please log in to follow users');
       window.location.href = '/pages/auth/login.html';
       return false;
@@ -115,7 +116,7 @@ class FollowManager {
           return true;
         }
 
-    if (!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
+    if (!this.isLoggedIn()) {
       if (window.SpopeerToast) window.SpopeerToast.warning('Please log in to unfollow users');
       return false;
     }
@@ -133,7 +134,7 @@ class FollowManager {
   }
 
   async acceptFollowRequest(connectionId) {
-    if (!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
+    if (!this.isLoggedIn()) {
       return false;
     }
 
@@ -157,7 +158,7 @@ class FollowManager {
   }
 
   async rejectFollowRequest(connectionId) {
-    if (!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
+    if (!this.isLoggedIn()) {
       return false;
     }
 
@@ -177,7 +178,7 @@ class FollowManager {
   }
 
   async getFollowers(userId) {
-    if ((window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
+    if (this.isLoggedIn()) {
       try {
         const data = await window.SpopeerAPI.getFollowers(userId);
         return this.unwrapUserListResponse(data);
@@ -190,7 +191,7 @@ class FollowManager {
   }
 
   async getFollowing(userId) {
-    if ((window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) {
+    if (this.isLoggedIn()) {
       try {
         const data = await window.SpopeerAPI.getFollowing(userId);
         return this.unwrapUserListResponse(data);
@@ -203,7 +204,7 @@ class FollowManager {
   }
 
   async getPendingRequests() {
-    if (!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true'))) return [];
+    if (!this.isLoggedIn()) return [];
     if (!window.SpopeerAPI || typeof window.SpopeerAPI.listIncomingFollowRequests !== 'function') return [];
 
     try {
@@ -220,7 +221,9 @@ class FollowManager {
   }
 
   isLoggedIn() {
-    return (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true')) && !!this.currentUser;
+    return !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function'
+      && window.CurrentUserStore.isLoggedIn()
+      && this.currentUser);
   }
 }
 
