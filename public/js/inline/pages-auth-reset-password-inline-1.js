@@ -140,7 +140,7 @@
             return;
           }
 
-          // Success � replace form with success card and redirect countdown
+          // Success — replace form with success card and redirect countdown
           document.getElementById('resetFormView').innerHTML =
             '<div class="success-card">' +
               '<i class="fa-solid fa-circle-check"></i>' +
