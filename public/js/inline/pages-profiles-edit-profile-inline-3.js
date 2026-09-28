@@ -23,7 +23,9 @@
       if (window.SpopeerAPI && typeof window.SpopeerAPI.getCurrentProfile === 'function') {
         await window.SpopeerAPI.getCurrentProfile();
         var freshUser = (window.SpopeerAPI.getUser && window.SpopeerAPI.getUser()) ||
-          JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+          (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function'
+            ? window.CurrentUserStore.getCurrentUser()
+            : {});
         if (freshUser && window._hydrateEditProfileFormFields) {
           window._hydrateEditProfileFormFields(freshUser);
         }
