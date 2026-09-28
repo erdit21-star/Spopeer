@@ -1,7 +1,6 @@
 // ============================================================
 // SPOPEER GAME TAPE STORIES
-// Frontend-only prototype for feed.html
-// Later can connect to /api/reels, /api/posts, or /api/stories
+// Stories are loaded only from the authenticated/backend data source.
 // ============================================================
 
 (function () {
@@ -38,97 +37,6 @@
     `.trim();
     return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
   }
-
-  const demoStories = [
-    {
-      id: 'demo-1',
-      userName: 'Alex Navarro',
-      userInitials: 'AN',
-      sport: 'Running',
-      mediaType: 'image',
-      mediaUrl: createStoryPlaceholder('Morning Run', '#001f3f'),
-      createdAt: new Date(Date.now() - 12 * 60000).toISOString(),
-      isLive: false,
-      isViewedByCurrentUser: false,
-      isLikedByCurrentUser: false,
-      caption: 'Negative split today. Felt strong on the second half.',
-      metrics: {
-        primary: { value: '4:32', unit: 'min/km', label: 'Avg pace' },
-        secondary: { value: '168', unit: 'bpm', label: 'Heart rate' },
-        tertiary: { value: '342', unit: 'kcal', label: 'Calories' }
-      },
-      comparison: { value: '-0:12', trend: 'up', label: 'vs last run' },
-      graphData: [28, 35, 42, 32, 28],
-      likesCount: 23,
-      commentsCount: 5
-    },
-    {
-      id: 'demo-2',
-      userName: 'Michael Chen',
-      userInitials: 'MC',
-      sport: 'Weightlifting',
-      mediaType: 'image',
-      mediaUrl: createStoryPlaceholder('Squat PR', '#1a6bff'),
-      createdAt: new Date(Date.now() - 45 * 60000).toISOString(),
-      isLive: false,
-      isViewedByCurrentUser: false,
-      isLikedByCurrentUser: false,
-      caption: 'Finally hit 185kg on squat. Next target: 200kg.',
-      metrics: {
-        primary: { value: '185', unit: 'kg', label: 'New 1RM' },
-        secondary: { value: '+12', unit: 'kg', label: 'Month gain' },
-        tertiary: { value: '5×5', unit: '', label: 'Working set' }
-      },
-      comparison: { value: '+12kg', trend: 'up', label: 'vs last month' },
-      graphData: [20, 28, 35, 42, 48],
-      likesCount: 47,
-      commentsCount: 12
-    },
-    {
-      id: 'demo-3',
-      userName: 'Sarah Rodriguez',
-      userInitials: 'SR',
-      sport: 'Basketball',
-      mediaType: 'image',
-      mediaUrl: createStoryPlaceholder('Game Highlights', '#003d7a'),
-      createdAt: new Date(Date.now() - 5 * 60000).toISOString(),
-      isLive: true,
-      isViewedByCurrentUser: false,
-      isLikedByCurrentUser: false,
-      caption: 'Last quarter push. Coach drew up a play for me.',
-      metrics: {
-        primary: { value: '28', unit: 'PTS', label: 'Career high' },
-        secondary: { value: '8', unit: 'REB', label: 'Rebounds' },
-        tertiary: { value: '6', unit: 'AST', label: 'Assists' }
-      },
-      comparison: { value: '+12pts', trend: 'up', label: 'vs average' },
-      graphData: [12, 28, 44, 38],
-      likesCount: 89,
-      commentsCount: 24
-    },
-    {
-      id: 'demo-4',
-      userName: 'Elena Vargas',
-      userInitials: 'EV',
-      sport: 'Cycling',
-      mediaType: 'image',
-      mediaUrl: createStoryPlaceholder('Hill Climb', '#16a34a'),
-      createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
-      isLive: false,
-      isViewedByCurrentUser: false,
-      isLikedByCurrentUser: false,
-      caption: 'Hill climb session. Legs are burning.',
-      metrics: {
-        primary: { value: '285', unit: 'w', label: 'Avg power' },
-        secondary: { value: '342', unit: 'm', label: 'Elevation' },
-        tertiary: { value: '28', unit: 'km/h', label: 'Avg speed' }
-      },
-      comparison: { value: '+15w', trend: 'up', label: 'vs climb' },
-      graphData: [22, 30, 38, 42, 35, 28],
-      likesCount: 34,
-      commentsCount: 7
-    }
-  ];
 
   let stories = [];
   let currentIndex = 0;
@@ -332,7 +240,7 @@
     renderStrip();
 
     // Register view in backend (non-blocking, best-effort)
-    if (story.id && !String(story.id).startsWith('demo-')) {
+    if (story.id) {
       fetch('/api/stories/' + encodeURIComponent(story.id) + '/view', {
         method: 'POST',
         credentials: 'include'
@@ -440,8 +348,6 @@
     story.likesCount = Math.max(0, previousCount + (story.isLikedByCurrentUser ? 1 : -1));
     renderViewerStats(story);
     renderStrip();
-
-    if (String(story.id).startsWith('demo-')) return;
 
     try {
       const res = await fetch('/api/stories/' + encodeURIComponent(story.id) + '/like', {
@@ -586,8 +492,7 @@
       stories = json.data.map(normalizeStory);
       renderStrip();
     } catch (_err) {
-      // Keep the feed usable if backend stories are unavailable.
-      stories = demoStories.map(normalizeStory);
+      stories = [];
       renderStrip();
     }
   }
