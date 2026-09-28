@@ -29,7 +29,7 @@ ProfileSyncService.init();
           // Fetch listing and user info
           const [listing, otherUser] = await Promise.all([
             fetch(`/api/marketplace/listings/${inquiry.listing_id}`).then(r => r.json()),
-            fetch(`/api/profiles/${inquiry.buyer_id === currentUserId ? inquiry.seller_id : inquiry.buyer_id}`).then(r => r.json())
+            fetch(`/api/users/${inquiry.buyer_id === currentUserId ? inquiry.seller_id : inquiry.buyer_id}`).then(r => r.json())
           ]);
 
           // Skip if data not available
