@@ -1,8 +1,7 @@
 // Updated
 /**
  * Shared profile field definitions, normalizer and update picker.
- * Used by both /api/users/me (users.js) and /api/profile/me (profile.js)
- * to ensure identical field handling and response shape from both routes.
+ * Used by the canonical /api/users/me profile route.
  */
 const { sanitizeString } = require('./validation');
 const { getEffectivePlan } = require('./subscription-plans');
