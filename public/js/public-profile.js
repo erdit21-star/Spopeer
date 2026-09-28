@@ -247,10 +247,10 @@ document.querySelectorAll('.follow-btn').forEach(btn => {
     }
   }
 
-  // Last resort for own profile: use /api/profile/me
+  // Last resort for own profile: use /api/users/me
   if(!profileFound && isOwnProfile){
     try {
-      const r = await fetch('/api/profile/me', { headers: _headers, credentials: 'include' });
+      const r = await fetch('/api/users/me', { headers: _headers, credentials: 'include' });
       if (r.ok) {
         const d = await r.json();
         payload = extractUserPayload(d);
