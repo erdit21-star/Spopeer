@@ -153,7 +153,7 @@ ProfileSyncService.init();
       document.getElementById('sellerAvatar').textContent = _sn.split(' ').map(n => n[0]).join('').toUpperCase();
 
       // Pre-fill buyer info
-      const _bu = JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      const _bu = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') ? (window.CurrentUserStore.getCurrentUser() || {}) : {};
       document.getElementById('buyerName').value = _bu.displayName || [_bu.firstName, _bu.lastName].filter(Boolean).join(' ') || 'You';
 
       const followBtn = document.getElementById('followBtn');
