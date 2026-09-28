@@ -459,7 +459,7 @@
       cover.style.background = coverGradients[type] || coverGradients.athlete;
     }
 
-    // Update avatar � show uploaded photo if available, else role gradient
+    // Update avatar — show uploaded photo if available, else role gradient
     const avatar = document.getElementById('sidebarAvatar');
     if (avatar) {
       const avatarGradients = {
