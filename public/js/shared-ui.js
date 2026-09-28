@@ -4,7 +4,9 @@
 
   function getUserProfile() {
     try {
-      return JSON.parse(localStorage.getItem('spopeer_user') || '{}');
+      return (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function')
+        ? (window.CurrentUserStore.getCurrentUser() || {})
+        : {};
     } catch (error) {
       return {};
     }
@@ -268,17 +270,7 @@
               console.error('Shared UI logout failed:', err);
             }
 
-            [
-              'spopeer_token',
-              'spopeer_user',
-              'spopeer_loggedIn',
-              'authToken',
-              'token',
-              'user',
-              'userToken',
-              'userData',
-              '_profileLastUpdated_'
-            ].forEach(function (key) {
+            ['spopeer_token', 'authToken', 'token', 'userToken', 'userData', '_profileLastUpdated_'].forEach(function (key) {
               localStorage.removeItem(key);
             });
 
@@ -567,7 +559,7 @@
       }
     };
 
-    var hasSession = localStorage.getItem('spopeer_loggedIn') === 'true' && !!(localStorage.getItem('spopeer_user') || localStorage.getItem('user'));
+    var hasSession = !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
     if (hasSession && window.SpopeerAPI && typeof window.SpopeerAPI.listNotifications === 'function') {
       window.SpopeerAPI.listNotifications({ page: 1, limit: 1 }).then(function (result) {
         var unreadCount = 0;
@@ -637,7 +629,7 @@
     updateSaveBtnUI(btn, saved);
     // If user is authenticated, persist to server (best-effort, non-blocking)
     try {
-      var isLoggedIn = localStorage.getItem('spopeer_loggedIn') === 'true';
+      var isLoggedIn = !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
       if (isLoggedIn && window.fetch) {
         fetch('/api/posts/' + encodeURIComponent(postId) + '/save', {
           method: 'POST',
