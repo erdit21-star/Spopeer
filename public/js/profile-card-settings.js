@@ -30,7 +30,7 @@
   }
 
   async function loadCurrentProfileForCardSettings() {
-    const response = await fetch('/api/profile/me', { credentials: 'include' });
+    const response = await fetch('/api/users/me', { credentials: 'include' });
     if (!response.ok) throw new Error('Could not load profile');
     const data = await response.json();
     return normalizeProfile(data);
@@ -103,7 +103,7 @@
       button.disabled = true;
       status.textContent = 'Saving card style...';
 
-      const response = await fetch('/api/profile/me/card-style', {
+      const response = await fetch('/api/users/me/card-style', {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
