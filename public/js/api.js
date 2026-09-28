@@ -550,30 +550,10 @@
   }
 
   function handleUnauthorized(path) {
-    var endpoint = String(path || '').toLowerCase();
-    var recentAuthAt = parseInt(localStorage.getItem('spopeer_last_auth_at') || '0', 10) || 0;
-    var msSinceAuth = recentAuthAt > 0 ? (Date.now() - recentAuthAt) : Number.POSITIVE_INFINITY;
-    var hasLocalSession = !!(
-      window.CurrentUserStore &&
-      typeof window.CurrentUserStore.isLoggedIn === 'function' &&
-      window.CurrentUserStore.isLoggedIn()
-    );
-
-    // Avoid bouncing users back to login on transient auth/profile races right after login.
-    var isPostLoginBootstrapEndpoint = endpoint.indexOf('/api/auth/me') === 0
-      || endpoint.indexOf('/api/users/me') === 0;
-
-    if (isPostLoginBootstrapEndpoint && hasLocalSession && msSinceAuth <= 2 * 60 * 1000) {
-      console.debug('Suppressing immediate unauthorized redirect during post-login grace window', {
-        endpoint: endpoint,
-        msSinceAuth: msSinceAuth
-      });
-      return;
-    }
-
-    clearAuthStorage();
-    try { sessionStorage.clear(); } catch (err) { console.debug('sessionStorage.clear failed during unauthorized handler', err); }
-
+    // A single 401 can be transient (token rotation, page bootstrap race,
+    // network/server restart). Do not destroy the local session or redirect
+    // from the API layer. Protected pages call Auth.requireAuth(), which
+    // performs the authoritative refresh/redirect decision.
     window.dispatchEvent(new CustomEvent('spopeer:auth-required', {
       detail: {
         code: 'UNAUTHORIZED',
@@ -581,21 +561,6 @@
         at: Date.now()
       }
     }));
-
-    var currentPath = String(window.location.pathname || '').toLowerCase();
-    if (
-      currentPath.indexOf('/pages/auth/') === 0
-      || currentPath === '/index.html'
-      || currentPath === '/'
-      || currentPath === '/mobile.html'
-      || currentPath.indexOf('/mobile-') === 0
-    ) {
-      return;
-    }
-
-    var next = window.location.pathname + window.location.search + window.location.hash;
-    var loginHref = '/pages/auth/login.html?reason=auth_required&next=' + encodeURIComponent(next);
-    window.location.replace(loginHref);
   }
 
   function getSafeNextPath(rawValue, fallbackPath) {
