@@ -16,7 +16,7 @@ async function handleSubmit(event) {
         return;
       }
 
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting�'; }
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
 
       try {
         const res = await fetch('/api/careers', {
