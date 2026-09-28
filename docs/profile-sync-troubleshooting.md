@@ -164,7 +164,7 @@ The following custom events are dispatched on `window` (via `spopeer:analytics`)
 # Unit tests for ProfileNormalizer
 cd server && npx jest tests/profile-normalizer.test.js
 
-# Contract tests for /api/users/:id and /api/profiles
+# Contract tests for /api/users/:id and /api/users/profile/:email
 cd server && npx jest tests/integration/profile-api.contract.test.js
 
 # E2E sync tests (requires Playwright)
