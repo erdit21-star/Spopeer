@@ -410,6 +410,7 @@
     }
     setTelemetryUser(user);
     trackDailyActiveUser(user);
+    startSessionRefreshTimer();
     return user;
   }
 
@@ -433,6 +434,7 @@
     }
 
     clearTelemetryUser();
+    stopSessionRefreshTimer();
   }
 
   function getCookieValue(name) {
@@ -610,6 +612,30 @@
   }
 
   var _refreshPromise = null;
+  var _refreshTimer = null;
+  var REFRESH_INTERVAL_MS = 10 * 60 * 1000;
+
+  function startSessionRefreshTimer() {
+    if (_refreshTimer) clearInterval(_refreshTimer);
+    _refreshTimer = setInterval(async function () {
+      if (!window.CurrentUserStore ||
+          typeof window.CurrentUserStore.isLoggedIn !== 'function' ||
+          !window.CurrentUserStore.isLoggedIn()) {
+        return;
+      }
+      var refreshed = await tryRefreshToken();
+      if (!refreshed) {
+        console.debug('[Spopeer] Proactive session refresh failed; keeping current session state.');
+      }
+    }, REFRESH_INTERVAL_MS);
+  }
+
+  function stopSessionRefreshTimer() {
+    if (_refreshTimer) {
+      clearInterval(_refreshTimer);
+      _refreshTimer = null;
+    }
+  }
 
   async function tryRefreshToken() {
     if (_refreshPromise) return _refreshPromise;
