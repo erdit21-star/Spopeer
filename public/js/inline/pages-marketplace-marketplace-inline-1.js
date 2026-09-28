@@ -1,3 +1,3 @@
-var _ud = JSON.parse(localStorage.getItem('spopeer_user') || localStorage.getItem('spopeerUser') || localStorage.getItem('user') || 'null');
-    var _li = localStorage.getItem('spopeer_loggedIn') === 'true' || !!_ud;
-    if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
+var _ud = (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') ? window.CurrentUserStore.getCurrentUser() : null;
+var _li = !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
+if (!_ud || !_li) window.location.href = '/pages/auth/login.html';
