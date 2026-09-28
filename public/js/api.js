@@ -545,8 +545,7 @@
     return safePath.indexOf('/api/auth/me') === 0
       || safePath.indexOf('/api/auth/profile') === 0
       || safePath.indexOf('/api/auth/refresh') === 0
-      || safePath.indexOf('/api/profile/me') === 0;
-  }
+;  }
 
   function handleUnauthorized(path) {
     var endpoint = String(path || '').toLowerCase();
@@ -556,7 +555,6 @@
 
     // Avoid bouncing users back to login on transient auth/profile races right after login.
     var isPostLoginBootstrapEndpoint = endpoint.indexOf('/api/auth/me') === 0
-      || endpoint.indexOf('/api/profile/me') === 0
       || endpoint.indexOf('/api/users/me') === 0;
 
     if (isPostLoginBootstrapEndpoint && hasLocalSession && msSinceAuth <= 2 * 60 * 1000) {
