@@ -152,7 +152,7 @@ function generateRefreshToken(user) {
   return jwt.sign(
     { userId: user.id, type: 'refresh', jti: crypto.randomBytes(16).toString('hex') },
     getRefreshSecret(),
-    { expiresIn: '7d' }
+    { expiresIn: '30d' }
   );
 }
 
