@@ -155,6 +155,7 @@
     chip.setAttribute('data-user-chip', '');
     var avatar = chip.querySelector('[data-user-chip-avatar]') || chip.querySelector('.chip-avatar');
     var name = chip.querySelector('[data-user-chip-name]') || chip.querySelector('.chip-name');
+    var themeToggle = chip.querySelector('.chip-theme-toggle');
     var caret = chip.querySelector('.chip-caret');
     if (!avatar) {
       avatar = document.createElement('span');
@@ -170,9 +171,11 @@
       caret = document.createElement('i');
       caret.className = 'fa-solid fa-chevron-down chip-caret';
     }
-    [avatar, name, caret].forEach(function (node) { chip.appendChild(node); });
+    [avatar, name].forEach(function (node) { chip.appendChild(node); });
+    if (themeToggle) chip.appendChild(themeToggle);
+    chip.appendChild(caret);
     Array.prototype.slice.call(chip.children).forEach(function (child) {
-      if (child === avatar || child === name || child === caret) return;
+      if (child === avatar || child === name || child === themeToggle || child === caret) return;
       if (child.matches && (child.matches('.chip-text,.chip-handle,.chip-online-dot') || child.hasAttribute('data-user-chip-handle') || child.hasAttribute('data-chip-online-dot'))) child.remove();
     });
     chip.appendChild(avatar);
