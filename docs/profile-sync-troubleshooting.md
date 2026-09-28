@@ -11,7 +11,7 @@ edit-profile.html
   └── saveSection()
         ├── ProfileSchema.validate() — guards bad payloads
         ├── ProfileNormalizer.withProfileTimestamp() — stamps _profileUpdatedAt
-        ├── POST /api/profiles — persists to server
+        ├── PATCH /api/users/me — persists to server
         └── dispatchEvent('profileUpdated') — notifies local tabs
 
 ProfileSyncService (profile-sync-service.js)
