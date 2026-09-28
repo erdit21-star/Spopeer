@@ -28,7 +28,7 @@
   /* ── User hydration ── */
   var ud = getCurrentUserFromStore();
 
-  var _loggedIn = (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') ? window.CurrentUserStore.isLoggedIn() : (localStorage.getItem('spopeer_loggedIn') === 'true');
+  var _loggedIn = !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
   let currentConversation=null;
   let currentConversationId=null;
   let myInitials='??';
