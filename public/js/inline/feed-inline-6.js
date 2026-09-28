@@ -343,9 +343,11 @@
             const data = await response.json();
             const freshProfile = data.payload || {};
             
-            // Merge API profile with localStorage
+            // Merge API profile into the canonical current-user state
             const mergedProfile = { ...ud, ...freshProfile };
-            localStorage.setItem('spopeer_user', JSON.stringify(mergedProfile));
+            if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
+              window.CurrentUserStore.setCurrentUser(mergedProfile);
+            }
             
             // Update sidebar silently if data changed
             updateSidebarFromProfile(mergedProfile);
@@ -845,7 +847,7 @@
       if (window.CurrentUserStore && typeof window.CurrentUserStore.setCurrentUser === 'function') {
         window.CurrentUserStore.setCurrentUser(updated);
       } else {
-        try { localStorage.setItem('spopeer_user', JSON.stringify(updated)); } catch (e) { /* ignore */ }
+        console.warn('CurrentUserStore is unavailable; follow counts were not cached locally.');
       }
       if (typeof window.CustomEvent === 'function') {
         if (window.Spopeer && window.Spopeer.events && typeof window.Spopeer.events.emit === 'function') {
