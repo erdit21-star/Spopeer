@@ -16,7 +16,7 @@
 
   async function refreshCurrentUserFromBackend() {
     try {
-      var res = await fetch('/api/profile/me', { credentials: 'include' });
+      var res = await fetch('/api/users/me', { credentials: 'include' });
       if (!res.ok) return null;
       var data = await res.json().catch(function () { return {}; });
       var user = (data.data && (data.data.user || data.data.payload)) || data.user || data.payload || null;
