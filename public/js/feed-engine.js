@@ -1,29 +1,4 @@
 (function () {
-  const LOCAL_POSTS_KEY = "spopeer_recent_created_posts";
-  const LOCAL_POST_TTL_MS = 10 * 60 * 1000;
-
-  function readLocalPosts() {
-    try {
-      const raw = JSON.parse(localStorage.getItem(LOCAL_POSTS_KEY) || "[]");
-      const now = Date.now();
-      return Array.isArray(raw)
-        ? raw.filter(function (item) {
-            return item && item.post && item.savedAt && now - item.savedAt < LOCAL_POST_TTL_MS;
-          })
-        : [];
-    } catch (_err) {
-      return [];
-    }
-  }
-
-  function writeLocalPosts(items) {
-    try {
-      localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(items.slice(0, 10)));
-    } catch (_err) {
-      // Feed still works from API if localStorage is unavailable.
-    }
-  }
-
   function getPostId(post) {
     return post && (post.id || post.postId || post.uuid || post.tempId);
   }
@@ -67,46 +42,12 @@
     });
   }
 
-  function storeLocalPost(post) {
-    const normalized = normalizePost(post);
-    if (!normalized) return null;
-
-    const id = getPostId(normalized);
-    const current = readLocalPosts().filter(function (item) {
-      return getPostId(item.post) !== id;
-    });
-
-    current.unshift({ post: normalized, savedAt: Date.now() });
-    writeLocalPosts(current);
-    return normalized;
-  }
-
-  function clearLocalPost(post) {
-    const id = getPostId(post);
-    if (!id) return;
-    writeLocalPosts(readLocalPosts().filter(function (item) {
-      return getPostId(item.post) !== id;
-    }));
-  }
-
   function mergeLocalPosts(serverPosts) {
-    const posts = Array.isArray(serverPosts) ? serverPosts.map(normalizePost).filter(Boolean) : [];
-    const localPosts = readLocalPosts().map(function (item) { return normalizePost(item.post); }).filter(Boolean);
-    const seen = new Set(posts.map(getPostId).filter(Boolean));
-
-    localPosts.forEach(function (post) {
-      const id = getPostId(post);
-      if (!id || !seen.has(id)) {
-        posts.unshift(post);
-        if (id) seen.add(id);
-      } else {
-        clearLocalPost(post);
-      }
-    });
-
-    return posts.sort(function (a, b) {
-      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-    });
+    return Array.isArray(serverPosts)
+      ? serverPosts.map(normalizePost).filter(Boolean).sort(function (a, b) {
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        })
+      : [];
   }
 
   function unwrapPosts(result) {
@@ -137,7 +78,7 @@
       return mergeLocalPosts(unwrapPosts(result));
     } catch (err) {
       console.error("[Spopeer] For-you feed failed:", err);
-      return mergeLocalPosts([]);
+      return [];
     }
   }
 
@@ -147,7 +88,7 @@
       return mergeLocalPosts(unwrapPosts(result));
     } catch (err) {
       console.error("[Spopeer] Following feed failed:", err);
-      return mergeLocalPosts([]);
+      return [];
     }
   }
 
@@ -157,7 +98,7 @@
       return mergeLocalPosts(unwrapPosts(result));
     } catch (err) {
       console.error("[Spopeer] Sport feed failed:", err);
-      return mergeLocalPosts([]);
+      return [];
     }
   }
 
@@ -167,13 +108,13 @@
       return mergeLocalPosts(unwrapPosts(result));
     } catch (err) {
       console.error("[Spopeer] Trending feed failed:", err);
-      return mergeLocalPosts([]);
+      return [];
     }
   }
 
   async function createPost(payload) {
     const result = await window.SpopeerAPI.createPost(payload);
-    const post = storeLocalPost(unwrapPost(result));
+    const post = normalizePost(unwrapPost(result));
     window.dispatchEvent(new CustomEvent("spopeer:post-created", { detail: { post: post } }));
     return post;
   }
