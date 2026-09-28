@@ -5,18 +5,19 @@
       if (window.CurrentUserStore && typeof window.CurrentUserStore.getCurrentUser === 'function') {
         return window.CurrentUserStore.getCurrentUser() || {};
       }
-      return JSON.parse(localStorage.getItem("spopeer_user") || "{}");
-    } catch {
-      return {};
+    } catch (err) {
+      console.debug('CurrentUserStore.getCurrentUser failed in role-router', err);
     }
+    return {};
   }
 
   function isLoggedIn() {
-    if (window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function') {
-      return window.CurrentUserStore.isLoggedIn();
+    try {
+      return !!(window.CurrentUserStore && typeof window.CurrentUserStore.isLoggedIn === 'function' && window.CurrentUserStore.isLoggedIn());
+    } catch (err) {
+      console.debug('CurrentUserStore.isLoggedIn failed in role-router', err);
+      return false;
     }
-    var hasUser = !!localStorage.getItem('spopeer_user');
-    return localStorage.getItem('spopeer_loggedIn') === 'true' && hasUser;
   }
 
   function isAdmin(user) {
@@ -28,9 +29,7 @@
   }
 
   function requireUser() {
-    if (!isLoggedIn()) {
-      window.location.href = "/pages/auth/login.html";
-    }
+    if (!isLoggedIn()) window.location.href = "/pages/auth/login.html";
   }
 
   function requireAdmin() {
@@ -38,20 +37,8 @@
       window.location.href = "/pages/auth/login.html";
       return;
     }
-
-    const user = getUser();
-
-    if (!isAdmin(user)) {
-      window.location.href = "/feed.html";
-    }
+    if (!isAdmin(getUser())) window.location.href = "/feed.html";
   }
 
-  window.SpopeerRoleRouter = {
-    getUser,
-    isLoggedIn,
-    isAdmin,
-    goToUserApp,
-    requireUser,
-    requireAdmin
-  };
+  window.SpopeerRoleRouter = { getUser, isLoggedIn, isAdmin, goToUserApp, requireUser, requireAdmin };
 })();
