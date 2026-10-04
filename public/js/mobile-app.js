@@ -238,12 +238,13 @@
   function initRealtimeSocket() {
     if (!window.io) return;
     var token = getRealtimeToken();
-    if (!token) return;
     if (realtimeSocket) return;
 
+    // The main app uses HttpOnly access cookies. The socket server already
+    // verifies that cookie when no explicit auth token is supplied.
     realtimeSocket = window.io({
       withCredentials: true,
-      auth: { token: token },
+      auth: token ? { token: token } : {},
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,
