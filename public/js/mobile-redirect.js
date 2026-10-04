@@ -1,5 +1,6 @@
 (function () {
-  var path = String(window.location.pathname || '/').toLowerCase().replace(/\\/+$/, '') || '/';
+  var path = String(window.location.pathname || '/').toLowerCase();
+  while (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
   var params = new URLSearchParams(window.location.search || '');
 
   // An explicit desktop override remains available for desktop testing.
@@ -9,7 +10,6 @@
   var isNarrowScreen = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
   if (!isMobileUa && !isNarrowScreen) return;
 
-  // Keep dedicated mobile auth and public/legal pages on their own mobile endpoints.
   if (path.indexOf('/mobile') === 0 || path.indexOf('/pages/auth/') === 0 ||
       path.indexOf('/pages/legal/') === 0 || path.indexOf('/pages/contact/') === 0) return;
 
@@ -27,6 +27,7 @@
   else if (path.indexOf('/pages/dashboard/') === 0) route = 'profile';
   else if (path !== '/' && path !== '/index.html' && path !== '/feed.html') return;
 
-  // Replace the legacy desktop document with the mobile app shell.
+  // Server routing handles mobile user agents before HTML is sent. This fallback
+  // covers narrow desktop windows and older deployments.
   window.location.replace('/mobile.html?mobileRoute=' + encodeURIComponent(route));
 })();
