@@ -110,6 +110,7 @@ self.addEventListener('fetch', (event) => {
     url.pathname === '/mobile.html' ||
     url.pathname === '/mobile-login.html' ||
     url.pathname === '/mobile-signup.html' ||
+    url.pathname.endsWith('.html') ||
     url.pathname === '/pages/auth/login.html' ||
     url.pathname === '/pages/auth/signup.html' ||
     url.pathname.startsWith('/pages/')
