@@ -15,6 +15,7 @@
 
   var route = 'feed';
   if (path === '/search.html' || path === '/pages/search/search.html') route = 'search';
+  else if (path.indexOf('/pages/admin/') === 0 || path.indexOf('/pages/ads/') === 0) route = 'admin';
   else if (path === '/pages/dashboard/notifications.html') route = 'notifications';
   else if (path.indexOf('/pages/dashboard/') === 0) route = 'settings';
   else if (path === '/pages/profiles/edit-profile.html') route = 'edit-profile';
