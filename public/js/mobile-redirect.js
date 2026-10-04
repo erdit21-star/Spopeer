@@ -21,7 +21,8 @@
   else if (path.indexOf('/pages/dashboard/') === 0) route = 'settings';
   else if (path === '/pages/profiles/edit-profile.html') route = 'edit-profile';
   else if (path === '/pages/profiles/public-profile.html') route = 'public-profile';
-  else if (path === '/pages/profiles/followers.html') route = 'follow-requests';
+  else if (path === '/pages/profiles/followers.html') route = 'followers';
+  else if (path === '/pages/profiles/user-posts.html') route = 'user-posts';
   else if (path.indexOf('/pages/profiles/') === 0) route = 'profile';
   else if (path.indexOf('/pages/community/') === 0) route = 'community';
   else if (path.indexOf('/pages/marketplace/') === 0) route = 'marketplace';
@@ -30,6 +31,7 @@
   else if (path.indexOf('/pages/messaging/') === 0) route = 'messages';
   else if (path.indexOf('/pages/sponsorship/') === 0) route = 'sponsorship';
   else if (path.indexOf('/pages/training/') === 0) route = 'training';
+  else if (path.endsWith('.html')) route = 'feed';
   else if (path !== '/' && path !== '/index.html' && path !== '/feed.html') return;
 
   // Server routing handles mobile user agents before HTML is sent. This fallback
