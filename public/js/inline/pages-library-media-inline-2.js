@@ -169,8 +169,9 @@
         const res = await fetch(`/api/media/my?type=${tab}&page=${page}&limit=48`, { credentials: 'include' });
         if (!res.ok) throw new Error('fetch failed');
         const data = await res.json();
-        const items = data.payload?.items || data.items || [];
-        _pages = data.payload?.pages || data.pages || 1;
+        const responseData = data.data || data.payload || data;
+        const items = Array.isArray(responseData.items) ? responseData.items : [];
+        _pages = responseData.pages || 1;
         _page = page;
 
         if (!append) _items = items;
