@@ -281,6 +281,7 @@ function mobileAppRouteForPath(requestPath) {
   if (pathname === '/pages/profiles/followers.html') return 'followers';
   if (pathname === '/pages/profiles/user-posts.html') return 'user-posts';
   if (pathname.startsWith('/pages/profiles/')) return 'profile';
+  if (pathname.startsWith('/pages/articles/')) return 'articles';
   if (pathname.startsWith('/pages/community/')) return 'community';
   if (pathname.startsWith('/pages/marketplace/')) return 'marketplace';
   if (pathname.startsWith('/pages/events/')) return 'events';
