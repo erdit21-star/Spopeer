@@ -4232,8 +4232,12 @@
 
   function updateDrawerAccessByRole() {
     var adminDashboardItem = document.getElementById('spmAdminDashboardItem');
-    if (!adminDashboardItem) return;
-    adminDashboardItem.classList.toggle('spm-hidden', !isAdminUser(app.user));
+    var isAdmin = isAdminUser(app.user);
+    if (adminDashboardItem) adminDashboardItem.classList.toggle('spm-hidden', !isAdmin);
+    ['spmMarketplaceModerationItem', 'spmAdsManagerItem'].forEach(function (id) {
+      var item = document.getElementById(id);
+      if (item) item.classList.toggle('spm-hidden', !isAdmin);
+    });
 
     var drawer = document.getElementById('spmDrawer');
     if (!drawer) return;
