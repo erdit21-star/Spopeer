@@ -4335,6 +4335,8 @@
       clearStoryTimer();
     }
     const screen = screens[app.route] || screens.feed;
+    var appRoot = document.getElementById('spmApp');
+    if (appRoot) appRoot.setAttribute('data-current-route', app.route);
     document.querySelectorAll('.spm-tabbar button').forEach(function (button) { button.classList.toggle('active', button.dataset.route === app.route); });
     Promise.resolve(screen()).finally(function () {
       refreshTopbarStats();
