@@ -2152,7 +2152,7 @@
         ['primarySport','Primary sport','text'],['playingLevel','Playing level','text'],['position','Position','text'],
         ['currentTeam','Current team','text'],['achievements','Achievements','textarea'],['highestLevelAchieved','Highest level achieved','text'],['trainingRoutine','Training routine','textarea'],['trainingLocation','Training location','text'],['injuryHistory','Injury history','textarea'],['nutritionDiet','Nutrition and diet','textarea'],
         ['contactEmail','Contact email','email'],['contactPhone','Contact phone','tel'],['contactAddress','Contact address','text'],['coachEducation','Coach education','textarea'],['coachingPhilosophy','Coaching philosophy','textarea'],['teamsCoached','Teams coached','textarea'],
-        ['nationality','Nationality','text'],['dateOfBirth','Date of birth','date'],['specialization','Specialization','text'],
+        ['specialization','Specialization','text'],
         ['clubName','Club name','text'],['clubPhone','Club phone','tel'],['clubAddress','Club address','text'],['website','Website','url'],['companyName','Company name','text'],['profEmail','Professional email','email'],['preferredContact','Preferred contact','text'],['availabilityHours','Availability hours','text'],['feeStructure','Fee structure','textarea']
       ];
       function fieldValue(key) { return user[key] != null ? user[key] : (user.extendedProfile && user.extendedProfile[key]) || ''; }
@@ -2165,8 +2165,22 @@
             : '<input name="' + field[0] + '" type="' + field[2] + '" value="' + value.replace(/"/g,'&quot;') + '" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #d8dee8;border-radius:12px;font:inherit">';
           return '<label style="display:grid;gap:6px;font-size:13px;font-weight:700">' + field[1] + control + '</label>';
         }).join('') +
+        '<fieldset style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:grid;gap:10px"><legend style="font-size:13px;font-weight:800;padding:0 6px">Performance & media</legend>' +
+        '<label>Goals / points<input name="statGoals" type="number" value="' + html(user.stats && user.stats.goalsOrPoints || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
+        '<label>Assists<input name="statAssists" type="number" value="' + html(user.stats && user.stats.assists || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
+        '<label>Appearances<input name="statApps" type="number" value="' + html(user.stats && user.stats.appearances || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
+        '<label>Highlight video<input name="highlightInput" type="url" value="' + html(user.mediaLinks && user.mediaLinks.highlightVideo || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
+        '<label>Instagram<input name="instagramInput" type="url" value="' + html(user.mediaLinks && user.mediaLinks.instagram || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
+        '<label>YouTube<input name="youtubeInput" type="url" value="' + html(user.mediaLinks && user.mediaLinks.youtubeChannel || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
+        '<label>LinkedIn<input name="linkedinInput" type="url" value="' + html(user.mediaLinks && user.mediaLinks.linkedIn || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
+        '</fieldset><fieldset style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:grid;gap:10px"><legend style="font-size:13px;font-weight:800;padding:0 6px">Privacy & sharing</legend>' +
+        '<label>Profile visibility<select name="profileVisibilityInput" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"><option value="public">Public</option><option value="private">Private</option></select></label>' +
+        ['contact','stats','media','searchable','messaging'].map(function (key) { return '<label style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="share_' + key + '"' + (user.sharingPreferences && user.sharingPreferences[key] ? ' checked' : '') + '> Share ' + key + '</label>'; }).join('') +
+        '</fieldset>' +
         '<button id="spmSaveEditProfile" class="spm-primary-action" type="submit">Save Profile</button><div id="spmEditProfileStatus" class="spm-empty" aria-live="polite"></div></form>';
       var form = document.getElementById('spmEditProfileForm');
+      var visibilitySelect = form.elements.namedItem('profileVisibilityInput');
+      if (visibilitySelect) visibilitySelect.value = user.profileVisibility || (user.privacyPublic === false ? 'private' : 'public');
       form.addEventListener('submit', async function (event) {
         event.preventDefault();
         var button = document.getElementById('spmSaveEditProfile');
@@ -2177,6 +2191,28 @@
           var control = form.elements.namedItem(field[0]);
           if (control && control.value.trim() !== '') payload[field[0]] = control.value.trim();
         });
+        if (payload.primarySport) payload.sport = payload.primarySport;
+        payload.stats = {
+          goalsOrPoints: form.elements.namedItem('statGoals').value,
+          assists: form.elements.namedItem('statAssists').value,
+          appearances: form.elements.namedItem('statApps').value
+        };
+        payload.mediaLinks = {
+          highlightVideo: form.elements.namedItem('highlightInput').value.trim(),
+          instagram: form.elements.namedItem('instagramInput').value.trim(),
+          youtubeChannel: form.elements.namedItem('youtubeInput').value.trim(),
+          linkedIn: form.elements.namedItem('linkedinInput').value.trim(),
+          website: payload.website || ''
+        };
+        payload.sharingPreferences = {
+          contact: form.elements.namedItem('share_contact').checked,
+          stats: form.elements.namedItem('share_stats').checked,
+          media: form.elements.namedItem('share_media').checked,
+          searchable: form.elements.namedItem('share_searchable').checked,
+          messaging: form.elements.namedItem('share_messaging').checked
+        };
+        payload.profileVisibility = form.elements.namedItem('profileVisibilityInput').value;
+        payload.privacyPublic = payload.profileVisibility !== 'private';
         try {
           var result = await window.SpopeerAPI.updateProfile({ payload: payload });
           var saved = (result && result.data && (result.data.user || result.data.payload)) || (result && (result.user || result.payload));
