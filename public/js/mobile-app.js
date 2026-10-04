@@ -3703,7 +3703,7 @@
               <p>${html(summary)}</p>
             </div>
             <div class="spm-detail-actions">
-              <button id="spmOpenSponsorshipDesktop" class="spm-primary-action" type="button">Open Full Page</button>
+              <button id="spmBackToSponsorship" class="spm-primary-action" type="button">All Sponsorships</button>
               <button id="spmShareSponsorshipBtn" class="spm-chat-back" type="button">Share</button>
             </div>
           </article>
@@ -3715,7 +3715,7 @@
         render();
       });
 
-      document.getElementById('spmOpenSponsorshipDesktop').addEventListener('click', function () {
+      document.getElementById('spmBackToSponsorship').addEventListener('click', function () {
         app.route = 'sponsorship'; render();
       });
 
