@@ -82,44 +82,11 @@ const SmoothNavigation = {
    * Intercept all navigation links for smooth transitions
    */
   interceptPageLinks: function() {
-    var self = this;
-
-    // Intercept link clicks
-    document.addEventListener('click', function(e) {
-      var link = e.target.closest('a[href]');
-      if (!link) return;
-
-      var href = link.getAttribute('href');
-      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-
-      // Don't intercept external links or anchors
-      if (link.target === '_blank' || link.hasAttribute('data-no-transition')) return;
-
-      // Check if it's an internal navigation
-      if (href.startsWith('/') || href.startsWith('.') || href.includes(window.location.hostname)) {
-        e.preventDefault();
-        self.navigateTo(href);
-      }
-    }, true);
-
-    // Intercept form submissions if they navigate
-    document.addEventListener('submit', function(e) {
-      var form = e.target;
-      if (!form) return;
-      if (form.hasAttribute && form.hasAttribute('data-no-transition')) return;
-
-      var method = String(form.method || 'GET').toUpperCase();
-      if (method !== 'GET' || !form.action) return;
-
-      // Some forms (like login/signup) are JS-handled and call preventDefault.
-      // Re-check defaultPrevented just before applying fade so we don't hide the page.
-      setTimeout(function() {
-        if (e.defaultPrevented) return;
-        self.isNavigating = true;
-        document.body.style.opacity = '0';
-        document.body.style.transition = 'opacity ' + self.TRANSITION_DURATION + 'ms ease-out';
-      }, 100);
-    }, true);
+    // Avoid global capture-phase link interception. Individual pages contain
+    // authenticated routing and delegated click handlers; a delayed transition
+    // redirect can race those handlers and briefly show a stale destination.
+    // Let the browser perform native navigation instead.
+    return;
   }
 };
 
