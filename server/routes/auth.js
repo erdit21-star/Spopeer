@@ -230,6 +230,11 @@ router.get('/csrf', (req, res) => {
 
 // ─── PUBLIC AUTH CONFIG ───
 router.get('/google-config', (_req, res) => {
+  // This configuration must always be fresh. A cached 304 has no JSON body,
+  // which previously caused the mobile login page to retain an empty client ID.
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
   return ok(res, {
     enabled: !!env.googleClientId,
     clientId: env.googleClientId || ''
