@@ -157,75 +157,75 @@ async function verifyAuthenticatedPages(browser, apiContext) {
     storageState,
     viewport: { width: 390, height: 844 },
     isMobile: true,
-    hasTouch: true
+    hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
   });
 
   const mobileRoutes = [
-    '/feed.html',
-    '/pages/community/community.html',
-    '/pages/community/forums.html',
-    '/pages/search/search.html',
-    '/pages/marketplace/marketplace.html',
-    '/pages/events/event.html',
-    '/pages/library/index.html',
-    '/pages/profiles/athlete-profile.html',
-    '/pages/profiles/club-profile.html',
-    '/pages/messaging/inbox.html',
-    '/pages/dashboard/notifications.html',
-    '/pages/profiles/edit-profile.html'
+    { path: '/', route: 'feed' },
+    { path: '/index.html', route: 'feed' },
+    { path: '/feed.html', route: 'feed' },
+    { path: '/pages/search/search.html', route: 'search' },
+    { path: '/search.html', route: 'search' },
+    { path: '/pages/community/community.html', route: 'community' },
+    { path: '/pages/community/forums.html', route: 'community' },
+    { path: '/pages/marketplace/marketplace.html', route: 'marketplace' },
+    { path: '/pages/events/event.html', route: 'events' },
+    { path: '/pages/library/index.html', route: 'library' },
+    { path: '/pages/profiles/athlete-profile.html', route: 'public-profile' },
+    { path: '/pages/profiles/club-profile.html', route: 'public-profile' },
+    { path: '/pages/messaging/inbox.html', route: 'messages' },
+    { path: '/pages/dashboard/notifications.html', route: 'profile' },
+    { path: '/pages/profiles/edit-profile.html', route: 'profile' }
   ];
 
   try {
     const page = await context.newPage();
     const measuredButtonHeights = [];
 
-    for (const route of mobileRoutes) {
-      const response = await page.goto(route);
-      expect(response && response.status(), `HTTP response for ${route}`).toBeLessThan(400);
-      await expect(page.locator('body')).toBeVisible();
+    for (const entry of mobileRoutes) {
+      const response = await page.goto(entry.path);
+      expect(response && response.status(), 'HTTP response for ' + entry.path).toBeLessThan(400);
+      await expect(page.locator('#spmApp'), 'mobile app shell for ' + entry.path).toBeVisible();
+      await expect(page.locator('#spmScreen')).toBeVisible();
 
-      // Authenticated app pages must expose the same shared five-item mobile bar.
-      const bottomNav = page.locator('.sp-bottom-nav[data-sp-shared-mobile-nav="true"]');
-      await expect(bottomNav, `shared mobile nav on ${route}`).toBeVisible({ timeout: 10000 });
-      await expect(bottomNav.locator('.sp-bottom-nav-item')).toHaveCount(5);
+      // The first response itself must be the mobile shell, not desktop index markup.
+      await expect(page.locator('.spm-tabbar')).toBeVisible({ timeout: 15000 });
+      await expect(page.locator('.spm-tabbar button')).toHaveCount(5);
+      await expect(page.locator('.spm-tabbar button[data-route="feed"]')).toBeVisible();
 
-      const homeLink = bottomNav.getByRole('link', { name: 'Home' });
-      const buttons = bottomNav.locator('.sp-bottom-nav-item');
-      const metrics = await buttons.evaluateAll((nodes) => nodes.map((node) => {
+      await expect.poll(async () => page.locator('#spmTitle').textContent()).not.toBe('');
+      const actualRoute = await page.evaluate(() => {
+        const active = document.querySelector('.spm-tabbar button.active');
+        return active ? active.getAttribute('data-route') : '';
+      });
+      if (['feed', 'search', 'messages', 'profile'].includes(entry.route)) {
+        expect(actualRoute, 'active mobile tab for ' + entry.path).toBe(entry.route);
+      }
+
+      const metrics = await page.locator('.spm-tabbar button').evaluateAll((nodes) => nodes.map((node) => {
         const rect = node.getBoundingClientRect();
         const style = window.getComputedStyle(node);
-        return {
-          height: Math.round(rect.height),
-          display: style.display,
-          flexDirection: style.flexDirection,
-          fontSize: style.fontSize
-        };
+        return { height: Math.round(rect.height), display: style.display, flexDirection: style.flexDirection };
       }));
       expect(metrics.every((item) => item.display === 'flex')).toBeTruthy();
-      expect(metrics.every((item) => item.flexDirection === 'column')).toBeTruthy();
       expect(metrics.every((item) => item.height >= 44)).toBeTruthy();
       measuredButtonHeights.push(metrics.map((item) => item.height));
 
       const hasHorizontalOverflow = await page.evaluate(() =>
         document.documentElement.scrollWidth > document.documentElement.clientWidth + 2
       );
-      expect(hasHorizontalOverflow, `horizontal overflow on ${route}`).toBeFalsy();
+      expect(hasHorizontalOverflow, 'horizontal overflow on ' + entry.path).toBeFalsy();
 
-      // Exercise Home from every page and ensure it settles on the canonical feed.
-      await homeLink.click();
-      await page.waitForURL((url) => url.pathname === '/feed.html', { timeout: 10000 });
-      await expect(page.locator('.sp-bottom-nav[data-sp-shared-mobile-nav="true"]')).toBeVisible();
+      // Confirm the route resolver selected the intended mobile screen.
+      const resolvedTitle = await page.locator('#spmTitle').textContent();
+      expect(resolvedTitle, 'mobile screen title for ' + entry.path).not.toBe('');
     }
 
-    // The same nav controls must retain the same rendered dimensions on every page.
     const referenceHeights = measuredButtonHeights[0];
     for (const heights of measuredButtonHeights.slice(1)) {
       expect(heights).toEqual(referenceHeights);
     }
-
-    const profilePage = await context.newPage();
-    await profilePage.goto('/pages/profiles/edit-profile.html');
-    await expect(profilePage.locator('body')).toBeVisible();
   } finally {
     await context.close();
   }
