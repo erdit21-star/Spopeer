@@ -4488,8 +4488,6 @@
     }
     if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') app.route = 'feed';
     else if (pathname === '/search.html' || pathname === '/pages/search/search.html') app.route = 'search';
-    else if (pathname.startsWith('/pages/admin/')) app.route = 'admin';
-    else if (pathname.startsWith('/pages/ads/')) app.route = 'admin';
     else if (pathname.startsWith('/pages/admin/') || pathname.startsWith('/pages/ads/')) app.route = 'admin';
     else if (pathname === '/pages/dashboard/notifications.html') app.route = 'notifications';
     else if (pathname === '/pages/dashboard/settings.html') app.route = 'settings';
@@ -4497,6 +4495,8 @@
     else if (pathname === '/pages/profiles/public-profile.html') app.route = 'public-profile';
     else if (pathname === '/pages/profiles/followers.html') app.route = 'followers';
     else if (pathname === '/pages/profiles/user-posts.html') app.route = 'user-posts';
+    else if (pathname.startsWith('/pages/profiles/')) app.route = 'profile';
+    else if (pathname.startsWith('/pages/articles/')) app.route = 'articles';
     else if (pathname.startsWith('/pages/community/')) app.route = 'community';
     else if (pathname.startsWith('/pages/marketplace/')) app.route = 'marketplace';
     else if (pathname.startsWith('/pages/events/')) app.route = 'events';
