@@ -335,6 +335,10 @@ function mobileAppRouteForPath(requestPath) {
 app.use((req, res, next) => {
   if (req.method !== 'GET' || !isMobileRequest(req)) return next();
   if (req.path.startsWith('/mobile')) return next();
+  // Keep the original, fully responsive Edit Profile page on mobile; it has its own
+  // established section-card layout and Save All workflow. Do not replace it with
+  // the simplified mobile-app form.
+  if (req.path.toLowerCase() === '/pages/profiles/edit-profile.html') return next();
   const mobileStaticPage = MOBILE_STATIC_PAGES[req.path.toLowerCase()];
   if (mobileStaticPage) {
     res.set('Vary', 'User-Agent');
