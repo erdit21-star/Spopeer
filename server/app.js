@@ -265,6 +265,36 @@ app.use((req, res, next) => {
 const MOBILE_APP_PATH = path.join(__dirname, '..', 'public', 'mobile.html');
 const MOBILE_LOGIN_PATH = path.join(__dirname, '..', 'public', 'mobile-login.html');
 const MOBILE_SIGNUP_PATH = path.join(__dirname, '..', 'public', 'mobile-signup.html');
+const MOBILE_FORGOT_PASSWORD_PATH = path.join(__dirname, '..', 'public', 'mobile-forgot-password.html');
+const MOBILE_TERMS_PATH = path.join(__dirname, '..', 'public', 'mobile-terms.html');
+const MOBILE_PRIVACY_PATH = path.join(__dirname, '..', 'public', 'mobile-privacy.html');
+const MOBILE_CONTACT_PATH = path.join(__dirname, '..', 'public', 'mobile-contact.html');
+const MOBILE_CAREERS_PATH = path.join(__dirname, '..', 'public', 'mobile-careers.html');
+const MOBILE_REPORT_ABUSE_PATH = path.join(__dirname, '..', 'public', 'mobile-report-abuse.html');
+const MOBILE_HELP_CENTER_PATH = path.join(__dirname, '..', 'public', 'mobile-help-center.html');
+const MOBILE_BLOG_PATH = path.join(__dirname, '..', 'public', 'mobile-blog.html');
+const MOBILE_ABOUT_PATH = path.join(__dirname, '..', 'public', 'mobile-about.html');
+const MOBILE_FEATURES_PATH = path.join(__dirname, '..', 'public', 'mobile-features.html');
+const MOBILE_WHO_PATH = path.join(__dirname, '..', 'public', 'mobile-who-its-for.html');
+const MOBILE_HOW_PATH = path.join(__dirname, '..', 'public', 'mobile-how-it-works.html');
+const MOBILE_STATIC_PAGES = {
+  '/pages/auth/forgot-password.html': MOBILE_FORGOT_PASSWORD_PATH,
+  '/pages/auth/reset-password.html': MOBILE_FORGOT_PASSWORD_PATH,
+  '/pages/legal/terms.html': MOBILE_TERMS_PATH,
+  '/pages/legal/cookies.html': MOBILE_PRIVACY_PATH,
+  '/pages/legal/community-guidelines.html': MOBILE_TERMS_PATH,
+  '/pages/legal/report-abuse.html': MOBILE_REPORT_ABUSE_PATH,
+  '/pages/contact/index.html': MOBILE_CONTACT_PATH,
+  '/contact.html': MOBILE_CONTACT_PATH,
+  '/pages/company/faq.html': MOBILE_HELP_CENTER_PATH,
+  '/pages/company/careers.html': MOBILE_CAREERS_PATH,
+  '/pages/company/changelog.html': MOBILE_BLOG_PATH,
+  '/pages/company/report-abuse.html': MOBILE_REPORT_ABUSE_PATH,
+  '/pages/company/about.html': MOBILE_ABOUT_PATH,
+  '/pages/company/features.html': MOBILE_FEATURES_PATH,
+  '/pages/company/who-its-for.html': MOBILE_WHO_PATH,
+  '/pages/company/how-it-works.html': MOBILE_HOW_PATH
+};
 function isMobileRequest(req) {
   return req.get('sec-ch-ua-mobile') === '?1' || /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(req.get('user-agent') || '');
 }
@@ -273,6 +303,9 @@ function mobileAppRouteForPath(requestPath) {
   while (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
   if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') return 'feed';
   if (pathname === '/search.html' || pathname === '/pages/search/search.html') return 'search';
+  if (pathname === '/articles.html' || pathname.startsWith('/pages/articles/')) return 'articles';
+  if (pathname === '/messages.html') return 'messages';
+  if (pathname === '/app.html' || pathname === '/pages/stories/archive.html') return 'feed';
   if (pathname.startsWith('/pages/admin/') || pathname.startsWith('/pages/ads/')) return 'admin';
   if (pathname === '/pages/dashboard/notifications.html') return 'notifications';
   if (pathname.startsWith('/pages/dashboard/')) return 'settings';
@@ -296,6 +329,12 @@ function mobileAppRouteForPath(requestPath) {
 app.use((req, res, next) => {
   if (req.method !== 'GET' || !isMobileRequest(req)) return next();
   if (req.path.startsWith('/mobile')) return next();
+  const mobileStaticPage = MOBILE_STATIC_PAGES[req.path.toLowerCase()];
+  if (mobileStaticPage) {
+    res.set('Vary', 'User-Agent');
+    res.set('Cache-Control', 'no-store');
+    return res.sendFile(mobileStaticPage);
+  }
   if (req.path === '/pages/auth/login.html') {
     res.set('Vary', 'User-Agent');
     res.set('Cache-Control', 'no-store');
@@ -307,8 +346,7 @@ app.use((req, res, next) => {
     return res.sendFile(MOBILE_SIGNUP_PATH);
   }
   if (req.path !== '/' && !req.path.toLowerCase().endsWith('.html')) return next();
-  // Keep mobile authentication and public/legal pages on their dedicated endpoints.
-  if (req.path.startsWith('/pages/auth/') || req.path.startsWith('/pages/legal/') || req.path.startsWith('/pages/contact/')) return next();
+  // Remaining unconverted authentication endpoints retain their dedicated forms.
   const mobileRoute = mobileAppRouteForPath(req.path);
   if (!mobileRoute) return next();
   res.set('Vary', 'User-Agent');
