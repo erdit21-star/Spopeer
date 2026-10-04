@@ -21,10 +21,13 @@
 
 
   <style>
-    .google-btn-host{width:100%;min-height:52px;display:flex;align-items:center;justify-content:center;overflow:visible}
-    .google-btn-host iframe{max-width:100%!important}
-    .google-btn-loading{width:100%;min-height:52px;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f2937;border:1px solid #d1d5db;border-radius:8px;font:600 14px Arial,sans-serif}
+    .google-btn-host{position:relative;width:100%;height:52px;min-height:52px;overflow:hidden;border-radius:8px}
+    .google-btn-visual{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f2937;border:1px solid #d1d5db;border-radius:8px;font:600 14px Arial,sans-serif;pointer-events:none}
     .google-loading-mark{font-size:20px;font-weight:800;color:#4285f4}
+    .google-btn-identity{position:absolute;inset:0;z-index:2;width:100%;height:52px;display:flex;align-items:center;justify-content:center}
+    .google-btn-identity>div{width:100%!important;height:52px!important}
+    .google-btn-identity iframe{width:100%!important;height:52px!important;max-width:100%!important;opacity:0!important;border:0!important}
+    .google-btn-host[data-google-ready="false"] .google-btn-visual{background:#f8fafc;color:#64748b}
   </style>
   <link rel="stylesheet" href="../../css/mobile-responsive.css">
   <script src="../../js/mobile-enhancements.js" defer></script>
@@ -65,11 +68,9 @@
         <p>Log in to your sports network</p>
       </div>
       <div class="social-login">
-        <div id="loginGoogleBtn" class="google-btn-host" aria-label="Continue with Google">
-          <button type="button" class="google-btn google-btn-loading" disabled>
-            <span class="google-loading-mark">G</span>
-            <span>Loading Google sign-in…</span>
-          </button>
+        <div id="loginGoogleBtn" class="google-btn-host" aria-label="Continue with Google" data-google-ready="false">
+          <div class="google-btn-visual" aria-hidden="true"><span class="google-loading-mark">G</span><span>Continue with Google</span></div>
+          <div id="loginGoogleIdentityButton" class="google-btn-identity" aria-label="Google sign-in"></div>
         </div>
       </div>
       <div class="divider">
