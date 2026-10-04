@@ -1,7 +1,7 @@
 /* eslint-disable no-empty */
 (function () {
   const $ = (selector) => document.querySelector(selector);
-  const app = { route: 'feed', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, activeConversationTargetId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' }, notificationsState: { items: [], source: 'all', type: 'all', sort: 'newest', query: '' }, messageThreads: {} };
+  const app = { route: 'feed', feedTab: 'for-you', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, activeConversationTargetId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' }, notificationsState: { items: [], source: 'all', type: 'all', sort: 'newest', query: '' }, messageThreads: {} };
 
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
@@ -1018,6 +1018,37 @@
     return '<section class="spm-stories"><div class="spm-stories-head"><strong>Stories</strong><small>Latest highlights</small></div><div class="spm-stories-row">' + createCard + storiesHtml + '</div></section>';
   }
 
+  async function fetchMobileFeedPosts() {
+    var api = window.SpopeerAPI || {};
+    var tab = app.feedTab || 'for-you';
+    var result;
+    if (tab === 'following' && typeof api.getFollowingFeed === 'function') {
+      result = await api.getFollowingFeed();
+    } else if (tab === 'sport' && typeof api.getSportFeed === 'function') {
+      result = await api.getSportFeed((app.user && (app.user.sport || app.user.primarySport)) || '');
+    } else if (tab === 'trending' && typeof api.getTrendingFeed === 'function') {
+      result = await api.getTrendingFeed();
+    } else if (typeof api.getForYouFeed === 'function') {
+      result = await api.getForYouFeed();
+    } else {
+      result = await api.listPosts({ limit: 50, page: 1, _: Date.now() });
+    }
+    return unwrapPosts(result);
+  }
+
+  function renderMobileFeedTabs() {
+    var tabs = [
+      ['for-you', 'For You'],
+      ['following', 'Following'],
+      ['sport', 'My Sport'],
+      ['trending', 'Trending']
+    ];
+    return '<nav class="spm-feed-tabs" aria-label="Feed filters">' + tabs.map(function (tab) {
+      var active = app.feedTab === tab[0];
+      return '<button type="button" class="spm-feed-tab' + (active ? ' active' : '') + '" data-feed-tab="' + tab[0] + '" aria-pressed="' + (active ? 'true' : 'false') + '">' + tab[1] + '</button>';
+    }).join('') + '</nav>';
+  }
+
   async function fetchStoriesFeed() {
     var response = await fetch('/api/stories', { credentials: 'include' });
     var payload = await response.json().catch(function () { return {}; });
@@ -1111,20 +1142,28 @@
       try {
         var responses = await Promise.allSettled([
           fetchStoriesFeed(),
-          window.SpopeerAPI.listPosts({ limit: 12, page: 1, _: Date.now() }),
+          fetchMobileFeedPosts(),
           window.SpopeerAPI.listEvents(),
           window.SpopeerAPI.listSponsorships({ limit: 5 })
         ]);
 
         var stories = responses[0].status === 'fulfilled' ? responses[0].value : [];
-        var posts = responses[1].status === 'fulfilled' ? unwrapPosts(responses[1].value) : [];
+        var posts = responses[1].status === 'fulfilled' ? responses[1].value : [];
         var events = responses[2].status === 'fulfilled' ? unwrapEvents(responses[2].value) : [];
         var opportunities = responses[3].status === 'fulfilled' ? unwrapSponsorships(responses[3].value) : [];
 
         var topEvent = events[0] || null;
         var topOpportunity = opportunities[0] || null;
 
-        container.innerHTML = renderStoriesRail(stories);
+        container.innerHTML = renderMobileFeedTabs() + renderStoriesRail(stories);
+        container.querySelectorAll('[data-feed-tab]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            var nextTab = button.getAttribute('data-feed-tab');
+            if (!nextTab || nextTab === app.feedTab) return;
+            app.feedTab = nextTab;
+            render();
+          });
+        });
         container.querySelectorAll('[data-story-create]').forEach(function (button) {
           button.addEventListener('click', function () {
             app.route = 'story-create';
