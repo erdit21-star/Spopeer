@@ -8,18 +8,26 @@ let _mobileGoogleInitPromise = null;
 let _mobileGoogleRendered = false;
 
 async function getMobileGoogleClientId() {
-  if (typeof _mobileGoogleClientId === 'string') return _mobileGoogleClientId;
+  // Never cache an empty value: a transient 304/network response must not
+  // permanently disable Google sign-in for this page session.
+  if (_mobileGoogleClientId) return _mobileGoogleClientId;
 
   try {
-    const res = await fetch('/api/auth/google-config', { credentials: 'include' });
-    const payload = await res.json().catch(function () { return {}; });
+    const res = await fetch('/api/auth/google-config', {
+      credentials: 'include',
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' }
+    });
+    if (!res.ok) throw new Error('Google configuration request failed (' + res.status + ').');
+    const payload = await res.json();
     const data = (payload && payload.data) || payload || {};
-    _mobileGoogleClientId = String(data.clientId || '').trim();
-  } catch (_err) {
-    _mobileGoogleClientId = '';
+    const clientId = String(data.clientId || '').trim();
+    if (clientId) _mobileGoogleClientId = clientId;
+    return clientId;
+  } catch (error) {
+    console.warn('[Mobile Google Sign-In] Could not load configuration:', error);
+    return '';
   }
-
-  return _mobileGoogleClientId;
 }
 
 async function postGoogleCredential(credential) {
@@ -96,6 +104,7 @@ async function initGoogleLoginButton() {
   _mobileGoogleInitPromise = (async function () {
     var clientId = await getMobileGoogleClientId();
     if (!clientId) {
+      host.setAttribute('data-google-ready', 'false');
       if (errBox) {
         errBox.textContent = 'Google sign-in is not configured for this environment. Please use email login for now.';
         errBox.style.display = 'block';
@@ -104,6 +113,7 @@ async function initGoogleLoginButton() {
     }
 
     if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      host.setAttribute('data-google-ready', 'false');
       return false;
     }
 
@@ -129,9 +139,11 @@ async function initGoogleLoginButton() {
       });
 
       _mobileGoogleRendered = true;
+      host.setAttribute('data-google-ready', 'true');
       if (errBox) errBox.style.display = 'none';
       return true;
     } catch (error) {
+      host.setAttribute('data-google-ready', 'false');
       if (errBox) {
         errBox.textContent = 'Google sign-in could not be displayed. Please refresh and try again, or use email login.';
         errBox.style.display = 'block';
