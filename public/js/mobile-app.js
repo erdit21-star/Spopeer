@@ -2139,90 +2139,9 @@
     },
 
     'edit-profile': async function () {
-      setTitle('Edit Profile', 'Update your sports identity');
-      var screen = $('#spmScreen');
-      screen.classList.remove('spm-snap-feed');
-      screen.innerHTML = '<div class="spm-empty">Loading profile...</div>';
-      var user = app.user || {};
-      try { user = unwrapUser(await window.SpopeerAPI.getProfile()) || user; app.user = user; }
-      catch (_error) { screen.innerHTML = '<div class="spm-empty">Could not load your profile.</div>'; return; }
-      var fields = [
-        ['displayName','Display name','text'],['firstName','First name','text'],['lastName','Last name','text'],
-        ['username','Username','text'],['dateOfBirth','Date of birth','date'],['gender','Gender','text'],['nationality','Nationality','text'],['bio','Biography','textarea'],['location','Location','text'],
-        ['primarySport','Primary sport','text'],['playingLevel','Playing level','text'],['position','Position','text'],
-        ['currentTeam','Current team','text'],['achievements','Achievements','textarea'],['highestLevelAchieved','Highest level achieved','text'],['trainingRoutine','Training routine','textarea'],['trainingLocation','Training location','text'],['injuryHistory','Injury history','textarea'],['nutritionDiet','Nutrition and diet','textarea'],
-        ['contactEmail','Contact email','email'],['contactPhone','Contact phone','tel'],['contactAddress','Contact address','text'],['coachEducation','Coach education','textarea'],['coachingPhilosophy','Coaching philosophy','textarea'],['teamsCoached','Teams coached','textarea'],
-        ['specialization','Specialization','text'],
-        ['clubName','Club name','text'],['clubPhone','Club phone','tel'],['clubAddress','Club address','text'],['website','Website','url'],['companyName','Company name','text'],['profEmail','Professional email','email'],['preferredContact','Preferred contact','text'],['availabilityHours','Availability hours','text'],['feeStructure','Fee structure','textarea']
-      ];
-      function fieldValue(key) { return user[key] != null ? user[key] : (user.extendedProfile && user.extendedProfile[key]) || ''; }
-      screen.innerHTML = '<form id="spmEditProfileForm" class="spm-card" style="display:grid;gap:12px;padding:16px">' +
-        '<p class="spm-library-copy">These changes are saved to your Spopeer account.</p>' +
-        fields.map(function (field) {
-          var value = html(fieldValue(field[0]));
-          var control = field[2] === 'textarea'
-            ? '<textarea name="' + field[0] + '" rows="3" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #d8dee8;border-radius:12px;font:inherit">' + value + '</textarea>'
-            : '<input name="' + field[0] + '" type="' + field[2] + '" value="' + value.replace(/"/g,'&quot;') + '" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #d8dee8;border-radius:12px;font:inherit">';
-          return '<label style="display:grid;gap:6px;font-size:13px;font-weight:700">' + field[1] + control + '</label>';
-        }).join('') +
-        '<fieldset style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:grid;gap:10px"><legend style="font-size:13px;font-weight:800;padding:0 6px">Performance & media</legend>' +
-        '<label>Goals / points<input name="statGoals" type="number" value="' + html(user.stats && user.stats.goalsOrPoints || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
-        '<label>Assists<input name="statAssists" type="number" value="' + html(user.stats && user.stats.assists || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
-        '<label>Appearances<input name="statApps" type="number" value="' + html(user.stats && user.stats.appearances || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
-        '<label>Highlight video<input name="highlightInput" type="url" value="' + html(user.mediaLinks && user.mediaLinks.highlightVideo || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
-        '<label>Instagram<input name="instagramInput" type="url" value="' + html(user.mediaLinks && user.mediaLinks.instagram || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
-        '<label>YouTube<input name="youtubeInput" type="url" value="' + html(user.mediaLinks && user.mediaLinks.youtubeChannel || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
-        '<label>LinkedIn<input name="linkedinInput" type="url" value="' + html(user.mediaLinks && user.mediaLinks.linkedIn || '') + '" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></label>' +
-        '</fieldset><fieldset style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:grid;gap:10px"><legend style="font-size:13px;font-weight:800;padding:0 6px">Privacy & sharing</legend>' +
-        '<label>Profile visibility<select name="profileVisibilityInput" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"><option value="public">Public</option><option value="private">Private</option></select></label>' +
-        ['contact','stats','media','searchable','messaging'].map(function (key) { return '<label style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="share_' + key + '"' + (user.sharingPreferences && user.sharingPreferences[key] ? ' checked' : '') + '> Share ' + key + '</label>'; }).join('') +
-        '</fieldset>' +
-        '<button id="spmSaveEditProfile" class="spm-primary-action" type="submit">Save Profile</button><div id="spmEditProfileStatus" class="spm-empty" aria-live="polite"></div></form>';
-      var form = document.getElementById('spmEditProfileForm');
-      var visibilitySelect = form.elements.namedItem('profileVisibilityInput');
-      if (visibilitySelect) visibilitySelect.value = user.profileVisibility || (user.privacyPublic === false ? 'private' : 'public');
-      form.addEventListener('submit', async function (event) {
-        event.preventDefault();
-        var button = document.getElementById('spmSaveEditProfile');
-        var status = document.getElementById('spmEditProfileStatus');
-        button.disabled = true; button.textContent = 'Saving...'; status.textContent = '';
-        var payload = {};
-        fields.forEach(function (field) {
-          var control = form.elements.namedItem(field[0]);
-          if (control && control.value.trim() !== '') payload[field[0]] = control.value.trim();
-        });
-        if (payload.primarySport) payload.sport = payload.primarySport;
-        payload.stats = {
-          goalsOrPoints: form.elements.namedItem('statGoals').value,
-          assists: form.elements.namedItem('statAssists').value,
-          appearances: form.elements.namedItem('statApps').value
-        };
-        payload.mediaLinks = {
-          highlightVideo: form.elements.namedItem('highlightInput').value.trim(),
-          instagram: form.elements.namedItem('instagramInput').value.trim(),
-          youtubeChannel: form.elements.namedItem('youtubeInput').value.trim(),
-          linkedIn: form.elements.namedItem('linkedinInput').value.trim(),
-          website: payload.website || ''
-        };
-        payload.sharingPreferences = {
-          contact: form.elements.namedItem('share_contact').checked,
-          stats: form.elements.namedItem('share_stats').checked,
-          media: form.elements.namedItem('share_media').checked,
-          searchable: form.elements.namedItem('share_searchable').checked,
-          messaging: form.elements.namedItem('share_messaging').checked
-        };
-        payload.profileVisibility = form.elements.namedItem('profileVisibilityInput').value;
-        payload.privacyPublic = payload.profileVisibility !== 'private';
-        try {
-          var result = await window.SpopeerAPI.updateProfile({ payload: payload });
-          var saved = (result && result.data && (result.data.user || result.data.payload)) || (result && (result.user || result.payload)) || (window.SpopeerAPI && window.SpopeerAPI.getUser && window.SpopeerAPI.getUser());
-          if (!saved) throw new Error('The server did not confirm the saved profile.');
-          app.user = saved;
-          status.textContent = 'Profile saved successfully.';
-        } catch (error) {
-          status.textContent = error && error.message ? error.message : 'Could not save profile.';
-        } finally { button.disabled = false; button.textContent = 'Save Profile'; }
-      });
+      // Reuse the original Edit Profile page, which already includes its own
+      // responsive mobile layout and complete Save All workflow.
+      window.location.assign('/pages/profiles/edit-profile.html');
     },
 
     admin: async function () {
