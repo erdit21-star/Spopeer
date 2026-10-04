@@ -277,7 +277,8 @@ function mobileAppRouteForPath(requestPath) {
   if (pathname.startsWith('/pages/dashboard/')) return 'settings';
   if (pathname === '/pages/profiles/edit-profile.html') return 'edit-profile';
   if (pathname === '/pages/profiles/public-profile.html') return 'public-profile';
-  if (pathname === '/pages/profiles/followers.html') return 'follow-requests';
+  if (pathname === '/pages/profiles/followers.html') return 'followers';
+  if (pathname === '/pages/profiles/user-posts.html') return 'user-posts';
   if (pathname.startsWith('/pages/profiles/')) return 'profile';
   if (pathname.startsWith('/pages/community/')) return 'community';
   if (pathname.startsWith('/pages/marketplace/')) return 'marketplace';
@@ -286,6 +287,8 @@ function mobileAppRouteForPath(requestPath) {
   if (pathname.startsWith('/pages/messaging/')) return 'messages';
   if (pathname.startsWith('/pages/sponsorship/')) return 'sponsorship';
   if (pathname.startsWith('/pages/training/')) return 'training';
+  // Last-resort mobile shell: never expose an unconverted desktop HTML page on phones.
+  if (pathname.endsWith('.html')) return 'feed';
   return null;
 }
 app.use((req, res, next) => {
