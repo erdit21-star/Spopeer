@@ -2144,12 +2144,12 @@
       catch (_error) { screen.innerHTML = '<div class="spm-empty">Could not load your profile.</div>'; return; }
       var fields = [
         ['displayName','Display name','text'],['firstName','First name','text'],['lastName','Last name','text'],
-        ['username','Username','text'],['bio','Biography','textarea'],['location','Location','text'],
+        ['username','Username','text'],['dateOfBirth','Date of birth','date'],['gender','Gender','text'],['nationality','Nationality','text'],['bio','Biography','textarea'],['location','Location','text'],
         ['primarySport','Primary sport','text'],['playingLevel','Playing level','text'],['position','Position','text'],
-        ['currentTeam','Current team','text'],['achievements','Achievements','textarea'],['trainingRoutine','Training routine','textarea'],
-        ['contactEmail','Contact email','email'],['contactPhone','Contact phone','tel'],['contactAddress','Contact address','text'],
+        ['currentTeam','Current team','text'],['achievements','Achievements','textarea'],['highestLevelAchieved','Highest level achieved','text'],['trainingRoutine','Training routine','textarea'],['trainingLocation','Training location','text'],['injuryHistory','Injury history','textarea'],['nutritionDiet','Nutrition and diet','textarea'],
+        ['contactEmail','Contact email','email'],['contactPhone','Contact phone','tel'],['contactAddress','Contact address','text'],['coachEducation','Coach education','textarea'],['coachingPhilosophy','Coaching philosophy','textarea'],['teamsCoached','Teams coached','textarea'],
         ['nationality','Nationality','text'],['dateOfBirth','Date of birth','date'],['specialization','Specialization','text'],
-        ['clubName','Club name','text'],['website','Website','url']
+        ['clubName','Club name','text'],['clubPhone','Club phone','tel'],['clubAddress','Club address','text'],['website','Website','url'],['companyName','Company name','text'],['profEmail','Professional email','email'],['preferredContact','Preferred contact','text'],['availabilityHours','Availability hours','text'],['feeStructure','Fee structure','textarea']
       ];
       function fieldValue(key) { return user[key] != null ? user[key] : (user.extendedProfile && user.extendedProfile[key]) || ''; }
       screen.innerHTML = '<form id="spmEditProfileForm" class="spm-card" style="display:grid;gap:12px;padding:16px">' +
@@ -4435,7 +4435,7 @@
       '<div style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#334155">Current Plan</div>' +
       '<div style="font-size:13px;font-weight:700;color:#0f172a;margin:4px 0 6px">' + html(info.code + ' · ' + info.label) + '</div>' +
       featureRows +
-      '<button type="button" data-route="settings" style="display:inline-flex;margin-top:7px;font-size:12px;font-weight:700;color:#001f3f;text-decoration:none;border:0;background:transparent;padding:0">Manage Subscription</button>';
+      '<a href="/mobile.html?mobileRoute=settings" style="display:inline-flex;margin-top:7px;font-size:12px;font-weight:700;color:#001f3f;text-decoration:none">Manage Subscription</a>';
   }
 
   function bindNav() {
@@ -4444,7 +4444,6 @@
     const drawer = $('#spmDrawer');
     const drawerOverlay = $('#spmDrawerOverlay');
     function closeDrawer() { if (drawer) drawer.classList.remove('spm-drawer-open'); if (drawerOverlay) drawerOverlay.classList.remove('spm-drawer-open'); }
-    if (drawer) drawer.addEventListener('click', function (event) { var item = event.target.closest('[data-route]'); if (!item || !drawer.contains(item)) return; if (item.dataset.route) { app.route = item.dataset.route; closeDrawer(); render(); } });
     if (menuBtn && drawer) {
       menuBtn.addEventListener('click', function () { drawer.classList.toggle('spm-drawer-open'); drawerOverlay.classList.toggle('spm-drawer-open'); });
       drawerOverlay.addEventListener('click', closeDrawer);
