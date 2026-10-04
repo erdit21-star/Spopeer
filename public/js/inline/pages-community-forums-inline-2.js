@@ -14,7 +14,7 @@ const API_BASE = '/api';
       try {
         const res = await fetch(url, { headers, credentials: 'include' });
         const data = await res.json();
-        renderThreads(data.payload || []);
+        renderThreads(Array.isArray(data.data) ? data.data : (Array.isArray(data.payload) ? data.payload : []));
       } catch (e) {
         console.error('Load threads error:', e);
         document.getElementById('threadList').innerHTML = '<div class="empty-state"><i class="fa-solid fa-plug-circle-xmark"></i>Could not load threads. Is the server running?</div>';
@@ -59,7 +59,7 @@ const API_BASE = '/api';
       try {
         const res = await fetch(`${API_BASE}/forums/${id}`, { headers, credentials: 'include' });
         const data = await res.json();
-        const t = data.payload;
+        const t = data.data || data.payload;
         const author = t.author || {};
         const initials = ((author.firstName || '?')[0] + (author.lastName || '?')[0]).toUpperCase();
 
