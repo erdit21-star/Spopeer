@@ -4,9 +4,9 @@
  * Handles caching strategies and offline functionality
  */
 
-const CACHE_NAME = 'spopeer-cache-v13';
-const ASSETS_CACHE = 'spopeer-assets-v13';
-const API_CACHE = 'spopeer-api-v13';
+const CACHE_NAME = 'spopeer-cache-v14';
+const ASSETS_CACHE = 'spopeer-assets-v14';
+const API_CACHE = 'spopeer-api-v14';
 const _STALE_WHILE_REVALIDATE_TTL = 5 * 60 * 1000; // 5 minutes
 
 const CRITICAL_ASSETS = [
@@ -19,6 +19,7 @@ const CRITICAL_ASSETS = [
   '/js/mobile-redirect.js',
   '/mobile-login.html',
   '/mobile-signup.html',
+  '/mobile-forgot-password.html',
   '/css/styles.css',
   '/js/shared-ui.js',
   '/js/api.js',
@@ -40,6 +41,7 @@ const AUTH_CRITICAL_SCRIPTS = new Set([
   '/js/google-auth-init.js',
   '/js/auth-login-flow.js',
   '/js/inline/mobile-login-inline-1.js',
+  '/js/inline/mobile-forgot-password-inline-1.js',
   '/js/inline/pages-auth-login-inline-1.js',
   '/js/inline/pages-auth-login-inline-2.js',
   '/js/inline/pages-auth-login-inline-3.js',
