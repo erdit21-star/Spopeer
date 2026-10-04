@@ -7,6 +7,12 @@ let _mobileGoogleClientId = null;
 let _mobileGoogleInitPromise = null;
 let _mobileGoogleRendered = false;
 
+function setMobileGoogleFallback(label) {
+  var host = document.getElementById('loginGoogleButton');
+  if (!host) return;
+  host.innerHTML = '<button type="button" class="ml-btn-google ml-google-loading" disabled><span style="font-weight:800;color:#4285F4;font-size:19px;line-height:1">G</span><span>' + String(label || 'Continue with Google') + '</span></button>';
+}
+
 async function getMobileGoogleClientId() {
   // Never cache an empty value: a transient 304/network response must not
   // permanently disable Google sign-in for this page session.
@@ -104,6 +110,7 @@ async function initGoogleLoginButton() {
   _mobileGoogleInitPromise = (async function () {
     var clientId = await getMobileGoogleClientId();
     if (!clientId) {
+      setMobileGoogleFallback('Google sign-in unavailable');
       host.setAttribute('data-google-ready', 'false');
       if (errBox) {
         errBox.textContent = 'Google sign-in is not configured for this environment. Please use email login for now.';
@@ -143,6 +150,7 @@ async function initGoogleLoginButton() {
       if (errBox) errBox.style.display = 'none';
       return true;
     } catch (error) {
+      setMobileGoogleFallback('Google sign-in unavailable');
       host.setAttribute('data-google-ready', 'false');
       if (errBox) {
         errBox.textContent = 'Google sign-in could not be displayed. Please refresh and try again, or use email login.';
@@ -172,6 +180,7 @@ function waitForGoogleLoginLibrary() {
     }
     if (attempts >= maxAttempts) {
       window.clearInterval(timer);
+      setMobileGoogleFallback('Google sign-in unavailable');
       var errBox = document.getElementById('loginError');
       if (errBox) {
         errBox.textContent = 'Google sign-in is unavailable on this browser. You can still log in with email.';
