@@ -21,12 +21,16 @@
     '/pages/auth/reset-password.html': '/mobile-forgot-password.html',
     '/pages/admin/login.html': '/mobile-login.html',
     '/pages/legal/terms.html': '/mobile-terms.html',
+    '/pages/legal/privacy.html': '/mobile-privacy.html',
+    '/pages/legal/about.html': '/mobile-about.html',
     '/pages/legal/community-guidelines.html': '/mobile-terms.html',
     '/pages/legal/cookies.html': '/mobile-privacy.html',
     '/pages/legal/report-abuse.html': '/mobile-report-abuse.html',
     '/pages/contact/index.html': '/mobile-contact.html',
     '/contact.html': '/mobile-contact.html',
     '/pages/company/faq.html': '/mobile-help-center.html',
+    '/pages/company/help-center.html': '/mobile-help-center.html',
+    '/pages/company/blog.html': '/mobile-blog.html',
     '/pages/company/careers.html': '/mobile-careers.html',
     '/pages/company/changelog.html': '/mobile-blog.html',
     '/pages/company/report-abuse.html': '/mobile-report-abuse.html',
@@ -37,6 +41,10 @@
   };
   if (mobileStaticPages[path]) {
     window.location.replace(mobileStaticPages[path] + (window.location.search || ''));
+    return;
+  }
+  if (path.indexOf('/pages/auth/') === 0) {
+    window.location.replace('/mobile-login.html' + (window.location.search || ''));
     return;
   }
 
