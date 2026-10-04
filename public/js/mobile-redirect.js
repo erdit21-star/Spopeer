@@ -15,6 +15,12 @@
 
   var route = 'feed';
   if (path === '/search.html' || path === '/pages/search/search.html') route = 'search';
+  else if (path === '/pages/dashboard/notifications.html') route = 'notifications';
+  else if (path.indexOf('/pages/dashboard/') === 0) route = 'settings';
+  else if (path === '/pages/profiles/edit-profile.html') route = 'edit-profile';
+  else if (path === '/pages/profiles/public-profile.html') route = 'public-profile';
+  else if (path === '/pages/profiles/followers.html') route = 'follow-requests';
+  else if (path.indexOf('/pages/profiles/') === 0) route = 'profile';
   else if (path.indexOf('/pages/community/') === 0) route = 'community';
   else if (path.indexOf('/pages/marketplace/') === 0) route = 'marketplace';
   else if (path.indexOf('/pages/events/') === 0) route = 'events';
