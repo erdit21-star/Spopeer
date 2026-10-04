@@ -4439,17 +4439,20 @@
   }
 
   function bindNav() {
-    document.querySelectorAll('[data-route]').forEach(function (button) { button.addEventListener('click', function () { app.route = button.dataset.route; render(); }); });
     const menuBtn = $('#spmMenuBtn');
     const drawer = $('#spmDrawer');
     const drawerOverlay = $('#spmDrawerOverlay');
     function closeDrawer() { if (drawer) drawer.classList.remove('spm-drawer-open'); if (drawerOverlay) drawerOverlay.classList.remove('spm-drawer-open'); }
+    document.querySelectorAll('[data-route]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        app.route = button.dataset.route;
+        if (drawer && drawer.contains(button)) closeDrawer();
+        render();
+      });
+    });
     if (menuBtn && drawer) {
       menuBtn.addEventListener('click', function () { drawer.classList.toggle('spm-drawer-open'); drawerOverlay.classList.toggle('spm-drawer-open'); });
       drawerOverlay.addEventListener('click', closeDrawer);
-      drawer.querySelectorAll('[data-route]').forEach(function (item) {
-        item.addEventListener('click', function () { app.route = item.dataset.route; closeDrawer(); render(); });
-      });
       var drawerThemeToggle = document.getElementById('spmDrawerThemeToggle');
       if (drawerThemeToggle) {
         drawerThemeToggle.addEventListener('click', function () {
