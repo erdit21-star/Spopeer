@@ -17,8 +17,27 @@
     }
   }
 
+  function getGoogleHost() {
+    var host = document.getElementById('loginGoogleBtn') || document.getElementById('signupGoogleBtn') || document.getElementById('loginModernGoogleBtn');
+    if (host && host.tagName === 'BUTTON') {
+      var replacement = document.createElement('div');
+      replacement.id = host.id;
+      replacement.className = 'google-btn-host';
+      host.parentNode.replaceChild(replacement, host);
+      host = replacement;
+    }
+    return host;
+  }
+
   function showFallback(host, message) {
     if (!host) return;
+    if (host.tagName === 'BUTTON') {
+      var replacement = document.createElement('div');
+      replacement.id = host.id;
+      replacement.className = 'google-btn-host';
+      host.parentNode.replaceChild(replacement, host);
+      host = replacement;
+    }
     host.innerHTML = '<button type="button" class="google-btn google-btn-loading" disabled><span class="google-loading-mark">G</span><span>' +
       String(message || 'Google sign-in unavailable') + '</span></button>';
   }
@@ -37,7 +56,7 @@
   }
 
   async function initGoogleSignIn() {
-    var host = document.getElementById('loginGoogleBtn') || document.getElementById('signupGoogleBtn') || document.getElementById('loginModernGoogleBtn');
+    var host = getGoogleHost();
     if (!host || initialized || initializing) return;
     if (!window.google || !window.google.accounts || !window.google.accounts.id) return;
 
@@ -94,7 +113,7 @@
         initGoogleSignIn();
       } else if (attempts >= 40) {
         window.clearInterval(timer);
-        var host = document.getElementById('loginGoogleBtn') || document.getElementById('signupGoogleBtn') || document.getElementById('loginModernGoogleBtn');
+        var host = getGoogleHost();
         showFallback(host, 'Google sign-in unavailable');
         showGoogleError('Google sign-in could not load in this browser. Please use email and password.');
       }
