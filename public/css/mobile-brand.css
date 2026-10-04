@@ -1,0 +1,127 @@
+/* Spopeer mobile brand restoration.
+   Uses the same visual tokens as the original authenticated desktop pages
+   (public/css/shared-tokens.css and shared-nav.css). Layout remains mobile-native. */
+:root {
+  --spm-page-bg: #fafaf8;
+  --spm-surface: #ffffff;
+  --spm-surface-muted: #f3f3ef;
+  --spm-border: #ebebe7;
+  --spm-ink: #111111;
+  --spm-ink-soft: #333333;
+  --spm-muted: #7a7a7a;
+  --spm-navy: #001233;
+  --spm-blue: #1a6bff;
+  --spm-radius: 10px;
+  --spm-radius-card: 16px;
+  --spm-radius-large: 24px;
+}
+body:has(#spmApp) { background: var(--spm-page-bg); color: var(--spm-ink); }
+#spmApp { background: var(--spm-page-bg); color: var(--spm-ink); font-family: 'Plus Jakarta Sans', Arial, sans-serif; }
+#spmApp .spm-shell { background: var(--spm-page-bg); }
+#spmApp .spm-topbar,
+#spmApp .spm-tabbar,
+#spmApp .spm-drawer,
+#spmApp .spm-auth-panel { background: var(--spm-surface); border-color: var(--spm-border); }
+#spmApp .spm-topbar { box-shadow: 0 1px 0 rgba(0,18,51,.025); }
+#spmApp .spm-screen { background: var(--spm-page-bg); color: var(--spm-ink); }
+#spmApp .spm-card,
+#spmApp .spm-list-item,
+#spmApp .spm-grid-card,
+#spmApp .spm-profile-panel,
+#spmApp .spm-detail-card,
+#spmApp .spm-library-card,
+#spmApp .spm-library-empty,
+#spmApp .spm-compose,
+#spmApp .spm-chat {
+  background-color: var(--spm-surface);
+  border-color: var(--spm-border);
+  color: var(--spm-ink);
+  border-radius: var(--spm-radius-card);
+  box-shadow: none;
+}
+#spmApp .spm-search,
+#spmApp input:not([type="checkbox"]):not([type="radio"]),
+#spmApp select,
+#spmApp textarea {
+  border-color: var(--spm-border);
+  border-radius: var(--spm-radius);
+  color: var(--spm-ink);
+}
+#spmApp .spm-search,
+#spmApp .spm-chat,
+#spmApp .spm-chat-input,
+#spmApp .spm-compose-tools,
+#spmApp .spm-poll-fields { background-color: var(--spm-surface-muted); }
+#spmApp .spm-icon-btn,
+#spmApp .spm-library-source-btn,
+#spmApp .spm-library-sort,
+#spmApp .spm-library-tab,
+#spmApp .spm-feed-tab,
+#spmApp .spm-chat-back,
+#spmApp .spm-detail-actions .spm-chat-back {
+  background-color: var(--spm-surface);
+  border-color: var(--spm-border);
+  color: var(--spm-ink-soft);
+}
+#spmApp .spm-tabbar button { color: var(--spm-muted); }
+#spmApp .spm-tabbar button.active {
+  color: var(--spm-navy);
+  background: var(--spm-surface-muted);
+}
+#spmApp .spm-tabbar button.create,
+#spmApp .spm-primary-action,
+#spmApp .spm-detail-actions > button.spm-primary-action,
+#spmApp .spm-library-open,
+#spmApp .spm-chat-input > button {
+  background: var(--spm-navy);
+  border-color: var(--spm-navy);
+  color: #fff;
+}
+#spmApp .spm-feed-tab.active,
+#spmApp .spm-library-tab.active {
+  background: var(--spm-navy);
+  border-color: var(--spm-navy);
+  color: #fff;
+}
+#spmApp .spm-profile-panel h2,
+#spmApp .spm-detail-copy h3,
+#spmApp .spm-detail-grid strong,
+#spmApp .spm-library-card h3 { color: var(--spm-ink); }
+#spmApp .spm-profile-panel p,
+#spmApp .spm-detail-copy p,
+#spmApp .spm-library-card p,
+#spmApp .spm-empty { color: var(--spm-muted); }
+#spmApp .spm-detail-grid div,
+#spmApp .spm-thread-replies,
+#spmApp .spm-thread-reply,
+#spmApp .spm-library-meta span,
+#spmApp .spm-library-pill.source {
+  background: var(--spm-surface-muted);
+  border-color: var(--spm-border);
+}
+#spmApp .spm-library-pill.type { background: #e8efff; color: var(--spm-blue); }
+#spmApp .spm-topbar-center { background: var(--spm-surface-muted); color: var(--spm-navy); }
+#spmApp .spm-brand-mark { border-radius: 50%; }
+#spmApp .spm-auth-hero,
+#spmApp .spm-splash { background: linear-gradient(145deg, #001233, #1a5cff); }
+#spmApp .spm-detail-hero { border-radius: var(--spm-radius-large); }
+#spmApp .spm-card,
+#spmApp .spm-list-item,
+#spmApp .spm-grid-card { border-radius: var(--spm-radius-card); }
+#spmApp .spm-screen a:not(.spm-btn):not(.spm-drawer-item) { text-decoration-color: currentColor; }
+#spmApp .spm-topbar-main-actions .spm-icon-btn,
+#spmApp .spm-topbar .spm-topbar-menu { border-color: var(--spm-border); color: var(--spm-ink-soft); }
+body.spm-dark-mode #spmApp,
+body.spm-dark-mode #spmApp .spm-shell,
+body.spm-dark-mode #spmApp .spm-screen { background: #0b1220; color: #f8fafc; }
+body.spm-dark-mode #spmApp .spm-topbar,
+body.spm-dark-mode #spmApp .spm-tabbar,
+body.spm-dark-mode #spmApp .spm-drawer,
+body.spm-dark-mode #spmApp .spm-card,
+body.spm-dark-mode #spmApp .spm-list-item,
+body.spm-dark-mode #spmApp .spm-grid-card,
+body.spm-dark-mode #spmApp .spm-profile-panel,
+body.spm-dark-mode #spmApp .spm-detail-card,
+body.spm-dark-mode #spmApp .spm-library-card,
+body.spm-dark-mode #spmApp .spm-library-empty,
+body.spm-dark-mode #spmApp .spm-compose { background-color: #111827; border-color: #243044; color: #f8fafc; }
