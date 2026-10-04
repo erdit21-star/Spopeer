@@ -3604,7 +3604,7 @@
       });
 
       document.getElementById('spmOpenSponsorshipDesktop').addEventListener('click', function () {
-        window.location.href = '/pages/sponsorship/sponsor.html';
+        app.route = 'sponsorship'; render();
       });
 
       document.getElementById('spmShareSponsorshipBtn').addEventListener('click', function () {
@@ -4390,7 +4390,7 @@
       '<div style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#334155">Current Plan</div>' +
       '<div style="font-size:13px;font-weight:700;color:#0f172a;margin:4px 0 6px">' + html(info.code + ' · ' + info.label) + '</div>' +
       featureRows +
-      '<a href="/pages/dashboard/settings.html#section-account" style="display:inline-flex;margin-top:7px;font-size:12px;font-weight:700;color:#001f3f;text-decoration:none">Manage Subscription</a>';
+      '<button type="button" data-route="settings" style="display:inline-flex;margin-top:7px;font-size:12px;font-weight:700;color:#001f3f;text-decoration:none;border:0;background:transparent;padding:0">Manage Subscription</button>';
   }
 
   function bindNav() {
@@ -4399,6 +4399,7 @@
     const drawer = $('#spmDrawer');
     const drawerOverlay = $('#spmDrawerOverlay');
     function closeDrawer() { if (drawer) drawer.classList.remove('spm-drawer-open'); if (drawerOverlay) drawerOverlay.classList.remove('spm-drawer-open'); }
+    if (drawer) drawer.addEventListener('click', function (event) { var item = event.target.closest('[data-route]'); if (!item || !drawer.contains(item)) return; if (item.dataset.route) { app.route = item.dataset.route; closeDrawer(); render(); } });
     if (menuBtn && drawer) {
       menuBtn.addEventListener('click', function () { drawer.classList.toggle('spm-drawer-open'); drawerOverlay.classList.toggle('spm-drawer-open'); });
       drawerOverlay.addEventListener('click', closeDrawer);
@@ -4442,6 +4443,7 @@
     else if (pathname === '/search.html' || pathname === '/pages/search/search.html') app.route = 'search';
     else if (pathname.startsWith('/pages/admin/')) app.route = 'admin';
     else if (pathname.startsWith('/pages/ads/')) app.route = 'admin';
+    else if (pathname.startsWith('/pages/admin/') || pathname.startsWith('/pages/ads/')) app.route = 'admin';
     else if (pathname === '/pages/dashboard/notifications.html') app.route = 'notifications';
     else if (pathname === '/pages/dashboard/settings.html') app.route = 'settings';
     else if (pathname === '/pages/profiles/edit-profile.html') app.route = 'edit-profile';
