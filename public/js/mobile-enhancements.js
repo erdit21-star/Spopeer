@@ -165,52 +165,61 @@
 
   /* ── 5. Bottom navigation bar (logged-in pages) ── */
   function setupBottomNav() {
-    // Only inject on app pages (has topnav with nav-icons)
-    var topnav = document.querySelector('.topnav');
-    if (!topnav) return;
+    // The same mobile navigation must be available on every authenticated app page,
+    // including pages whose desktop header uses .navbar instead of .topnav.
+    var topnav = document.querySelector('.topnav, .navbar');
+    if (!topnav || !document.body) return;
 
-    // Don't double-inject
-    if (document.querySelector('.sp-bottom-nav')) return;
-
-    var path = window.location.pathname;
-
-    // Determine active tab
-    function isActive(href) {
-      return path === href || path.startsWith(href.replace(/\.html$/, ''));
+    var path = window.location.pathname.replace(/\\/+$/, '') || '/';
+    document.body.classList.add('has-sp-bottom-nav');
+    if (path === '/pages/community/community.html' || path === '/pages/community/forums.html') {
+      document.body.classList.add('sp-community-mobile-layout');
     }
 
+    // Reuse an existing bar rather than creating duplicates when scripts initialize twice.
+    var existing = document.querySelector('.sp-bottom-nav');
+    if (existing) return;
+
     var items = [
-      { href: '/feed.html', icon: 'fa-solid fa-house', label: 'Home' },
-      { href: '/pages/search/search.html', icon: 'fa-regular fa-compass', label: 'Explore' },
-      { href: null, icon: 'fa-solid fa-plus', label: '', post: true },
-      { href: '/pages/messaging/inbox.html', icon: 'fa-regular fa-paper-plane', label: 'Messages' },
-      { href: '/pages/profiles/edit-profile.html', icon: 'fa-regular fa-user', label: 'Profile' },
+      { key: 'home', href: '/feed.html', aliases: ['/','/index.html'], icon: 'fa-solid fa-house', label: 'Home' },
+      { key: 'explore', href: '/search.html', aliases: ['/pages/search/search.html'], icon: 'fa-solid fa-compass', label: 'Explore' },
+      { key: 'create', href: null, icon: 'fa-solid fa-plus', label: 'Create', post: true },
+      { key: 'messages', href: '/pages/messaging/inbox.html', aliases: ['/pages/messaging/chat.html'], icon: 'fa-regular fa-paper-plane', label: 'Messages' },
+      { key: 'profile', href: '/pages/profiles/edit-profile.html', aliases: ['/pages/profiles/public-profile.html'], icon: 'fa-regular fa-user', label: 'Profile' }
     ];
+
+    function isActive(item) {
+      if (!item.href) return false;
+      var paths = [item.href].concat(item.aliases || []);
+      return paths.some(function (candidate) {
+        var normalized = candidate.replace(/\\/+$/, '') || '/';
+        return path === normalized || (normalized !== '/' && path.indexOf(normalized.replace(/\\.html$/, '') + '/') === 0);
+      });
+    }
 
     var nav = document.createElement('nav');
     nav.className = 'sp-bottom-nav';
     nav.setAttribute('aria-label', 'Main navigation');
+    nav.setAttribute('data-sp-shared-mobile-nav', 'true');
 
     var inner = document.createElement('div');
     inner.className = 'sp-bottom-nav-inner';
 
     items.forEach(function (item) {
       var el;
-
       if (item.post) {
-        // Post button — opens post composer or scrolls to feed composer
         el = document.createElement('button');
+        el.type = 'button';
         el.className = 'sp-bottom-nav-item sp-bottom-nav-post';
         el.setAttribute('aria-label', 'Create post');
-        el.innerHTML = '<i class="' + item.icon + '"></i>';
+        el.innerHTML = '<i class="' + item.icon + '" aria-hidden="true"></i>';
         el.addEventListener('click', function () {
-          // Try to find and focus the post composer on feed page
           var composer = document.querySelector('.composer-input, .post-input, [placeholder*="mind"], [placeholder*="share"], [placeholder*="post"]');
           if (composer) {
             composer.focus();
             composer.scrollIntoView({ behavior: 'smooth', block: 'center' });
           } else {
-            window.location.href = '/feed.html';
+            window.location.href = '/feed.html#compose';
           }
         });
       } else {
@@ -218,34 +227,17 @@
         el.className = 'sp-bottom-nav-item';
         el.href = item.href;
         el.setAttribute('aria-label', item.label);
-        if (isActive(item.href)) el.classList.add('active');
-        el.innerHTML = '<i class="' + item.icon + '"></i><span class="sp-nav-label">' + item.label + '</span>';
-
-        // Badge for messages
-        if (item.href && item.href.includes('messaging')) {
-          el.dataset.badgeTarget = 'messages';
+        if (isActive(item)) {
+          el.classList.add('active');
+          el.setAttribute('aria-current', 'page');
         }
+        el.innerHTML = '<i class="' + item.icon + '" aria-hidden="true"></i><span class="sp-nav-label">' + item.label + '</span>';
       }
-
       inner.appendChild(el);
     });
 
     nav.appendChild(inner);
     document.body.appendChild(nav);
-
-    // Pull unread count from notification badge in topnav if available
-    setTimeout(function () {
-      var msgBadge = document.querySelector('#messagesBtn .notif-badge, #messagesBtn [class*="badge"]');
-      if (msgBadge && msgBadge.textContent.trim()) {
-        var mobileMsg = nav.querySelector('[data-badge-target="messages"]');
-        if (mobileMsg) {
-          var badge = document.createElement('span');
-          badge.className = 'sp-nav-badge';
-          badge.textContent = msgBadge.textContent.trim();
-          mobileMsg.appendChild(badge);
-        }
-      }
-    }, 1500);
   }
 
   /* ── 5b. Ensure global topnav normalizer is loaded ── */
