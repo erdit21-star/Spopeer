@@ -4,7 +4,9 @@
   var params = new URLSearchParams(window.location.search || '');
 
   // An explicit desktop override remains available for desktop testing.
-  if (params.get('desktop') === '1' || localStorage.getItem('spopeer_force_desktop') === '1') return;
+  var forceDesktop = params.get('desktop') === '1';
+  try { forceDesktop = forceDesktop || localStorage.getItem('spopeer_force_desktop') === '1'; } catch (_storageError) {}
+  if (forceDesktop) return;
 
   var isMobileUa = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent || '');
   var isNarrowScreen = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
