@@ -78,7 +78,7 @@ const API_BASE = '/api';
       try {
         const res = await fetch(`${API_BASE}/reels?limit=50`, { credentials: 'include' });
         const data = await res.json();
-        renderReels(data.payload || []);
+        renderReels(Array.isArray(data.data) ? data.data : (Array.isArray(data.payload) ? data.payload : []));
       } catch (e) {
         console.error('Load reels error:', e);
         document.getElementById('reelGrid').innerHTML = '<div class="empty-state"><i class="fa-solid fa-plug-circle-xmark"></i>Could not load reels.</div>';
