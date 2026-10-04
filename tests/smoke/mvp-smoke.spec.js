@@ -188,7 +188,12 @@ async function verifyAuthenticatedPages(browser, apiContext) {
     { path: '/pages/marketplace/analytics.html', route: 'marketplace' },
     { path: '/pages/marketplace/my-listings.html', route: 'marketplace' },
     { path: '/pages/community/reels.html', route: 'community' },
-    { path: '/pages/library/media.html', route: 'library' }
+    { path: '/pages/library/media.html', route: 'library' },
+    { path: '/pages/articles/index.html', route: 'articles' },
+    { path: '/pages/marketplace/moderation.html', route: 'marketplace' },
+    { path: '/pages/events/event.html?eventId=mobile-smoke', route: 'events' },
+    { path: '/pages/sponsorship/sponsor.html', route: 'sponsorship' },
+    { path: '/pages/training/index.html', route: 'training' }
   ];
 
   try {
