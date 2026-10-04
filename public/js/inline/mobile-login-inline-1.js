@@ -132,10 +132,11 @@ async function initGoogleLoginButton() {
         cancel_on_tap_outside: true
       });
 
+      var identityHost = document.getElementById('loginGoogleIdentityButton') || host;
       var width = Math.floor(host.getBoundingClientRect().width || host.clientWidth || 320);
       width = Math.max(240, Math.min(440, width));
-      host.innerHTML = '';
-      window.google.accounts.id.renderButton(host, {
+      identityHost.innerHTML = '';
+      window.google.accounts.id.renderButton(identityHost, {
         type: 'standard',
         theme: 'outline',
         size: 'large',
