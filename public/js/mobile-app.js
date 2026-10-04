@@ -2272,7 +2272,7 @@
         '<select id="spmMobilePlanSelect" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></select><button id="spmSavePlan" class="spm-primary-action" type="button">Update Subscription</button></fieldset>' +
         '<fieldset style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:grid;gap:10px"><legend style="font-size:13px;font-weight:800;padding:0 6px">Change Password</legend>' +
         '<input id="spmCurrentPassword" type="password" autocomplete="current-password" placeholder="Current password" style="padding:10px;border:1px solid #d8dee8;border-radius:10px">' +
-        '<input id="spmNewPassword" type="password" autocomplete="new-password" placeholder="New password (min. 8 characters)" style="padding:10px;border:1px solid #d8dee8;border-radius:10px">' +
+        '<input id="spmNewPassword" type="password" autocomplete="new-password" placeholder="New password (min. 10 characters)" style="padding:10px;border:1px solid #d8dee8;border-radius:10px">' +
         '<input id="spmConfirmPassword" type="password" autocomplete="new-password" placeholder="Confirm new password" style="padding:10px;border:1px solid #d8dee8;border-radius:10px">' +
         '<button id="spmUpdatePassword" class="spm-primary-action" type="button">Update Password</button></fieldset>' +
         '<label style="display:grid;gap:6px;font-size:13px;font-weight:700">Account name<input id="spmSettingsName" value="' + html(user.displayName || [user.firstName,user.lastName].filter(Boolean).join(' ') || user.name || '') + '" style="padding:11px;border:1px solid #d8dee8;border-radius:12px"></label><button id="spmSaveSettingsName" class="spm-primary-action" type="button">Save Account Name</button><div id="spmSettingsStatus" class="spm-empty" aria-live="polite"></div></section>';
@@ -2321,17 +2321,12 @@
         var newPassword = document.getElementById('spmNewPassword').value;
         var confirmPassword = document.getElementById('spmConfirmPassword').value;
         if (!currentPassword || !newPassword || !confirmPassword) { status.textContent = 'Complete all password fields.'; return; }
-        if (newPassword.length < 8) { status.textContent = 'New password must be at least 8 characters.'; return; }
+        if (newPassword.length < 10) { status.textContent = 'New password must be at least 10 characters.'; return; }
         if (newPassword !== confirmPassword) { status.textContent = 'New passwords do not match.'; return; }
         this.disabled = true;
         try {
-          var response = await fetch('/api/auth/change-password', {
-            method: 'POST', credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ currentPassword: currentPassword, newPassword: newPassword })
-          });
-          var body = await response.json();
-          if (!response.ok) throw new Error((body && (body.error && body.error.message || body.error)) || 'Password update failed.');
+          if (!window.SpopeerAPI || typeof window.SpopeerAPI.changePassword !== 'function') throw new Error('Password update is temporarily unavailable.');
+          await window.SpopeerAPI.changePassword(currentPassword, newPassword);
           document.getElementById('spmCurrentPassword').value = '';
           document.getElementById('spmNewPassword').value = '';
           document.getElementById('spmConfirmPassword').value = '';
