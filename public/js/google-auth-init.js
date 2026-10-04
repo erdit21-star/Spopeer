@@ -18,7 +18,10 @@
   }
 
   function getGoogleHost() {
-    var host = document.getElementById('loginGoogleBtn') || document.getElementById('signupGoogleBtn') || document.getElementById('loginModernGoogleBtn');
+    var host = document.getElementById('loginGoogleIdentityButton') ||
+      document.getElementById('loginGoogleBtn') ||
+      document.getElementById('signupGoogleBtn') ||
+      document.getElementById('loginModernGoogleBtn');
     if (host && host.tagName === 'BUTTON') {
       var replacement = document.createElement('div');
       replacement.id = host.id;
@@ -31,6 +34,14 @@
 
   function showFallback(host, message) {
     if (!host) return;
+    var wrapper = host.closest ? host.closest('.google-btn-host') : null;
+    if (wrapper) {
+      wrapper.setAttribute('data-google-ready', 'false');
+      var label = wrapper.querySelector('.google-btn-visual span:last-child');
+      if (label) label.textContent = String(message || 'Google sign-in unavailable');
+      host.innerHTML = '';
+      return;
+    }
     if (host.tagName === 'BUTTON') {
       var replacement = document.createElement('div');
       replacement.id = host.id;
@@ -79,7 +90,9 @@
         use_fedcm_for_prompt: true
       });
 
-      var width = Math.floor(host.getBoundingClientRect().width || host.clientWidth || 320);
+      var wrapper = host.closest ? host.closest('.google-btn-host') : null;
+      var widthNode = wrapper || host;
+      var width = Math.floor(widthNode.getBoundingClientRect().width || widthNode.clientWidth || 320);
       width = Math.max(240, Math.min(400, width));
       host.innerHTML = '';
       window.google.accounts.id.renderButton(host, {
@@ -91,7 +104,8 @@
         logo_alignment: 'left',
         width: width
       });
-      host.setAttribute('data-google-ready', 'true');
+      if (wrapper) wrapper.setAttribute('data-google-ready', 'true');
+      else host.setAttribute('data-google-ready', 'true');
       initialized = true;
       var box = errorBox();
       if (box) box.style.display = 'none';
