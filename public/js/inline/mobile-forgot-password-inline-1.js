@@ -1,34 +1,101 @@
-document.getElementById('submitBtn').addEventListener('click', async function () {
-    var btn = this;
+(function () {
+  var params = new URLSearchParams(window.location.search || '');
+  var token = params.get('token') || '';
+  var button = document.getElementById('submitBtn');
+  var errorBox = document.getElementById('fpError');
+  var successBox = document.getElementById('fpSuccess');
+
+  function showError(message) {
+    errorBox.textContent = message;
+    errorBox.style.display = 'block';
+    successBox.style.display = 'none';
+  }
+
+  function showSuccess(message) {
+    successBox.textContent = message;
+    successBox.style.display = 'block';
+    errorBox.style.display = 'none';
+  }
+
+  if (token) {
+    document.querySelector('.page-title').textContent = 'Set a New Password';
+    document.querySelector('.page-sub').textContent = 'Choose a new secure password for your Spopeer account.';
+    var intro = document.querySelector('.fp-intro');
+    if (intro) intro.remove();
+    var emailLabel = document.querySelector('label[for="email"]');
+    var emailInput = document.getElementById('email');
+    if (emailLabel) emailLabel.textContent = 'New password';
+    emailInput.type = 'password';
+    emailInput.id = 'newPassword';
+    emailInput.name = 'newPassword';
+    emailInput.autocomplete = 'new-password';
+    emailInput.placeholder = 'At least 8 characters';
+    var confirm = document.createElement('input');
+    confirm.className = 'input';
+    confirm.id = 'confirmPassword';
+    confirm.type = 'password';
+    confirm.autocomplete = 'new-password';
+    confirm.placeholder = 'Confirm new password';
+    confirm.style.marginTop = '10px';
+    emailInput.insertAdjacentElement('afterend', confirm);
+    button.textContent = 'Reset Password';
+    button.addEventListener('click', async function () {
+      var password = emailInput.value;
+      if (!password || password.length < 8) {
+        showError('Your new password must contain at least 8 characters.');
+        return;
+      }
+      if (password !== confirm.value) {
+        showError('The passwords do not match.');
+        return;
+      }
+      button.disabled = true;
+      button.textContent = 'Updating...';
+      try {
+        var response = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token, password: password })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error((data.error && data.error.message) || 'The reset link is invalid or has expired.');
+        showSuccess('Your password has been updated. You can now sign in.');
+        button.textContent = 'Go to Sign In';
+        button.disabled = false;
+        button.onclick = function () { window.location.href = '/mobile-login.html'; };
+      } catch (error) {
+        showError(error.message || 'Could not reset your password. Please request a new link.');
+        button.disabled = false;
+        button.textContent = 'Reset Password';
+      }
+    });
+    return;
+  }
+
+  button.addEventListener('click', async function () {
     var email = document.getElementById('email').value.trim();
-    var errorBox = document.getElementById('fpError');
-    var successBox = document.getElementById('fpSuccess');
     errorBox.style.display = 'none';
     successBox.style.display = 'none';
-
     if (!email) {
-      errorBox.textContent = 'Please enter your email address.';
-      errorBox.style.display = 'block';
+      showError('Please enter your email address.');
       return;
     }
-
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
+    button.disabled = true;
+    button.textContent = 'Sending...';
     try {
-      var res = await fetch('/api/auth/forgot-password', {
+      var response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email })
       });
-      var data = await res.json().catch(function(){ return {}; });
-      if (!res.ok) throw new Error((data.error && data.error.message) || 'Could not send reset instructions.');
-      successBox.textContent = 'If an account exists for ' + email + ', reset instructions were sent. Check inbox and spam.';
-      successBox.style.display = 'block';
-    } catch (err) {
-      errorBox.textContent = err.message || 'Network error. Please try again.';
-      errorBox.style.display = 'block';
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error((data.error && data.error.message) || 'Could not send reset instructions.');
+      showSuccess('If an account exists for ' + email + ', reset instructions were sent. Check inbox and spam.');
+    } catch (error) {
+      showError(error.message || 'Network error. Please try again.');
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Send Reset Link';
+      button.disabled = false;
+      button.textContent = 'Send Reset Link';
     }
   });
+})();
