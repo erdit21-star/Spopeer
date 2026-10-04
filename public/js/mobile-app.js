@@ -2241,7 +2241,7 @@
         if (!name) { status.textContent = 'Name cannot be empty.'; return; }
         button.disabled = true;
         try {
-          var parts = name.split(/\\s+/).filter(Boolean);
+          var parts = name.split(/\s+/).filter(Boolean);
           var result = await window.SpopeerAPI.updateProfile({ firstName: parts[0], lastName: parts.slice(1).join(' '), displayName: name });
           var updated = (result && result.data && (result.data.user || result.data.payload)) || (result && (result.user || result.payload));
           if (!updated) throw new Error('The server did not confirm the account update.');
