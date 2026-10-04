@@ -4309,7 +4309,41 @@
     }
   }
 
+  function resolveInitialMobileRoute() {
+    var params = new URLSearchParams(window.location.search || '');
+    var requested = String(params.get('mobileRoute') || '').toLowerCase();
+    var pathname = String(window.location.pathname || '/').toLowerCase().replace(/\\/+$/, '') || '/';
+    var routeByPath = [
+      [/^\\/(?:index|feed)\\.html$/, 'feed'],
+      [/^\\/(?:search)\\.html$/, 'search'],
+      [/^\\/pages\\/search\\/search\\.html$/, 'search'],
+      [/^\\/pages\\/community\\//, 'community'],
+      [/^\\/pages\\/marketplace\\//, 'marketplace'],
+      [/^\\/pages\\/events\\//, 'events'],
+      [/^\\/pages\\/library\\//, 'library'],
+      [/^\\/pages\\/messaging\\//, 'messages'],
+      [/^\\/pages\\/sponsorship\\//, 'sponsorship'],
+      [/^\\/pages\\/training\\//, 'training'],
+      [/^\\/pages\\/profiles\\/edit-profile\\.html$/, 'profile'],
+      [/^\\/pages\\/profiles\\//, 'public-profile'],
+      [/^\\/pages\\/dashboard\\//, 'profile']
+    ];
+    var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile'];
+    if (knownRoutes.indexOf(requested) !== -1) {
+      app.route = requested;
+      return;
+    }
+    for (var i = 0; i < routeByPath.length; i += 1) {
+      if (routeByPath[i][0].test(pathname)) {
+        app.route = routeByPath[i][1];
+        return;
+      }
+    }
+    app.route = 'feed';
+  }
+
   async function init() {
+    resolveInitialMobileRoute();
     applyStoredTheme();
     bindNav();
     updateDrawerAccessByRole();
