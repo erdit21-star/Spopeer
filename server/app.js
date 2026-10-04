@@ -263,6 +263,8 @@ app.use((req, res, next) => {
 // Resolve mobile HTML requests before static serving so the desktop document is
 // never sent to a phone first (which caused the old-homepage flash).
 const MOBILE_APP_PATH = path.join(__dirname, '..', 'public', 'mobile.html');
+const MOBILE_LOGIN_PATH = path.join(__dirname, '..', 'public', 'mobile-login.html');
+const MOBILE_SIGNUP_PATH = path.join(__dirname, '..', 'public', 'mobile-signup.html');
 function isMobileRequest(req) {
   return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(req.get('user-agent') || '');
 }
@@ -292,6 +294,17 @@ function mobileAppRouteForPath(requestPath) {
 }
 app.use((req, res, next) => {
   if (req.method !== 'GET' || !isMobileRequest(req)) return next();
+  if (req.path.startsWith('/mobile')) return next();
+  if (req.path === '/pages/auth/login.html') {
+    res.set('Vary', 'User-Agent');
+    res.set('Cache-Control', 'no-store');
+    return res.sendFile(MOBILE_LOGIN_PATH);
+  }
+  if (req.path === '/pages/auth/signup.html') {
+    res.set('Vary', 'User-Agent');
+    res.set('Cache-Control', 'no-store');
+    return res.sendFile(MOBILE_SIGNUP_PATH);
+  }
   if (req.path !== '/' && !req.path.toLowerCase().endsWith('.html')) return next();
   // Keep mobile authentication and public/legal pages on their dedicated endpoints.
   if (req.path.startsWith('/pages/auth/') || req.path.startsWith('/pages/legal/') || req.path.startsWith('/pages/contact/')) return next();
