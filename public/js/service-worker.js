@@ -16,6 +16,7 @@ const CRITICAL_ASSETS = [
   '/js/mobile-app.js',
   '/js/mobile-redirect.js',
   '/js/mobile-redirect.js',
+  '/js/mobile-redirect.js',
   '/mobile-login.html',
   '/mobile-signup.html',
   '/css/styles.css',
