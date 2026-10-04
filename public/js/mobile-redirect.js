@@ -12,11 +12,39 @@
   var isNarrowScreen = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
   if (!isMobileUa && !isNarrowScreen) return;
 
-  if (path.indexOf('/mobile') === 0 || path.indexOf('/pages/auth/') === 0 ||
-      path.indexOf('/pages/legal/') === 0 || path.indexOf('/pages/contact/') === 0) return;
+  if (path.indexOf('/mobile') === 0) return;
+
+  var mobileStaticPages = {
+    '/pages/auth/login.html': '/mobile-login.html',
+    '/pages/auth/signup.html': '/mobile-signup.html',
+    '/pages/auth/forgot-password.html': '/mobile-forgot-password.html',
+    '/pages/auth/reset-password.html': '/mobile-forgot-password.html',
+    '/pages/admin/login.html': '/mobile-login.html',
+    '/pages/legal/terms.html': '/mobile-terms.html',
+    '/pages/legal/community-guidelines.html': '/mobile-terms.html',
+    '/pages/legal/cookies.html': '/mobile-privacy.html',
+    '/pages/legal/report-abuse.html': '/mobile-report-abuse.html',
+    '/pages/contact/index.html': '/mobile-contact.html',
+    '/contact.html': '/mobile-contact.html',
+    '/pages/company/faq.html': '/mobile-help-center.html',
+    '/pages/company/careers.html': '/mobile-careers.html',
+    '/pages/company/changelog.html': '/mobile-blog.html',
+    '/pages/company/report-abuse.html': '/mobile-report-abuse.html',
+    '/pages/company/about.html': '/mobile-about.html',
+    '/pages/company/features.html': '/mobile-features.html',
+    '/pages/company/who-its-for.html': '/mobile-who-its-for.html',
+    '/pages/company/how-it-works.html': '/mobile-how-it-works.html'
+  };
+  if (mobileStaticPages[path]) {
+    window.location.replace(mobileStaticPages[path]);
+    return;
+  }
 
   var route = 'feed';
   if (path === '/search.html' || path === '/pages/search/search.html') route = 'search';
+  else if (path === '/articles.html' || path.indexOf('/pages/articles/') === 0) route = 'articles';
+  else if (path === '/messages.html') route = 'messages';
+  else if (path === '/app.html' || path === '/pages/stories/archive.html') route = 'feed';
   else if (path.indexOf('/pages/admin/') === 0 || path.indexOf('/pages/ads/') === 0) route = 'admin';
   else if (path === '/pages/dashboard/notifications.html') route = 'notifications';
   else if (path.indexOf('/pages/dashboard/') === 0) route = 'settings';
