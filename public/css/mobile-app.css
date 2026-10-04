@@ -464,3 +464,26 @@ body.spm-dark-mode .spm-poll-fields input,body.spm-dark-mode .spm-poll-option{ba
 body.spm-dark-mode .spm-poll-box small{color:#94a3b8}
 
 .spm-poll-fields[hidden]{display:none}
+
+/* Reliable, high-contrast topbar controls on mobile Safari */
+.spm-topbar-main-actions .spm-icon-btn,
+.spm-topbar .spm-topbar-menu{
+  min-width:42px;
+  min-height:42px;
+  color:#334155;
+  background:#fff;
+  border:1px solid #dbe3ef;
+  display:grid;
+  place-items:center;
+  padding:0;
+}
+.spm-topbar-main-actions .spm-icon-btn svg,
+.spm-topbar .spm-topbar-menu svg{
+  display:block;
+  width:20px;
+  height:20px;
+  color:currentColor;
+  stroke:currentColor;
+}
+.spm-topbar-main-actions{min-width:0}
+.spm-topbar-menu{width:42px!important;border-radius:50%!important}
