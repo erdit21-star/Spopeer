@@ -22,9 +22,6 @@
   else if (path.indexOf('/pages/messaging/') === 0) route = 'messages';
   else if (path.indexOf('/pages/sponsorship/') === 0) route = 'sponsorship';
   else if (path.indexOf('/pages/training/') === 0) route = 'training';
-  else if (path.indexOf('/pages/profiles/edit-profile') === 0) route = 'profile';
-  else if (path.indexOf('/pages/profiles/') === 0) route = 'public-profile';
-  else if (path.indexOf('/pages/dashboard/') === 0) route = 'profile';
   else if (path !== '/' && path !== '/index.html' && path !== '/feed.html') return;
 
   // Server routing handles mobile user agents before HTML is sent. This fallback
