@@ -278,8 +278,6 @@ function mobileAppRouteForPath(requestPath) {
   if (pathname.startsWith('/pages/messaging/')) return 'messages';
   if (pathname.startsWith('/pages/sponsorship/')) return 'sponsorship';
   if (pathname.startsWith('/pages/training/')) return 'training';
-  if (pathname.startsWith('/pages/profiles/')) return pathname.includes('edit-profile') ? 'profile' : 'public-profile';
-  if (pathname.startsWith('/pages/dashboard/')) return 'profile';
   return null;
 }
 app.use((req, res, next) => {
