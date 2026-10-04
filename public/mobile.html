@@ -18,16 +18,11 @@
   <script src="/js/api.js"></script>
   <script src="/js/subscription-features.js"></script>
   <script>
+    // Register once without forcing a reload when a new worker takes control.
+    // Page navigation must remain under the user's control; controllerchange is not a reason to reload.
     if ('serviceWorker' in navigator) {
-      var spmReloadedForServiceWorker = false;
-      navigator.serviceWorker.addEventListener('controllerchange', function () {
-        if (spmReloadedForServiceWorker) return;
-        spmReloadedForServiceWorker = true;
-        window.location.reload();
-      });
       navigator.serviceWorker.register('/js/service-worker.js', { updateViaCache: 'none' })
-        .then(function (registration) { return registration.update(); })
-        .catch(function (error) { console.debug('[Spopeer] Service worker update skipped:', error); });
+        .catch(function (error) { console.debug('[Spopeer] Service worker registration skipped:', error); });
     }
   </script>
 </head>
