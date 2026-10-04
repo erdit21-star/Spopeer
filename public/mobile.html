@@ -17,6 +17,13 @@
   <script src="/js/sanitize.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/subscription-features.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/js/service-worker.js', { updateViaCache: 'none' })
+        .then(function (registration) { return registration.update(); })
+        .catch(function (error) { console.debug('[Spopeer] Service worker update skipped:', error); });
+    }
+  </script>
 </head>
 <body>
   <a href="#main-content" class="skip-to-main">Skip to main content</a>
