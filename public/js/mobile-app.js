@@ -4614,6 +4614,8 @@
     else if (pathname === '/pages/profiles/user-posts.html') app.route = 'user-posts';
     else if (pathname.startsWith('/pages/profiles/')) app.route = 'profile';
     else if (pathname.startsWith('/pages/articles/')) app.route = 'articles';
+    else if (pathname === '/articles.html') app.route = 'articles';
+    else if (pathname === '/messages.html') app.route = 'messages';
     else if (pathname.startsWith('/pages/community/')) app.route = 'community';
     else if (pathname.startsWith('/pages/marketplace/')) app.route = 'marketplace';
     else if (pathname.startsWith('/pages/events/')) app.route = 'events';
