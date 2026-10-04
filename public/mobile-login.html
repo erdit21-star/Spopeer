@@ -68,6 +68,12 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     if ('serviceWorker' in navigator) {
+      var spmReloadedForServiceWorker = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (spmReloadedForServiceWorker) return;
+        spmReloadedForServiceWorker = true;
+        window.location.reload();
+      });
       navigator.serviceWorker.register('/js/service-worker.js', { updateViaCache: 'none' })
         .then(function (registration) { return registration.update(); })
         .catch(function (error) { console.debug('[Spopeer] Service worker update skipped:', error); });
