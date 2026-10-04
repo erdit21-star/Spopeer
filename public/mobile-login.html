@@ -48,8 +48,15 @@
   .ml-btn-google:hover{border-color:#4285F4;box-shadow:0 2px 12px rgba(66,133,244,.15)}
   .ml-btn-google:active{transform:scale(.98)}
   .ml-btn-google svg{flex-shrink:0}
-  .ml-google-host{width:100%;min-height:52px;display:flex;justify-content:center;align-items:center;overflow:visible;box-sizing:border-box}\n  .ml-google-host iframe{max-width:100%!important}\n  .ml-google-loading{cursor:wait;opacity:1}\n  .ml-google-loading:disabled{color:#0f172a;background:#fff;border-color:#dbe2ea;opacity:1}
-  .ml-google-host > div{width:100%!important;display:flex;justify-content:center}
+
+  .ml-google-host{position:relative;width:100%;height:52px;min-height:52px;overflow:hidden;border-radius:999px;box-sizing:border-box}
+  .ml-google-visual{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:1.5px solid #d7dfeb;border-radius:999px;color:#172033;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;z-index:1;pointer-events:none}
+  .ml-google-visual svg{flex:0 0 20px}
+  .ml-google-identity{position:absolute;inset:0;z-index:2;width:100%;height:52px;display:flex;align-items:center;justify-content:center}
+  .ml-google-identity>div{width:100%!important;height:52px!important}
+  .ml-google-identity iframe{width:100%!important;height:52px!important;opacity:0!important;border:0!important}
+  .ml-google-host[data-google-ready="false"] .ml-google-visual{background:#f8fafc;color:#64748b;border-color:#dbe2ea}
+  .ml-google-host[data-google-ready="true"] .ml-google-visual{background:#fff;color:#172033}
 
   .ml-footer{margin-top:24px;text-align:center;font-size:13px;font-weight:600;color:#64748b}
   .ml-footer a{color:#1a6bff;font-weight:800;text-decoration:none}
@@ -80,11 +87,12 @@
     <div id="loginError"></div>
 
     <!-- Google button FIRST — prominent -->
-    <div id="loginGoogleButton" class="ml-google-host" aria-label="Continue with Google">
-      <button type="button" class="ml-btn-google ml-google-loading" disabled aria-live="polite">
-        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44z"/><path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8z"/><path fill="#EA4335" d="M24 11.9c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 5.9 29.5 4 24 4A20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.5 18.7 11.9 24 11.9z"/></svg>
-        <span>Loading Google sign-in…</span>
-      </button>
+    <div id="loginGoogleButton" class="ml-google-host" aria-label="Continue with Google" data-google-ready="false">
+      <div class="ml-google-visual" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44z"/><path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8z"/><path fill="#EA4335" d="M24 11.9c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 5.9 29.5 4 24 4A20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.5 18.7 11.9 24 11.9z"/></svg>
+        <span>Continue with Google</span>
+      </div>
+      <div id="loginGoogleIdentityButton" class="ml-google-identity" aria-label="Google sign-in"></div>
     </div>
 
     <div class="ml-divider">or log in with email</div>
