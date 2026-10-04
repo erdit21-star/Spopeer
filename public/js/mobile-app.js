@@ -2185,6 +2185,21 @@
       });
     },
 
+    admin: async function () {
+      setTitle('Admin Dashboard', 'Mobile administration');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      var role = String((app.user && (app.user.role || app.user.userType)) || '').toLowerCase();
+      if (!(app.user && (app.user.isAdmin === true || role === 'admin' || role === 'superadmin'))) {
+        screen.innerHTML = '<div class="spm-empty">Administrator access is required.</div>';
+        return;
+      }
+      screen.innerHTML = '<section class="spm-card" style="padding:16px;display:grid;gap:12px"><h2 style="margin:0">Admin Dashboard</h2><p class="spm-library-copy">Choose an area to manage from the mobile app.</p><button class="spm-primary-action" data-route="marketplace" type="button">Marketplace moderation</button><button class="spm-primary-action" data-route="community" type="button">Community</button><button class="spm-primary-action" data-route="notifications" type="button">Notifications</button><button class="spm-primary-action" data-route="settings" type="button">Account settings</button></section>';
+      screen.querySelectorAll('[data-route]').forEach(function (button) {
+        button.addEventListener('click', function () { app.route = button.dataset.route; render(); });
+      });
+    },
+
     settings: async function () {
       setTitle('Account Settings', 'Privacy and notification preferences');
       var screen = $('#spmScreen');
@@ -4416,13 +4431,15 @@
     var requested = String(params.get('mobileRoute') || '').toLowerCase();
     var pathname = String(window.location.pathname || '/').toLowerCase();
     while (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
-    var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile','notifications','edit-profile','settings','articles','follow-requests'];
+    var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile','notifications','edit-profile','settings','articles','follow-requests','admin'];
     if (knownRoutes.indexOf(requested) !== -1) {
       app.route = requested;
       return;
     }
     if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') app.route = 'feed';
     else if (pathname === '/search.html' || pathname === '/pages/search/search.html') app.route = 'search';
+    else if (pathname.startsWith('/pages/admin/')) app.route = 'admin';
+    else if (pathname.startsWith('/pages/ads/')) app.route = 'admin';
     else if (pathname === '/pages/dashboard/notifications.html') app.route = 'notifications';
     else if (pathname === '/pages/dashboard/settings.html') app.route = 'settings';
     else if (pathname === '/pages/profiles/edit-profile.html') app.route = 'edit-profile';
