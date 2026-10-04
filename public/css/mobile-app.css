@@ -439,3 +439,16 @@ body.spm-dark-mode .spm-library-card p,body.spm-dark-mode .spm-library-empty p{c
   .spm-detail-overlay h2{font-size:24px}
   .spm-detail-grid{grid-template-columns:1fr}
 }
+
+
+/* Phase 1 parity: mobile feed filters and usable post composer controls */
+.spm-feed-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;margin:0 0 2px;scrollbar-width:none}
+.spm-feed-tabs::-webkit-scrollbar{display:none}
+.spm-feed-tab{flex:0 0 auto;border:1px solid #dbe3ef;background:#fff;color:#475467;border-radius:999px;padding:9px 14px;font:700 12px 'Plus Jakarta Sans',Arial,sans-serif;white-space:nowrap}
+.spm-feed-tab.active{background:#1a6bff;border-color:#1a6bff;color:#fff}
+.spm-feed-chip.is-liked{background:#fee2e2;color:#be123c}
+.spm-compose-tools button{border:1px solid #dbe3ef;background:#f8fafc;color:#334155;border-radius:999px;padding:9px 13px;font:700 12px 'Plus Jakarta Sans',Arial,sans-serif}
+.spm-compose-tools button:active{background:#eaf2ff;color:#1a6bff}
+body.spm-dark-mode .spm-feed-tab{background:#111827;border-color:#243044;color:#cbd5e1}
+body.spm-dark-mode .spm-feed-tab.active{background:#1a6bff;border-color:#1a6bff;color:#fff}
+body.spm-dark-mode .spm-compose-tools button{background:#1d2939;border-color:#344054;color:#cbd5e1}
