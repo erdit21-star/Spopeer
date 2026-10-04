@@ -581,3 +581,137 @@ textarea {
 @media (max-width: 768px) {
   .sp-msg-back-btn { display: flex; }
 }
+
+
+/* ── Shared authenticated mobile app shell ── */
+@media (max-width: 768px) {
+  body.has-sp-bottom-nav {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* The desktop icon row is not a second navigation system on phones. */
+  body.has-sp-bottom-nav .topnav .nav-right > .nav-icon,
+  body.has-sp-bottom-nav .navbar .nav-right > .nav-icon {
+    display: none !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav {
+    display: block !important;
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 0  max(8px, env(safe-area-inset-left, 0px)) env(safe-area-inset-bottom, 0px) max(8px, env(safe-area-inset-right, 0px)) !important;
+    box-sizing: border-box !important;
+    z-index: 1200 !important;
+    background: var(--white, #fff) !important;
+    border-top: 1px solid var(--border, #e2e0d8) !important;
+    box-shadow: 0 -4px 18px rgba(0,0,0,.07) !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-inner {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    max-width: 600px !important;
+    height: 64px !important;
+    margin: 0 auto !important;
+    gap: 2px !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-item {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: flex !important;
+    flex: initial !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    height: 56px !important;
+    margin: 0 !important;
+    padding: 5px 2px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--muted, #888) !important;
+    font-family: inherit !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    line-height: 1.1 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-item i {
+    display: block !important;
+    width: auto !important;
+    height: 21px !important;
+    margin: 0 !important;
+    font-size: 19px !important;
+    line-height: 21px !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-item .sp-nav-label {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 10px !important;
+    line-height: 12px !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-item.active {
+    color: var(--navy, #001233) !important;
+    background: transparent !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-post {
+    justify-self: center !important;
+    width: 46px !important;
+    min-width: 46px !important;
+    max-width: 46px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    margin: -7px auto 0 !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    background: var(--navy, #001233) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 14px rgba(0,18,51,.24) !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-post i {
+    height: auto !important;
+    font-size: 19px !important;
+    line-height: 1 !important;
+  }
+
+  /* Community hub's desktop left rail is replaced by the shared bottom bar. */
+  body.sp-community-mobile-layout .app-layout > .sidebar-left {
+    display: none !important;
+  }
+
+  body.sp-community-mobile-layout .app-layout {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  body.sp-community-mobile-layout .community-col {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
