@@ -24,7 +24,7 @@
     if (intro) intro.remove();
     var emailLabel = document.querySelector('label[for="email"]');
     var emailInput = document.getElementById('email');
-    if (emailLabel) emailLabel.textContent = 'New password';
+    if (emailLabel) { emailLabel.textContent = 'New password'; emailLabel.htmlFor = 'newPassword'; }
     emailInput.type = 'password';
     emailInput.id = 'newPassword';
     emailInput.name = 'newPassword';
@@ -60,9 +60,9 @@
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error((data.error && data.error.message) || 'The reset link is invalid or has expired.');
         showSuccess('Your password has been updated. You can now sign in.');
-        button.textContent = 'Go to Sign In';
-        button.disabled = false;
-        button.onclick = function () { window.location.href = '/mobile-login.html'; };
+        button.textContent = 'Password Updated';
+        button.disabled = true;
+        button.insertAdjacentHTML('afterend', '<a class="btn btn-primary" href="/mobile-login.html" style="display:block;text-align:center;margin-top:10px">Go to Sign In</a>');
       } catch (error) {
         showError(error.message || 'Could not reset your password. Please request a new link.');
         button.disabled = false;
