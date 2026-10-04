@@ -281,6 +281,7 @@ const MOBILE_STATIC_PAGES = {
   '/pages/admin/login.html': MOBILE_LOGIN_PATH,
   '/pages/auth/forgot-password.html': MOBILE_FORGOT_PASSWORD_PATH,
   '/pages/auth/reset-password.html': MOBILE_FORGOT_PASSWORD_PATH,
+  '/pages/legal/index.html': MOBILE_TERMS_PATH,
   '/pages/legal/terms.html': MOBILE_TERMS_PATH,
   '/pages/legal/privacy.html': MOBILE_PRIVACY_PATH,
   '/pages/legal/about.html': MOBILE_ABOUT_PATH,
