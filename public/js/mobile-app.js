@@ -4328,9 +4328,6 @@
     else if (pathname.startsWith('/pages/messaging/')) app.route = 'messages';
     else if (pathname.startsWith('/pages/sponsorship/')) app.route = 'sponsorship';
     else if (pathname.startsWith('/pages/training/')) app.route = 'training';
-    else if (pathname.startsWith('/pages/profiles/edit-profile')) app.route = 'profile';
-    else if (pathname.startsWith('/pages/profiles/')) app.route = 'public-profile';
-    else if (pathname.startsWith('/pages/dashboard/')) app.route = 'profile';
     else app.route = 'feed';
   }
 
