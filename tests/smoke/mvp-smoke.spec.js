@@ -172,7 +172,18 @@ async function verifyAuthenticatedPages(browser, apiContext) {
     { path: '/pages/marketplace/marketplace.html', route: 'marketplace' },
     { path: '/pages/events/event.html', route: 'events' },
     { path: '/pages/library/index.html', route: 'library' },
-    { path: '/pages/messaging/inbox.html', route: 'messages' }
+    { path: '/pages/messaging/inbox.html', route: 'messages' },
+    { path: '/pages/dashboard/notifications.html', route: 'notifications' },
+    { path: '/pages/dashboard/settings.html', route: 'settings' },
+    { path: '/pages/profiles/edit-profile.html', route: 'edit-profile' },
+    { path: '/pages/profiles/public-profile.html', route: 'public-profile' },
+    { path: '/pages/profiles/followers.html', route: 'follow-requests' },
+    { path: '/pages/admin/dashboard.html', route: 'admin' },
+    { path: '/pages/marketplace/advanced-search.html', route: 'marketplace' },
+    { path: '/pages/marketplace/create-listing.html', route: 'marketplace' },
+    { path: '/pages/marketplace/messages.html', route: 'marketplace' },
+    { path: '/pages/community/reels.html', route: 'community' },
+    { path: '/pages/library/media.html', route: 'library' }
   ];
 
   try {
