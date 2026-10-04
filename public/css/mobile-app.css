@@ -487,3 +487,133 @@ body.spm-dark-mode .spm-poll-box small{color:#94a3b8}
 }
 .spm-topbar-main-actions{min-width:0}
 .spm-topbar-menu{width:42px!important;border-radius:50%!important}
+
+
+/* SPOPEER MOBILE DESIGN SYSTEM: shared action controls */
+:root {
+  --spm-control-height: 46px;
+  --spm-control-radius: 12px;
+  --spm-control-font-size: 14px;
+  --spm-control-primary: #1a6bff;
+  --spm-control-primary-hover: #1558d6;
+  --spm-control-secondary-bg: #f8fafc;
+  --spm-control-secondary-border: #dbe5f1;
+  --spm-control-secondary-text: #334155;
+}
+
+/* One consistent size, shape, typography and alignment across every mobile section. */
+.spm-screen .spm-primary-action,
+.spm-screen .spm-chat-back,
+.spm-screen .spm-signout-btn,
+.spm-screen .spm-detail-actions > button,
+.spm-screen .spm-chat-input > button {
+  box-sizing: border-box;
+  min-height: var(--spm-control-height);
+  height: var(--spm-control-height);
+  padding: 0 16px;
+  border-radius: var(--spm-control-radius);
+  font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+  font-size: var(--spm-control-font-size);
+  font-weight: 800;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.spm-screen .spm-primary-action,
+.spm-screen .spm-detail-actions > button.spm-primary-action {
+  border: 1px solid var(--spm-control-primary);
+  background: var(--spm-control-primary);
+  color: #fff;
+}
+
+.spm-screen .spm-primary-action:hover:not(:disabled),
+.spm-screen .spm-detail-actions > button.spm-primary-action:hover:not(:disabled) {
+  background: var(--spm-control-primary-hover);
+  border-color: var(--spm-control-primary-hover);
+}
+
+.spm-screen .spm-chat-back,
+.spm-screen .spm-detail-actions > button.spm-chat-back {
+  border: 1px solid var(--spm-control-secondary-border);
+  background: var(--spm-control-secondary-bg);
+  color: var(--spm-control-secondary-text);
+}
+
+.spm-screen .spm-chat-back:hover:not(:disabled),
+.spm-screen .spm-detail-actions > button.spm-chat-back:hover:not(:disabled) {
+  background: #eaf2ff;
+  border-color: #b7d0ff;
+  color: #155eef;
+}
+
+.spm-screen .spm-signout-btn {
+  border: 1.5px solid #ef4444;
+  background: #fff;
+  color: #dc2626;
+}
+
+.spm-screen .spm-signout-btn:hover:not(:disabled) {
+  background: #fff1f2;
+  border-color: #dc2626;
+}
+
+.spm-screen .spm-primary-action:disabled,
+.spm-screen .spm-chat-back:disabled,
+.spm-screen .spm-signout-btn:disabled,
+.spm-screen .spm-detail-actions > button:disabled,
+.spm-screen .spm-chat-input > button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.spm-screen .spm-primary-action:focus-visible,
+.spm-screen .spm-chat-back:focus-visible,
+.spm-screen .spm-signout-btn:focus-visible,
+.spm-screen .spm-detail-actions > button:focus-visible,
+.spm-screen .spm-chat-input > button:focus-visible {
+  outline: 3px solid rgba(26, 107, 255, .28);
+  outline-offset: 2px;
+}
+
+/* Small filters and utility controls share the same corner language. */
+.spm-screen .spm-library-source-btn,
+.spm-screen .spm-story-action,
+.spm-screen .spm-chat-more-btn,
+.spm-screen .spm-avatar-picker-head button,
+.spm-screen .spm-story-more-menu button {
+  border-radius: var(--spm-control-radius);
+  font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+  font-weight: 800;
+}
+
+body.spm-dark-mode .spm-screen .spm-chat-back,
+body.spm-dark-mode .spm-screen .spm-detail-actions > button.spm-chat-back {
+  background: #1d2939;
+  border-color: #34445c;
+  color: #d5e4ff;
+}
+
+body.spm-dark-mode .spm-screen .spm-signout-btn {
+  background: #111827;
+  border-color: #b91c1c;
+  color: #fca5a5;
+}
+
+@media (max-width: 360px) {
+  .spm-screen .spm-primary-action,
+  .spm-screen .spm-chat-back,
+  .spm-screen .spm-signout-btn,
+  .spm-screen .spm-detail-actions > button,
+  .spm-screen .spm-chat-input > button {
+    padding-left: 12px;
+    padding-right: 12px;
+    font-size: 13px;
+  }
+}
