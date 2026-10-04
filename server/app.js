@@ -260,14 +260,15 @@ app.use((req, res, next) => {
 });
 
 // ─── MOBILE APP ENTRY ROUTING ───
-// Serve the mobile application shell before static files so mobile browsers never
-// render the desktop index/page first and then get redirected by client-side JS.
+// Resolve mobile HTML requests before static serving so the desktop document is
+// never sent to a phone first (which caused the old-homepage flash).
 const MOBILE_APP_PATH = path.join(__dirname, '..', 'public', 'mobile.html');
 function isMobileRequest(req) {
   return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(req.get('user-agent') || '');
 }
 function mobileAppRouteForPath(requestPath) {
-  const pathname = String(requestPath || '/').toLowerCase().replace(/\\/+$/, '') || '/';
+  let pathname = String(requestPath || '/').toLowerCase();
+  while (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
   if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') return 'feed';
   if (pathname === '/search.html' || pathname === '/pages/search/search.html') return 'search';
   if (pathname.startsWith('/pages/community/')) return 'community';
@@ -281,8 +282,9 @@ function mobileAppRouteForPath(requestPath) {
   if (pathname.startsWith('/pages/dashboard/')) return 'profile';
   return null;
 }
-app.get('*path', (req, res, next) => {
-  if (!isMobileRequest(req)) return next();
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || !isMobileRequest(req)) return next();
+  if (req.path !== '/' && !req.path.toLowerCase().endsWith('.html')) return next();
   // Keep mobile authentication and public/legal pages on their dedicated endpoints.
   if (req.path.startsWith('/pages/auth/') || req.path.startsWith('/pages/legal/') || req.path.startsWith('/pages/contact/')) return next();
   const mobileRoute = mobileAppRouteForPath(req.path);
