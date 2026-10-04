@@ -278,6 +278,7 @@ const MOBILE_FEATURES_PATH = path.join(__dirname, '..', 'public', 'mobile-featur
 const MOBILE_WHO_PATH = path.join(__dirname, '..', 'public', 'mobile-who-its-for.html');
 const MOBILE_HOW_PATH = path.join(__dirname, '..', 'public', 'mobile-how-it-works.html');
 const MOBILE_STATIC_PAGES = {
+  '/pages/admin/login.html': MOBILE_LOGIN_PATH,
   '/pages/auth/forgot-password.html': MOBILE_FORGOT_PASSWORD_PATH,
   '/pages/auth/reset-password.html': MOBILE_FORGOT_PASSWORD_PATH,
   '/pages/legal/terms.html': MOBILE_TERMS_PATH,
