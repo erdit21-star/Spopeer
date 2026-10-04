@@ -2215,7 +2215,7 @@
         payload.privacyPublic = payload.profileVisibility !== 'private';
         try {
           var result = await window.SpopeerAPI.updateProfile({ payload: payload });
-          var saved = (result && result.data && (result.data.user || result.data.payload)) || (result && (result.user || result.payload));
+          var saved = (result && result.data && (result.data.user || result.data.payload)) || (result && (result.user || result.payload)) || (window.SpopeerAPI && window.SpopeerAPI.getUser && window.SpopeerAPI.getUser());
           if (!saved) throw new Error('The server did not confirm the saved profile.');
           app.user = saved;
           status.textContent = 'Profile saved successfully.';
