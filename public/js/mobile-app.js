@@ -2260,8 +2260,85 @@
           var checked = Object.prototype.hasOwnProperty.call(saved,item[0]) ? !!saved[item[0]] : item[2];
           return '<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #e7ebf0;font-size:14px;font-weight:600"><span>' + item[1] + '</span><input type="checkbox" data-mobile-setting="' + item[0] + '"' + (checked ? ' checked' : '') + ' style="width:22px;height:22px;accent-color:#0b3b63"></label>';
         }).join('') +
+        '<fieldset style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:grid;gap:10px"><legend style="font-size:13px;font-weight:800;padding:0 6px">Appearance</legend>' +
+        '<label>Language<select id="spmSettingLanguage" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"><option value="en">English</option><option value="el">Ελληνικά</option></select></label>' +
+        '<label>Default feed<select id="spmSettingFeed" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"><option value="all">All posts</option><option value="following">Following</option></select></label>' +
+        '<label>Avatar style<select id="spmSettingAvatarStyle" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"><option value="gradient">Gradient</option><option value="solid">Solid</option></select></label>' +
+        '<label>Avatar color<input id="spmSettingAvatarColor" type="color" value="' + html(saved.avatarColor || '#001f3f') + '" style="width:100%;height:42px"></label>' +
+        '<label>Accent color<input id="spmSettingAvatarAccent" type="color" value="' + html(saved.avatarAccent || '#1a6bff') + '" style="width:100%;height:42px"></label>' +
+        '<button id="spmSaveAppearance" class="spm-primary-action" type="button">Save Appearance</button></fieldset>' +
+        '<fieldset style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:grid;gap:10px"><legend style="font-size:13px;font-weight:800;padding:0 6px">Subscription</legend>' +
+        '<div id="spmCurrentPlan" class="spm-library-copy">Current plan: ' + html(resolveSubscriptionInfo(user).code + ' · ' + resolveSubscriptionInfo(user).label) + '</div>' +
+        '<select id="spmMobilePlanSelect" style="width:100%;padding:10px;border:1px solid #d8dee8;border-radius:10px"></select><button id="spmSavePlan" class="spm-primary-action" type="button">Update Subscription</button></fieldset>' +
+        '<fieldset style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:grid;gap:10px"><legend style="font-size:13px;font-weight:800;padding:0 6px">Change Password</legend>' +
+        '<input id="spmCurrentPassword" type="password" autocomplete="current-password" placeholder="Current password" style="padding:10px;border:1px solid #d8dee8;border-radius:10px">' +
+        '<input id="spmNewPassword" type="password" autocomplete="new-password" placeholder="New password (min. 8 characters)" style="padding:10px;border:1px solid #d8dee8;border-radius:10px">' +
+        '<input id="spmConfirmPassword" type="password" autocomplete="new-password" placeholder="Confirm new password" style="padding:10px;border:1px solid #d8dee8;border-radius:10px">' +
+        '<button id="spmUpdatePassword" class="spm-primary-action" type="button">Update Password</button></fieldset>' +
         '<label style="display:grid;gap:6px;font-size:13px;font-weight:700">Account name<input id="spmSettingsName" value="' + html(user.displayName || [user.firstName,user.lastName].filter(Boolean).join(' ') || user.name || '') + '" style="padding:11px;border:1px solid #d8dee8;border-radius:12px"></label><button id="spmSaveSettingsName" class="spm-primary-action" type="button">Save Account Name</button><div id="spmSettingsStatus" class="spm-empty" aria-live="polite"></div></section>';
       var status = document.getElementById('spmSettingsStatus');
+      document.getElementById('spmSettingLanguage').value = saved.language || 'en';
+      document.getElementById('spmSettingFeed').value = saved.feedDefault || 'all';
+      document.getElementById('spmSettingAvatarStyle').value = saved.avatarStyle || 'gradient';
+      var planSelect = document.getElementById('spmMobilePlanSelect');
+      if (window.SubscriptionFeatures && typeof window.SubscriptionFeatures.resolveCurrentPlan === 'function') {
+        var planInfo = window.SubscriptionFeatures.resolveCurrentPlan(user || {});
+        planSelect.innerHTML = (planInfo.plans || []).map(function (plan) {
+          return '<option value="' + html(plan.code) + '">' + html(plan.code + ' — ' + plan.label) + '</option>';
+        }).join('');
+        if (planInfo.code) planSelect.value = planInfo.code;
+      }
+      document.getElementById('spmSaveAppearance').addEventListener('click', async function () {
+        var next = Object.assign({}, saved, {
+          language: document.getElementById('spmSettingLanguage').value,
+          feedDefault: document.getElementById('spmSettingFeed').value,
+          avatarStyle: document.getElementById('spmSettingAvatarStyle').value,
+          avatarColor: document.getElementById('spmSettingAvatarColor').value,
+          avatarAccent: document.getElementById('spmSettingAvatarAccent').value
+        });
+        this.disabled = true;
+        try {
+          var result = await window.SpopeerAPI.updateProfile({ settings: next });
+          var updated = (result && result.data && (result.data.user || result.data.payload)) || (result && (result.user || result.payload));
+          if (!updated) throw new Error('The server did not confirm appearance preferences.');
+          saved = next; app.user = updated; status.textContent = 'Appearance preferences saved.';
+        } catch (error) { status.textContent = error.message || 'Could not save appearance preferences.'; }
+        finally { this.disabled = false; }
+      });
+      document.getElementById('spmSavePlan').addEventListener('click', async function () {
+        if (!planSelect.value) { status.textContent = 'No subscription plan is available.'; return; }
+        this.disabled = true;
+        try {
+          var result = await window.SpopeerAPI.updateSubscriptionPlan(planSelect.value);
+          var updated = (result && result.data && result.data.user) || (result && result.user);
+          if (!updated) throw new Error('The server did not confirm the subscription update.');
+          app.user = updated; status.textContent = 'Subscription updated.';
+        } catch (error) { status.textContent = error.message || 'Could not update subscription.'; }
+        finally { this.disabled = false; }
+      });
+      document.getElementById('spmUpdatePassword').addEventListener('click', async function () {
+        var currentPassword = document.getElementById('spmCurrentPassword').value;
+        var newPassword = document.getElementById('spmNewPassword').value;
+        var confirmPassword = document.getElementById('spmConfirmPassword').value;
+        if (!currentPassword || !newPassword || !confirmPassword) { status.textContent = 'Complete all password fields.'; return; }
+        if (newPassword.length < 8) { status.textContent = 'New password must be at least 8 characters.'; return; }
+        if (newPassword !== confirmPassword) { status.textContent = 'New passwords do not match.'; return; }
+        this.disabled = true;
+        try {
+          var response = await fetch('/api/auth/change-password', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword: currentPassword, newPassword: newPassword })
+          });
+          var body = await response.json();
+          if (!response.ok) throw new Error((body && (body.error && body.error.message || body.error)) || 'Password update failed.');
+          document.getElementById('spmCurrentPassword').value = '';
+          document.getElementById('spmNewPassword').value = '';
+          document.getElementById('spmConfirmPassword').value = '';
+          status.textContent = 'Password updated successfully.';
+        } catch (error) { status.textContent = error.message || 'Could not update password.'; }
+        finally { this.disabled = false; }
+      });
       screen.querySelectorAll('[data-mobile-setting]').forEach(function (control) {
         control.addEventListener('change', async function () {
           var key = control.getAttribute('data-mobile-setting'), previous = !!saved[key];
