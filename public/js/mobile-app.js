@@ -2134,6 +2134,108 @@
       }
     },
 
+    'edit-profile': async function () {
+      setTitle('Edit Profile', 'Update your sports identity');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading profile...</div>';
+      var user = app.user || {};
+      try { user = unwrapUser(await window.SpopeerAPI.getProfile()) || user; app.user = user; }
+      catch (_error) { screen.innerHTML = '<div class="spm-empty">Could not load your profile.</div>'; return; }
+      var fields = [
+        ['displayName','Display name','text'],['firstName','First name','text'],['lastName','Last name','text'],
+        ['username','Username','text'],['bio','Biography','textarea'],['location','Location','text'],
+        ['primarySport','Primary sport','text'],['playingLevel','Playing level','text'],['position','Position','text'],
+        ['currentTeam','Current team','text'],['achievements','Achievements','textarea'],['trainingRoutine','Training routine','textarea'],
+        ['contactEmail','Contact email','email'],['contactPhone','Contact phone','tel'],['contactAddress','Contact address','text'],
+        ['nationality','Nationality','text'],['dateOfBirth','Date of birth','date'],['specialization','Specialization','text'],
+        ['clubName','Club name','text'],['website','Website','url']
+      ];
+      function fieldValue(key) { return user[key] != null ? user[key] : (user.extendedProfile && user.extendedProfile[key]) || ''; }
+      screen.innerHTML = '<form id="spmEditProfileForm" class="spm-card" style="display:grid;gap:12px;padding:16px">' +
+        '<p class="spm-library-copy">These changes are saved to your Spopeer account.</p>' +
+        fields.map(function (field) {
+          var value = html(fieldValue(field[0]));
+          var control = field[2] === 'textarea'
+            ? '<textarea name="' + field[0] + '" rows="3" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #d8dee8;border-radius:12px;font:inherit">' + value + '</textarea>'
+            : '<input name="' + field[0] + '" type="' + field[2] + '" value="' + value.replace(/"/g,'&quot;') + '" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #d8dee8;border-radius:12px;font:inherit">';
+          return '<label style="display:grid;gap:6px;font-size:13px;font-weight:700">' + field[1] + control + '</label>';
+        }).join('') +
+        '<button id="spmSaveEditProfile" class="spm-primary-action" type="submit">Save Profile</button><div id="spmEditProfileStatus" class="spm-empty" aria-live="polite"></div></form>';
+      var form = document.getElementById('spmEditProfileForm');
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        var button = document.getElementById('spmSaveEditProfile');
+        var status = document.getElementById('spmEditProfileStatus');
+        button.disabled = true; button.textContent = 'Saving...'; status.textContent = '';
+        var payload = {};
+        fields.forEach(function (field) {
+          var control = form.elements.namedItem(field[0]);
+          if (control && control.value.trim() !== '') payload[field[0]] = control.value.trim();
+        });
+        try {
+          var result = await window.SpopeerAPI.updateProfile({ payload: payload });
+          var saved = (result && result.data && (result.data.user || result.data.payload)) || (result && (result.user || result.payload));
+          if (!saved) throw new Error('The server did not confirm the saved profile.');
+          app.user = saved;
+          status.textContent = 'Profile saved successfully.';
+        } catch (error) {
+          status.textContent = error && error.message ? error.message : 'Could not save profile.';
+        } finally { button.disabled = false; button.textContent = 'Save Profile'; }
+      });
+    },
+
+    settings: async function () {
+      setTitle('Account Settings', 'Privacy and notification preferences');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading settings...</div>';
+      var user = app.user || {};
+      try { user = unwrapUser(await window.SpopeerAPI.getProfile()) || user; app.user = user; }
+      catch (_error) { screen.innerHTML = '<div class="spm-empty">Could not load settings.</div>'; return; }
+      var saved = Object.assign({}, user.settings || {}, user.extendedProfile && user.extendedProfile.settings || {});
+      var toggles = [
+        ['emailNotif','Email notifications',true],['pushNotif','Push notifications',true],
+        ['trainingNotif','Training notifications',true],['followerNotif','New follower notifications',true],
+        ['digestNotif','Weekly digest',false],['profileVisibility','Profile visible to others',true],
+        ['onlineStatus','Show online status',true],['dataSharing','Allow usage data sharing',false],['allowDMs','Allow direct messages',true]
+      ];
+      screen.innerHTML = '<section class="spm-card" style="padding:16px;display:grid;gap:12px"><h3 style="margin:0">Privacy & notifications</h3><p class="spm-library-copy">Changes are saved to your account database.</p>' +
+        toggles.map(function (item) {
+          var checked = Object.prototype.hasOwnProperty.call(saved,item[0]) ? !!saved[item[0]] : item[2];
+          return '<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #e7ebf0;font-size:14px;font-weight:600"><span>' + item[1] + '</span><input type="checkbox" data-mobile-setting="' + item[0] + '"' + (checked ? ' checked' : '') + ' style="width:22px;height:22px;accent-color:#0b3b63"></label>';
+        }).join('') +
+        '<label style="display:grid;gap:6px;font-size:13px;font-weight:700">Account name<input id="spmSettingsName" value="' + html(user.displayName || [user.firstName,user.lastName].filter(Boolean).join(' ') || user.name || '') + '" style="padding:11px;border:1px solid #d8dee8;border-radius:12px"></label><button id="spmSaveSettingsName" class="spm-primary-action" type="button">Save Account Name</button><div id="spmSettingsStatus" class="spm-empty" aria-live="polite"></div></section>';
+      var status = document.getElementById('spmSettingsStatus');
+      screen.querySelectorAll('[data-mobile-setting]').forEach(function (control) {
+        control.addEventListener('change', async function () {
+          var key = control.getAttribute('data-mobile-setting'), previous = !!saved[key];
+          var next = Object.assign({}, saved, { [key]: control.checked });
+          control.disabled = true;
+          try {
+            var result = await window.SpopeerAPI.updateProfile({ settings: next });
+            var updated = (result && result.data && (result.data.user || result.data.payload)) || (result && (result.user || result.payload));
+            if (!updated) throw new Error('The server did not confirm the setting change.');
+            saved = next; app.user = updated; status.textContent = 'Setting saved.';
+          } catch (error) { control.checked = previous; status.textContent = error.message || 'Could not save setting.'; }
+          finally { control.disabled = false; }
+        });
+      });
+      document.getElementById('spmSaveSettingsName').addEventListener('click', async function () {
+        var button = this, name = document.getElementById('spmSettingsName').value.trim();
+        if (!name) { status.textContent = 'Name cannot be empty.'; return; }
+        button.disabled = true;
+        try {
+          var parts = name.split(/\\s+/).filter(Boolean);
+          var result = await window.SpopeerAPI.updateProfile({ firstName: parts[0], lastName: parts.slice(1).join(' '), displayName: name });
+          var updated = (result && result.data && (result.data.user || result.data.payload)) || (result && (result.user || result.payload));
+          if (!updated) throw new Error('The server did not confirm the account update.');
+          app.user = updated; status.textContent = 'Account name saved.';
+        } catch (error) { status.textContent = error.message || 'Could not save account name.'; }
+        finally { button.disabled = false; }
+      });
+    },
+
     notifications: function () {
       setTitle('Notifications', 'Latest activity');
       var screen = $('#spmScreen');
@@ -4031,14 +4133,14 @@
       var editProfileBtn = document.getElementById('spmEditProfileBtn');
       if (editProfileBtn) {
         editProfileBtn.addEventListener('click', function () {
-          window.location.href = '/pages/profiles/edit-profile.html';
+          app.route = 'edit-profile'; render();
         });
       }
 
       var managePlanBtn = document.getElementById('spmManagePlanBtn');
       if (managePlanBtn) {
         managePlanBtn.addEventListener('click', function () {
-          window.location.href = '/pages/dashboard/settings.html#section-account';
+          app.route = 'settings'; render();
         });
       }
 
@@ -4314,13 +4416,18 @@
     var requested = String(params.get('mobileRoute') || '').toLowerCase();
     var pathname = String(window.location.pathname || '/').toLowerCase();
     while (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
-    var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile'];
+    var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile','notifications','edit-profile','settings','articles','follow-requests'];
     if (knownRoutes.indexOf(requested) !== -1) {
       app.route = requested;
       return;
     }
     if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') app.route = 'feed';
     else if (pathname === '/search.html' || pathname === '/pages/search/search.html') app.route = 'search';
+    else if (pathname === '/pages/dashboard/notifications.html') app.route = 'notifications';
+    else if (pathname === '/pages/dashboard/settings.html') app.route = 'settings';
+    else if (pathname === '/pages/profiles/edit-profile.html') app.route = 'edit-profile';
+    else if (pathname === '/pages/profiles/public-profile.html') app.route = 'public-profile';
+    else if (pathname === '/pages/profiles/followers.html') app.route = 'follow-requests';
     else if (pathname.startsWith('/pages/community/')) app.route = 'community';
     else if (pathname.startsWith('/pages/marketplace/')) app.route = 'marketplace';
     else if (pathname.startsWith('/pages/events/')) app.route = 'events';
