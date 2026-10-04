@@ -1,9 +1,11 @@
 function getCookieValue(name) {
-  var match = document.cookie.match(new RegExp('(^|;\\s*)' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^;]+)'));
+  var match = document.cookie.match(new RegExp('(^|;\\s*)' + name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&') + '=([^;]+)'));
   return match ? decodeURIComponent(match[2]) : '';
 }
 
 let _mobileGoogleClientId = null;
+let _mobileGoogleInitPromise = null;
+let _mobileGoogleRendered = false;
 
 async function getMobileGoogleClientId() {
   if (typeof _mobileGoogleClientId === 'string') return _mobileGoogleClientId;
@@ -43,8 +45,6 @@ function completeAuthNavigation(path) {
   if (lower.indexOf('/api/') === 0 || lower.indexOf('/pages/auth/login.html') === 0 || lower.indexOf('/pages/auth/signup.html') === 0) {
     targetPath = '/feed.html';
   }
-  // Mobile browsers are unreliable with opener/popup close flows.
-  // Always navigate the current tab to avoid ending on a blank white page.
   try { localStorage.setItem('spopeer_google_auth_complete', String(Date.now())); } catch (_error) { /* ignore storage failures */ }
   var sep = targetPath.indexOf('?') === -1 ? '?' : '&';
   window.location.replace(targetPath + sep + 'loginAt=' + Date.now());
@@ -52,7 +52,8 @@ function completeAuthNavigation(path) {
 
 async function handleGoogleCredential(response) {
   const errBox = document.getElementById('loginError');
-  errBox.style.display = 'none';
+  if (errBox) errBox.style.display = 'none';
+
   try {
     if (!response || !response.credential) {
       throw new Error('Google did not return a valid credential. Please try again.');
@@ -66,7 +67,6 @@ async function handleGoogleCredential(response) {
     }
 
     let userData = (data.data && data.data.user) || data.user || null;
-    const accessToken = (data.data && data.data.accessToken) || data.token;
 
     if (!userData && window.SpopeerAPI && typeof window.SpopeerAPI.me === 'function') {
       const me = await window.SpopeerAPI.me();
@@ -80,77 +80,93 @@ async function handleGoogleCredential(response) {
     if (window.Auth) window.Auth.login(userData);
     completeAuthNavigation('/feed.html');
   } catch (err) {
-    errBox.textContent = (err && err.message) || 'Google sign-in failed. Please try again.';
-    errBox.style.display = 'block';
+    if (errBox) {
+      errBox.textContent = (err && err.message) || 'Google sign-in failed. Please try again.';
+      errBox.style.display = 'block';
+    }
   }
 }
 
-function initGoogleLoginButton() {
+async function initGoogleLoginButton() {
   var errBox = document.getElementById('loginError');
   var host = document.getElementById('loginGoogleButton');
-  if (!host) return;
+  if (!host || _mobileGoogleRendered) return _mobileGoogleRendered;
+  if (_mobileGoogleInitPromise) return _mobileGoogleInitPromise;
 
-  async function wire() {
-    if (!window.google || !window.google.accounts || !window.google.accounts.id) return false;
-
+  _mobileGoogleInitPromise = (async function () {
     var clientId = await getMobileGoogleClientId();
     if (!clientId) {
-      errBox.textContent = 'Google sign-in is not configured for this environment. Please use email login for now.';
-      errBox.style.display = 'block';
+      if (errBox) {
+        errBox.textContent = 'Google sign-in is not configured for this environment. Please use email login for now.';
+        errBox.style.display = 'block';
+      }
       return false;
     }
 
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: handleGoogleCredential
-    });
-    host.innerHTML = '';
-    window.google.accounts.id.renderButton(host, {
-      theme: 'outline',
-      size: 'large',
-      text: 'continue_with',
-      shape: 'pill',
-      width: Math.max(260, Math.min(440, host.clientWidth || 320))
-    });
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      return false;
+    }
 
-    // Surface setup issues (e.g. unauthorized origin) with a user-facing message.
     try {
-      window.google.accounts.id.prompt(function (notification) {
-        var isNotDisplayed = notification && typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed();
-        var reason = notification && typeof notification.getNotDisplayedReason === 'function'
-          ? notification.getNotDisplayedReason()
-          : '';
-        if (isNotDisplayed && reason === 'unregistered_origin') {
-          errBox.textContent = 'Google sign-in is blocked: this domain is not authorized in Google OAuth settings.';
-          errBox.style.display = 'block';
-        }
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true
       });
-    } catch (_err) { /* ignore prompt observer errors */ }
 
-    return true;
-  }
+      var width = Math.floor(host.getBoundingClientRect().width || host.clientWidth || 320);
+      width = Math.max(240, Math.min(440, width));
+      host.innerHTML = '';
+      window.google.accounts.id.renderButton(host, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'pill',
+        width: width,
+        logo_alignment: 'left'
+      });
 
-  wire().then(function (ok) {
-    if (ok) return;
-  });
-
-  var attempts = 0;
-  var timer = window.setInterval(function () {
-    attempts += 1;
-    wire().then(function (ok) {
-      if (ok || attempts > 80) {
-        window.clearInterval(timer);
-        if (!ok && attempts > 80) {
-          errBox.textContent = 'Google sign-in is unavailable on this browser. You can still log in with email.';
-          errBox.style.display = 'block';
-        }
+      _mobileGoogleRendered = true;
+      if (errBox) errBox.style.display = 'none';
+      return true;
+    } catch (error) {
+      if (errBox) {
+        errBox.textContent = 'Google sign-in could not be displayed. Please refresh and try again, or use email login.';
+        errBox.style.display = 'block';
       }
-    });
-  }, 250);
+      console.error('[Mobile Google Sign-In] Initialization failed:', error);
+      return false;
+    }
+  })();
 
-  window.addEventListener('load', function () {
-    wire().catch(function () {});
-  }, { once: true });
+  try {
+    return await _mobileGoogleInitPromise;
+  } finally {
+    _mobileGoogleInitPromise = null;
+  }
+}
+
+function waitForGoogleLoginLibrary() {
+  var attempts = 0;
+  var maxAttempts = 40;
+  var timer = window.setInterval(async function () {
+    attempts += 1;
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      window.clearInterval(timer);
+      await initGoogleLoginButton();
+      return;
+    }
+    if (attempts >= maxAttempts) {
+      window.clearInterval(timer);
+      var errBox = document.getElementById('loginError');
+      if (errBox) {
+        errBox.textContent = 'Google sign-in is unavailable on this browser. You can still log in with email.';
+        errBox.style.display = 'block';
+      }
+    }
+  }, 250);
 }
 
 document.getElementById('loginBtn').onclick = async function() {
@@ -180,4 +196,8 @@ document.getElementById('loginBtn').onclick = async function() {
   }
 };
 
-document.addEventListener('DOMContentLoaded', initGoogleLoginButton);
+document.addEventListener('DOMContentLoaded', function () {
+  initGoogleLoginButton().then(function (ready) {
+    if (!ready) waitForGoogleLoginLibrary();
+  });
+});
