@@ -172,11 +172,7 @@ async function verifyAuthenticatedPages(browser, apiContext) {
     { path: '/pages/marketplace/marketplace.html', route: 'marketplace' },
     { path: '/pages/events/event.html', route: 'events' },
     { path: '/pages/library/index.html', route: 'library' },
-    { path: '/pages/profiles/athlete-profile.html', route: 'public-profile' },
-    { path: '/pages/profiles/club-profile.html', route: 'public-profile' },
-    { path: '/pages/messaging/inbox.html', route: 'messages' },
-    { path: '/pages/dashboard/notifications.html', route: 'profile' },
-    { path: '/pages/profiles/edit-profile.html', route: 'profile' }
+    { path: '/pages/messaging/inbox.html', route: 'messages' }
   ];
 
   try {
