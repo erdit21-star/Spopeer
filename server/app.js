@@ -271,6 +271,12 @@ function mobileAppRouteForPath(requestPath) {
   while (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
   if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') return 'feed';
   if (pathname === '/search.html' || pathname === '/pages/search/search.html') return 'search';
+  if (pathname === '/pages/dashboard/notifications.html') return 'notifications';
+  if (pathname.startsWith('/pages/dashboard/')) return 'settings';
+  if (pathname === '/pages/profiles/edit-profile.html') return 'edit-profile';
+  if (pathname === '/pages/profiles/public-profile.html') return 'public-profile';
+  if (pathname === '/pages/profiles/followers.html') return 'follow-requests';
+  if (pathname.startsWith('/pages/profiles/')) return 'profile';
   if (pathname.startsWith('/pages/community/')) return 'community';
   if (pathname.startsWith('/pages/marketplace/')) return 'marketplace';
   if (pathname.startsWith('/pages/events/')) return 'events';
