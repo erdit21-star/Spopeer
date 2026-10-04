@@ -4,9 +4,9 @@
  * Handles caching strategies and offline functionality
  */
 
-const CACHE_NAME = 'spopeer-cache-v12';
-const ASSETS_CACHE = 'spopeer-assets-v12';
-const API_CACHE = 'spopeer-api-v12';
+const CACHE_NAME = 'spopeer-cache-v13';
+const ASSETS_CACHE = 'spopeer-assets-v13';
+const API_CACHE = 'spopeer-api-v13';
 const _STALE_WHILE_REVALIDATE_TTL = 5 * 60 * 1000; // 5 minutes
 
 const CRITICAL_ASSETS = [
@@ -14,6 +14,7 @@ const CRITICAL_ASSETS = [
   '/index.html',
   '/mobile.html',
   '/js/mobile-app.js',
+  '/js/mobile-redirect.js',
   '/js/mobile-redirect.js',
   '/mobile-login.html',
   '/mobile-signup.html',
