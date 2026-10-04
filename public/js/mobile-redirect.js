@@ -24,6 +24,7 @@
   else if (path === '/pages/profiles/followers.html') route = 'followers';
   else if (path === '/pages/profiles/user-posts.html') route = 'user-posts';
   else if (path.indexOf('/pages/profiles/') === 0) route = 'profile';
+  else if (path.indexOf('/pages/articles/') === 0) route = 'articles';
   else if (path.indexOf('/pages/community/') === 0) route = 'community';
   else if (path.indexOf('/pages/marketplace/') === 0) route = 'marketplace';
   else if (path.indexOf('/pages/events/') === 0) route = 'events';
