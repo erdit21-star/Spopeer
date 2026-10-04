@@ -4312,34 +4312,26 @@
   function resolveInitialMobileRoute() {
     var params = new URLSearchParams(window.location.search || '');
     var requested = String(params.get('mobileRoute') || '').toLowerCase();
-    var pathname = String(window.location.pathname || '/').toLowerCase().replace(/\\/+$/, '') || '/';
-    var routeByPath = [
-      [/^\\/(?:index|feed)\\.html$/, 'feed'],
-      [/^\\/(?:search)\\.html$/, 'search'],
-      [/^\\/pages\\/search\\/search\\.html$/, 'search'],
-      [/^\\/pages\\/community\\//, 'community'],
-      [/^\\/pages\\/marketplace\\//, 'marketplace'],
-      [/^\\/pages\\/events\\//, 'events'],
-      [/^\\/pages\\/library\\//, 'library'],
-      [/^\\/pages\\/messaging\\//, 'messages'],
-      [/^\\/pages\\/sponsorship\\//, 'sponsorship'],
-      [/^\\/pages\\/training\\//, 'training'],
-      [/^\\/pages\\/profiles\\/edit-profile\\.html$/, 'profile'],
-      [/^\\/pages\\/profiles\\//, 'public-profile'],
-      [/^\\/pages\\/dashboard\\//, 'profile']
-    ];
+    var pathname = String(window.location.pathname || '/').toLowerCase();
+    while (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
     var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile'];
     if (knownRoutes.indexOf(requested) !== -1) {
       app.route = requested;
       return;
     }
-    for (var i = 0; i < routeByPath.length; i += 1) {
-      if (routeByPath[i][0].test(pathname)) {
-        app.route = routeByPath[i][1];
-        return;
-      }
-    }
-    app.route = 'feed';
+    if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') app.route = 'feed';
+    else if (pathname === '/search.html' || pathname === '/pages/search/search.html') app.route = 'search';
+    else if (pathname.startsWith('/pages/community/')) app.route = 'community';
+    else if (pathname.startsWith('/pages/marketplace/')) app.route = 'marketplace';
+    else if (pathname.startsWith('/pages/events/')) app.route = 'events';
+    else if (pathname.startsWith('/pages/library/')) app.route = 'library';
+    else if (pathname.startsWith('/pages/messaging/')) app.route = 'messages';
+    else if (pathname.startsWith('/pages/sponsorship/')) app.route = 'sponsorship';
+    else if (pathname.startsWith('/pages/training/')) app.route = 'training';
+    else if (pathname.startsWith('/pages/profiles/edit-profile')) app.route = 'profile';
+    else if (pathname.startsWith('/pages/profiles/')) app.route = 'public-profile';
+    else if (pathname.startsWith('/pages/dashboard/')) app.route = 'profile';
+    else app.route = 'feed';
   }
 
   async function init() {
