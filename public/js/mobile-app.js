@@ -543,6 +543,14 @@
     var card = document.createElement('article');
     card.className = 'spm-feed-card';
     var mediaType = postMediaType(post);
+    var pollOptions = Array.isArray(post.pollOptions) ? post.pollOptions : [];
+    var pollVotes = Array.isArray(post.pollVotes) ? post.pollVotes : pollOptions.map(function () { return 0; });
+    var pollTotal = pollVotes.reduce(function (sum, value) { return sum + Number(value || 0); }, 0);
+    var pollMarkup = String(post.type || '').toLowerCase() === 'poll' ? '<div class="spm-poll-box">' + pollOptions.map(function (option, index) {
+      var votes = Number(pollVotes[index] || 0);
+      var percent = pollTotal ? Math.round(votes / pollTotal * 100) : 0;
+      return '<button type="button" class="spm-poll-option" data-poll-index="' + index + '"><span>' + html(option) + '</span><strong>' + percent + '%</strong></button>';
+    }).join('') + '<small>' + pollTotal + ' votes</small></div>' : '';
     var mediaMarkup = '';
     if (mediaType === 'video') {
       mediaMarkup = '<video class="spm-feed-video" controls playsinline preload="metadata" src="' + html(postVideoUrl(post)) + '"></video>';
@@ -559,11 +567,30 @@
       </div>
       ${mediaMarkup}
       <p class="spm-feed-copy">${html(post.content || 'Shared a sports update.')}</p>
+      ${pollMarkup}
       <div class="spm-feed-meta">
         <button class="spm-feed-chip" type="button" data-like="${html(post.id)}">❤️ ${Number(post.likesCount || 0)}</button>
         <button class="spm-feed-chip" type="button" data-comments="${html(post.id)}">💬 ${Number(post.commentsCount || 0)}</button>
         <span class="spm-feed-chip static">${html(post.sport || 'Sport')}</span>
       </div>`;
+
+    card.querySelectorAll('[data-poll-index]').forEach(function (button) {
+      button.addEventListener('click', async function () {
+        if (button.disabled) return;
+        button.disabled = true;
+        try {
+          await window.SpopeerAPI.votePoll(post.id, Number(button.getAttribute('data-poll-index')));
+          await render();
+        } catch (error) {
+          if (window.SpopeerAPI && typeof window.SpopeerAPI.showNotification === 'function') {
+            window.SpopeerAPI.showNotification(error.message || 'Could not submit poll vote.', 'error');
+          } else {
+            alert(error.message || 'Could not submit poll vote.');
+          }
+          button.disabled = false;
+        }
+      });
+    });
 
     var likeButton = card.querySelector('[data-like]');
     var commentButton = card.querySelector('[data-comments]');
@@ -1462,6 +1489,12 @@
           <div class="spm-compose-tools">
             <button type="button" id="spmChoosePhoto">📷 Photo</button>
             <button type="button" id="spmChooseVideo">🎥 Video</button>
+            <button type="button" id="spmTogglePoll" aria-pressed="false">📊 Poll</button>
+          </div>
+          <div id="spmPollFields" class="spm-poll-fields" hidden>
+            <input id="spmPollQuestion" type="text" maxlength="300" placeholder="Ask a question">
+            <input class="spmPollOption" type="text" maxlength="200" placeholder="Option 1">
+            <input class="spmPollOption" type="text" maxlength="200" placeholder="Option 2">
           </div>
           <input id="spmPostMedia" type="file" accept="image/*,video/mp4,video/webm" hidden>
           <div id="spmPostMediaName" class="spm-empty" style="display:none"></div>
@@ -1472,6 +1505,19 @@
       var mediaName = document.getElementById('spmPostMediaName');
       var errorBox = document.getElementById('spmPostError');
       var postButton = document.getElementById('spmPostBtn');
+      var pollToggle = document.getElementById('spmTogglePoll');
+      var pollFields = document.getElementById('spmPollFields');
+      pollToggle.addEventListener('click', function () {
+        var enabled = pollToggle.getAttribute('aria-pressed') !== 'true';
+        pollToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+        pollToggle.classList.toggle('active', enabled);
+        pollFields.hidden = !enabled;
+        if (enabled) {
+          mediaInput.value = '';
+          mediaName.style.display = 'none';
+          mediaName.textContent = '';
+        }
+      });
       document.getElementById('spmCancelPost').onclick = function () { app.route = 'feed'; render(); };
       document.getElementById('spmChoosePhoto').onclick = function () {
         mediaInput.accept = 'image/*';
@@ -1491,8 +1537,21 @@
       postButton.onclick = async function () {
         var content = document.getElementById('spmPostContent').value.trim();
         var file = mediaInput.files && mediaInput.files[0];
+        var pollEnabled = pollToggle.getAttribute('aria-pressed') === 'true';
+        var pollOptions = Array.from(document.querySelectorAll('.spmPollOption')).map(function (input) { return input.value.trim(); }).filter(Boolean);
+        var pollQuestion = document.getElementById('spmPollQuestion').value.trim();
         errorBox.style.display = 'none';
-        if (!content && !file) {
+        if (pollEnabled && pollOptions.length < 2) {
+          errorBox.textContent = 'A poll needs at least two options.';
+          errorBox.style.display = 'block';
+          return;
+        }
+        if (pollEnabled && !pollQuestion && !content) {
+          errorBox.textContent = 'Enter a question for your poll.';
+          errorBox.style.display = 'block';
+          return;
+        }
+        if (!content && !file && !pollEnabled) {
           errorBox.textContent = 'Write something or attach a photo/video.';
           errorBox.style.display = 'block';
           return;
@@ -1506,14 +1565,20 @@
         postButton.textContent = 'Publishing...';
         try {
           var payload;
-          if (file) {
+          var sport = (app.user && (app.user.sport || app.user.primarySport)) || 'General';
+          if (file || pollEnabled) {
             payload = new FormData();
-            payload.append('content', content);
-            payload.append('sport', (app.user && (app.user.sport || app.user.primarySport)) || 'General');
-            payload.append('type', file.type.indexOf('video/') === 0 ? 'video' : 'photo');
-            payload.append('media', file);
+            payload.append('content', pollEnabled ? (pollQuestion || content || 'Poll') : content);
+            payload.append('sport', sport);
+            if (pollEnabled) {
+              payload.append('type', 'poll');
+              payload.append('pollOptions', JSON.stringify(pollOptions));
+            } else if (file) {
+              payload.append('type', file.type.indexOf('video/') === 0 ? 'video' : 'photo');
+              payload.append('media', file);
+            }
           } else {
-            payload = { content: content, sport: (app.user && (app.user.sport || app.user.primarySport)) || 'General' };
+            payload = { content: content, sport: sport };
           }
           await window.SpopeerAPI.createPost(payload);
           app.route = 'feed';
