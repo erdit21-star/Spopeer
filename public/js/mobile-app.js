@@ -575,12 +575,34 @@
       });
     }
 
+    var initialLiked = !!(post.isLiked || post.liked || post.userLiked);
+    likeButton.setAttribute('aria-pressed', initialLiked ? 'true' : 'false');
+    likeButton.classList.toggle('is-liked', initialLiked);
     likeButton.addEventListener('click', async function () {
+      if (likeButton.disabled) return;
+      var wasLiked = likeButton.getAttribute('aria-pressed') === 'true';
+      var oldCount = Number(post.likesCount || post.likes || 0);
+      likeButton.disabled = true;
       try {
-        await window.SpopeerAPI.toggleLike(post.id);
-        likeButton.textContent = '❤️ ' + (Number(post.likesCount || 0) + 1);
+        var toggle = window.SpopeerAPI.togglePostLike || window.SpopeerAPI.toggleLike;
+        if (typeof toggle !== 'function') throw new Error('Like is unavailable. Please refresh and try again.');
+        var result = await toggle.call(window.SpopeerAPI, post.id);
+        var payload = (result && result.data) || result || {};
+        var liked = typeof payload.liked === 'boolean' ? payload.liked : !wasLiked;
+        var count = typeof payload.likesCount === 'number' ? payload.likesCount : Math.max(0, oldCount + (liked ? 1 : -1));
+        post.likesCount = count;
+        post.isLiked = liked;
+        likeButton.setAttribute('aria-pressed', liked ? 'true' : 'false');
+        likeButton.classList.toggle('is-liked', liked);
+        likeButton.textContent = (liked ? '❤️ ' : '♡ ') + count;
       } catch (error) {
-        alert(error.message || 'Could not like post');
+        if (window.SpopeerAPI && typeof window.SpopeerAPI.showNotification === 'function') {
+          window.SpopeerAPI.showNotification(error.message || 'Could not update like.', 'error');
+        } else {
+          alert(error.message || 'Could not update like.');
+        }
+      } finally {
+        likeButton.disabled = false;
       }
     });
 
@@ -1388,28 +1410,81 @@
 
     create: function () {
       setTitle('Create Post', 'Share your update');
-      $('#spmScreen').classList.remove('spm-snap-feed');
-      $('#spmScreen').innerHTML = `
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = `
         <div class="spm-compose">
           <div class="spm-compose-head">
             <button type="button" id="spmCancelPost">Cancel</button>
             <strong>Create Post</strong>
             <button type="button" id="spmPostBtn">Post</button>
           </div>
-          <textarea id="spmPostContent" placeholder="Share your update..."></textarea>
-          <div class="spm-compose-tools"><span>📷 Photo</span><span>🎥 Video</span><span>📊 Poll</span></div>
+          <textarea id="spmPostContent" placeholder="Share your update..." maxlength="5000"></textarea>
+          <div class="spm-compose-tools">
+            <button type="button" id="spmChoosePhoto">📷 Photo</button>
+            <button type="button" id="spmChooseVideo">🎥 Video</button>
+          </div>
+          <input id="spmPostMedia" type="file" accept="image/*,video/mp4,video/webm" hidden>
+          <div id="spmPostMediaName" class="spm-empty" style="display:none"></div>
+          <div id="spmPostError" class="spm-empty" style="display:none;color:#dc2626;text-align:left"></div>
         </div>`;
 
-      $('#spmCancelPost').onclick = function () { app.route = 'feed'; render(); };
-      $('#spmPostBtn').onclick = async function () {
-        const content = $('#spmPostContent').value.trim();
-        if (!content) return alert('Write something before posting.');
+      var mediaInput = document.getElementById('spmPostMedia');
+      var mediaName = document.getElementById('spmPostMediaName');
+      var errorBox = document.getElementById('spmPostError');
+      var postButton = document.getElementById('spmPostBtn');
+      document.getElementById('spmCancelPost').onclick = function () { app.route = 'feed'; render(); };
+      document.getElementById('spmChoosePhoto').onclick = function () {
+        mediaInput.accept = 'image/*';
+        mediaInput.value = '';
+        mediaInput.click();
+      };
+      document.getElementById('spmChooseVideo').onclick = function () {
+        mediaInput.accept = 'video/mp4,video/webm';
+        mediaInput.value = '';
+        mediaInput.click();
+      };
+      mediaInput.addEventListener('change', function () {
+        var file = mediaInput.files && mediaInput.files[0];
+        mediaName.style.display = file ? 'block' : 'none';
+        mediaName.textContent = file ? 'Attached: ' + file.name : '';
+      });
+      postButton.onclick = async function () {
+        var content = document.getElementById('spmPostContent').value.trim();
+        var file = mediaInput.files && mediaInput.files[0];
+        errorBox.style.display = 'none';
+        if (!content && !file) {
+          errorBox.textContent = 'Write something or attach a photo/video.';
+          errorBox.style.display = 'block';
+          return;
+        }
+        if (file && file.size > 50 * 1024 * 1024) {
+          errorBox.textContent = 'The selected file is too large. Maximum size is 50MB.';
+          errorBox.style.display = 'block';
+          return;
+        }
+        postButton.disabled = true;
+        postButton.textContent = 'Publishing...';
         try {
-          await window.SpopeerAPI.createPost({ content: content, sport: app.user && (app.user.sport || app.user.primarySport) });
+          var payload;
+          if (file) {
+            payload = new FormData();
+            payload.append('content', content);
+            payload.append('sport', (app.user && (app.user.sport || app.user.primarySport)) || 'General');
+            payload.append('type', file.type.indexOf('video/') === 0 ? 'video' : 'photo');
+            payload.append('media', file);
+          } else {
+            payload = { content: content, sport: (app.user && (app.user.sport || app.user.primarySport)) || 'General' };
+          }
+          await window.SpopeerAPI.createPost(payload);
           app.route = 'feed';
-          render();
+          await render();
         } catch (error) {
-          alert(error.message || 'Could not publish post.');
+          errorBox.textContent = (error && error.message) || 'Could not publish post. Please try again.';
+          errorBox.style.display = 'block';
+        } finally {
+          postButton.disabled = false;
+          postButton.textContent = 'Post';
         }
       };
     },
@@ -1432,25 +1507,47 @@
         <div class="spm-chat-input"><input id="spmCommentText" placeholder="Comment..."><button id="spmSendComment">Send</button></div>`;
 
       const commentsBox = $('#spmComments');
-      try {
-        const result = await window.SpopeerAPI.getComments(post.id);
-        const comments = Array.isArray(result.data) ? result.data : (result.comments || []);
-        commentsBox.innerHTML = comments.length ? '' : '<div class="spm-empty">No comments yet.</div>';
-        comments.forEach(function (comment) {
-          const item = document.createElement('div');
-          item.className = 'spm-list-item';
-          item.textContent = comment.content || comment.text || '';
-          commentsBox.appendChild(item);
-        });
-      } catch (_error) {
-        commentsBox.innerHTML = '<div class="spm-empty">Could not load comments.</div>';
+      async function loadMobileComments() {
+        try {
+          var getComments = window.SpopeerAPI.getPostComments || window.SpopeerAPI.getComments;
+          if (typeof getComments !== 'function') throw new Error('Comments are unavailable.');
+          const result = await getComments.call(window.SpopeerAPI, post.id);
+          const payload = (result && result.data) || result || {};
+          const comments = Array.isArray(payload) ? payload : (payload.comments || payload.rows || []);
+          commentsBox.innerHTML = comments.length ? '' : '<div class="spm-empty">No comments yet.</div>';
+          comments.forEach(function (comment) {
+            const item = document.createElement('div');
+            item.className = 'spm-list-item';
+            item.textContent = comment.content || comment.text || '';
+            commentsBox.appendChild(item);
+          });
+        } catch (error) {
+          commentsBox.innerHTML = '<div class="spm-empty">Could not load comments. ' + html(error.message || '') + '</div>';
+        }
       }
+      await loadMobileComments();
 
       $('#spmSendComment').onclick = async function () {
-        const content = $('#spmCommentText').value.trim();
-        if (!content) return;
-        await window.SpopeerAPI.addComment(post.id, content);
-        screens.post();
+        const input = $('#spmCommentText');
+        const button = $('#spmSendComment');
+        const content = input.value.trim();
+        if (!content || button.disabled) return;
+        button.disabled = true;
+        try {
+          var addComment = window.SpopeerAPI.addPostComment || window.SpopeerAPI.addComment;
+          if (typeof addComment !== 'function') throw new Error('Comments are unavailable.');
+          await addComment.call(window.SpopeerAPI, post.id, content);
+          input.value = '';
+          await loadMobileComments();
+        } catch (error) {
+          if (window.SpopeerAPI && typeof window.SpopeerAPI.showNotification === 'function') {
+            window.SpopeerAPI.showNotification(error.message || 'Could not add comment.', 'error');
+          } else {
+            alert(error.message || 'Could not add comment.');
+          }
+        } finally {
+          button.disabled = false;
+        }
       };
     },
 
