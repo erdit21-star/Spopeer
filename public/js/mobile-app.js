@@ -4037,7 +4037,7 @@
       var managePlanBtn = document.getElementById('spmManagePlanBtn');
       if (managePlanBtn) {
         managePlanBtn.addEventListener('click', function () {
-          window.location.href = '/pages/dashboard/settings.html#section-subscription';
+          window.location.href = '/pages/dashboard/settings.html#section-account';
         });
       }
 
@@ -4266,7 +4266,7 @@
       '<div style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#334155">Current Plan</div>' +
       '<div style="font-size:13px;font-weight:700;color:#0f172a;margin:4px 0 6px">' + html(info.code + ' · ' + info.label) + '</div>' +
       featureRows +
-      '<a href="/pages/dashboard/settings.html#section-subscription" style="display:inline-flex;margin-top:7px;font-size:12px;font-weight:700;color:#001f3f;text-decoration:none">Manage Subscription</a>';
+      '<a href="/pages/dashboard/settings.html#section-account" style="display:inline-flex;margin-top:7px;font-size:12px;font-weight:700;color:#001f3f;text-decoration:none">Manage Subscription</a>';
   }
 
   function bindNav() {
