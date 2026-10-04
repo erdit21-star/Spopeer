@@ -777,6 +777,13 @@
     return updateProfile(payload);
   }
 
+  async function changePassword(currentPassword, newPassword) {
+    return request('/api/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword: currentPassword, newPassword: newPassword })
+    });
+  }
+
   async function getSubscriptionPlans() {
     return request('/api/profile/subscription-plans');
   }
@@ -829,6 +836,7 @@
     getCurrentProfile,
     updateProfile,
     updateCurrentProfile,
+    changePassword,
     getSubscriptionPlans,
     updateSubscriptionPlan,
     uploadAvatar,
