@@ -18,6 +18,7 @@
   }
 
   if (token) {
+    document.title = 'Spopeer | Reset Password';
     document.querySelector('.page-title').textContent = 'Set a New Password';
     document.querySelector('.page-sub').textContent = 'Choose a new secure password for your Spopeer account.';
     var intro = document.querySelector('.fp-intro');
