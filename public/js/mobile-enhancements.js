@@ -184,7 +184,7 @@
 
     var items = [
       { key: 'home', href: '/feed.html', aliases: ['/','/index.html'], icon: 'fa-solid fa-house', label: 'Home' },
-      { key: 'explore', href: '/search.html', aliases: ['/pages/search/search.html'], icon: 'fa-solid fa-compass', label: 'Explore' },
+      { key: 'explore', href: '/search.html', aliases: ['/pages/search/search.html', '/pages/community/community.html', '/pages/community/forums.html'], icon: 'fa-solid fa-compass', label: 'Explore' },
       { key: 'create', href: null, icon: 'fa-solid fa-plus', label: 'Create', post: true },
       { key: 'messages', href: '/pages/messaging/inbox.html', aliases: ['/pages/messaging/chat.html'], icon: 'fa-regular fa-paper-plane', label: 'Messages' },
       { key: 'profile', href: '/pages/profiles/edit-profile.html', aliases: ['/pages/profiles/public-profile.html'], icon: 'fa-regular fa-user', label: 'Profile' }
