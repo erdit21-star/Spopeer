@@ -66,6 +66,13 @@
 </style>
 <script src="/js/api.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/js/service-worker.js', { updateViaCache: 'none' })
+        .then(function (registration) { return registration.update(); })
+        .catch(function (error) { console.debug('[Spopeer] Service worker update skipped:', error); });
+    }
+  </script>
 </head>
 <body>
 
