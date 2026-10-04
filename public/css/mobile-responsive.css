@@ -745,3 +745,112 @@ textarea {
     -webkit-tap-highlight-color: transparent !important;
   }
 }
+
+
+/* Match the legacy-page bottom navigation to the native Spopeer mobile tab bar. */
+@media (max-width: 768px) {
+  body.has-sp-bottom-nav {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav {
+    display: grid !important;
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: 0 !important;
+    transform: translateX(-50%) !important;
+    width: min(520px, 100%) !important;
+    height: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    padding: 8px 10px max(8px, env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+    background: #fff !important;
+    border-top: 1px solid #e5e7eb !important;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, .07) !important;
+    z-index: 1200 !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-inner {
+    display: contents !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-item {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 5px 2px !important;
+    border: 0 !important;
+    border-radius: 16px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #64748b !important;
+    font-family: inherit !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-item i {
+    display: block !important;
+    width: auto !important;
+    height: 21px !important;
+    margin: 0 !important;
+    font-size: 19px !important;
+    line-height: 21px !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-item .sp-nav-label {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 10px !important;
+    line-height: 12px !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-item.active {
+    color: #1a6bff !important;
+    background: #eaf2ff !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-post {
+    justify-self: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    padding: 5px 2px !important;
+    border-radius: 16px !important;
+    background: #001f3f !important;
+    color: #fff !important;
+    box-shadow: none !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-post i {
+    height: 21px !important;
+    font-size: 19px !important;
+    line-height: 21px !important;
+  }
+
+  body.has-sp-bottom-nav .sp-bottom-nav-post .sp-nav-label {
+    display: block !important;
+  }
+}
