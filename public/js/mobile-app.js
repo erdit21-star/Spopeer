@@ -64,6 +64,10 @@
     if (Array.isArray(result)) return result;
     if (Array.isArray(result.results)) return result.results;
     if (Array.isArray(result.users)) return result.users;
+    if (Array.isArray(result.followers)) return result.followers;
+    if (Array.isArray(result.following)) return result.following;
+    if (Array.isArray(result.data && result.data.followers)) return result.data.followers;
+    if (Array.isArray(result.data && result.data.following)) return result.data.following;
     if (Array.isArray(result.data)) return result.data;
     if (result.data && Array.isArray(result.data.results)) return result.data.results;
     if (result.data && Array.isArray(result.data.users)) return result.data.users;
