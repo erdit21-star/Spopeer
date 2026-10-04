@@ -154,13 +154,74 @@ async function verifyAuthenticatedPages(browser, apiContext) {
   const storageState = await apiContext.storageState();
   const context = await browser.newContext({
     baseURL: E2E_BASE_URL,
-    storageState
+    storageState,
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true
   });
 
+  const mobileRoutes = [
+    '/feed.html',
+    '/pages/community/community.html',
+    '/pages/community/forums.html',
+    '/pages/search/search.html',
+    '/pages/marketplace/marketplace.html',
+    '/pages/events/event.html',
+    '/pages/library/index.html',
+    '/pages/profiles/athlete-profile.html',
+    '/pages/profiles/club-profile.html',
+    '/pages/messaging/inbox.html',
+    '/pages/dashboard/notifications.html',
+    '/pages/profiles/edit-profile.html'
+  ];
+
   try {
-    const feedPage = await context.newPage();
-    await feedPage.goto('/feed.html');
-    await expect(feedPage.locator('body')).toBeVisible();
+    const page = await context.newPage();
+    const measuredButtonHeights = [];
+
+    for (const route of mobileRoutes) {
+      const response = await page.goto(route);
+      expect(response && response.status(), `HTTP response for ${route}`).toBeLessThan(400);
+      await expect(page.locator('body')).toBeVisible();
+
+      // Authenticated app pages must expose the same shared five-item mobile bar.
+      const bottomNav = page.locator('.sp-bottom-nav[data-sp-shared-mobile-nav="true"]');
+      await expect(bottomNav, `shared mobile nav on ${route}`).toBeVisible({ timeout: 10000 });
+      await expect(bottomNav.locator('.sp-bottom-nav-item')).toHaveCount(5);
+
+      const homeLink = bottomNav.getByRole('link', { name: 'Home' });
+      const buttons = bottomNav.locator('.sp-bottom-nav-item');
+      const metrics = await buttons.evaluateAll((nodes) => nodes.map((node) => {
+        const rect = node.getBoundingClientRect();
+        const style = window.getComputedStyle(node);
+        return {
+          height: Math.round(rect.height),
+          display: style.display,
+          flexDirection: style.flexDirection,
+          fontSize: style.fontSize
+        };
+      }));
+      expect(metrics.every((item) => item.display === 'flex')).toBeTruthy();
+      expect(metrics.every((item) => item.flexDirection === 'column')).toBeTruthy();
+      expect(metrics.every((item) => item.height >= 44)).toBeTruthy();
+      measuredButtonHeights.push(metrics.map((item) => item.height));
+
+      const hasHorizontalOverflow = await page.evaluate(() =>
+        document.documentElement.scrollWidth > document.documentElement.clientWidth + 2
+      );
+      expect(hasHorizontalOverflow, `horizontal overflow on ${route}`).toBeFalsy();
+
+      // Exercise Home from every page and ensure it settles on the canonical feed.
+      await homeLink.click();
+      await page.waitForURL((url) => url.pathname === '/feed.html', { timeout: 10000 });
+      await expect(page.locator('.sp-bottom-nav[data-sp-shared-mobile-nav="true"]')).toBeVisible();
+    }
+
+    // The same nav controls must retain the same rendered dimensions on every page.
+    const referenceHeights = measuredButtonHeights[0];
+    for (const heights of measuredButtonHeights.slice(1)) {
+      expect(heights).toEqual(referenceHeights);
+    }
 
     const profilePage = await context.newPage();
     await profilePage.goto('/pages/profiles/edit-profile.html');
