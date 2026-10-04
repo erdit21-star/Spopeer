@@ -195,6 +195,7 @@ async function verifyAuthenticatedPages(browser, apiContext) {
       expect(response && response.status(), 'HTTP response for ' + entry.path).toBeLessThan(400);
       await expect(page.locator('#spmApp'), 'mobile app shell for ' + entry.path).toBeVisible();
       await expect(page.locator('#spmScreen')).toBeVisible();
+      await expect(page.locator('#spmApp')).toHaveAttribute('data-current-route', entry.route);
 
       // The first response itself must be the mobile shell, not desktop index markup.
       await expect(page.locator('.spm-tabbar')).toBeVisible({ timeout: 15000 });
