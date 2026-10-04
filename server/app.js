@@ -271,6 +271,7 @@ function mobileAppRouteForPath(requestPath) {
   while (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
   if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') return 'feed';
   if (pathname === '/search.html' || pathname === '/pages/search/search.html') return 'search';
+  if (pathname.startsWith('/pages/admin/') || pathname.startsWith('/pages/ads/')) return 'admin';
   if (pathname === '/pages/dashboard/notifications.html') return 'notifications';
   if (pathname.startsWith('/pages/dashboard/')) return 'settings';
   if (pathname === '/pages/profiles/edit-profile.html') return 'edit-profile';
