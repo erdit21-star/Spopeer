@@ -4180,6 +4180,51 @@
 
     ,
 
+    followers: async function () {
+      setTitle('Followers & Following', 'Your sports network');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading connections...</div>';
+      try {
+        var profile = unwrapUser(await window.SpopeerAPI.getProfile()) || app.user || {};
+        app.user = profile;
+        var userId = profile.id || profile.userId;
+        if (!userId) throw new Error('Your profile could not be identified.');
+        var results = await Promise.all([window.SpopeerAPI.getFollowers(userId), window.SpopeerAPI.getFollowing(userId)]);
+        var followers = unwrapSearchUsers(results[0]), following = unwrapSearchUsers(results[1]);
+        function renderPeople(items, title) {
+          return '<section class="spm-card" style="padding:14px;margin-bottom:12px"><h3 style="margin:0 0 10px">' + title + ' (' + items.length + ')</h3>' +
+            (items.length ? items.map(function (entry) {
+              var person = entry.user || entry.follower || entry.following || entry;
+              var name = displayNameFromUser(person);
+              return '<article class="spm-feed-card"><div class="spm-feed-head"><div class="spm-mini-avatar">' + html(initialForName(name)) + '</div><div class="spm-feed-title-wrap"><strong>' + html(name) + '</strong><small>' + html(person.sport || person.primarySport || person.role || 'Spopeer member') + '</small></div></div></article>';
+            }).join('') : '<div class="spm-empty">No members yet.</div>') + '</section>';
+        }
+        screen.innerHTML = renderPeople(followers, 'Followers') + renderPeople(following, 'Following');
+      } catch (error) {
+        screen.innerHTML = '<div class="spm-empty">' + html(error.message || 'Could not load your connections.') + '</div>';
+      }
+    },
+
+    'user-posts': async function () {
+      setTitle('Your Posts', 'Your activity on Spopeer');
+      var screen = $('#spmScreen');
+      screen.classList.remove('spm-snap-feed');
+      screen.innerHTML = '<div class="spm-empty">Loading your posts...</div>';
+      try {
+        var profile = unwrapUser(await window.SpopeerAPI.getProfile()) || app.user || {};
+        app.user = profile;
+        var userId = profile.id || profile.userId;
+        if (!userId) throw new Error('Your profile could not be identified.');
+        var result = await window.SpopeerAPI.listPosts({ authorId: userId, limit: 60, page: 1 });
+        var posts = unwrapPosts(result);
+        screen.innerHTML = posts.length ? '' : '<div class="spm-empty">You have not published any posts yet.</div>';
+        posts.forEach(function (post) { screen.appendChild(renderFeedPostCard(post)); });
+      } catch (error) {
+        screen.innerHTML = '<div class="spm-empty">' + html(error.message || 'Could not load your posts.') + '</div>';
+      }
+    },
+
     'follow-requests': async function () {
       setTitle('Follow Requests', 'Manage incoming and sent requests');
       var screen = $('#spmScreen');
@@ -4434,7 +4479,7 @@
     var requested = String(params.get('mobileRoute') || '').toLowerCase();
     var pathname = String(window.location.pathname || '/').toLowerCase();
     while (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
-    var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile','notifications','edit-profile','settings','articles','follow-requests','admin'];
+    var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile','notifications','edit-profile','settings','articles','follow-requests','admin','followers','user-posts'];
     if (knownRoutes.indexOf(requested) !== -1) {
       app.route = requested;
       return;
@@ -4448,7 +4493,8 @@
     else if (pathname === '/pages/dashboard/settings.html') app.route = 'settings';
     else if (pathname === '/pages/profiles/edit-profile.html') app.route = 'edit-profile';
     else if (pathname === '/pages/profiles/public-profile.html') app.route = 'public-profile';
-    else if (pathname === '/pages/profiles/followers.html') app.route = 'follow-requests';
+    else if (pathname === '/pages/profiles/followers.html') app.route = 'followers';
+    else if (pathname === '/pages/profiles/user-posts.html') app.route = 'user-posts';
     else if (pathname.startsWith('/pages/community/')) app.route = 'community';
     else if (pathname.startsWith('/pages/marketplace/')) app.route = 'marketplace';
     else if (pathname.startsWith('/pages/events/')) app.route = 'events';
