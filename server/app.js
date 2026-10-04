@@ -266,7 +266,7 @@ const MOBILE_APP_PATH = path.join(__dirname, '..', 'public', 'mobile.html');
 const MOBILE_LOGIN_PATH = path.join(__dirname, '..', 'public', 'mobile-login.html');
 const MOBILE_SIGNUP_PATH = path.join(__dirname, '..', 'public', 'mobile-signup.html');
 function isMobileRequest(req) {
-  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(req.get('user-agent') || '');
+  return req.get('sec-ch-ua-mobile') === '?1' || /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(req.get('user-agent') || '');
 }
 function mobileAppRouteForPath(requestPath) {
   let pathname = String(requestPath || '/').toLowerCase();
