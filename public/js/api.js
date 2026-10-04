@@ -1154,7 +1154,14 @@
       });
     },
     searchUsers: function (params) {
-      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      var normalized = Object.assign({}, params || {});
+      // Mobile discovery supplies term/pageSize while the authenticated
+      // search endpoint expects query/limit. Accept both calling conventions.
+      if (normalized.query == null && normalized.term != null) normalized.query = normalized.term;
+      if (normalized.limit == null && normalized.pageSize != null) normalized.limit = normalized.pageSize;
+      delete normalized.term;
+      delete normalized.pageSize;
+      var qs = Object.keys(normalized).length ? '?' + new URLSearchParams(normalized).toString() : '';
       return request("/api/search/users" + qs);
     },
     unwrap: unwrap
