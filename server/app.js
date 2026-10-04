@@ -282,12 +282,16 @@ const MOBILE_STATIC_PAGES = {
   '/pages/auth/forgot-password.html': MOBILE_FORGOT_PASSWORD_PATH,
   '/pages/auth/reset-password.html': MOBILE_FORGOT_PASSWORD_PATH,
   '/pages/legal/terms.html': MOBILE_TERMS_PATH,
+  '/pages/legal/privacy.html': MOBILE_PRIVACY_PATH,
+  '/pages/legal/about.html': MOBILE_ABOUT_PATH,
   '/pages/legal/cookies.html': MOBILE_PRIVACY_PATH,
   '/pages/legal/community-guidelines.html': MOBILE_TERMS_PATH,
   '/pages/legal/report-abuse.html': MOBILE_REPORT_ABUSE_PATH,
   '/pages/contact/index.html': MOBILE_CONTACT_PATH,
   '/contact.html': MOBILE_CONTACT_PATH,
   '/pages/company/faq.html': MOBILE_HELP_CENTER_PATH,
+  '/pages/company/help-center.html': MOBILE_HELP_CENTER_PATH,
+  '/pages/company/blog.html': MOBILE_BLOG_PATH,
   '/pages/company/careers.html': MOBILE_CAREERS_PATH,
   '/pages/company/changelog.html': MOBILE_BLOG_PATH,
   '/pages/company/report-abuse.html': MOBILE_REPORT_ABUSE_PATH,
@@ -345,6 +349,11 @@ app.use((req, res, next) => {
     res.set('Vary', 'User-Agent');
     res.set('Cache-Control', 'no-store');
     return res.sendFile(MOBILE_SIGNUP_PATH);
+  }
+  if (req.path.startsWith('/pages/auth/')) {
+    res.set('Vary', 'User-Agent');
+    res.set('Cache-Control', 'no-store');
+    return res.sendFile(MOBILE_LOGIN_PATH);
   }
   if (req.path !== '/' && !req.path.toLowerCase().endsWith('.html')) return next();
   // Remaining unconverted authentication endpoints retain their dedicated forms.
