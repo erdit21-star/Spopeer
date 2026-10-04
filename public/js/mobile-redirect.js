@@ -36,7 +36,7 @@
     '/pages/company/how-it-works.html': '/mobile-how-it-works.html'
   };
   if (mobileStaticPages[path]) {
-    window.location.replace(mobileStaticPages[path]);
+    window.location.replace(mobileStaticPages[path] + (window.location.search || ''));
     return;
   }
 
