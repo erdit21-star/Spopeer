@@ -20,6 +20,7 @@
     '/pages/auth/forgot-password.html': '/mobile-forgot-password.html',
     '/pages/auth/reset-password.html': '/mobile-forgot-password.html',
     '/pages/admin/login.html': '/mobile-login.html',
+    '/pages/legal/index.html': '/mobile-terms.html',
     '/pages/legal/terms.html': '/mobile-terms.html',
     '/pages/legal/privacy.html': '/mobile-privacy.html',
     '/pages/legal/about.html': '/mobile-about.html',
