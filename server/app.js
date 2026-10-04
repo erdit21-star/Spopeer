@@ -259,6 +259,39 @@ app.use((req, res, next) => {
   next();
 });
 
+// ─── MOBILE APP ENTRY ROUTING ───
+// Serve the mobile application shell before static files so mobile browsers never
+// render the desktop index/page first and then get redirected by client-side JS.
+const MOBILE_APP_PATH = path.join(__dirname, '..', 'public', 'mobile.html');
+function isMobileRequest(req) {
+  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(req.get('user-agent') || '');
+}
+function mobileAppRouteForPath(requestPath) {
+  const pathname = String(requestPath || '/').toLowerCase().replace(/\\/+$/, '') || '/';
+  if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') return 'feed';
+  if (pathname === '/search.html' || pathname === '/pages/search/search.html') return 'search';
+  if (pathname.startsWith('/pages/community/')) return 'community';
+  if (pathname.startsWith('/pages/marketplace/')) return 'marketplace';
+  if (pathname.startsWith('/pages/events/')) return 'events';
+  if (pathname.startsWith('/pages/library/')) return 'library';
+  if (pathname.startsWith('/pages/messaging/')) return 'messages';
+  if (pathname.startsWith('/pages/sponsorship/')) return 'sponsorship';
+  if (pathname.startsWith('/pages/training/')) return 'training';
+  if (pathname.startsWith('/pages/profiles/')) return pathname.includes('edit-profile') ? 'profile' : 'public-profile';
+  if (pathname.startsWith('/pages/dashboard/')) return 'profile';
+  return null;
+}
+app.get('*path', (req, res, next) => {
+  if (!isMobileRequest(req)) return next();
+  // Keep mobile authentication and public/legal pages on their dedicated endpoints.
+  if (req.path.startsWith('/pages/auth/') || req.path.startsWith('/pages/legal/') || req.path.startsWith('/pages/contact/')) return next();
+  const mobileRoute = mobileAppRouteForPath(req.path);
+  if (!mobileRoute) return next();
+  res.set('Vary', 'User-Agent');
+  res.set('Cache-Control', 'no-store');
+  return res.sendFile(MOBILE_APP_PATH);
+});
+
 // ─── STATIC FILES ───
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, '..', 'public')));
