@@ -53,6 +53,13 @@ function validateCampaign(data) {
   if (!['cpm', 'cpc', 'flat'].includes(data.billingModel)) return 'Invalid billing model.';
   if (!Number.isFinite(data.dailyBudget) || data.dailyBudget < 5 || data.dailyBudget > 10000) return 'Daily budget must be between €5 and €10,000.';
   if (!data.startDate || !data.endDate || data.endDate < data.startDate) return 'A valid start and end date are required.';
+  if (!data.destinationUrl) return 'Destination URL is required.';
+  try {
+    const url = new URL(data.destinationUrl);
+    if (!['http:', 'https:'].includes(url.protocol)) return 'Destination URL must use http or https.';
+  } catch (_error) {
+    return 'Destination URL must be a valid URL.';
+  }
   return null;
 }
 
