@@ -106,7 +106,24 @@
         chart.appendChild(group);
       });
     }
-    if (labels) labels.innerHTML = '<span>Current</span><span>Campaign totals</span>';
+    var live = campaigns.filter(function(c){ return c.status === 'live'; });
+    var paused = campaigns.filter(function(c){ return c.status === 'paused'; });
+    var review = campaigns.filter(function(c){ return c.status === 'review'; });
+    var best = campaigns.slice().sort(function(a,b){
+      var ca = Number(a.impressions || 0) ? Number(a.clicks || 0) / Number(a.impressions || 0) : 0;
+      var cb = Number(b.impressions || 0) ? Number(b.clicks || 0) / Number(b.impressions || 0) : 0;
+      return cb - ca;
+    })[0];
+    var bestEl = document.querySelector('[data-quick-stat="best"]');
+    var liveEl = document.querySelector('[data-quick-stat="live"]');
+    var pausedEl = document.querySelector('[data-quick-stat="paused"]');
+    var reviewEl = document.querySelector('[data-quick-stat="review"]');
+    var cpcEl = document.querySelector('[data-quick-stat="cpc"]');
+    if (liveEl) liveEl.textContent = live.length;
+    if (pausedEl) pausedEl.textContent = paused.length;
+    if (reviewEl) reviewEl.textContent = review.length;
+    if (bestEl) bestEl.textContent = best ? best.name : '—';
+    if (cpcEl) cpcEl.textContent = clicks ? money(spend / clicks) : '€0.00';
   }
 
   async function loadCampaigns() {
