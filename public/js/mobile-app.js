@@ -13,7 +13,51 @@
     'event-detail', 'sponsorship-detail', 'thread-detail', 'group-detail'
   ]);
 
+  function persistMobileRouteState() {
+    try {
+      var state = {
+        selectedPost: app.selectedPost || null,
+        selectedStory: app.selectedStory || null,
+        selectedProfile: app.selectedProfile || null,
+        selectedProfileIdentifier: app.selectedProfileIdentifier || null,
+        selectedEvent: app.selectedEvent || null,
+        selectedSponsorship: app.selectedSponsorship || null,
+        selectedArticle: app.selectedArticle || null,
+        selectedMarketplaceListing: app.selectedMarketplaceListing || null,
+        selectedThread: app.selectedThread || null,
+        selectedGroup: app.selectedGroup || null,
+        activeConversationId: app.activeConversationId || null,
+        activeConversationTargetId: app.activeConversationTargetId || null,
+        detailBackRoute: app.detailBackRoute || null,
+        storyFeed: Array.isArray(app.storyFeed) ? app.storyFeed.slice(0, 50) : [],
+        storyIndex: Number.isInteger(app.storyIndex) ? app.storyIndex : -1
+      };
+      sessionStorage.setItem('spopeer_mobile_route_state', JSON.stringify(state));
+    } catch (_error) {}
+  }
+
+  function restoreMobileRouteState() {
+    try {
+      var raw = sessionStorage.getItem('spopeer_mobile_route_state');
+      if (!raw) return;
+      var state = JSON.parse(raw);
+      if (!state || typeof state !== 'object') return;
+      [
+        'selectedPost', 'selectedStory', 'selectedProfile',
+        'selectedProfileIdentifier', 'selectedEvent', 'selectedSponsorship',
+        'selectedArticle', 'selectedMarketplaceListing', 'selectedThread',
+        'selectedGroup', 'activeConversationId', 'activeConversationTargetId',
+        'detailBackRoute'
+      ].forEach(function (key) {
+        if (state[key] !== undefined && state[key] !== null) app[key] = state[key];
+      });
+      if (Array.isArray(state.storyFeed)) app.storyFeed = state.storyFeed;
+      if (Number.isInteger(state.storyIndex)) app.storyIndex = state.storyIndex;
+    } catch (_error) {}
+  }
+
   function syncRouteToUrl(route) {
+    persistMobileRouteState();
     var normalized = String(route || 'feed').toLowerCase();
     if (!MOBILE_URL_ROUTES.has(normalized)) normalized = 'feed';
 
@@ -4607,6 +4651,7 @@
   }
 
   async function init() {
+    restoreMobileRouteState();
     resolveInitialMobileRoute();
     applyStoredTheme();
     bindNav();
