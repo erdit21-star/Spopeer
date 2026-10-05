@@ -5,7 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
-const { AdCampaign, User } = require('../models');
+const { AdCampaign, User, AdminAuditLog } = require('../models');
 const { authenticate } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
 const { uploadAvatar, persistFile, validateUploadedFile, enforceFileSizeLimits } = require('../middleware/upload');
@@ -194,6 +194,86 @@ router.post('/:id/event', async (req, res) => {
   } catch (error) {
     console.error('Ad event error:', error);
     res.status(204).end();
+  }
+});
+
+
+// Admin campaign management: review queue, filters and aggregate delivery stats.
+router.get('/admin', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { status, search, page = 1, limit = 25 } = req.query;
+    const parsedLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 25));
+    const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+    const where = {};
+    if (status && ['review', 'live', 'paused', 'ended', 'rejected'].includes(status)) where.status = status;
+    if (search) {
+      const term = String(search).trim();
+      where[Op.or] = [
+        { name: { [Op.iLike]: '%' + term + '%' } },
+        { headline: { [Op.iLike]: '%' + term + '%' } }
+      ];
+    }
+    const { rows, count } = await AdCampaign.findAndCountAll({
+      where,
+      include: [{ model: User, as: 'advertiser', attributes: ['id','firstName','lastName','email','role','subscription'] }],
+      limit: parsedLimit,
+      offset: (parsedPage - 1) * parsedLimit,
+      order: [['createdAt', 'DESC']]
+    });
+    const [review, live, paused, ended, rejected] = await Promise.all(
+      ['review','live','paused','ended','rejected'].map(s => AdCampaign.count({ where: { status: s } }))
+    );
+    const [impressions, clicks, spend] = await Promise.all([
+      AdCampaign.sum('impressions'),
+      AdCampaign.sum('clicks'),
+      AdCampaign.sum('spend')
+    ]);
+    ok(res, rows, {
+      pagination: { total: count, page: parsedPage, pages: Math.ceil(count / parsedLimit) },
+      stats: { review, live, paused, ended, rejected, impressions: Number(impressions || 0), clicks: Number(clicks || 0), spend: Number(spend || 0) }
+    });
+  } catch (error) {
+    console.error('Admin ads list error:', error);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to load advertising campaigns.');
+  }
+});
+
+router.get('/admin/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidId(req.params.id)) return fail(res, 400, 'VALIDATION', 'Invalid campaign ID.');
+    const campaign = await AdCampaign.findByPk(req.params.id, {
+      include: [{ model: User, as: 'advertiser', attributes: ['id','firstName','lastName','email','role','subscription','createdAt'] }]
+    });
+    if (!campaign) return fail(res, 404, 'NOT_FOUND', 'Campaign not found.');
+    ok(res, campaign);
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to load campaign.');
+  }
+});
+
+router.patch('/admin/:id/status', authenticate, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidId(req.params.id)) return fail(res, 400, 'VALIDATION', 'Invalid campaign ID.');
+    const campaign = await AdCampaign.findByPk(req.params.id);
+    if (!campaign) return fail(res, 404, 'NOT_FOUND', 'Campaign not found.');
+    const status = clean(req.body && req.body.status, 20);
+    if (!['live','paused','ended'].includes(status)) return fail(res, 400, 'VALIDATION', 'Admin status must be live, paused, or ended.');
+    await campaign.update({ status });
+    try {
+      await AdminAuditLog.create({
+        adminId: req.userId,
+        action: 'ad_campaign_status_updated',
+        targetType: 'ad_campaign',
+        targetId: campaign.id,
+        details: JSON.stringify({ status }),
+        ipAddress: req.ip
+      });
+    } catch (auditError) {
+      console.warn('Ad campaign audit log failed:', auditError.message);
+    }
+    ok(res, { campaign });
+  } catch (error) {
+    fail(res, 500, 'SERVER_ERROR', 'Failed to update campaign status.');
   }
 });
 
