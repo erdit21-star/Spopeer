@@ -1101,6 +1101,25 @@
       return request("/api/admin/posts/" + encodeURIComponent(postId), { method: "DELETE" });
     },
     adminAnalytics: function () { return request("/api/admin/analytics"); },
+    adminAds: function (params) {
+      var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request("/api/ads/admin" + qs);
+    },
+    adminAd: function (campaignId) {
+      return request("/api/ads/admin/" + encodeURIComponent(campaignId));
+    },
+    adminReviewAd: function (campaignId, action, note) {
+      return request("/api/ads/" + encodeURIComponent(campaignId) + "/review", {
+        method: "PATCH",
+        body: JSON.stringify({ action: action, note: note || "" })
+      });
+    },
+    adminAdStatus: function (campaignId, status) {
+      return request("/api/ads/admin/" + encodeURIComponent(campaignId) + "/status", {
+        method: "PATCH",
+        body: JSON.stringify({ status: status })
+      });
+    },
     adsList: function () { return request("/api/ads"); },
     adsActive: function () { return request("/api/ads/active"); },
     adsCreate: function (payload) { return request("/api/ads", { method: "POST", body: JSON.stringify(payload || {}) }); },
