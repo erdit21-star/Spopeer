@@ -1101,6 +1101,30 @@
       return request("/api/admin/posts/" + encodeURIComponent(postId), { method: "DELETE" });
     },
     adminAnalytics: function () { return request("/api/admin/analytics"); },
+    adsList: function () { return request("/api/ads"); },
+    adsActive: function () { return request("/api/ads/active"); },
+    adsCreate: function (payload) { return request("/api/ads", { method: "POST", body: JSON.stringify(payload || {}) }); },
+    adsUploadCreative: async function (campaignId, file) {
+      var form = new FormData();
+      form.append("creative", file);
+      return request("/api/ads/" + encodeURIComponent(campaignId) + "/creative", {
+        method: "POST",
+        body: form
+      });
+    },
+    adsStatus: function (campaignId, status) {
+      return request("/api/ads/" + encodeURIComponent(campaignId) + "/status", {
+        method: "PATCH",
+        body: JSON.stringify({ status: status })
+      });
+    },
+    adsEvent: function (campaignId, event) {
+      return request("/api/ads/" + encodeURIComponent(campaignId) + "/event", {
+        method: "POST",
+        body: JSON.stringify({ event: event })
+      });
+    },
+
     adminMarketplaceListings: function (params) {
       var qs = params ? '?' + new URLSearchParams(params).toString() : '';
       return request("/api/admin/marketplace/listings" + qs);
