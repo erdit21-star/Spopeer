@@ -220,6 +220,7 @@
     <button class="sidebar-link" onclick="switchSection('users', this)"><i class="fa-solid fa-users"></i><span>Users</span></button>
     <button class="sidebar-link" onclick="switchSection('content', this)"><i class="fa-solid fa-newspaper"></i><span>Content</span></button>
     <button class="sidebar-link" onclick="switchSection('marketplace', this)"><i class="fa-solid fa-store"></i><span>Marketplace</span></button>
+    <button class="sidebar-link" onclick="switchSection('ads', this)"><i class="fa-solid fa-bullhorn"></i><span>Advertising</span><span class="sidebar-badge" id="sb-ads-review">0</span></button>
 
     <div class="sidebar-section-label">Moderation</div>
     <button class="sidebar-link" onclick="switchSection('reports', this)"><i class="fa-solid fa-flag"></i><span>Reports</span><span class="sidebar-badge" id="sb-reports">0</span></button>
@@ -340,6 +341,37 @@
       </div>
     </div>
 
+    
+    <div id="section-ads" class="section">
+      <div class="page-header">
+        <div><div class="page-title">Advertising Management</div><div class="page-subtitle">Review advertiser campaigns, control delivery, and monitor real campaign performance.</div></div>
+        <div class="header-actions"><button class="btn btn-secondary btn-sm" onclick="loadAds(1)"><i class="fa-solid fa-rotate-right"></i> Refresh</button></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon amber"><i class="fa-solid fa-hourglass-half"></i></div><div><div class="stat-label">Needs Review</div><div class="stat-value" id="ad-kpi-review">0</div></div></div>
+        <div class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-bullhorn"></i></div><div><div class="stat-label">Live Campaigns</div><div class="stat-value" id="ad-kpi-live">0</div></div></div>
+        <div class="stat-card"><div class="stat-icon blue"><i class="fa-solid fa-eye"></i></div><div><div class="stat-label">Impressions</div><div class="stat-value" id="ad-kpi-impressions">0</div></div></div>
+        <div class="stat-card"><div class="stat-icon purple"><i class="fa-solid fa-arrow-pointer"></i></div><div><div class="stat-label">Clicks</div><div class="stat-value" id="ad-kpi-clicks">0</div></div></div>
+        <div class="stat-card"><div class="stat-icon red"><i class="fa-solid fa-euro-sign"></i></div><div><div class="stat-label">Recorded Spend</div><div class="stat-value" id="ad-kpi-spend">€0.00</div></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="filter-bar" style="flex:1;">
+            <div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="search-input" id="ad-search" type="text" placeholder="Search campaign or headline" oninput="filterAds(this.value)"></div>
+            <select class="filter-select" id="ad-status-filter" onchange="filterAds(null, this.value)">
+              <option value="">All statuses</option><option value="review">Needs review</option><option value="live">Live</option><option value="paused">Paused</option><option value="ended">Ended</option><option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div class="panel-body no-pad">
+          <table class="sp-table">
+            <thead><tr><th>Campaign</th><th>Advertiser</th><th>Placement</th><th>Budget</th><th>Delivery</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="ads-tbody"><tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted);">Loading campaigns...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination"><span id="ads-pagination-info">Showing 0 campaigns</span><div class="page-btns" id="ads-page-btns"></div></div>
+      </div>
+    </div>
     <div id="section-reports" class="section">
       <div class="page-header"><div><div class="page-title">Reports and Flags</div><div class="page-subtitle">User-submitted reports from moderation API</div></div></div>
       <div class="panel">
@@ -438,6 +470,14 @@
       <div class="form-group"><label class="form-label">Resolution Notes</label><textarea class="form-control" id="resolve-notes" rows="3"></textarea></div>
     </div>
     <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-resolve-report')">Cancel</button><button class="btn btn-primary" onclick="submitReportReview()">Submit</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ad-review">
+  <div class="modal" style="max-width:720px;">
+    <div class="modal-header"><div class="modal-title">Review Advertising Campaign</div><button class="modal-close" onclick="closeModal('modal-ad-review')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body" id="ad-review-body">Loading campaign...</div>
+    <div class="modal-footer" id="ad-review-footer"></div>
   </div>
 </div>
 
