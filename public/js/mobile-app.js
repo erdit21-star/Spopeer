@@ -4572,7 +4572,6 @@
     while (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
     var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile','notifications','edit-profile','settings','articles','follow-requests','admin','followers','user-posts','create','story-create','story-view'];
     if (knownRoutes.indexOf(requested) !== -1) {
-      app.route = requested;
       var requestedProfile = params.get('profile');
       var requestedConversation = params.get('conversation');
       if (requestedProfile) {
@@ -4581,6 +4580,7 @@
       if (requestedConversation) {
         app.activeConversationId = requestedConversation;
       }
+      app.route = requested;
       return;
     }
     if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') app.route = 'feed';
