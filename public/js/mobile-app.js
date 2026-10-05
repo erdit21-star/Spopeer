@@ -21,7 +21,24 @@
       var url = new URL(window.location.href);
       url.pathname = '/mobile.html';
       url.searchParams.set('mobileRoute', normalized);
-      window.history.replaceState({ mobileRoute: normalized }, '', url.pathname + '?' + url.searchParams.toString());
+
+      // Preserve the minimum state needed to restore screens that depend on
+      // an identifier after a hard refresh.
+      ['profile', 'conversation'].forEach(function (key) {
+        url.searchParams.delete(key);
+      });
+      if (normalized === 'public-profile' && app.selectedProfileIdentifier) {
+        url.searchParams.set('profile', String(app.selectedProfileIdentifier));
+      }
+      if (normalized === 'messages' && app.activeConversationId) {
+        url.searchParams.set('conversation', String(app.activeConversationId));
+      }
+
+      window.history.replaceState(
+        { mobileRoute: normalized },
+        '',
+        url.pathname + '?' + url.searchParams.toString()
+      );
     } catch (_error) {
       // URL/history APIs are optional in older embedded browsers.
     }
@@ -4553,9 +4570,17 @@
     var requested = String(params.get('mobileRoute') || '').toLowerCase();
     var pathname = String(window.location.pathname || '/').toLowerCase();
     while (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
-    var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile','notifications','edit-profile','settings','articles','follow-requests','admin','followers','user-posts'];
+    var knownRoutes = ['feed','search','community','marketplace','events','library','messages','sponsorship','training','profile','public-profile','notifications','edit-profile','settings','articles','follow-requests','admin','followers','user-posts','create','story-create','story-view'];
     if (knownRoutes.indexOf(requested) !== -1) {
       app.route = requested;
+      var requestedProfile = params.get('profile');
+      var requestedConversation = params.get('conversation');
+      if (requestedProfile) {
+        app.selectedProfileIdentifier = requestedProfile;
+      }
+      if (requestedConversation) {
+        app.activeConversationId = requestedConversation;
+      }
       return;
     }
     if (pathname === '/' || pathname === '/index.html' || pathname === '/feed.html') app.route = 'feed';
