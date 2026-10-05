@@ -22,7 +22,10 @@
 
   function slotFormat(slot) {
     var id = String(slot.getAttribute('data-sponsored-slot') || '');
-    return id.indexOf('right-rail-') === 0 ? 'sidebar' : 'feed';
+    if (id.indexOf('right-rail-') === 0) return 'sidebar';
+    if (id.indexOf('marketplace-') === 0) return 'marketplace';
+    if (id.indexOf('event-') === 0 || id.indexOf('events-') === 0) return 'event';
+    return 'feed';
   }
 
   function hide(slot) {
