@@ -242,6 +242,24 @@ router.post('/:id/event', async (req, res) => {
 });
 
 
+
+router.get('/admin/placement-stats', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const rows = await AdCampaign.findAll({
+      attributes: ['format', [AdCampaign.sequelize.fn('COUNT', AdCampaign.sequelize.col('id')), 'campaigns'],
+        [AdCampaign.sequelize.fn('SUM', AdCampaign.sequelize.col('impressions')), 'impressions'],
+        [AdCampaign.sequelize.fn('SUM', AdCampaign.sequelize.col('clicks')), 'clicks']],
+      where: { status: { [Op.in]: ['live','paused','ended'] } },
+      group: ['format'],
+      order: [['format','ASC']]
+    });
+    ok(res, rows);
+  } catch (error) {
+    console.error('Admin placement stats error:', error);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to load placement statistics.');
+  }
+});
+
 // Admin campaign management: review queue, filters and aggregate delivery stats.
 router.get('/admin', authenticate, requireAdmin, async (req, res) => {
   try {
