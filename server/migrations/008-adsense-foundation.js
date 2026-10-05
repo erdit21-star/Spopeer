@@ -2,11 +2,23 @@
 
 /**
  * Phase 6 migration:
- * Existing installations may already have the ad format enum created by
- * migration 007. Add the Phase 4 marketplace/event formats safely.
+ * Migration 007 stores ad_campaigns.format as VARCHAR, not PostgreSQL ENUM.
+ * Older installations may have an enum with this name, so extend it only
+ * when it actually exists. New installations need no schema change here.
  */
 module.exports = {
   async up(queryInterface) {
+    const [rows] = await queryInterface.sequelize.query(`
+      SELECT 1
+      FROM pg_type
+      WHERE typname = 'enum_ad_campaigns_format'
+      LIMIT 1
+    `);
+
+    if (!rows.length) {
+      return;
+    }
+
     await queryInterface.sequelize.query(
       'ALTER TYPE "enum_ad_campaigns_format" ADD VALUE IF NOT EXISTS \'marketplace\';'
     );
@@ -14,6 +26,7 @@ module.exports = {
       'ALTER TYPE "enum_ad_campaigns_format" ADD VALUE IF NOT EXISTS \'event\';'
     );
   },
+
   async down() {
     // PostgreSQL enum values cannot be removed safely in a reversible migration.
   }
