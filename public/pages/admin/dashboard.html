@@ -370,6 +370,12 @@
           </table>
         </div>
         <div class="pagination"><span id="ads-pagination-info">Showing 0 campaigns</span><div class="page-btns" id="ads-page-btns"></div></div>
+      <div class="panel" style="margin-top:18px;">
+        <div class="panel-header"><div class="panel-title">Placement Performance</div><button class="btn btn-secondary btn-sm" onclick="loadAdPlacementStats()">Refresh</button></div>
+        <div class="panel-body no-pad">
+          <table class="sp-table"><thead><tr><th>Placement</th><th>Campaigns</th><th>Impressions</th><th>Clicks</th><th>CTR</th></tr></thead><tbody id="ad-placement-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">Loading placement data...</td></tr></tbody></table>
+        </div>
+      </div>
       </div>
     </div>
     <div id="section-reports" class="section">
