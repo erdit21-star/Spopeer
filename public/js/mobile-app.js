@@ -9,7 +9,7 @@
     'feed', 'search', 'community', 'marketplace', 'events', 'library',
     'messages', 'sponsorship', 'training', 'profile', 'public-profile',
     'notifications', 'edit-profile', 'settings', 'articles', 'follow-requests',
-    'admin', 'followers', 'user-posts', 'post', 'article-detail',
+    'admin', 'followers', 'user-posts', 'create', 'story-create', 'story-view', 'post', 'article-detail',
     'event-detail', 'sponsorship-detail', 'thread-detail', 'group-detail'
   ]);
 
