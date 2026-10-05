@@ -167,7 +167,7 @@
   function setupBottomNav() {
     // The same mobile navigation must be available on every authenticated app page,
     // including pages whose desktop header uses .navbar instead of .topnav.
-    var topnav = document.querySelector('.topnav, .navbar, .top-nav');
+    var topnav = document.querySelector('.topnav, .top-nav');
     if (!document.body) return;
 
     var path = window.location.pathname.replace(/\\/+$/, '') || '/';
