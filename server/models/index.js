@@ -39,6 +39,7 @@ const BreachIncident = require('./BreachIncident')(sequelize);
 const PostMedia = require('./PostMedia')(sequelize);
 const PostShare = require('./PostShare')(sequelize);
 const UserPrivacySettings = require('./UserPrivacySettings')(sequelize);
+const AdCampaign = require('./AdCampaign')(sequelize);
 
 // ─── ASSOCIATIONS ───
 
@@ -184,6 +185,10 @@ Post.belongsTo(Group, { foreignKey: 'groupId', as: 'group' });
 User.hasOne(UserPrivacySettings, { foreignKey: 'userId', as: 'privacySettings' });
 UserPrivacySettings.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// User <-> Ad Campaign
+User.hasMany(AdCampaign, { foreignKey: 'userId', as: 'adCampaigns' });
+AdCampaign.belongsTo(User, { foreignKey: 'userId', as: 'advertiser' });
+
 // User <-> Report
 User.hasMany(Report, { foreignKey: 'reporterId', as: 'reports' });
 Report.belongsTo(User, { foreignKey: 'reporterId', as: 'reporter' });
@@ -236,6 +241,7 @@ module.exports = {
   BreachIncident,
   PostMedia,
   PostShare,
-  UserPrivacySettings
+  UserPrivacySettings,
+  AdCampaign
 };
 
