@@ -168,8 +168,33 @@ router.patch('/:id/review', authenticate, requireAdmin, async (req, res) => {
         return fail(res, 400, 'VALIDATION', 'Campaign needs a creative image and destination URL before approval.');
       }
       await campaign.update({ status: 'live', reviewNote: null });
+      try {
+        await AdminAuditLog.create({
+          adminId: req.userId,
+          action: 'ad_campaign_approved',
+          targetType: 'ad_campaign',
+          targetId: campaign.id,
+          details: null,
+          ipAddress: req.ip
+        });
+      } catch (auditError) {
+        console.warn('Ad approval audit log failed:', auditError.message);
+      }
     } else if (action === 'reject') {
-      await campaign.update({ status: 'rejected', reviewNote: clean(req.body && req.body.note, 500) });
+      const reviewNote = clean(req.body && req.body.note, 500);
+      await campaign.update({ status: 'rejected', reviewNote });
+      try {
+        await AdminAuditLog.create({
+          adminId: req.userId,
+          action: 'ad_campaign_rejected',
+          targetType: 'ad_campaign',
+          targetId: campaign.id,
+          details: reviewNote,
+          ipAddress: req.ip
+        });
+      } catch (auditError) {
+        console.warn('Ad rejection audit log failed:', auditError.message);
+      }
     } else {
       return fail(res, 400, 'VALIDATION', 'Review action must be approve or reject.');
     }
