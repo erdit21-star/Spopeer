@@ -3,6 +3,9 @@ let postsData = [];
 let reportsData = [];
 let analyticsData = {};
 let dashboardData = {};
+let adsData = [];
+let currentAdsPage = 1;
+let adsFilter = { search: '', status: '' };
 let currentReportTab = 'pending';
 let currentUsersPage = 1;
 let currentPostsPage = 1;
@@ -85,6 +88,7 @@ function switchSection(id, btn) {
   if (id === 'reports') loadReports();
   if (id === 'analytics' && !analyticsData.topPosters) loadAnalytics();
   if (id === 'marketplace') loadMarketplace('listings');
+  if (id === 'ads') loadAds(currentAdsPage);
   if (id === 'auditlog') renderAuditLog();
 }
 
@@ -638,6 +642,182 @@ async function renderAuditLog() {
   } catch (err) {
     console.error('Audit log load failed:', err);
     body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--red);">Failed to load audit logs.</td></tr>';
+  }
+}
+
+
+function adStatusChip(status) {
+  const map = { review:'amber', live:'green', paused:'blue', ended:'gray', rejected:'red' };
+  const labels = { review:'Needs review', live:'Live', paused:'Paused', ended:'Ended', rejected:'Rejected' };
+  return '<span class="chip chip-' + (map[status] || 'gray') + '">' + (labels[status] || status || 'Unknown') + '</span>';
+}
+
+function escapeAdminHtml(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+  });
+}
+
+function adAdvertiserName(ad) {
+  const u = ad && ad.advertiser || {};
+  return ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || u.email || ('User #' + (ad && ad.userId || '-'));
+}
+
+async function loadAds(page) {
+  currentAdsPage = page || 1;
+  const params = { page: currentAdsPage, limit: PAGE_SIZE };
+  if (adsFilter.search) params.search = adsFilter.search;
+  if (adsFilter.status) params.status = adsFilter.status;
+
+  const tbody = document.getElementById('ads-tbody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted);">Loading campaigns...</td></tr>';
+
+  try {
+    const res = await window.SpopeerAPI.adminAds(params);
+    adsData = apiUnwrap(res) || [];
+    const stats = (res && res.stats) || {};
+    document.getElementById('ad-kpi-review').textContent = fmtNum(stats.review || 0);
+    document.getElementById('ad-kpi-live').textContent = fmtNum(stats.live || 0);
+    document.getElementById('ad-kpi-impressions').textContent = fmtNum(stats.impressions || 0);
+    document.getElementById('ad-kpi-clicks').textContent = fmtNum(stats.clicks || 0);
+    document.getElementById('ad-kpi-spend').textContent = '€' + Number(stats.spend || 0).toFixed(2);
+    document.getElementById('sb-ads-review').textContent = String(stats.review || 0);
+    renderAdsTable(adsData, (res && res.pagination) || {});
+  } catch (err) {
+    console.error('Admin ads load failed:', err);
+    adsData = [];
+    document.getElementById('ad-kpi-review').textContent = '0';
+    document.getElementById('ad-kpi-live').textContent = '0';
+    document.getElementById('ad-kpi-impressions').textContent = '0';
+    document.getElementById('ad-kpi-clicks').textContent = '0';
+    document.getElementById('ad-kpi-spend').textContent = '€0.00';
+    document.getElementById('sb-ads-review').textContent = '0';
+    renderAdsTable([], { total: 0, pages: 1 });
+    showToast('Failed to load advertising campaigns', 'error');
+  }
+}
+
+function renderAdsTable(rows, pagination) {
+  const tbody = document.getElementById('ads-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-bullhorn"></i><p>No advertising campaigns found</p></div></td></tr>';
+    document.getElementById('ads-pagination-info').textContent = 'Showing 0 campaigns';
+    document.getElementById('ads-page-btns').innerHTML = '';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function (ad) {
+    const advertiser = adAdvertiserName(ad);
+    const delivery = fmtNum(ad.impressions || 0) + ' / ' + fmtNum(ad.clicks || 0);
+    let actions = '<button class="btn btn-secondary btn-sm" onclick="openAdReview(' + Number(ad.id) + ')"><i class="fa-solid fa-eye"></i> View</button>';
+    if (ad.status === 'review') {
+      actions += ' <button class="btn btn-success btn-sm" onclick="reviewAd(' + Number(ad.id) + ',\'approve\')"><i class="fa-solid fa-check"></i></button>';
+      actions += ' <button class="btn btn-danger btn-sm" onclick="reviewAd(' + Number(ad.id) + ',\'reject\')"><i class="fa-solid fa-xmark"></i></button>';
+    } else if (ad.status === 'live') {
+      actions += ' <button class="btn btn-secondary btn-sm" onclick="setAdminAdStatus(' + Number(ad.id) + ',\'paused\')"><i class="fa-solid fa-pause"></i></button>';
+      actions += ' <button class="btn btn-danger btn-sm" onclick="setAdminAdStatus(' + Number(ad.id) + ',\'ended\')"><i class="fa-solid fa-stop"></i></button>';
+    } else if (ad.status === 'paused') {
+      actions += ' <button class="btn btn-success btn-sm" onclick="setAdminAdStatus(' + Number(ad.id) + ',\'live\')"><i class="fa-solid fa-play"></i></button>';
+      actions += ' <button class="btn btn-danger btn-sm" onclick="setAdminAdStatus(' + Number(ad.id) + ',\'ended\')"><i class="fa-solid fa-stop"></i></button>';
+    }
+    return '<tr>' +
+      '<td><div style="font-weight:700;">' + escapeAdminHtml(ad.name || '-') + '</div><div class="u-email">' + escapeAdminHtml(ad.headline || '') + '</div></td>' +
+      '<td><div class="u-name">' + escapeAdminHtml(advertiser) + '</div><div class="u-email">' + escapeAdminHtml((ad.advertiser && ad.advertiser.email) || '') + '</div></td>' +
+      '<td><span class="chip chip-blue">' + escapeAdminHtml(ad.format || '-') + '</span></td>' +
+      '<td>€' + Number(ad.dailyBudget || 0).toFixed(2) + '/day</td>' +
+      '<td>' + delivery + '</td>' +
+      '<td>' + adStatusChip(ad.status) + '</td>' +
+      '<td><div style="display:flex;gap:5px;flex-wrap:wrap;">' + actions + '</div></td>' +
+      '</tr>';
+  }).join('');
+
+  const total = pagination.total || rows.length;
+  document.getElementById('ads-pagination-info').textContent = 'Showing ' + rows.length + ' of ' + fmtNum(total) + ' campaigns';
+  renderPagination('ads-page-btns', pagination.pages || 1, currentAdsPage, loadAds);
+}
+
+function filterAds(search, status) {
+  if (search !== null && search !== undefined) adsFilter.search = search;
+  if (status !== undefined && status !== null) adsFilter.status = status || '';
+  loadAds(1);
+}
+
+async function openAdReview(id) {
+  const body = document.getElementById('ad-review-body');
+  const footer = document.getElementById('ad-review-footer');
+  body.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">Loading campaign...</div>';
+  footer.innerHTML = '';
+  openModal('modal-ad-review');
+  try {
+    const res = await window.SpopeerAPI.adminAd(id);
+    const ad = apiUnwrap(res) || {};
+    const target = [
+      ad.targetSport ? 'Sport: ' + escapeAdminHtml(ad.targetSport) : '',
+      ad.targetLocation ? 'Location: ' + escapeAdminHtml(ad.targetLocation) : '',
+      ad.targetAgeRange ? 'Age: ' + escapeAdminHtml(ad.targetAgeRange) : '',
+      ad.targetSkillLevel ? 'Skill: ' + escapeAdminHtml(ad.targetSkillLevel) : ''
+    ].filter(Boolean).join(' · ') || 'No targeting details';
+    const creative = ad.creativeUrl
+      ? '<img src="' + escapeAdminHtml(ad.creativeUrl) + '" alt="Campaign creative" style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;border:1px solid var(--border);">'
+      : '<div style="padding:40px;text-align:center;background:var(--surface);border-radius:12px;color:var(--muted);">No creative uploaded</div>';
+    body.innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">' +
+        '<div>' + creative + '</div>' +
+        '<div>' +
+          '<div style="font-family:var(--fD);font-weight:800;font-size:1.15rem;margin-bottom:5px;">' + escapeAdminHtml(ad.name || '-') + '</div>' +
+          '<div style="color:var(--muted);font-size:.82rem;margin-bottom:14px;">' + adStatusChip(ad.status) + '</div>' +
+          '<div style="font-weight:700;margin-bottom:4px;">' + escapeAdminHtml(ad.headline || '-') + '</div>' +
+          '<p style="color:var(--ink-2);font-size:.86rem;margin-bottom:14px;">' + escapeAdminHtml(ad.body || '-') + '</p>' +
+          '<div class="u-email" style="margin-bottom:10px;">Advertiser: ' + escapeAdminHtml(adAdvertiserName(ad)) + ' · ' + escapeAdminHtml((ad.advertiser && ad.advertiser.email) || '') + '</div>' +
+          '<div class="u-email" style="margin-bottom:10px;">Objective: ' + escapeAdminHtml(ad.objective || '-') + ' · Placement: ' + escapeAdminHtml(ad.format || '-') + '</div>' +
+          '<div class="u-email" style="margin-bottom:10px;">Budget: €' + Number(ad.dailyBudget || 0).toFixed(2) + '/day · ' + escapeAdminHtml(ad.billingModel || '-') + '</div>' +
+          '<div class="u-email" style="margin-bottom:10px;">Dates: ' + escapeAdminHtml(ad.startDate || '-') + ' → ' + escapeAdminHtml(ad.endDate || '-') + '</div>' +
+          '<div class="u-email" style="margin-bottom:10px;">' + target + '</div>' +
+          '<div style="font-size:.8rem;">Delivery: ' + fmtNum(ad.impressions || 0) + ' impressions · ' + fmtNum(ad.clicks || 0) + ' clicks · €' + Number(ad.spend || 0).toFixed(2) + ' spend</div>' +
+          (ad.reviewNote ? '<div style="margin-top:12px;padding:10px;border-radius:8px;background:var(--red-lt);color:var(--red);">Review note: ' + escapeAdminHtml(ad.reviewNote) + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    let buttons = '<button class="btn btn-secondary" onclick="closeModal(\'modal-ad-review\')">Close</button>';
+    if (ad.status === 'review') {
+      buttons += '<button class="btn btn-danger" onclick="reviewAd(' + Number(ad.id) + ',\'reject\', true)">Reject</button>';
+      buttons += '<button class="btn btn-success" onclick="reviewAd(' + Number(ad.id) + ',\'approve\')">Approve & Go Live</button>';
+    } else if (ad.status === 'live') {
+      buttons += '<button class="btn btn-secondary" onclick="setAdminAdStatus(' + Number(ad.id) + ',\'paused\')">Pause</button><button class="btn btn-danger" onclick="setAdminAdStatus(' + Number(ad.id) + ',\'ended\')">End Campaign</button>';
+    } else if (ad.status === 'paused') {
+      buttons += '<button class="btn btn-success" onclick="setAdminAdStatus(' + Number(ad.id) + ',\'live\')">Resume</button><button class="btn btn-danger" onclick="setAdminAdStatus(' + Number(ad.id) + ',\'ended\')">End Campaign</button>';
+    }
+    footer.innerHTML = buttons;
+  } catch (err) {
+    body.innerHTML = '<div style="padding:30px;color:var(--red);">Failed to load campaign details.</div>';
+    footer.innerHTML = '<button class="btn btn-secondary" onclick="closeModal(\'modal-ad-review\')">Close</button>';
+  }
+}
+
+async function reviewAd(id, action, askNote) {
+  let note = '';
+  if (action === 'reject' || askNote) {
+    note = window.prompt('Optional review note for the advertiser:', '') || '';
+  }
+  try {
+    await window.SpopeerAPI.adminReviewAd(id, action, note);
+    showToast(action === 'approve' ? 'Campaign approved and is now live' : 'Campaign rejected', 'success');
+    closeModal('modal-ad-review');
+    loadAds(currentAdsPage);
+  } catch (err) {
+    showToast((err && err.message) || 'Failed to review campaign', 'error');
+  }
+}
+
+async function setAdminAdStatus(id, status) {
+  const labels = { live:'resume', paused:'pause', ended:'end' };
+  if (!window.confirm('Are you sure you want to ' + (labels[status] || status) + ' this campaign?')) return;
+  try {
+    await window.SpopeerAPI.adminAdStatus(id, status);
+    showToast('Campaign status updated', 'success');
+    closeModal('modal-ad-review');
+    loadAds(currentAdsPage);
+  } catch (err) {
+    showToast((err && err.message) || 'Failed to update campaign', 'error');
   }
 }
 
