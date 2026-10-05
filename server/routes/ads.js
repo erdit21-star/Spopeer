@@ -12,7 +12,7 @@ const { uploadAvatar, persistFile, validateUploadedFile, enforceFileSizeLimits }
 const { sanitizeString, isValidId } = require('../utils/validation');
 const { ok, created, fail } = require('../utils/response');
 
-const ALLOWED_FORMATS = new Set(['feed', 'sidebar', 'community', 'search']);
+const ALLOWED_FORMATS = new Set(['feed', 'sidebar', 'community', 'search', 'marketplace', 'event']);
 const ALLOWED_OBJECTIVES = new Set(['awareness', 'reach', 'event-signups', 'profile-visits', 'marketplace', 'sponsorship']);
 const ALLOWED_CTA = new Set(['Join Us', 'Learn More', 'Create Account', 'Register Now', 'View Profile', 'Shop Now', 'Contact Us']);
 
@@ -84,6 +84,25 @@ router.get('/active', async (req, res) => {
     ok(res, campaigns);
   } catch (error) {
     console.error('Active ads error:', error);
+    fail(res, 500, 'SERVER_ERROR', 'Failed to load sponsored content.');
+  }
+});
+
+
+router.get('/active/:format', async (req, res) => {
+  try {
+    const format = clean(req.params.format, 30);
+    if (!ALLOWED_FORMATS.has(format)) return fail(res, 400, 'VALIDATION', 'Invalid ad placement.');
+    const today = new Date().toISOString().slice(0, 10);
+    const campaigns = await AdCampaign.findAll({
+      where: { status: 'live', format, startDate: { [Op.lte]: today }, endDate: { [Op.gte]: today } },
+      attributes: ['id','name','format','headline','body','cta','destinationUrl','creativeUrl','targetProfiles','targetSport','targetLocation','impressions','clicks'],
+      order: [['createdAt','DESC']],
+      limit: 20
+    });
+    ok(res, campaigns);
+  } catch (error) {
+    console.error('Placement ads error:', error);
     fail(res, 500, 'SERVER_ERROR', 'Failed to load sponsored content.');
   }
 });
