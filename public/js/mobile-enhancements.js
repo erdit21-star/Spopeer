@@ -167,11 +167,11 @@
   function setupBottomNav() {
     // The same mobile navigation must be available on every authenticated app page,
     // including pages whose desktop header uses .navbar instead of .topnav.
-    var topnav = document.querySelector('.topnav, .navbar');
+    var topnav = document.querySelector('.topnav, .navbar, .top-nav');
     if (!document.body) return;
 
     var path = window.location.pathname.replace(/\\/+$/, '') || '/';
-    var isAppRoute = path === '/feed.html' || /^\\/pages\\/(community|search|marketplace|events|library|profiles|messaging|dashboard|sponsorship)\\//.test(path);
+    var isAppRoute = path === '/feed.html' || path === '/connections.html' || /^\\/pages\\/(community|search|marketplace|events|library|profiles|messaging|dashboard|sponsorship)\\//.test(path);
     if (!topnav && !isAppRoute) return;
     document.body.classList.add('has-sp-bottom-nav');
     if (path === '/pages/community/community.html' || path === '/pages/community/forums.html') {
