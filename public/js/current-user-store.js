@@ -56,8 +56,23 @@
     const action = document.createElement('button');
     action.type = 'button';
     action.textContent = 'Resend verification';
-    action.addEventListener('click', function () {
-      window.location.href = '/pages/auth/login.html';
+    action.addEventListener('click', async function () {
+      action.disabled = true;
+      action.textContent = 'Sending...';
+      try {
+        if (!window.SpopeerAPI || typeof window.SpopeerAPI.request !== 'function') {
+          throw new Error('Verification service is unavailable.');
+        }
+        await window.SpopeerAPI.request('/api/auth/resend-verification', {
+          method: 'POST',
+          body: JSON.stringify({ email: user.email })
+        });
+        action.textContent = 'Email sent';
+      } catch (err) {
+        action.disabled = false;
+        action.textContent = 'Resend verification';
+        console.debug('Resend verification failed:', err);
+      }
     });
     el.appendChild(action);
 
