@@ -4,7 +4,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { Op } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 const { AdCampaign, User, AdminAuditLog } = require('../models');
 const { authenticate } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
@@ -246,9 +246,9 @@ router.post('/:id/event', async (req, res) => {
 router.get('/admin/placement-stats', authenticate, requireAdmin, async (req, res) => {
   try {
     const rows = await AdCampaign.findAll({
-      attributes: ['format', [AdCampaign.sequelize.fn('COUNT', AdCampaign.sequelize.col('id')), 'campaigns'],
-        [AdCampaign.sequelize.fn('SUM', AdCampaign.sequelize.col('impressions')), 'impressions'],
-        [AdCampaign.sequelize.fn('SUM', AdCampaign.sequelize.col('clicks')), 'clicks']],
+      attributes: ['format', [fn('COUNT', col('id')), 'campaigns'],
+        [fn('SUM', col('impressions')), 'impressions'],
+        [fn('SUM', col('clicks')), 'clicks']],
       where: { status: { [Op.in]: ['live','paused','ended'] } },
       group: ['format'],
       order: [['format','ASC']]
@@ -260,7 +260,7 @@ router.get('/admin/placement-stats', authenticate, requireAdmin, async (req, res
   }
 });
 
-// Admin campaign management: review queue, filters and aggregate delivery stats.
+// Advertiser reporting summary: real lifetime delivery totals from persisted campaigns.\nrouter.get('/summary', authenticate, async (req, res) => {\n  try {\n    const campaigns = await AdCampaign.findAll({\n      where: { userId: req.userId },\n      attributes: ['id','name','format','status','impressions','clicks','spend','dailyBudget','billingModel']\n    });\n    const totalImpressions = campaigns.reduce((n, c) => n + Number(c.impressions || 0), 0);\n    const totalClicks = campaigns.reduce((n, c) => n + Number(c.clicks || 0), 0);\n    const totalSpend = campaigns.reduce((n, c) => n + Number(c.spend || 0), 0);\n    const byFormat = {};\n    campaigns.forEach(c => {\n      const key = c.format || 'unknown';\n      if (!byFormat[key]) byFormat[key] = { campaigns: 0, impressions: 0, clicks: 0, spend: 0 };\n      byFormat[key].campaigns += 1;\n      byFormat[key].impressions += Number(c.impressions || 0);\n      byFormat[key].clicks += Number(c.clicks || 0);\n      byFormat[key].spend += Number(c.spend || 0);\n    });\n    Object.keys(byFormat).forEach(key => {\n      const row = byFormat[key];\n      row.ctr = row.impressions ? Number(((row.clicks / row.impressions) * 100).toFixed(2)) : 0;\n      row.cpc = row.clicks ? Number((row.spend / row.clicks).toFixed(2)) : 0;\n    });\n    ok(res, {\n      totals: {\n        campaigns: campaigns.length,\n        live: campaigns.filter(c => c.status === 'live').length,\n        impressions: totalImpressions,\n        clicks: totalClicks,\n        spend: totalSpend,\n        ctr: totalImpressions ? Number(((totalClicks / totalImpressions) * 100).toFixed(2)) : 0,\n        cpc: totalClicks ? Number((totalSpend / totalClicks).toFixed(2)) : 0\n      },\n      byFormat\n    });\n  } catch (error) {\n    console.error('Ad summary error:', error);\n    fail(res, 500, 'SERVER_ERROR', 'Failed to load advertising summary.');\n  }\n});\n\n// Admin campaign management: review queue, filters and aggregate delivery stats.
 router.get('/admin', authenticate, requireAdmin, async (req, res) => {
   try {
     const { status, search, page = 1, limit = 25 } = req.query;
