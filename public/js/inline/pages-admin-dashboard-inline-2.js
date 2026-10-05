@@ -167,6 +167,7 @@ async function loadDashboard() {
 
   await loadReportCounts();
   renderBarChart();
+  await loadAds(1);
 }
 
 function renderBarChart() {
