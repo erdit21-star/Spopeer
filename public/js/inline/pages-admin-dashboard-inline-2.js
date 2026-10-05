@@ -664,6 +664,30 @@ function adAdvertiserName(ad) {
   return ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || u.email || ('User #' + (ad && ad.userId || '-'));
 }
 
+async function loadAdPlacementStats() {
+  const tbody = document.getElementById('ad-placement-tbody');
+  if (!tbody || !window.SpopeerAPI || !window.SpopeerAPI.adminAdPlacementStats) return;
+  try {
+    const res = await window.SpopeerAPI.adminAdPlacementStats();
+    const rows = apiUnwrap(res) || [];
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">No placement delivery yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(function (row) {
+      const impressions = Number(row.impressions || 0);
+      const clicks = Number(row.clicks || 0);
+      const ctr = impressions ? ((clicks / impressions) * 100).toFixed(2) + '%' : '0.00%';
+      return '<tr><td><strong>' + escapeAdminHtml(row.format || '-') + '</strong></td><td>' +
+        fmtNum(row.campaigns || 0) + '</td><td>' + fmtNum(impressions) + '</td><td>' +
+        fmtNum(clicks) + '</td><td>' + ctr + '</td></tr>';
+    }).join('');
+  } catch (err) {
+    console.error('Ad placement stats load failed:', err);
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">Placement statistics unavailable.</td></tr>';
+  }
+}
+
 async function loadAds(page) {
   currentAdsPage = page || 1;
   const params = { page: currentAdsPage, limit: PAGE_SIZE };
@@ -684,6 +708,7 @@ async function loadAds(page) {
     document.getElementById('ad-kpi-spend').textContent = '€' + Number(stats.spend || 0).toFixed(2);
     document.getElementById('sb-ads-review').textContent = String(stats.review || 0);
     renderAdsTable(adsData, (res && res.pagination) || {});
+    loadAdPlacementStats();
   } catch (err) {
     console.error('Admin ads load failed:', err);
     adsData = [];
