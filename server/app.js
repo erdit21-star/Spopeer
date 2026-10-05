@@ -312,6 +312,9 @@ function mobileAppRouteForPath(requestPath) {
   if (pathname === '/search.html' || pathname === '/pages/search/search.html') return 'search';
   if (pathname === '/articles.html' || pathname.startsWith('/pages/articles/')) return 'articles';
   if (pathname === '/messages.html') return 'messages';
+  if (pathname === '/connections.html') return 'follow-requests';
+  if (pathname === '/profile.html') return 'profile';
+  if (pathname === '/create-post.html') return 'create';
   if (pathname === '/app.html' || pathname === '/pages/stories/archive.html') return 'feed';
   if (pathname.startsWith('/pages/admin/') || pathname.startsWith('/pages/ads/')) return 'admin';
   if (pathname === '/pages/dashboard/notifications.html') return 'notifications';
