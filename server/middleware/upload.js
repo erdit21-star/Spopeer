@@ -180,7 +180,7 @@ function validateUploadedFile(req, res, next) {
  */
 async function persistFile(file, folder, userId) {
   const ext = path.extname(file.originalname).toLowerCase();
-  const prefix = folder === 'avatars' ? 'avatar' : folder === 'covers' ? 'cover' : 'post';
+  const prefix = folder === 'avatars' ? 'avatar' : folder === 'covers' ? 'cover' : folder === 'ads' ? 'ad' : 'post';
   const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
   const envPrefix = process.env.NODE_ENV === 'production' ? 'production' : 'staging';
 
