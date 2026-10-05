@@ -672,6 +672,7 @@
       }
       const msg = (data.error && data.error.message) || data.message || data.error || "Session expired. Please log in again.";
       const err = new Error(msg);
+      err.status = 401;
       err.code = respCode || "UNAUTHORIZED";
       throw err;
     }
