@@ -56,6 +56,8 @@
     } catch (_error) {}
   }
 
+  var suppressRouteHistory = false;
+
   function syncRouteToUrl(route) {
     persistMobileRouteState();
     var normalized = String(route || 'feed').toLowerCase();
@@ -63,6 +65,7 @@
 
     try {
       var url = new URL(window.location.href);
+      var currentRoute = String(url.searchParams.get('mobileRoute') || '').toLowerCase();
       url.pathname = '/mobile.html';
       url.searchParams.set('mobileRoute', normalized);
 
@@ -78,15 +81,52 @@
         url.searchParams.set('conversation', String(app.activeConversationId));
       }
 
-      window.history.replaceState(
-        { mobileRoute: normalized },
-        '',
-        url.pathname + '?' + url.searchParams.toString()
-      );
+      var nextUrl = url.pathname + '?' + url.searchParams.toString();
+      var historyState = { mobileRoute: normalized };
+
+      // A real route change gets a browser-history entry so Back/Forward works.
+      // Re-rendering the same route only replaces its current URL state, which
+      // keeps selected conversation/profile/detail identifiers up to date.
+      if (!suppressRouteHistory && currentRoute !== normalized) {
+        window.history.pushState(historyState, '', nextUrl);
+      } else {
+        window.history.replaceState(historyState, '', nextUrl);
+      }
     } catch (_error) {
       // URL/history APIs are optional in older embedded browsers.
     }
   }
+
+  function restoreRouteFromUrl() {
+    try {
+      var params = new URLSearchParams(window.location.search || '');
+      var requested = String(params.get('mobileRoute') || '').toLowerCase();
+      if (!MOBILE_URL_ROUTES.has(requested)) return false;
+
+      if (requested === 'public-profile') {
+        app.selectedProfileIdentifier = params.get('profile') || null;
+      } else if (requested === 'messages') {
+        app.activeConversationId = params.get('conversation') || null;
+      }
+
+      suppressRouteHistory = true;
+      app.route = requested;
+      suppressRouteHistory = false;
+      return true;
+    } catch (_error) {
+      suppressRouteHistory = false;
+      return false;
+    }
+  }
+
+  // Browser Back/Forward must restore the SPA screen instead of leaving the
+  // user on the same rendered route. The URL is the source of truth for the
+  // route; sessionStorage keeps the selected detail data available after a
+  // hard refresh.
+  window.addEventListener('popstate', function () {
+    if (!restoreRouteFromUrl()) return;
+    render();
+  });
 
   // Centralize route persistence without changing the existing render/navigation
   // code throughout the mobile app. Every app.route assignment now updates the
