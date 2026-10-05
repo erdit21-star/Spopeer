@@ -232,12 +232,25 @@
       return setCurrentUser(merged);
     } catch (err) {
       console.warn('Failed to refresh current user:', err);
-      // /api/auth/me is authoritative. Never turn a failed server
-      // authentication check into a successful session from stale cache.
-      currentUser = null;
-      persistUser(null);
+
+      // Do not log the user out because of a transient network/server error.
+      // api.js marks a definitive unauthenticated response as 401/UNAUTHORIZED;
+      // only that case should invalidate the cached session. This prevents
+      // refresh/navigation races from throwing the user back to Login or Feed.
+      var status = Number(err && err.status || 0);
+      var code = String(err && err.code || '').toUpperCase();
+      var isUnauthorized = status === 401 || code === 'UNAUTHORIZED';
+
+      if (isUnauthorized) {
+        currentUser = null;
+        persistUser(null);
+        emit();
+        return null;
+      }
+
+      currentUser = getStoredUser();
       emit();
-      return null;
+      return currentUser;
     }
   }
 
