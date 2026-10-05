@@ -1124,6 +1124,7 @@
       });
     },
     adsList: function () { return request("/api/ads"); },
+    adsSummary: function () { return request("/api/ads/summary"); },
     adsActive: function () { return request("/api/ads/active"); },
     adsCreate: function (payload) { return request("/api/ads", { method: "POST", body: JSON.stringify(payload || {}) }); },
     adsUploadCreative: async function (campaignId, file) {
