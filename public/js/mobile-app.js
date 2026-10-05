@@ -3,6 +3,47 @@
   const $ = (selector) => document.querySelector(selector);
   const app = { route: 'feed', feedTab: 'for-you', user: null, selectedPost: null, selectedStory: null, storyFeed: [], storyIndex: -1, storyAutoTimer: null, selectedProfile: null, selectedProfileIdentifier: null, activeConversationId: null, activeConversationTargetId: null, selectedEvent: null, selectedSponsorship: null, selectedArticle: null, selectedMarketplaceListing: null, selectedThread: null, selectedGroup: null, detailBackRoute: null, libraryState: { items: [], type: 'all', source: 'all', sort: 'newest' }, eventsState: { items: [], source: 'all', sort: 'upcoming', query: '' }, sponsorshipState: { items: [], source: 'all', sort: 'newest', query: '', mode: 'all' }, notificationsState: { items: [], source: 'all', type: 'all', sort: 'newest', query: '' }, messageThreads: {} };
 
+  // Keep the current mobile SPA route in the URL so a browser refresh
+  // restores the same screen instead of falling back to Feed.
+  const MOBILE_URL_ROUTES = new Set([
+    'feed', 'search', 'community', 'marketplace', 'events', 'library',
+    'messages', 'sponsorship', 'training', 'profile', 'public-profile',
+    'notifications', 'edit-profile', 'settings', 'articles', 'follow-requests',
+    'admin', 'followers', 'user-posts', 'post', 'article-detail',
+    'event-detail', 'sponsorship-detail', 'thread-detail', 'group-detail'
+  ]);
+
+  function syncRouteToUrl(route) {
+    var normalized = String(route || 'feed').toLowerCase();
+    if (!MOBILE_URL_ROUTES.has(normalized)) normalized = 'feed';
+
+    try {
+      var url = new URL(window.location.href);
+      url.pathname = '/mobile.html';
+      url.searchParams.set('mobileRoute', normalized);
+      window.history.replaceState({ mobileRoute: normalized }, '', url.pathname + '?' + url.searchParams.toString());
+    } catch (_error) {
+      // URL/history APIs are optional in older embedded browsers.
+    }
+  }
+
+  // Centralize route persistence without changing the existing render/navigation
+  // code throughout the mobile app. Every app.route assignment now updates the
+  // URL, so refresh, direct reload, and browser restoration keep the same page.
+  (function installRoutePersistence() {
+    var initialRoute = app.route;
+    Object.defineProperty(app, 'route', {
+      configurable: true,
+      enumerable: true,
+      get: function () { return this._route || initialRoute; },
+      set: function (value) {
+        this._route = String(value || 'feed');
+        syncRouteToUrl(this._route);
+      }
+    });
+    app.route = initialRoute;
+  })();
+
   function html(value) {
     return String(value || '').replace(/[&<>"']/g, function (char) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char];
