@@ -4509,6 +4509,9 @@
   };
 
   function render() {
+    // Persist the current screen and its selected item even when the route
+    // itself did not change (for example opening a conversation or story).
+    syncRouteToUrl(app.route);
     if (app.route !== 'story-view') {
       clearStoryTimer();
     }
