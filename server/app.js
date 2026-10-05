@@ -124,13 +124,13 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://apis.google.com", "https://www.googletagmanager.com", "https://browser.sentry-cdn.com", "https://*.posthog.com", "https://*.i.posthog.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://apis.google.com", "https://www.googletagmanager.com", "https://browser.sentry-cdn.com", "https://*.posthog.com", "https://*.i.posthog.com", "https://pagead2.googlesyndication.com", "https://googleads.g.doubleclick.net"],
       // scriptSrcAttr: unsafe-inline removed — disallows inline event handlers (onclick=, etc.)
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://accounts.google.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "blob:", "https:"],
-        connectSrc: ["'self'", "ws:", "wss:", "https://accounts.google.com", "https://www.googleapis.com", "https://oauth2.googleapis.com", "https://www.google-analytics.com", "https://region1.google-analytics.com", "https://browser.sentry-cdn.com", "https://*.sentry.io", "https://*.ingest.sentry.io", "https://*.posthog.com", "https://*.i.posthog.com"],
-      frameSrc: ["'self'", "https://accounts.google.com"],
+        connectSrc: ["'self'", "ws:", "wss:", "https://accounts.google.com", "https://www.googleapis.com", "https://oauth2.googleapis.com", "https://www.google-analytics.com", "https://region1.google-analytics.com", "https://browser.sentry-cdn.com", "https://*.sentry.io", "https://*.ingest.sentry.io", "https://*.posthog.com", "https://*.i.posthog.com", "https://pagead2.googlesyndication.com", "https://googleads.g.doubleclick.net"],
+      frameSrc: ["'self'", "https://accounts.google.com", "https://googleads.g.doubleclick.net", "https://tpc.googlesyndication.com"],
       mediaSrc: ["'self'", "blob:", "https://res.cloudinary.com", "https://*.cloudinary.com"],
       objectSrc: ["'none'"],
       frameAncestors: ["'none'"],
@@ -511,7 +511,16 @@ app.get('/api/config/public', (_req, res) => {
       sentryBrowserDsn: process.env.SENTRY_BROWSER_DSN || process.env.SENTRY_DSN || '',
       gaMeasurementId: process.env.GA_MEASUREMENT_ID || '',
       posthogKey: process.env.POSTHOG_KEY || '',
-      posthogHost: process.env.POSTHOG_HOST || 'https://us.i.posthog.com'
+      posthogHost: process.env.POSTHOG_HOST || 'https://us.i.posthog.com',
+      adsense: {
+        enabled: process.env.ADSENSE_ENABLED === 'true' && !!process.env.ADSENSE_CLIENT_ID,
+        clientId: process.env.ADSENSE_CLIENT_ID || '',
+        slots: {
+          feed: process.env.ADSENSE_FEED_SLOT_ID || '',
+          marketplace: process.env.ADSENSE_MARKETPLACE_SLOT_ID || '',
+          event: process.env.ADSENSE_EVENT_SLOT_ID || ''
+        }
+      }
     }
   });
 });
