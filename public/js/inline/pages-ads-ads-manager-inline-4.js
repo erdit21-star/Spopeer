@@ -29,7 +29,9 @@
       feed: ['', 'Sponsored Post'],
       search: ['search', 'Search Boost'],
       community: ['community', 'Community Pin'],
-      sidebar: ['sidebar', 'Sidebar Banner']
+      sidebar: ['sidebar', 'Sidebar Banner'],
+      marketplace: ['marketplace', 'Marketplace Sponsored'],
+      event: ['event', 'Event Promotion']
     };
     var pair = map[format] || ['', format || 'Sponsored'];
     return '<span class="format-tag ' + pair[0] + '">' + escStr(pair[1]) + '</span>';
@@ -201,7 +203,8 @@
   function normalizeFormat(text) {
     return ({
       'Sponsored Feed Post':'feed', 'Sidebar Banner':'sidebar',
-      'Community Pin':'community', 'Search Boost':'search'
+      'Community Pin':'community', 'Search Boost':'search',
+      'Marketplace Sponsored':'marketplace', 'Event Promotion':'event'
     })[text] || 'feed';
   }
 
