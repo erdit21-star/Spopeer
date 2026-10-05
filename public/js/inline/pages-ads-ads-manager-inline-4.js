@@ -205,7 +205,7 @@
       targetLocation: document.getElementById('targetLocation').value.trim(),
       targetAgeRange: document.querySelectorAll('#panel2 .form-select')[1] ? document.querySelectorAll('#panel2 .form-select')[1].value : 'All ages',
       targetSkillLevel: document.querySelectorAll('#panel2 .form-select')[2] ? document.querySelectorAll('#panel2 .form-select')[2].value : 'All levels',
-      targetInterests: selectedTexts('#panel2 .tag-cloud')[1] ? selectedTexts('#panel2 .tag-cloud')[1] : [],
+      targetInterests: (function () { var clouds = document.querySelectorAll('#panel2 .tag-cloud'); return clouds[1] ? Array.prototype.slice.call(clouds[1].querySelectorAll('.tag-pill.sel')).map(function (el) { return el.textContent.trim(); }) : []; })(),
       headline: document.getElementById('adHeadline').value.trim(),
       body: document.getElementById('adBody').value.trim(),
       cta: cta ? cta.textContent.trim() : 'Learn More',
