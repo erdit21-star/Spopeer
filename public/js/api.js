@@ -1114,6 +1114,9 @@
         body: JSON.stringify({ action: action, note: note || "" })
       });
     },
+    adminAdPlacementStats: function () {
+      return request("/api/ads/admin/placement-stats");
+    },
     adminAdStatus: function (campaignId, status) {
       return request("/api/ads/admin/" + encodeURIComponent(campaignId) + "/status", {
         method: "PATCH",
