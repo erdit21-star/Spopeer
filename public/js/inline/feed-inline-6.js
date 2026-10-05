@@ -1798,8 +1798,10 @@
     for (var i = startIndex; i < endIndex; i += 1) {
       var post = posts[i];
       parts.push(renderPostCard(post));
-      if ((i + 1) % 4 === 0) {
-        parts.push('<section class="feed-sponsored-slot" data-sponsored-slot="feed-inline-' + (Math.floor(i / 4) + 1) + '"></section>');
+      // Reserve a light ad placement after every 8 posts.
+      // The Phase 1 ad layer keeps these slots hidden until real campaigns are connected.
+      if ((i + 1) % 8 === 0) {
+        parts.push('<section class="feed-sponsored-slot" data-sponsored-slot="feed-inline-' + (Math.floor(i / 8) + 1) + '"></section>');
       }
     }
     return parts.join('');
