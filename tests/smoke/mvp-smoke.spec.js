@@ -150,7 +150,7 @@ async function createVideoPost(apiContext, roleConfig) {
   return json.data;
 }
 
-async function verifyAuthenticatedPages(browser, apiContext) {
+async function verifyAuthenticatedPages(browser, apiContext, expectedUserId) {
   const storageState = await apiContext.storageState();
   const context = await browser.newContext({
     baseURL: E2E_BASE_URL,
@@ -207,6 +207,10 @@ async function verifyAuthenticatedPages(browser, apiContext) {
     for (const entry of mobileRoutes) {
       const response = await page.goto(entry.path);
       expect(response && response.status(), 'HTTP response for ' + entry.path).toBeLessThan(400);
+      const sessionResponse = await page.request.get('/api/auth/me');
+      expect(sessionResponse.status(), 'authenticated session after navigating to ' + entry.path).toBe(200);
+      const sessionJson = await sessionResponse.json();
+      expect(Number(sessionJson.data.user.id), 'same signed-in user after navigating to ' + entry.path).toBe(Number(expectedUserId));
       await expect(page.locator('#spmApp'), 'mobile app shell for ' + entry.path).toBeVisible();
       await expect(page.locator('#spmScreen')).toBeVisible();
       await expect(page.locator('#spmApp')).toHaveAttribute('data-current-route', entry.route);
@@ -249,6 +253,31 @@ async function verifyAuthenticatedPages(browser, apiContext) {
   } finally {
     await context.close();
   }
+}
+
+async function likeAndComment(viewerSession, authorSession, post) {
+  expect(post && post.id, 'post to like/comment').toBeTruthy();
+
+  const likeResponse = await withCsrf(viewerSession.apiContext, '/api/posts/' + encodeURIComponent(post.id) + '/like', {
+    method: 'POST'
+  });
+  const likeJson = await likeResponse.json();
+  expect(likeResponse.ok(), JSON.stringify(likeJson)).toBeTruthy();
+  expect(likeJson.data.liked).toBe(true);
+
+  const commentResponse = await withCsrf(viewerSession.apiContext, '/api/posts/' + encodeURIComponent(post.id) + '/comment', {
+    method: 'POST',
+    data: { content: 'E2E comment from ' + viewerSession.roleConfig.role }
+  });
+  const commentJson = await commentResponse.json();
+  expect(commentResponse.ok(), JSON.stringify(commentJson)).toBeTruthy();
+  expect(commentJson.data.id).toBeTruthy();
+
+  const postResponse = await authorSession.apiContext.get('/api/posts/' + encodeURIComponent(post.id));
+  const postJson = await postResponse.json();
+  expect(postResponse.ok(), JSON.stringify(postJson)).toBeTruthy();
+  expect(Number(postJson.data.likesCount)).toBeGreaterThanOrEqual(1);
+  expect(Number(postJson.data.commentsCount)).toBeGreaterThanOrEqual(1);
 }
 
 async function followAndMessage(senderSession, receiverSession) {
@@ -314,10 +343,11 @@ test.describe('Spopeer MVP Smoke', () => {
 
         await updateProfile(session.apiContext, roleConfig);
         await uploadAvatar(session.apiContext);
-        await createVideoPost(session.apiContext, roleConfig);
-        await verifyAuthenticatedPages(browser, session.apiContext);
+        session.createdPost = await createVideoPost(session.apiContext, roleConfig);
+        await verifyAuthenticatedPages(browser, session.apiContext, session.user.id);
       }
 
+      await likeAndComment(sessions[1], sessions[0], sessions[0].createdPost);
       await followAndMessage(sessions[0], sessions[1]);
       await followAndMessage(sessions[2], sessions[3]);
     } finally {
