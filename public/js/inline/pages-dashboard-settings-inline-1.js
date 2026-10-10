@@ -195,7 +195,7 @@
 
   /* ── Privacy & notification settings: database is the source of truth ── */
   const SETTINGS_KEY = 'spopeer_settings';
-  const toggleIds = ['emailNotif','pushNotif','trainingNotif','followerNotif','digestNotif','profileVisibility','onlineStatus','dataSharing','allowDMs'];
+  const toggleIds = ['emailNotif','pushNotif','trainingNotif','followerNotif','digestNotif','onlineStatus','dataSharing','allowDMs'];
   const selectIds = ['language','feedDefault','avatarStyle','avatarColor','avatarAccent'];
   let settingsState = {};
 
@@ -300,6 +300,38 @@
         }
       });
     });
+
+    // Profile visibility is a real privacy setting, not a notification preference.
+    // Keep its toggle and the detailed privacy dropdown synchronized with the database.
+    const visibilityToggle = document.getElementById('profileVisibility');
+    if (visibilityToggle && !visibilityToggle.dataset.privacySettingsBound) {
+      visibilityToggle.dataset.privacySettingsBound = '1';
+      visibilityToggle.addEventListener('change', async function() {
+        const previous = !visibilityToggle.checked;
+        const value = visibilityToggle.checked ? 'public' : 'private';
+        const visibilitySelect = document.getElementById('psProfileVisibility');
+        visibilityToggle.disabled = true;
+        try {
+          const response = await fetch('/api/privacy/settings', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ profileVisibility: value })
+          });
+          const json = await response.json();
+          if (!response.ok || json.success === false) {
+            throw new Error((json.error && json.error.message) || json.message || 'Could not save profile visibility.');
+          }
+          if (visibilitySelect) visibilitySelect.value = value;
+          showToast('Profile visibility saved');
+        } catch (err) {
+          visibilityToggle.checked = previous;
+          showToast(err.message || 'Failed to save profile visibility', 'fa-triangle-exclamation');
+        } finally {
+          visibilityToggle.disabled = false;
+        }
+      });
+    }
 
     selectIds.forEach(function(id) {
       const el = document.getElementById(id);
