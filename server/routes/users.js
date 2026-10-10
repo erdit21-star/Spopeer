@@ -46,10 +46,15 @@ function handleUploadMiddleware(uploadMiddleware) {
 
 // Apply extended-profile merge before saving
 async function applyExtendedMerge(user, updates) {
+  const existing = user.extendedProfile && typeof user.extendedProfile === 'object' && !Array.isArray(user.extendedProfile)
+    ? user.extendedProfile
+    : {};
   if (updates._extendedProfilePatch) {
-    const existing = user.extendedProfile || {};
     updates.extendedProfile = { ...existing, ...updates._extendedProfilePatch };
     delete updates._extendedProfilePatch;
+  } else if (updates.extendedProfile && typeof updates.extendedProfile === 'object' && !Array.isArray(updates.extendedProfile)) {
+    // Partial settings/profile writes must not erase unrelated extended profile data.
+    updates.extendedProfile = { ...existing, ...updates.extendedProfile };
   }
   return updates;
 }
