@@ -31,6 +31,10 @@
         const el = form.elements[key];
         if (el) el.value = value;
       });
+      const visibilityToggle = document.getElementById('profileVisibility');
+      if (visibilityToggle && data.profileVisibility) {
+        visibilityToggle.checked = data.profileVisibility === 'public';
+      }
     } catch (_) {
       // Non-fatal: form defaults are acceptable
     }
@@ -56,7 +60,12 @@
         body: JSON.stringify(payload)
       });
       const json = await res.json();
-      if (!res.ok) throw new Error((json.error && json.error.message) || 'Save failed.');
+      if (!res.ok || json.success === false) throw new Error((json.error && json.error.message) || json.message || 'Save failed.');
+      const saved = json.data || json;
+      const visibilityToggle = document.getElementById('profileVisibility');
+      if (visibilityToggle && saved.profileVisibility) {
+        visibilityToggle.checked = saved.profileVisibility === 'public';
+      }
 
       if (msgEl) {
         msgEl.hidden = false;
