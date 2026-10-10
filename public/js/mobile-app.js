@@ -142,7 +142,9 @@
         syncRouteToUrl(this._route);
       }
     });
-    app.route = initialRoute;
+    // Seed internal state without syncing the URL yet. init() must first read the
+    // original path/query so direct links to Edit Profile and detail screens survive.
+    app._route = initialRoute;
   })();
 
   function html(value) {
