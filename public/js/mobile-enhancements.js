@@ -81,14 +81,21 @@
 
     // Create hamburger button
     var hamburger = document.createElement('button');
+    hamburger.type = 'button';
     hamburger.className = 'sp-public-hamburger';
-    hamburger.setAttribute('aria-label', 'Open menu');
-    hamburger.innerHTML = '<i class="fa-solid fa-bars"></i>';
+    hamburger.setAttribute('aria-label', 'Open navigation menu');
+    hamburger.setAttribute('aria-expanded', 'false');
+    hamburger.setAttribute('aria-controls', 'sp-public-mobile-menu');
+    hamburger.innerHTML = '<i class="fa-solid fa-bars" aria-hidden="true"></i>';
     navContainer.appendChild(hamburger);
 
-    // Create mobile panel
+    // Create an explicitly labelled navigation region for assistive technology.
     var panel = document.createElement('div');
+    panel.id = 'sp-public-mobile-menu';
     panel.className = 'sp-public-mobile-panel';
+    panel.setAttribute('role', 'navigation');
+    panel.setAttribute('aria-label', 'Mobile navigation');
+    panel.setAttribute('aria-hidden', 'true');
 
     // Clone nav links into the panel
     if (navLinks) {
@@ -117,49 +124,49 @@
       document.body.insertBefore(panel, document.body.firstChild);
     }
 
-    // Toggle panel
+    // Keep visual state and accessible state in sync for keyboard and screen-reader users.
     var panelOpen = false;
+    function setPanelOpen(open, restoreFocus) {
+      panelOpen = Boolean(open);
+      panel.classList.toggle('open', panelOpen);
+      panel.setAttribute('aria-hidden', panelOpen ? 'false' : 'true');
+      hamburger.setAttribute('aria-expanded', panelOpen ? 'true' : 'false');
+      hamburger.setAttribute('aria-label', panelOpen ? 'Close navigation menu' : 'Open navigation menu');
+      hamburger.innerHTML = panelOpen
+        ? '<i class="fa-solid fa-xmark" aria-hidden="true"></i>'
+        : '<i class="fa-solid fa-bars" aria-hidden="true"></i>';
+      if (restoreFocus) hamburger.focus();
+    }
+
     hamburger.addEventListener('click', function (e) {
       e.stopPropagation();
-      panelOpen = !panelOpen;
-      panel.classList.toggle('open', panelOpen);
-      hamburger.innerHTML = panelOpen
-        ? '<i class="fa-solid fa-xmark"></i>'
-        : '<i class="fa-solid fa-bars"></i>';
+      setPanelOpen(!panelOpen, false);
     });
 
-    // Close panel when clicking outside
+    // Close panel when clicking outside.
     document.addEventListener('click', function (e) {
       if (panelOpen && !panel.contains(e.target) && !hamburger.contains(e.target)) {
-        panelOpen = false;
-        panel.classList.remove('open');
-        hamburger.innerHTML = '<i class="fa-solid fa-bars"></i>';
+        setPanelOpen(false, false);
       }
     });
 
-    // Close on Escape
+    // Escape closes the menu and returns keyboard focus to its trigger.
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && panelOpen) {
-        panelOpen = false;
-        panel.classList.remove('open');
-        hamburger.innerHTML = '<i class="fa-solid fa-bars"></i>';
+        setPanelOpen(false, true);
       }
     });
 
-    // Close on link click inside panel
+    // Close after navigation/action links are activated.
     panel.addEventListener('click', function (e) {
-      if (e.target.closest('a')) {
-        panelOpen = false;
-        panel.classList.remove('open');
-        hamburger.innerHTML = '<i class="fa-solid fa-bars"></i>';
+      if (e.target.closest('a, button')) {
+        setPanelOpen(false, false);
       }
     });
 
-    // Expose close function for inline onclick handlers
+    // Expose close function for inline onclick handlers.
     window.closeMobileMenu = function () {
-      panelOpen = false;
-      panel.classList.remove('open');
-      hamburger.innerHTML = '<i class="fa-solid fa-bars"></i>';
+      setPanelOpen(false, false);
     };
   }
 
