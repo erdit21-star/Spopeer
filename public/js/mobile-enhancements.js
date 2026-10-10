@@ -171,7 +171,7 @@
     if (!document.body) return;
 
     var path = window.location.pathname.replace(/\\/+$/, '') || '/';
-    var isAppRoute = path === '/feed.html' || path === '/connections.html' || /^\\/pages\\/(community|search|marketplace|events|library|profiles|messaging|dashboard|sponsorship)\\//.test(path);
+    var isAppRoute = path === '/feed.html' || path === '/connections.html' || /^\\/pages\\/(community|search|marketplace|events|library|profiles|messaging|dashboard|sponsorship|admin|ads)\\//.test(path);
     if (!isAppRoute) return;
     document.body.classList.add('has-sp-bottom-nav');
     if (path === '/pages/community/community.html' || path === '/pages/community/forums.html') {
