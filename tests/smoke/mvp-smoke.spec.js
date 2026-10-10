@@ -254,6 +254,21 @@ async function verifyAuthenticatedPages(browser, apiContext, expectedUserId) {
       // Confirm the route resolver selected the intended mobile screen.
     }
 
+    await page.goto('/pages/profiles/edit-profile.html');
+    await page.locator('#section-basic .edit-card-header').click();
+    const bioValue = 'E2E Save All persisted ' + Date.now();
+    await page.locator('#bioInput').fill(bioValue);
+    const saveResponsePromise = page.waitForResponse((response) =>
+      response.url().includes('/api/users/me') && response.request().method() === 'PATCH'
+    );
+    await page.locator('#saveAllBtn').click();
+    const saveResponse = await saveResponsePromise;
+    expect(saveResponse.ok(), 'Edit Profile Save All PATCH').toBeTruthy();
+    const savedProfileResponse = await apiContext.get('/api/users/me');
+    const savedProfileJson = await savedProfileResponse.json();
+    expect(savedProfileResponse.ok(), JSON.stringify(savedProfileJson)).toBeTruthy();
+    expect(savedProfileJson.data.user.bio).toBe(bioValue);
+
     const referenceHeights = measuredButtonHeights[0];
     for (const heights of measuredButtonHeights.slice(1)) {
       expect(heights).toEqual(referenceHeights);
