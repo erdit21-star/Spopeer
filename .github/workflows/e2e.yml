@@ -10,7 +10,30 @@ jobs:
   e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: spopeer_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d spopeer_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://test:test@127.0.0.1:5432/spopeer_test
+      JWT_ACCESS_SECRET: ci-test-access-secret-at-least-64-characters-long
+      JWT_REFRESH_SECRET: ci-test-refresh-secret-at-least-64-characters-long
+      APP_URL: http://127.0.0.1:5000
+      FRONTEND_URL: http://127.0.0.1:5000
+      E2E_BASE_URL: http://127.0.0.1:5000
+      PORT: 5000
 
     steps:
       - name: Checkout code
@@ -21,52 +44,68 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
 
       - name: Install root dependencies
         run: npm ci
 
-      - name: Detect Playwright suite
-        id: detect_playwright
+      - name: Install server dependencies
+        run: npm ci
+        working-directory: server
+
+      - name: Run database migrations
+        run: npx sequelize-cli db:migrate --env test
+        working-directory: server
+
+      - name: Start local test server
         run: |
-          CONFIG_FILE=""
-          for candidate in playwright.config.ts playwright.config.js playwright.config.mjs playwright.config.cjs; do
-            if [ -f "$candidate" ]; then
-              CONFIG_FILE="$candidate"
-              break
+          npm start > /tmp/spopeer-e2e-server.log 2>&1 &
+          echo $! > /tmp/spopeer-e2e-server.pid
+        working-directory: server
+
+      - name: Wait for server readiness
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:5000/ready > /tmp/spopeer-ready.json; then
+              cat /tmp/spopeer-ready.json
+              exit 0
             fi
+            if ! kill -0 "$(cat /tmp/spopeer-e2e-server.pid)" 2>/dev/null; then
+              cat /tmp/spopeer-e2e-server.log
+              exit 1
+            fi
+            sleep 2
           done
+          cat /tmp/spopeer-e2e-server.log
+          echo "Server did not become ready within 120 seconds."
+          exit 1
 
-          TEST_COUNT=$(find e2e tests -type f \( -name "*.spec.ts" -o -name "*.spec.js" -o -name "*.spec.mjs" -o -name "*.spec.cjs" -o -name "*.test.ts" -o -name "*.test.js" -o -name "*.test.mjs" -o -name "*.test.cjs" \) 2>/dev/null | wc -l | tr -d ' ')
-
-          RUN_PLAYWRIGHT=false
-          if [ -n "$CONFIG_FILE" ] && [ "${TEST_COUNT:-0}" -gt 0 ]; then
-            RUN_PLAYWRIGHT=true
-          fi
-
-          echo "run_playwright=$RUN_PLAYWRIGHT" >> "$GITHUB_OUTPUT"
-          echo "config_file=$CONFIG_FILE" >> "$GITHUB_OUTPUT"
-          echo "Detected config: ${CONFIG_FILE:-none}, tests: ${TEST_COUNT:-0}, run_playwright: $RUN_PLAYWRIGHT"
-
-      - name: Install Playwright browsers
-        if: steps.detect_playwright.outputs.run_playwright == 'true'
+      - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run E2E tests
-        if: steps.detect_playwright.outputs.run_playwright == 'true'
-        run: npx playwright test --config="${{ steps.detect_playwright.outputs.config_file }}" --pass-with-no-tests
+      - name: Run Playwright E2E tests
+        run: npx playwright test --config=playwright.config.cjs --forbid-only
 
       - name: Upload Playwright report
-        if: always() && steps.detect_playwright.outputs.run_playwright == 'true'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report/
+          if-no-files-found: ignore
           retention-days: 7
 
       - name: Upload test results
-        if: always() && steps.detect_playwright.outputs.run_playwright == 'true'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results
           path: test-results/
+          if-no-files-found: ignore
           retention-days: 7
+
+      - name: Print server logs on failure
+        if: failure()
+        run: cat /tmp/spopeer-e2e-server.log
