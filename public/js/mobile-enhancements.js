@@ -165,14 +165,14 @@
 
   /* ── 5. Bottom navigation bar (logged-in pages) ── */
   function setupBottomNav() {
-    // The same mobile navigation must be available on every authenticated app page,
-    // including pages whose desktop header uses .navbar instead of .topnav.
-    var topnav = document.querySelector('.topnav, .top-nav');
+    // Inject the authenticated bottom navigation only on known app routes.
+    // Public marketing/legal pages may also use .topnav/.top-nav and must not
+    // receive an app-only navigation bar.
     if (!document.body) return;
 
     var path = window.location.pathname.replace(/\\/+$/, '') || '/';
     var isAppRoute = path === '/feed.html' || path === '/connections.html' || /^\\/pages\\/(community|search|marketplace|events|library|profiles|messaging|dashboard|sponsorship)\\//.test(path);
-    if (!topnav && !isAppRoute) return;
+    if (!isAppRoute) return;
     document.body.classList.add('has-sp-bottom-nav');
     if (path === '/pages/community/community.html' || path === '/pages/community/forums.html') {
       document.body.classList.add('sp-community-mobile-layout');
