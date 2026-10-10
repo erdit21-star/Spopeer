@@ -255,7 +255,12 @@ async function verifyAuthenticatedPages(browser, apiContext, expectedUserId) {
     }
 
     await page.goto('/pages/profiles/edit-profile.html');
-    await page.locator('#section-basic .edit-card-header').click();
+    const bioInput = page.locator('#bioInput');
+    // Basic Information is expanded by default; only open it if it is collapsed.
+    if (!(await bioInput.isVisible())) {
+      await page.locator('#section-basic .edit-card-header').click();
+    }
+    await expect(bioInput).toBeVisible();
     const bioValue = 'E2E Save All persisted ' + Date.now();
     await page.locator('#bioInput').fill(bioValue);
     const saveResponsePromise = page.waitForResponse((response) =>
