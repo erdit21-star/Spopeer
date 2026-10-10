@@ -876,7 +876,6 @@
 
     try {
       var combined = buildCombinedProfileFromForm();
-      console.log('Save All payload', combined);
       var merged = await saveSection(combined);
       ud = merged;
 
@@ -1083,10 +1082,8 @@
     if (!window.SpopeerAPI || typeof window.SpopeerAPI.updateProfile !== 'function') {
       throw new Error('Profile API is unavailable.');
     }
-    console.log('Saving profile payload', sanitizedOutgoing);
     try {
       var result = await window.SpopeerAPI.updateProfile({ payload: sanitizedOutgoing });
-      console.log('Save profile response', result);
       var returnedUser = normalizeSavedUserFromResponse(result);
       if (!returnedUser || !Object.keys(returnedUser).length) {
         throw new Error('Profile save returned no updated user.');
@@ -1114,7 +1111,6 @@
       console.log('Edit profile save failure details', {
         endpoint: (saveErr && saveErr.endpoint) || '/api/users/me',
         method: (saveErr && saveErr.method) || 'PATCH',
-        payload: sanitizedOutgoing,
         backendResponse: saveErr && saveErr.response,
         validationField: saveErr && saveErr.validationField,
         statusCode: saveErr && saveErr.status,
