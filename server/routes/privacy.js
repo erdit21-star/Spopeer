@@ -7,7 +7,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { UserPrivacySettings } = require('../models');
+const { UserPrivacySettings, User } = require('../models');
 const { authenticate } = require('../middleware/auth');
 const { ok, fail } = require('../utils/response');
 
@@ -80,6 +80,12 @@ router.put('/settings', authenticate, async (req, res) => {
       if (req.body[f] !== undefined) updates[f] = req.body[f];
     }
     await settings.update(updates);
+    if (updates.profileVisibility !== undefined) {
+      await User.update(
+        { profileVisibility: updates.profileVisibility, privacyPublic: updates.profileVisibility !== 'private' },
+        { where: { id: req.userId } }
+      );
+    }
     ok(res, settings);
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to update privacy settings.');
@@ -110,6 +116,12 @@ router.patch('/settings', authenticate, async (req, res) => {
     if (Object.keys(updates).length === 0) return fail(res, 400, 'VALIDATION', 'No valid fields provided.');
 
     await settings.update(updates);
+    if (updates.profileVisibility !== undefined) {
+      await User.update(
+        { profileVisibility: updates.profileVisibility, privacyPublic: updates.profileVisibility !== 'private' },
+        { where: { id: req.userId } }
+      );
+    }
     ok(res, settings);
   } catch (error) {
     fail(res, 500, 'SERVER_ERROR', 'Failed to update privacy settings.');
