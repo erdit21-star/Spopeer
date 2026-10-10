@@ -445,6 +445,31 @@ textarea {
   background: var(--surface, #f3f3ef);
 }
 
+/* Visible keyboard focus for the public mobile menu and authenticated tab bar. */
+.sp-public-hamburger:focus-visible,
+.sp-public-mobile-panel a:focus-visible,
+.sp-public-mobile-panel button:focus-visible,
+.sp-bottom-nav-item:focus-visible {
+  outline: 3px solid var(--spm-blue, #1a6bff);
+  outline-offset: 3px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Honour reduced-motion preferences without changing the default design. */
+@media (prefers-reduced-motion: reduce) {
+  .sp-public-hamburger,
+  .sp-public-mobile-panel,
+  .sp-public-mobile-panel *,
+  .sp-bottom-nav,
+  .sp-bottom-nav * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media (max-width: 768px) {
   .sp-public-hamburger { display: flex; }
 }
