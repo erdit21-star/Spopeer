@@ -116,10 +116,10 @@ async function updateProfile(apiContext, roleConfig) {
   const readBackResponse = await apiContext.get('/api/users/me');
   const readBackJson = await readBackResponse.json();
   expect(readBackResponse.ok(), JSON.stringify(readBackJson)).toBeTruthy();
-  expect(readBackJson.data.displayName).toBe(roleConfig.firstName + ' ' + roleConfig.lastName);
-  expect(readBackJson.data.bio).toBe('E2E ' + roleConfig.role + ' profile');
-  expect(readBackJson.data.location).toBe('Athens');
-  expect(readBackJson.data.sport).toBe(roleConfig.sport);
+  expect(readBackJson.data.user.displayName).toBe(roleConfig.firstName + ' ' + roleConfig.lastName);
+  expect(readBackJson.data.user.bio).toBe('E2E ' + roleConfig.role + ' profile');
+  expect(readBackJson.data.user.location).toBe('Athens');
+  expect(readBackJson.data.user.sport).toBe(roleConfig.sport);
 }
 
 async function uploadAvatar(apiContext) {
