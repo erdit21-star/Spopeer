@@ -339,7 +339,8 @@ test.describe('Spopeer MVP Smoke', () => {
     try {
       for (const roleConfig of ROLE_CONFIGS) {
         const session = await loginOrSignupRole(roleConfig);
-        sessions.push({ ...session, roleConfig });
+        session.roleConfig = roleConfig;
+        sessions.push(session);
 
         await updateProfile(session.apiContext, roleConfig);
         await uploadAvatar(session.apiContext);
