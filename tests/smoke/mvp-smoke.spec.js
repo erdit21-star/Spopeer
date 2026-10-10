@@ -112,6 +112,14 @@ async function updateProfile(apiContext, roleConfig) {
   });
   const json = await response.json();
   expect(response.ok(), JSON.stringify(json)).toBeTruthy();
+
+  const readBackResponse = await apiContext.get('/api/users/me');
+  const readBackJson = await readBackResponse.json();
+  expect(readBackResponse.ok(), JSON.stringify(readBackJson)).toBeTruthy();
+  expect(readBackJson.data.displayName).toBe(roleConfig.firstName + ' ' + roleConfig.lastName);
+  expect(readBackJson.data.bio).toBe('E2E ' + roleConfig.role + ' profile');
+  expect(readBackJson.data.location).toBe('Athens');
+  expect(readBackJson.data.sport).toBe(roleConfig.sport);
 }
 
 async function uploadAvatar(apiContext) {
