@@ -66,7 +66,17 @@ async function updateProfileHandler(user, updates) {
     }
   }
 
-  const privacyUpdates = mapPrivacySettingsToUserUpdates(updates);
+  // Only normalize/synchronize privacy fields when the request actually changes privacy.
+  // Otherwise notification/appearance saves would overwrite privacy choices with defaults.
+  const privacyInputFields = [
+    'profileVisibility', 'privacyPublic', 'messagePermission', 'commentPermission',
+    'followersVisibility', 'followingVisibility', 'emailVisibility', 'phoneVisibility',
+    'dobVisibility', 'sharingPreferences', 'visibility'
+  ];
+  const hasPrivacyInput = privacyInputFields.some((field) =>
+    Object.prototype.hasOwnProperty.call(updates, field)
+  );
+  const privacyUpdates = hasPrivacyInput ? mapPrivacySettingsToUserUpdates(updates) : {};
   const mergedUpdates = { ...updates, ...privacyUpdates };
 
   await applyExtendedMerge(user, mergedUpdates);
