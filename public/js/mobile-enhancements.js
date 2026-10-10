@@ -170,8 +170,8 @@
     // receive an app-only navigation bar.
     if (!document.body) return;
 
-    var path = window.location.pathname.replace(/\\/+$/, '') || '/';
-    var isAppRoute = path === '/feed.html' || path === '/connections.html' || /^\\/pages\\/(community|search|marketplace|events|library|profiles|messaging|dashboard|sponsorship|admin|ads)\\//.test(path);
+    var path = window.location.pathname.replace(/\/+$/, '') || '/';
+    var isAppRoute = path === '/feed.html' || path === '/connections.html' || /^\/pages\/(community|search|marketplace|events|library|profiles|messaging|dashboard|sponsorship|admin|ads)\//.test(path);
     if (!isAppRoute) return;
     document.body.classList.add('has-sp-bottom-nav');
     if (path === '/pages/community/community.html' || path === '/pages/community/forums.html') {
@@ -194,8 +194,8 @@
       if (!item.href) return false;
       var paths = [item.href].concat(item.aliases || []);
       return paths.some(function (candidate) {
-        var normalized = candidate.replace(/\\/+$/, '') || '/';
-        return path === normalized || (normalized !== '/' && path.indexOf(normalized.replace(/\\.html$/, '') + '/') === 0);
+        var normalized = candidate.replace(/\/+$/, '') || '/';
+        return path === normalized || (normalized !== '/' && path.indexOf(normalized.replace(/\.html$/, '') + '/') === 0);
       });
     }
 
