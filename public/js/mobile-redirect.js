@@ -49,6 +49,32 @@
     return;
   }
 
+  // These desktop pages already contain the full feature workflows and responsive
+  // layouts. Keep them available on mobile until the native mobile SPA has parity.
+  var responsiveFeaturePages = [
+    '/pages/marketplace/advanced-search.html',
+    '/pages/marketplace/create-listing.html',
+    '/pages/marketplace/listing-detail.html',
+    '/pages/marketplace/messages.html',
+    '/pages/marketplace/my-listings.html',
+    '/pages/marketplace/notifications.html',
+    '/pages/marketplace/analytics.html',
+    '/pages/marketplace/moderation.html',
+    '/pages/marketplace/marketplace.html',
+    '/pages/library/media.html',
+    '/pages/community/forums.html',
+    '/pages/community/reels.html',
+    '/pages/features/athlete-read-more.html',
+    '/pages/features/club-read-more.html',
+    '/pages/features/coach-read-more.html',
+    '/pages/features/professional-read-more.html'
+  ];
+  if (responsiveFeaturePages.indexOf(path) !== -1) {
+    params.set('desktop', '1');
+    window.location.replace(path + '?' + params.toString());
+    return;
+  }
+
   var route = 'feed';
   if (path === '/search.html' || path === '/pages/search/search.html') route = 'search';
   else if (path === '/articles.html' || path.indexOf('/pages/articles/') === 0) route = 'articles';
